@@ -7,10 +7,11 @@ using Portfolio.Data.Entities;
 namespace Portfolio.Data.Seeding;
 
 /// <summary>
-/// Idempotent seeder: reads JSON files from the Seed folder and upserts each row by a
-/// natural key (slug / name / company+title). Safe to run on every startup — editing a
-/// seed file and redeploying updates the matching rows, adds new ones, and leaves the
-/// rest untouched. Content is data, never hardcoded markup.
+/// Idempotent, authoritative seeder: reads JSON files from the Seed folder and makes each
+/// table match its seed file, keyed by a natural key (slug / name / company+title). Safe to
+/// run on every startup — editing a seed file and redeploying adds new rows, updates matching
+/// ones, and removes rows no longer present. The seed files are the single source of truth.
+/// Content is data, never hardcoded markup.
 /// </summary>
 public static class PortfolioSeeder
 {
@@ -78,13 +79,21 @@ public static class PortfolioSeeder
         if (items is null || items.Count == 0) { log?.LogInformation("Seed file empty: {file}", file); return; }
 
         var byKey = (await set.ToListAsync(ct)).ToDictionary(key, StringComparer.OrdinalIgnoreCase);
+        var incomingKeys = new HashSet<string>(items.Select(key), StringComparer.OrdinalIgnoreCase);
         int added = 0, updated = 0;
         foreach (var incoming in items)
         {
             if (byKey.TryGetValue(key(incoming), out var current)) { copy(current, incoming); updated++; }
             else { set.Add(incoming); added++; }
         }
+
+        // Authoritative seed: the seed file is the single source of truth, so rows whose
+        // natural key is no longer present get removed. Guarded by the earlier empty-file
+        // check (we never reach here with zero items), so an empty/missing file never wipes a table.
+        var stale = byKey.Where(kv => !incomingKeys.Contains(kv.Key)).Select(kv => kv.Value).ToList();
+        if (stale.Count > 0) set.RemoveRange(stale);
+
         await db.SaveChangesAsync(ct);
-        log?.LogInformation("Seeded {file}: +{added} ~{updated}", file, added, updated);
+        log?.LogInformation("Seeded {file}: +{added} ~{updated} -{removed}", file, added, updated, stale.Count);
     }
 }
