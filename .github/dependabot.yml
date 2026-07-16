@@ -8,6 +8,10 @@ updates:
     labels: ["dependencies"]
     commit-message:
       prefix: "deps"
+    groups:
+      # Roll minor/patch bumps into a single PR to cut noise; majors stay separate.
+      nuget-minor-patch:
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: github-actions
     directory: "/"
