@@ -41,6 +41,16 @@ else
                     }
                 </div>
             }
+            <div class="mt-6 flex flex-wrap items-center gap-2">
+                <span class="font-mono text-xs text-muted">Share</span>
+                <button type="button" data-share="copy" data-url="/blog/@post.Slug" data-title="@post.Title"
+                        class="btn btn-ghost !px-3 !py-1.5 text-xs">
+                    <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8h16v-8"/><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/></svg>
+                    <span data-share-label>Copy link</span>
+                </button>
+                <button type="button" data-share="x" data-url="/blog/@post.Slug" data-title="@post.Title" class="btn btn-ghost !px-3 !py-1.5 text-xs">X</button>
+                <button type="button" data-share="linkedin" data-url="/blog/@post.Slug" data-title="@post.Title" class="btn btn-ghost !px-3 !py-1.5 text-xs">LinkedIn</button>
+            </div>
         </header>
         <div class="article mt-10 max-w-2xl">
             @Html.Raw(Md.ToHtml(post.BodyMarkdown))

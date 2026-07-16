@@ -1,0 +1,71 @@
+- generic [active] [ref=f2e1]:
+  - banner [ref=f2e2]:
+    - generic [ref=f2e3]:
+      - link "Alex." [ref=f2e4] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=f2e5]:
+        - link "about" [ref=f2e6] [cursor=pointer]:
+          - /url: /about
+        - link "experience" [ref=f2e7] [cursor=pointer]:
+          - /url: /experience
+        - link "work" [ref=f2e8] [cursor=pointer]:
+          - /url: /projects
+        - link "skills" [ref=f2e9] [cursor=pointer]:
+          - /url: /skills
+        - link "certs" [ref=f2e10] [cursor=pointer]:
+          - /url: /certifications
+        - link "blog" [ref=f2e11] [cursor=pointer]:
+          - /url: /blog
+        - link "cv" [ref=f2e12] [cursor=pointer]:
+          - /url: /cv
+      - generic [ref=f2e13]:
+        - button "Toggle light/dark theme" [ref=f2e14] [cursor=pointer]
+        - link "Get in touch" [ref=f2e17] [cursor=pointer]:
+          - /url: /contact
+  - main [ref=f2e18]:
+    - article [ref=f2e19]:
+      - link "← blog" [ref=f2e20] [cursor=pointer]:
+        - /url: /blog
+      - generic [ref=f2e21]:
+        - paragraph [ref=f2e22]: Nov 2, 2025 · 1 min read
+        - heading "Serving millions of records in under a minute" [level=1] [ref=f2e23]
+        - generic [ref=f2e24]:
+          - generic [ref=f2e25]: "#Architecture"
+          - generic [ref=f2e26]: "#Performance"
+          - generic [ref=f2e27]: "#Microservices"
+      - generic [ref=f2e28]:
+        - paragraph [ref=f2e29]: "Some services have one job and have to do it fast. This one had two jobs with very different shapes: answer individual lookups in single-digit milliseconds, and materialize an entire multi-million-row, multi-gigabyte dataset in under a minute when a full pull was requested."
+        - heading "The constraint" [level=2] [ref=f2e30]
+        - paragraph [ref=f2e31]: Optimizing for one pattern usually hurts the other. Tight per-record latency wants small, cached, index-friendly reads. A full pull wants large, sequential, batched I/O. Treating them as the same code path is how you end up slow at both.
+        - heading "Sub-10ms hot paths" [level=2] [ref=f2e32]
+        - paragraph [ref=f2e33]: "For individual lookups the wins were unglamorous and effective: shape the data for the read, keep the hot set in memory, and avoid chatty round-trips. Once the query plan was stable and the working set fit, average response settled into the sub-10ms range and stayed there under load."
+        - heading "The bulk pull" [level=2] [ref=f2e34]
+        - paragraph [ref=f2e35]:
+          - text: The full pull was a different problem. Instead of millions of small reads, it became a streamed, batched export — read in large chunks, keep memory bounded, and never hold the whole result set at once. The target wasn't
+          - emphasis [ref=f2e36]: lowest latency per record
+          - text: ", it was"
+          - emphasis [ref=f2e37]: bounded, predictable total time
+          - text: — and it landed under a minute.
+        - heading "What mattered" [level=2] [ref=f2e38]
+        - list [ref=f2e39]:
+          - listitem [ref=f2e40]:
+            - strong [ref=f2e41]: Measure first.
+            - text: The bottleneck was never where intuition said it was.
+          - listitem [ref=f2e42]:
+            - strong [ref=f2e43]: Separate the access patterns.
+            - text: Two paths, each optimized for its own shape, beat one clever path trying to serve both.
+          - listitem [ref=f2e44]:
+            - strong [ref=f2e45]: Bound your memory.
+            - text: Streaming beats buffering the moment the data outgrows a comfortable slice of RAM.
+        - paragraph [ref=f2e46]: None of this was exotic. It was picking the right shape for each job and refusing to let the two contaminate each other.
+  - contentinfo [ref=f2e47]:
+    - generic [ref=f2e48]:
+      - paragraph [ref=f2e49]: © 2026 Alex Rivera
+      - generic [ref=f2e50]:
+        - link "LinkedIn" [ref=f2e51] [cursor=pointer]:
+          - /url: https://www.linkedin.com/in/example-alex-rivera/
+        - link "GitHub" [ref=f2e52] [cursor=pointer]:
+          - /url: https://github.com/example-alex-rivera
+        - link "Email" [ref=f2e53] [cursor=pointer]:
+          - /url: mailto:alex.rivera@example.dev
+      - paragraph [ref=f2e54]: ASP.NET Core · SQL Server · Plesk

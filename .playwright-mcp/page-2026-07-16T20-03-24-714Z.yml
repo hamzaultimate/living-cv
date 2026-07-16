@@ -1,0 +1,65 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e2]:
+    - generic [ref=f1e3]:
+      - link "Alex." [ref=f1e4] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=f1e5]:
+        - link "about" [ref=f1e6] [cursor=pointer]:
+          - /url: /about
+        - link "experience" [ref=f1e7] [cursor=pointer]:
+          - /url: /experience
+        - link "work" [ref=f1e8] [cursor=pointer]:
+          - /url: /projects
+        - link "skills" [ref=f1e9] [cursor=pointer]:
+          - /url: /skills
+        - link "certs" [ref=f1e10] [cursor=pointer]:
+          - /url: /certifications
+        - link "blog" [ref=f1e11] [cursor=pointer]:
+          - /url: /blog
+        - link "cv" [ref=f1e12] [cursor=pointer]:
+          - /url: /cv
+      - generic [ref=f1e13]:
+        - button "Toggle light/dark theme" [ref=f1e14] [cursor=pointer]
+        - link "Get in touch" [ref=f1e17] [cursor=pointer]:
+          - /url: /contact
+  - main [ref=f1e18]:
+    - generic [ref=f1e19]:
+      - paragraph [ref=f1e20]: Blog
+      - heading "Writing" [level=1] [ref=f1e21]
+      - paragraph [ref=f1e22]: Specific, credible notes from real work — .NET, performance, and applied AI.
+      - generic [ref=f1e23]:
+        - article [ref=f1e24]:
+          - paragraph [ref=f1e25]: Nov 2, 2025 · 1 min read
+          - heading [level=2] [ref=f1e26]:
+            - link "Serving millions of records in under a minute" [ref=f1e27] [cursor=pointer]:
+              - /url: /blog/serving-millions-under-a-minute
+          - paragraph [ref=f1e28]: The architecture and performance decisions behind a service that answers single-digit-ms lookups and still exports a multi-million-row dataset fast.
+          - generic [ref=f1e29]:
+            - generic [ref=f1e30]:
+              - generic [ref=f1e31]: "#Architecture"
+              - generic [ref=f1e32]: "#Performance"
+              - generic [ref=f1e33]: "#Microservices"
+            - button "Share" [ref=f1e34] [cursor=pointer]
+        - article [ref=f1e39]:
+          - paragraph [ref=f1e40]: Sept 15, 2025 · 2 min read
+          - heading [level=2] [ref=f1e41]:
+            - link "How I cut memory leaks in a multi-tenant .NET SaaS" [ref=f1e42] [cursor=pointer]:
+              - /url: /blog/memory-leaks-multitenant-dotnet
+          - paragraph [ref=f1e43]: A captive-dependency bug that quietly grew memory in a multi-tenant .NET SaaS — how I found it and the DI rule that prevents it.
+          - generic [ref=f1e44]:
+            - generic [ref=f1e45]:
+              - generic [ref=f1e46]: "#.NET"
+              - generic [ref=f1e47]: "#Performance"
+              - generic [ref=f1e48]: "#DI"
+            - button "Share" [ref=f1e49] [cursor=pointer]
+  - contentinfo [ref=f1e54]:
+    - generic [ref=f1e55]:
+      - paragraph [ref=f1e56]: © 2026 Alex Rivera
+      - generic [ref=f1e57]:
+        - link "LinkedIn" [ref=f1e58] [cursor=pointer]:
+          - /url: https://www.linkedin.com/in/example-alex-rivera/
+        - link "GitHub" [ref=f1e59] [cursor=pointer]:
+          - /url: https://github.com/example-alex-rivera
+        - link "Email" [ref=f1e60] [cursor=pointer]:
+          - /url: mailto:alex.rivera@example.dev
+      - paragraph [ref=f1e61]: ASP.NET Core · SQL Server · Plesk

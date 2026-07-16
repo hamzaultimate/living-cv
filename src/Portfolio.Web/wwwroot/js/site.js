@@ -21,6 +21,48 @@
     });
   }
 
+  // Share buttons. data-share="copy" uses the native Web Share sheet when available
+  // (mobile), else copies the link with brief "Copied!" feedback. data-share="x" / "linkedin"
+  // open the platform share intent. URLs are relative in markup and resolved to absolute here,
+  // so no server-side host handling is needed. Progressive enhancement.
+  document.addEventListener('click', function (e) {
+    const el = e.target.closest('[data-share]');
+    if (!el) return;
+    e.preventDefault();
+    const rel = el.getAttribute('data-url');
+    const url = rel ? new URL(rel, location.origin).href : location.href;
+    const title = el.getAttribute('data-title') || document.title;
+    const type = el.getAttribute('data-share');
+    if (type === 'x') {
+      window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(title) + '&url=' + encodeURIComponent(url), '_blank', 'noopener');
+      return;
+    }
+    if (type === 'linkedin') {
+      window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url), '_blank', 'noopener');
+      return;
+    }
+    if (navigator.share) {
+      navigator.share({ title: title, url: url }).catch(function () {});
+      return;
+    }
+    const label = el.querySelector('[data-share-label]') || el;
+    const flash = function () {
+      const orig = label.getAttribute('data-orig') || label.textContent;
+      label.setAttribute('data-orig', orig);
+      label.textContent = 'Copied!';
+      setTimeout(function () { label.textContent = orig; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(flash).catch(function () {});
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = url; ta.setAttribute('readonly', ''); ta.style.position = 'absolute'; ta.style.left = '-9999px';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); flash(); } catch (_) { /* ignore */ }
+      document.body.removeChild(ta);
+    }
+  });
+
   // Work-page domain filter. Chips toggle which project cards are visible; purely client-side.
   const filterBar = document.querySelector('[data-project-filter]');
   const grid = document.querySelector('[data-project-grid]');

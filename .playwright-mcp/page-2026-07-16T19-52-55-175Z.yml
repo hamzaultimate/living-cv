@@ -1,0 +1,98 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Alex." [ref=e4] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e5]:
+        - link "about" [ref=e6] [cursor=pointer]:
+          - /url: /about
+        - link "experience" [ref=e7] [cursor=pointer]:
+          - /url: /experience
+        - link "work" [ref=e8] [cursor=pointer]:
+          - /url: /projects
+        - link "skills" [ref=e9] [cursor=pointer]:
+          - /url: /skills
+        - link "certs" [ref=e10] [cursor=pointer]:
+          - /url: /certifications
+        - link "blog" [ref=e11] [cursor=pointer]:
+          - /url: /blog
+        - link "cv" [ref=e12] [cursor=pointer]:
+          - /url: /cv
+      - generic [ref=e13]:
+        - button "Toggle light/dark theme" [ref=e14] [cursor=pointer]
+        - link "Get in touch" [ref=e17] [cursor=pointer]:
+          - /url: /contact
+  - main [ref=e18]:
+    - generic [ref=e19]:
+      - paragraph [ref=e20]: Experience
+      - heading "Where I've built" [level=1] [ref=e21]
+      - paragraph [ref=e22]: Reverse-chronological, outcome-focused. What the systems did, and my part in them.
+      - generic [ref=e23]:
+        - article [ref=e24]:
+          - generic [ref=e26]:
+            - heading "Nimbus Systems" [level=2] [ref=e27]
+            - generic [ref=e28]: 2025 – present
+          - paragraph [ref=e29]: Senior Software Engineer
+          - paragraph [ref=e30]: Bringing applied AI into production .NET systems on the cloud — the current chapter of a backend career pivoting toward AI.
+          - list [ref=e31]:
+            - listitem [ref=e32]: ▸ Building applied-AI features on Azure and OpenAI-compatible models
+            - listitem [ref=e33]: ▸ Pursuing the cloud AI certification path
+            - listitem [ref=e34]: ▸ Fluent with agentic developer tooling
+          - generic [ref=e35]:
+            - generic [ref=e36]: .NET
+            - generic [ref=e37]: Azure
+            - generic [ref=e38]: Azure AI Services
+            - generic [ref=e39]: C#
+        - article [ref=e40]:
+          - generic [ref=e42]:
+            - heading "Contoso Cloud" [level=2] [ref=e43]
+            - generic [ref=e44]: 2022 – 2025
+          - paragraph [ref=e45]: Senior Software Engineer
+          - paragraph [ref=e46]: Senior backend engineer on distributed .NET systems and microservices at scale; mentored junior engineers.
+          - list [ref=e47]:
+            - listitem [ref=e48]: ▸ Designed and operated high-throughput microservices behind a licensing platform
+            - listitem [ref=e49]: ▸ Owned reliability and performance of data-heavy services
+            - listitem [ref=e50]: ▸ Introduced CI/CD pipelines and infrastructure-as-code
+          - generic [ref=e51]:
+            - generic [ref=e52]: .NET Core
+            - generic [ref=e53]: C#
+            - generic [ref=e54]: Microservices
+            - generic [ref=e55]: MS SQL Server
+            - generic [ref=e56]: Azure
+        - article [ref=e57]:
+          - generic [ref=e59]:
+            - heading "Fabrikam Labs" [level=2] [ref=e60]
+            - generic [ref=e61]: 2019 – 2022
+          - paragraph [ref=e62]: Software Engineer
+          - paragraph [ref=e63]: Delivered and led backend systems across licensing, access, and data-heavy services.
+          - list [ref=e64]:
+            - listitem [ref=e65]: ▸ Led the access-service rebuild delivered on time with a strong reliability record
+            - listitem [ref=e66]: ▸ Built streaming export paths for multi-million-row datasets
+          - generic [ref=e67]:
+            - generic [ref=e68]: .NET Core
+            - generic [ref=e69]: C#
+            - generic [ref=e70]: Microservices
+            - generic [ref=e71]: MS SQL Server
+        - article [ref=e72]:
+          - generic [ref=e74]:
+            - heading "Northwind Trading Co." [level=2] [ref=e75]
+            - generic [ref=e76]: 2016 – 2019
+          - paragraph [ref=e77]: Software Engineer
+          - paragraph [ref=e78]: Early-career .NET engineering across a range of business systems.
+          - list [ref=e79]:
+            - listitem [ref=e80]: ▸ Built and maintained .NET business applications end to end
+          - generic [ref=e81]:
+            - generic [ref=e82]: .NET
+            - generic [ref=e83]: C#
+            - generic [ref=e84]: MS SQL Server
+  - contentinfo [ref=e85]:
+    - generic [ref=e86]:
+      - paragraph [ref=e87]: © 2026 Alex Rivera
+      - generic [ref=e88]:
+        - link "LinkedIn" [ref=e89] [cursor=pointer]:
+          - /url: https://www.linkedin.com/in/example-alex-rivera/
+        - link "GitHub" [ref=e90] [cursor=pointer]:
+          - /url: https://github.com/example-alex-rivera
+        - link "Email" [ref=e91] [cursor=pointer]:
+          - /url: mailto:alex.rivera@example.dev
+      - paragraph [ref=e92]: ASP.NET Core · SQL Server · Plesk

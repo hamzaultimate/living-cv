@@ -33,15 +33,22 @@
                     {
                         <p class="mt-2 max-w-2xl text-muted">@post.Description</p>
                     }
-                    @if (post.Tags.Count > 0)
-                    {
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            @foreach (var t in post.Tags)
-                            {
-                                <span class="tag">#@t</span>
-                            }
-                        </div>
-                    }
+                    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                        @if (post.Tags.Count > 0)
+                        {
+                            <div class="flex flex-wrap gap-2">
+                                @foreach (var t in post.Tags)
+                                {
+                                    <span class="tag">#@t</span>
+                                }
+                            </div>
+                        }
+                        <button type="button" data-share="copy" data-url="/blog/@post.Slug" data-title="@post.Title"
+                                class="inline-flex items-center gap-1 font-mono text-xs text-muted transition-colors hover:text-accent">
+                            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8h16v-8"/><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/></svg>
+                            <span data-share-label>Share</span>
+                        </button>
+                    </div>
                 </article>
             }
         </div>
