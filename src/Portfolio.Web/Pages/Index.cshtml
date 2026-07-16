@@ -50,11 +50,11 @@
                 <a href="/cv" class="btn btn-ghost">Download CV</a>
             </div>
         </div>
-        @if (Model.HasPhoto)
+        @if (site.HasPhoto)
         {
             <div class="relative shrink-0">
                 <div class="absolute -inset-2 rounded-full border border-accent/30" aria-hidden="true"></div>
-                <img src="~/img/profile.jpg" alt="@site.OwnerName"
+                <img src="@site.PhotoUrl" alt="@site.OwnerName"
                      class="h-40 w-40 rounded-full border border-border object-cover md:h-56 md:w-56"
                      width="224" height="224" fetchpriority="high" />
             </div>

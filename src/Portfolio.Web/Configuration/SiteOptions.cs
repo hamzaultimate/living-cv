@@ -30,6 +30,11 @@ public class SiteOptions
     /// <summary>Topics for the schema.org Person "knowsAbout" list.</summary>
     public List<string> KnowsAbout { get; set; } = new();
 
+    /// <summary>Optional profile photo URL/path, e.g. "/img/profile.jpg". Empty = no photo shown.
+    /// Must be a real, served asset (drop the file in wwwroot/img and rebuild).</summary>
+    public string? PhotoUrl { get; set; }
+    public bool HasPhoto => !string.IsNullOrWhiteSpace(PhotoUrl);
+
     // ── Home page ───────────────────────────────────────────────────────────
     public HeroOptions Hero { get; set; } = new();
     public List<MetricOption> Metrics { get; set; } = new();
