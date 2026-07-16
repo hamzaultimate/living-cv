@@ -16,7 +16,7 @@ testable the moment you run it. Swap in your own details to make it yours.
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white">
   <img alt="C#" src="https://img.shields.io/badge/C%23-Razor%20Pages-239120?logo=csharp&logoColor=white">
-  <a href="../../actions/workflows/ci.yml"><img alt="CI" src="../../actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/hamzaultimate/living-cv/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/hamzaultimate/living-cv/actions/workflows/ci.yml/badge.svg"></a>
   <a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
 </p>
 
