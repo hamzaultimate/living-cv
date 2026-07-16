@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Alex Rivera avatar">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e3a8a"/>
+      <stop offset="0.55" stop-color="#1d4ed8"/>
+      <stop offset="1" stop-color="#0b1220"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.3" cy="0.28" r="0.9">
+      <stop offset="0" stop-color="#60a5fa" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#60a5fa" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <rect width="400" height="400" fill="url(#glow)"/>
+  <!-- subtle telemetry waveform, echoing the site's hero -->
+  <path d="M0 300 C50 270 90 330 140 300 C190 270 230 330 280 300 C330 270 370 330 400 300"
+        fill="none" stroke="#93c5fd" stroke-opacity="0.35" stroke-width="2"/>
+  <text x="200" y="205" text-anchor="middle" dominant-baseline="middle"
+        font-family="'Space Grotesk','Segoe UI',Arial,sans-serif" font-size="150" font-weight="700"
+        fill="#f8fafc" letter-spacing="4">AR</text>
+</svg>
