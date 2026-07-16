@@ -1,0 +1,128 @@
+@page "/projects"
+@inject PortfolioContentService Repo
+@{
+    ViewData["Title"] = "Work";
+    ViewData["Description"] = "Project case studies — problem, approach, and impact with concrete metrics.";
+    var projects = await Repo.GetProjectsAsync();
+    var categories = projects
+        .Select(p => p.Category)
+        .Where(c => !string.IsNullOrWhiteSpace(c))
+        .Select(c => c!.Trim())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(c => c)
+        .ToList();
+}
+
+<section class="container-page py-16 md:py-20">
+    <p class="eyebrow">Selected work</p>
+    <h1 class="mt-3 text-3xl md:text-4xl">Case studies</h1>
+    <p class="lead">Mini engineering write-ups — problem → approach → impact, with the numbers that mattered.</p>
+
+    @if (projects.Count == 0)
+    {
+        <p class="mt-10 font-mono text-sm text-muted">// projects load from the database</p>
+    }
+    else
+    {
+        @if (categories.Count > 1)
+        {
+            <div class="mt-10 flex flex-wrap gap-2" data-project-filter role="group" aria-label="Filter work by domain">
+                <button type="button" class="filter-chip is-active" data-filter="all" aria-pressed="true">All</button>
+                @foreach (var c in categories)
+                {
+                    <button type="button" class="filter-chip" data-filter="@c" aria-pressed="false">@c</button>
+                }
+            </div>
+        }
+        <div class="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3" data-project-grid>
+            @foreach (var p in projects)
+            {
+                // Gallery mode: a project with an uploaded screenshot/video leads with its media and
+                // opens a lightbox you can page through. Projects with no media keep the details card.
+                var media = new List<(string Url, string? Caption)>();
+                if (!string.IsNullOrWhiteSpace(p.HeroImage)) { media.Add((p.HeroImage!, null)); }
+                foreach (var s in p.Screenshots) { media.Add((s.Url, s.Caption)); }
+                var hasMedia = media.Count > 0;
+                var cover = hasMedia ? media[0] : default;
+                var coverIsVideo = hasMedia && Media.IsVideo(cover.Url);
+                var cat = p.Category?.Trim();
+                <article class="card group flex flex-col" data-category="@cat">
+                    @if (hasMedia)
+                    {
+                        <div data-lightbox-gallery class="-mx-6 -mt-6 mb-4">
+                            <button type="button" data-lightbox-item data-src="@cover.Url" data-caption="@cover.Caption" data-video="@(coverIsVideo ? "true" : "false")"
+                                    class="group/media relative block w-full overflow-hidden rounded-t-lg border-b border-border/60"
+                                    aria-label="View @p.Title media">
+                                @if (coverIsVideo)
+                                {
+                                    <video class="aspect-video w-full object-cover" muted playsinline preload="metadata">
+                                        <source src="@cover.Url" />
+                                    </video>
+                                }
+                                else
+                                {
+                                    <img src="@cover.Url" alt="@p.Title screenshot" loading="lazy"
+                                         class="aspect-video w-full object-cover transition duration-300 group-hover/media:scale-[1.03]" />
+                                }
+                                <span class="pointer-events-none absolute inset-0 flex items-center justify-center bg-bg/30 opacity-0 transition group-hover/media:opacity-100">
+                                    <span class="font-mono text-xs text-text">@(coverIsVideo ? "▶ play" : "⤢ view")</span>
+                                </span>
+                                @if (media.Count > 1)
+                                {
+                                    <span class="absolute bottom-2 right-2 rounded bg-bg/70 px-1.5 py-0.5 font-mono text-[10px] text-text">1 / @media.Count</span>
+                                }
+                            </button>
+                            @for (var i = 1; i < media.Count; i++)
+                            {
+                                <button type="button" hidden tabindex="-1" aria-hidden="true"
+                                        data-lightbox-item data-src="@media[i].Url" data-caption="@media[i].Caption"
+                                        data-video="@(Media.IsVideo(media[i].Url) ? "true" : "false")"></button>
+                            }
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(cat))
+                    {
+                        <p class="mb-1 font-mono text-[10px] uppercase tracking-wider text-muted">@cat</p>
+                    }
+                    <div class="flex items-start justify-between gap-3">
+                        <h2 class="text-lg">
+                            <a href="/projects/@p.Slug" class="text-text hover:text-accent">@p.Title</a>
+                        </h2>
+                        @if (p.Featured)
+                        {
+                            <span class="shrink-0 font-mono text-[10px] uppercase tracking-wider text-accent">featured</span>
+                        }
+                    </div>
+                    <p class="mt-2 flex-1 text-sm text-muted">@p.Summary</p>
+                    @if (p.Impact.Count > 0)
+                    {
+                        <p class="mt-4 font-mono text-xs text-accent">▸ @p.Impact[0]</p>
+                    }
+                    @if (p.Tech.Count > 0)
+                    {
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            @foreach (var t in p.Tech.Take(4))
+                            {
+                                <span class="tag">@t</span>
+                            }
+                        </div>
+                    }
+                    @if (p.Links.Count > 0 || p.Proofs.Count > 0)
+                    {
+                        <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-border/60 pt-3">
+                            @foreach (var l in p.Links)
+                            {
+                                <a href="@l.Url" target="_blank" rel="noopener" class="font-mono text-xs text-muted hover:text-accent">@l.Label ↗</a>
+                            }
+                            @foreach (var pr in p.Proofs)
+                            {
+                                <a href="@pr.Url" target="_blank" rel="noopener" class="font-mono text-xs text-accent/80 hover:text-accent">✓ @pr.Label</a>
+                            }
+                        </div>
+                    }
+                    <a href="/projects/@p.Slug" class="mt-4 font-mono text-xs text-muted group-hover:text-accent">Read case study →</a>
+                </article>
+            }
+        </div>
+    }
+</section>

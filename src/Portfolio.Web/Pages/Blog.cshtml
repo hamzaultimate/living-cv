@@ -1,0 +1,49 @@
+@page "/blog"
+@inject PortfolioContentService Repo
+@{
+    ViewData["Title"] = "Blog";
+    ViewData["Description"] = "Notes on .NET, distributed systems, performance, and applied AI.";
+    var posts = await Repo.GetBlogPostsAsync();
+}
+
+<section class="container-page py-16 md:py-20">
+    <p class="eyebrow">Blog</p>
+    <h1 class="mt-3 text-3xl md:text-4xl">Writing</h1>
+    <p class="lead">Specific, credible notes from real work — .NET, performance, and applied AI.</p>
+
+    @if (posts.Count == 0)
+    {
+        <div class="mt-12 card max-w-xl text-center">
+            <p class="font-mono text-sm text-muted">// posts coming soon</p>
+        </div>
+    }
+    else
+    {
+        <div class="mt-12 divide-y divide-border/70">
+            @foreach (var post in posts)
+            {
+                <article class="group py-6">
+                    <p class="font-mono text-xs text-muted">
+                        @post.Date.ToString("MMM d, yyyy") · @Md.ReadingMinutes(post.BodyMarkdown) min read
+                    </p>
+                    <h2 class="mt-2 text-xl text-text group-hover:text-accent">
+                        <a href="/blog/@post.Slug">@post.Title</a>
+                    </h2>
+                    @if (!string.IsNullOrWhiteSpace(post.Description))
+                    {
+                        <p class="mt-2 max-w-2xl text-muted">@post.Description</p>
+                    }
+                    @if (post.Tags.Count > 0)
+                    {
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @foreach (var t in post.Tags)
+                            {
+                                <span class="tag">#@t</span>
+                            }
+                        </div>
+                    }
+                </article>
+            }
+        </div>
+    }
+</section>

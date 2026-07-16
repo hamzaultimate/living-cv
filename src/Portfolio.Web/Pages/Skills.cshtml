@@ -1,0 +1,37 @@
+@page "/skills"
+@inject PortfolioContentService Repo
+@{
+    ViewData["Title"] = "Skills";
+    ViewData["Description"] = "Skills grouped by area — Backend, Architecture, Cloud/DevOps, Data, AI, and Embedded/IoT.";
+    var skills = await Repo.GetSkillsAsync();
+    var order = new[] { "Backend", "Architecture", "Cloud/DevOps", "Data", "AI", "Embedded/IoT" };
+    var groups = skills.GroupBy(s => s.Group).OrderBy(g => { var i = Array.IndexOf(order, g.Key); return i < 0 ? int.MaxValue : i; });
+}
+
+<section class="container-page py-16 md:py-20">
+    <p class="eyebrow">Skills</p>
+    <h1 class="mt-3 text-3xl md:text-4xl">The toolkit</h1>
+    <p class="lead">Grouped and scannable — the areas I work across, from silicon to cloud.</p>
+
+    @if (skills.Count == 0)
+    {
+        <p class="mt-10 font-mono text-sm text-muted">// skills load from the database</p>
+    }
+    else
+    {
+        <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            @foreach (var g in groups)
+            {
+                <div class="card">
+                    <p class="eyebrow">@g.Key</p>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        @foreach (var s in g)
+                        {
+                            <span class="tag">@s.Name</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>

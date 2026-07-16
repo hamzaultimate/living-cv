@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Portfolio.Data\Portfolio.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Markdig" Version="0.38.0" />
+    <PackageReference Include="QuestPDF" Version="2024.12.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- ================= Tailwind CSS (compiled at build; no Node needed) =================
+       The standalone Tailwind CLI is downloaded once to /tools and run before build/publish.
+       If the download fails (offline), the committed wwwroot/css/app.css is used as-is. -->
+  <PropertyGroup>
+    <TailwindVersion>3.4.17</TailwindVersion>
+    <TailwindExe>$(MSBuildProjectDirectory)\..\..\tools\tailwindcss.exe</TailwindExe>
+    <TailwindInput>Styles\app.css</TailwindInput>
+    <TailwindOutput>wwwroot\css\app.css</TailwindOutput>
+  </PropertyGroup>
+
+  <Target Name="EnsureTailwind" Condition="!Exists('$(TailwindExe)')">
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(TailwindExe)'))" />
+    <Message Importance="high" Text="Downloading Tailwind CLI v$(TailwindVersion)..." />
+    <Exec ContinueOnError="true"
+          Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;[Net.ServicePointManager]::SecurityProtocol='Tls12'; Invoke-WebRequest -Uri 'https://github.com/tailwindlabs/tailwindcss/releases/download/v$(TailwindVersion)/tailwindcss-windows-x64.exe' -OutFile '$(TailwindExe)'&quot;" />
+  </Target>
+
+  <Target Name="BuildTailwind" BeforeTargets="BeforeBuild;BeforeCompile;BeforePublish" DependsOnTargets="EnsureTailwind">
+    <Message Condition="Exists('$(TailwindExe)')" Importance="high" Text="Compiling Tailwind CSS -> $(TailwindOutput)" />
+    <Exec Condition="Exists('$(TailwindExe)')" Command="&quot;$(TailwindExe)&quot; -i &quot;$(TailwindInput)&quot; -o &quot;$(TailwindOutput)&quot; --minify" />
+    <Warning Condition="!Exists('$(TailwindExe)')" Text="Tailwind CLI unavailable; using committed wwwroot/css/app.css." />
+  </Target>
+
+</Project>

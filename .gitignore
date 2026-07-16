@@ -1,0 +1,46 @@
+## .NET build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+publish/
+artifacts/
+
+## ASP.NET Core / IIS runtime logs
+logs/
+*.log
+
+## Tailwind standalone CLI (downloaded at build time)
+/tools/
+stdout*.log
+
+## Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Node / Tailwind toolchain (dev-only, added in Phase 1)
+node_modules/
+npm-debug.log*
+
+## Local secrets & environment (never commit connection strings/FTP creds)
+appsettings.*.local.json
+*.local.json
+.env
+.env.*
+secrets.json
+
+## Local agent / editor settings (may contain personal paths — keep out of the public repo)
+.claude/
+
+## OS noise
+Thumbs.db
+.DS_Store

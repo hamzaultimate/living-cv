@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" role="img" aria-label="Report">
+  <rect width="900" height="640" fill="#0f172a"/>
+  <text x="60" y="90" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#f8fafc">Load-test report (demo)</text>
+  <g fill="none" stroke="#3b82f6" stroke-width="3">
+    <polyline points="60,520 180,470 300,430 420,300 540,260 660,180 780,150"/>
+  </g>
+  <g stroke="#334155" stroke-width="1"><line x1="60" y1="560" x2="840" y2="560"/><line x1="60" y1="140" x2="60" y2="560"/></g>
+  <text x="60" y="600" font-family="Consolas, monospace" font-size="16" fill="#93c5fd">throughput (rps) vs. p99 latency — fictional placeholder</text>
+</svg>

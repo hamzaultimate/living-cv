@@ -1,0 +1,48 @@
+@page "/talks"
+@inject PortfolioContentService Repo
+@{
+    ViewData["Title"] = "Talks & Videos";
+    ViewData["Description"] = "Talks and videos — coming soon.";
+    var talks = await Repo.GetTalksAsync();
+}
+
+<section class="container-page py-16 md:py-20">
+    <p class="eyebrow">Talks &amp; Videos</p>
+    <h1 class="mt-3 text-3xl md:text-4xl">Coming soon</h1>
+
+    @if (talks.Count == 0)
+    {
+        <div class="mt-10 card max-w-xl">
+            <p class="text-muted">
+                No talks or videos yet — this space is wired and ready for YouTube content.
+                Check back soon.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="mt-12 grid gap-6 md:grid-cols-2">
+            @foreach (var t in talks)
+            {
+                <article class="card">
+                    @if (!string.IsNullOrWhiteSpace(t.YoutubeId))
+                    {
+                        <div class="aspect-video overflow-hidden rounded-md border border-border">
+                            <iframe class="h-full w-full" src="https://www.youtube-nocookie.com/embed/@t.YoutubeId"
+                                    title="@t.Title" loading="lazy" allowfullscreen
+                                    referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                        </div>
+                    }
+                    <h2 class="mt-4 text-lg text-text">@t.Title</h2>
+                    <p class="mt-1 font-mono text-xs text-muted">
+                        @string.Join(" · ", new[] { t.Event, t.Date?.ToString("MMM yyyy") }.Where(x => !string.IsNullOrWhiteSpace(x)))
+                    </p>
+                    @if (!string.IsNullOrWhiteSpace(t.Url))
+                    {
+                        <a href="@t.Url" target="_blank" rel="noopener" class="mt-3 inline-block font-mono text-xs text-accent hover:text-accent-strong">Watch →</a>
+                    }
+                </article>
+            }
+        </div>
+    }
+</section>

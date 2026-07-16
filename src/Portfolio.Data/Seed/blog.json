@@ -1,0 +1,32 @@
+[
+  {
+    "title": "How I cut memory leaks in a multi-tenant .NET SaaS",
+    "slug": "memory-leaks-multitenant-dotnet",
+    "description": "A captive-dependency bug that quietly grew memory in a multi-tenant .NET SaaS — how I found it and the DI rule that prevents it.",
+    "date": "2025-09-15",
+    "tags": [".NET", "Performance", "DI"],
+    "draft": false,
+    "cover": null,
+    "bodyMarkdown": "Memory that only ever climbs is one of the most unsettling failure modes in a long-running service. It doesn't crash on the happy path, it doesn't show up in a quick load test — it just grows until the process gets recycled and the cycle starts again.\n\n## The symptom\n\nOn a multi-tenant .NET SaaS, working set rose steadily under normal traffic. Nothing in the logs, no obvious leak of unmanaged handles — just a slow, monotonic increase that forced periodic recycles to stay healthy.\n\n## The cause: a captive dependency\n\nThe culprit was a classic **captive dependency** — a long-lived service holding a reference to something that was meant to be short-lived:\n\n```csharp\n// A singleton that captured a per-request dependency\nservices.AddSingleton<TenantCache>();        // lives for the whole app\nservices.AddScoped<ITenantContext>(/* ... */); // meant to live per request\n\n// TenantCache took ITenantContext in its constructor,\n// so the very first request's scope was pinned in memory forever.\n```\n\nBecause the singleton was resolved once, it froze the first request's scope — and everything that scope transitively referenced — for the lifetime of the process. Multiply that across tenants and the graph never gets collected.\n\n## The fix\n\nDon't capture scoped state in a singleton. Resolve it per operation instead:\n\n```csharp\nservices.AddSingleton<TenantCache>();\n\n// Inside TenantCache, take IServiceScopeFactory and create a scope per use:\nusing var scope = _scopeFactory.CreateScope();\nvar ctx = scope.ServiceProvider.GetRequiredService<ITenantContext>();\n```\n\n## The rule\n\nA service may only depend on things that live **at least as long** as it does. Singletons can depend on singletons; scoped can depend on scoped or singleton; never the other way around. Turning on DI scope validation in development surfaces most of these before they ever ship.\n\nThe leak was a one-line registration mistake — but the discipline behind it is the whole point."
+  },
+  {
+    "title": "Serving millions of records in under a minute",
+    "slug": "serving-millions-under-a-minute",
+    "description": "The architecture and performance decisions behind a service that answers single-digit-ms lookups and still exports a multi-million-row dataset fast.",
+    "date": "2025-11-02",
+    "tags": ["Architecture", "Performance", "Microservices"],
+    "draft": false,
+    "cover": null,
+    "bodyMarkdown": "Some services have one job and have to do it fast. This one had two jobs with very different shapes: answer individual lookups in single-digit milliseconds, and materialize an entire multi-million-row, multi-gigabyte dataset in under a minute when a full pull was requested.\n\n## The constraint\n\nOptimizing for one pattern usually hurts the other. Tight per-record latency wants small, cached, index-friendly reads. A full pull wants large, sequential, batched I/O. Treating them as the same code path is how you end up slow at both.\n\n## Sub-10ms hot paths\n\nFor individual lookups the wins were unglamorous and effective: shape the data for the read, keep the hot set in memory, and avoid chatty round-trips. Once the query plan was stable and the working set fit, average response settled into the sub-10ms range and stayed there under load.\n\n## The bulk pull\n\nThe full pull was a different problem. Instead of millions of small reads, it became a streamed, batched export — read in large chunks, keep memory bounded, and never hold the whole result set at once. The target wasn't *lowest latency per record*, it was *bounded, predictable total time* — and it landed under a minute.\n\n## What mattered\n\n- **Measure first.** The bottleneck was never where intuition said it was.\n- **Separate the access patterns.** Two paths, each optimized for its own shape, beat one clever path trying to serve both.\n- **Bound your memory.** Streaming beats buffering the moment the data outgrows a comfortable slice of RAM.\n\nNone of this was exotic. It was picking the right shape for each job and refusing to let the two contaminate each other."
+  },
+  {
+    "title": "Notes on grounding an LLM assistant with citations (draft)",
+    "slug": "grounding-llm-with-citations",
+    "description": "Work-in-progress notes on building a retrieval-augmented assistant that cites its sources — this post is a draft and should not appear in the public list.",
+    "date": "2026-01-10",
+    "tags": ["AI", "RAG"],
+    "draft": true,
+    "cover": null,
+    "bodyMarkdown": "This is a **draft** post. It exists in the seed data so you can verify that draft filtering works — draft posts are hidden from the public blog list and return 404 on their detail route.\n\n## Why grounding matters\n\nAn assistant that can't point at where an answer came from is hard to trust. Retrieval + citations turns a confident guess into something a reader can verify.\n\n(Rest of the write-up coming soon.)"
+  }
+]

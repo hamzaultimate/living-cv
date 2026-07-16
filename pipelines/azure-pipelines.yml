@@ -1,0 +1,116 @@
+# ---------------------------------------------------------------------------
+# CI/CD — build once, deploy to a Windows/IIS host over FTPS.
+#
+#   develop -> deploys to the Dev environment   (auto)
+#   main    -> deploys to Production             (manual approval gate)
+#
+# The app is published SELF-CONTAINED (win-x64), so the target server only needs
+# the ASP.NET Core Module (ANCM) — no matching .NET runtime required.
+#
+# ------ All host-specific values come from a Variable Group named
+#        'portfolio-deploy' (Pipelines > Library > + Variable group). Nothing
+#        host-specific is committed to this file. Define:
+#   Ftp.Host             <ftp host or IP>
+#   Ftp.User             <ftp user>
+#   Ftp.Password         (SECRET)
+#   Ftp.RemoteRootDev    <remote docroot for dev>
+#   Ftp.RemoteRootProd   <remote docroot for prod>
+#   Db.ConnectionStringDev / Db.ConnectionStringProd   (SECRET)
+#   Deploy.HealthUrlDev  <https URL to /health for dev>
+#   Deploy.HealthUrlProd <https URL to /health for prod>
+#   Deploy.AgentPool     <name of your self-hosted agent pool>
+# ---------------------------------------------------------------------------
+
+trigger:
+  branches:
+    include:
+      - develop
+      - main
+
+pr: none
+
+variables:
+  - group: portfolio-deploy
+  - name: buildConfiguration
+    value: 'Release'
+  - name: targetRuntime
+    value: 'win-x64'
+  - name: webProject
+    value: 'src/Portfolio.Web/Portfolio.Web.csproj'
+
+stages:
+  # =========================================================================
+  - stage: Build
+    displayName: Build & publish
+    jobs:
+      - job: publish
+        displayName: Publish self-contained
+        pool:
+          name: '$(Deploy.AgentPool)'
+        steps:
+          - task: UseDotNet@2
+            displayName: Install .NET SDK (from global.json)
+            inputs:
+              packageType: 'sdk'
+              useGlobalJson: true
+
+          - script: dotnet restore "$(webProject)"
+            displayName: Restore
+
+          - script: >
+              dotnet publish "$(webProject)"
+              -c $(buildConfiguration)
+              -r $(targetRuntime)
+              --self-contained true
+              -p:PublishSingleFile=true
+              -p:IncludeNativeLibrariesForSelfExtract=true
+              -o "$(Build.ArtifactStagingDirectory)/site"
+            displayName: Publish (single-file)
+
+          - publish: '$(Build.ArtifactStagingDirectory)/site'
+            artifact: site
+            displayName: Publish pipeline artifact
+
+  # =========================================================================
+  - stage: DeployDev
+    displayName: Deploy → Dev (auto)
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    jobs:
+      - deployment: deployDev
+        displayName: FTPS deploy (dev)
+        pool:
+          name: '$(Deploy.AgentPool)'
+        environment: 'portfolio-dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: templates/ftps-deploy.yml
+                  parameters:
+                    remoteRoot: '$(Ftp.RemoteRootDev)'
+                    healthUrl: '$(Deploy.HealthUrlDev)'
+                    connectionString: '$(Db.ConnectionStringDev)'
+
+  # =========================================================================
+  - stage: DeployProd
+    displayName: Deploy → Production (manual gate)
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: deployProd
+        displayName: FTPS deploy (prod)
+        pool:
+          name: '$(Deploy.AgentPool)'
+        # The 'portfolio-prod' environment carries a manual approval check
+        # (configured in the DevOps portal) so production requires sign-off.
+        environment: 'portfolio-prod'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: templates/ftps-deploy.yml
+                  parameters:
+                    remoteRoot: '$(Ftp.RemoteRootProd)'
+                    healthUrl: '$(Deploy.HealthUrlProd)'
+                    connectionString: '$(Db.ConnectionStringProd)'

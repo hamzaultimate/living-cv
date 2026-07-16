@@ -1,0 +1,31 @@
+[
+  { "name": ".NET / .NET Core", "group": "Backend", "sortOrder": 1 },
+  { "name": "C#", "group": "Backend", "sortOrder": 2 },
+  { "name": "ASP.NET Core", "group": "Backend", "sortOrder": 3 },
+  { "name": "EF Core", "group": "Backend", "sortOrder": 4 },
+  { "name": "MediatR / CQRS", "group": "Backend", "sortOrder": 5 },
+
+  { "name": "Azure Functions", "group": "Cloud/DevOps", "sortOrder": 1 },
+  { "name": "Azure DevOps", "group": "Cloud/DevOps", "sortOrder": 2 },
+  { "name": "CI/CD (YAML pipelines)", "group": "Cloud/DevOps", "sortOrder": 3 },
+  { "name": "IaC / Bicep", "group": "Cloud/DevOps", "sortOrder": 4 },
+  { "name": "Docker", "group": "Cloud/DevOps", "sortOrder": 5 },
+
+  { "name": "Azure AI Services", "group": "AI", "sortOrder": 1 },
+  { "name": "RAG / vector search", "group": "AI", "sortOrder": 2 },
+  { "name": "Agentic tooling", "group": "AI", "sortOrder": 3 },
+
+  { "name": "MS SQL Server", "group": "Data", "sortOrder": 1 },
+  { "name": "PostgreSQL", "group": "Data", "sortOrder": 2 },
+  { "name": "MongoDB", "group": "Data", "sortOrder": 3 },
+  { "name": "Redis", "group": "Data", "sortOrder": 4 },
+
+  { "name": "Microservices", "group": "Architecture", "sortOrder": 1 },
+  { "name": "Clean Architecture", "group": "Architecture", "sortOrder": 2 },
+  { "name": "Domain-Driven Design", "group": "Architecture", "sortOrder": 3 },
+  { "name": "Event-driven systems", "group": "Architecture", "sortOrder": 4 },
+
+  { "name": "ESP32", "group": "Embedded/IoT", "sortOrder": 1 },
+  { "name": "Arduino", "group": "Embedded/IoT", "sortOrder": 2 },
+  { "name": "MicroPython", "group": "Embedded/IoT", "sortOrder": 3 }
+]

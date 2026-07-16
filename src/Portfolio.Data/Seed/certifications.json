@@ -1,0 +1,62 @@
+// Certifications. Add "badgeImageUrl" (e.g. a Credly/Microsoft badge image URL) to show
+// the credential badge in a Microsoft-style grid; add "credentialUrl" to link the badge to
+// its verification page. Certs without a badge image render as branded issuer cards below.
+// Add "certificateUrl" (a PDF or image URL) to expose a "View certificate" button on the card.
+// Everything below is fictional demo content — swap in your own.
+[
+  {
+    "name": "Microsoft Certified: Azure Developer Associate (AZ-204)",
+    "issuer": "Microsoft",
+    "status": "Earned",
+    "date": "2024",
+    "credentialUrl": "https://learn.microsoft.com/credentials/example",
+    "category": "Azure",
+    "badgeImageUrl": "/img/badges/badge.svg",
+    "certificateUrl": "/img/certs/certificate.svg",
+    "proofs": [],
+    "sortOrder": 1
+  },
+  {
+    "name": "Microsoft Certified: Azure AI Fundamentals (AI-900)",
+    "issuer": "Microsoft",
+    "status": "InProgress",
+    "date": null,
+    "credentialUrl": null,
+    "category": "Azure AI",
+    "badgeImageUrl": "/img/badges/badge.svg",
+    "certificateUrl": null,
+    "proofs": [],
+    "sortOrder": 2
+  },
+  {
+    "name": "Professional Scrum Master I (PSM I)",
+    "issuer": "Scrum.org",
+    "status": "Earned",
+    "date": "2023",
+    "credentialUrl": "https://www.scrum.org/certificates/example",
+    "category": "Agile",
+    "certificateUrl": "/img/certs/certificate.svg",
+    "proofs": [],
+    "sortOrder": 3
+  },
+  {
+    "name": "Decision-Making Strategies",
+    "issuer": "LinkedIn Learning",
+    "status": "Earned",
+    "date": "2023",
+    "credentialUrl": "https://www.linkedin.com/learning/certificates/example",
+    "category": "Leadership",
+    "proofs": [],
+    "sortOrder": 4
+  },
+  {
+    "name": "Certified Kubernetes Administrator (CKA)",
+    "issuer": "Cloud Native Computing Foundation",
+    "status": "Planned",
+    "date": null,
+    "credentialUrl": null,
+    "category": "Cloud/DevOps",
+    "proofs": [],
+    "sortOrder": 5
+  }
+]

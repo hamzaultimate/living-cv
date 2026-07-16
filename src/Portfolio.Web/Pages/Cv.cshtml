@@ -1,0 +1,102 @@
+@page "/cv"
+@inject PortfolioContentService Repo
+@inject IOptions<SiteOptions> SiteOpt
+@{
+    ViewData["Title"] = "CV";
+    var site = SiteOpt.Value;
+    ViewData["Description"] = $"Curriculum vitae — {site.OwnerName}, {site.JobTitle}.";
+    var roles = await Repo.GetExperiencesAsync();
+    var skills = await Repo.GetSkillsAsync();
+    var certs = await Repo.GetCertificationsAsync();
+    var projects = await Repo.GetFeaturedProjectsAsync();
+    var order = new[] { "Backend", "Architecture", "Cloud/DevOps", "Data", "AI", "Embedded/IoT" };
+    var groups = skills.GroupBy(s => s.Group).OrderBy(g => { var i = Array.IndexOf(order, g.Key); return i < 0 ? int.MaxValue : i; });
+    var contacts = new[] { site.HasEmail ? site.Email : null, site.HasPhone ? site.Phone : null, site.HasLinkedIn ? site.LinkedIn : null, site.HasGitHub ? site.GitHub : null }
+        .Where(x => !string.IsNullOrWhiteSpace(x));
+}
+
+<section class="container-page py-16 md:py-20 print-light">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+            <h1 class="text-3xl md:text-4xl">@site.OwnerName</h1>
+            <p class="mt-2 font-mono text-sm text-accent">@site.Role</p>
+            @if (contacts.Any())
+            {
+                <p class="mt-2 font-mono text-xs text-muted">@string.Join("  ·  ", contacts)</p>
+            }
+        </div>
+        <div class="flex gap-3 no-print">
+            <a href="/cv.pdf" class="btn btn-primary">Download PDF</a>
+            <button onclick="window.print()" class="btn btn-ghost">Print</button>
+        </div>
+    </div>
+
+    <p class="mt-8 max-w-3xl text-muted">@site.Summary</p>
+
+    @if (roles.Count > 0)
+    {
+        <h2 class="mt-12 text-xl">Experience</h2>
+        <div class="mt-4 space-y-6">
+            @foreach (var r in roles)
+            {
+                <div>
+                    <div class="flex flex-wrap items-baseline justify-between gap-x-4">
+                        <p class="text-text">@r.Company — <span class="text-muted">@r.Title</span></p>
+                        <span class="font-mono text-xs text-muted">@r.Start – @(r.Current ? "present" : r.End)</span>
+                    </div>
+                    <p class="mt-1 max-w-2xl text-sm text-muted">@r.Summary</p>
+                    @if (r.Highlights.Count > 0)
+                    {
+                        <ul class="mt-2 space-y-1">
+                            @foreach (var h in r.Highlights)
+                            {
+                                <li class="text-sm text-muted"><span class="text-accent">▸</span> @h</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    @if (skills.Count > 0)
+    {
+        <h2 class="mt-12 text-xl">Skills</h2>
+        <div class="mt-4 space-y-2">
+            @foreach (var g in groups)
+            {
+                <p class="text-sm"><span class="font-mono text-xs uppercase tracking-wider text-accent">@g.Key</span>
+                    <span class="text-muted"> — @string.Join(", ", g.Select(s => s.Name))</span></p>
+            }
+        </div>
+    }
+
+    @if (projects.Count > 0)
+    {
+        <h2 class="mt-12 text-xl">Selected projects</h2>
+        <div class="mt-4 space-y-4">
+            @foreach (var p in projects)
+            {
+                <div>
+                    <p class="text-text">@p.Title</p>
+                    <p class="text-sm text-muted">@p.Summary</p>
+                    @if (p.Impact.Count > 0)
+                    {
+                        <p class="mt-1 font-mono text-xs text-accent">▸ @string.Join("  ·  ", p.Impact)</p>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    @if (certs.Count > 0)
+    {
+        <h2 class="mt-12 text-xl">Certifications</h2>
+        <ul class="mt-4 space-y-1">
+            @foreach (var c in certs)
+            {
+                <li class="text-sm text-muted">@c.Name — <span class="font-mono text-xs">@c.Issuer (@c.Status)</span></li>
+            }
+        </ul>
+    }
+</section>

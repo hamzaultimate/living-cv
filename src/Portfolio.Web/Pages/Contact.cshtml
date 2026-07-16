@@ -1,0 +1,67 @@
+@page "/contact"
+@inject IOptions<SiteOptions> SiteOpt
+@{
+    ViewData["Title"] = "Contact";
+    var site = SiteOpt.Value;
+    ViewData["Description"] = $"Get in touch with {site.OwnerName} — email, phone, WhatsApp, LinkedIn, or GitHub.";
+}
+
+<section class="container-page py-16 md:py-24">
+    <p class="eyebrow">Contact</p>
+    <h1 class="mt-3 max-w-2xl text-3xl md:text-5xl">Let's talk systems — backend, cloud, or AI.</h1>
+    <p class="lead">The fastest ways to reach me. I read everything.</p>
+
+    <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        @if (site.HasEmail)
+        {
+            <div class="card">
+                <p class="eyebrow">Email</p>
+                <a href="@site.EmailHref" class="mt-3 block text-text hover:text-accent">@site.Email</a>
+                @foreach (var e in site.SecondaryEmails.Where(x => !string.IsNullOrWhiteSpace(x)))
+                {
+                    <a href="mailto:@e" class="mt-1 block text-sm text-muted hover:text-accent">@e</a>
+                }
+            </div>
+        }
+        @if (site.HasPhone)
+        {
+            <div class="card">
+                <p class="eyebrow">Phone / WhatsApp</p>
+                <a href="@site.PhoneHref" class="mt-3 block text-text hover:text-accent">@site.Phone</a>
+                @if (site.HasWhatsApp)
+                {
+                    <a href="@site.WhatsAppHref" target="_blank" rel="noopener" class="mt-1 block text-sm text-accent hover:text-accent-strong">Message on WhatsApp →</a>
+                }
+            </div>
+        }
+        <div class="card">
+            <p class="eyebrow">Online</p>
+            <div class="mt-3 flex flex-col gap-1">
+                @if (site.HasLinkedIn)
+                {
+                    <a href="@site.LinkedIn" target="_blank" rel="me noopener" class="text-text hover:text-accent">LinkedIn →</a>
+                }
+                @if (site.HasGitHub)
+                {
+                    <a href="@site.GitHub" target="_blank" rel="me noopener" class="text-text hover:text-accent">GitHub →</a>
+                }
+                @if (site.HasYouTube)
+                {
+                    <a href="@site.YouTube" target="_blank" rel="me noopener" class="text-text hover:text-accent">YouTube →</a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-8 flex flex-wrap gap-3">
+        @if (site.HasEmail)
+        {
+            <a href="@site.EmailHref" class="btn btn-primary">Email me</a>
+        }
+        @if (site.HasWhatsApp)
+        {
+            <a href="@site.WhatsAppHref" target="_blank" rel="noopener" class="btn btn-ghost">WhatsApp</a>
+        }
+        <a href="/cv.pdf" class="btn btn-ghost">Download CV</a>
+    </div>
+</section>

@@ -1,0 +1,140 @@
+// Projects/case studies. Per project you can attach:
+//   "links":  [ { "label": "GitHub repo", "url": "https://github.com/..." } ]
+//   "proofs": [ { "label": "Performance report", "url": "/proofs/report.svg", "kind": "Pdf" } ]
+//   "category": "Distributed Systems"        ← domain/industry; drives the Work-page filter chips (optional)
+//   "heroImage": "/img/projects/telemetry.svg"   ← card thumbnail + case-study hero (optional; 16:9, ~1200×675)
+//   "screenshots": [ { "url": "/img/projects/telemetry-1.svg", "caption": "Dashboard" }, ... ]  ← gallery + lightbox
+// kind: "Link" | "Image" | "Pdf". Put proof files in src/Portfolio.Web/wwwroot/proofs/ and
+// project images in src/Portfolio.Web/wwwroot/img/projects/. Images are optional — cards
+// without heroImage render text-only. Everything below is fictional demo content.
+[
+  {
+    "title": "Telemetry Pipeline — real-time ingestion at scale",
+    "slug": "telemetry-pipeline",
+    "role": "Lead backend engineer",
+    "org": "Contoso Cloud",
+    "period": "2023–2024",
+    "summary": "An event-driven pipeline ingesting millions of device events per hour with sub-second dashboards.",
+    "category": "Distributed Systems",
+    "problem": "Device telemetry was arriving faster than the legacy monolith could store it, causing dropped events and dashboards that lagged minutes behind reality.",
+    "approach": "Rebuilt ingestion as a set of stateless .NET microservices behind a message broker, with batched writes, back-pressure, and a read model tuned for the dashboard's exact query shape.",
+    "impact": [
+      "Sustains ~20k events/second at peak with zero dropped events",
+      "Dashboard latency dropped from minutes to under 1 second",
+      "Cut infrastructure cost ~35% versus the previous design"
+    ],
+    "tech": [".NET Core", "C#", "Azure Service Bus", "MS SQL Server", "Redis"],
+    "heroImage": "/img/projects/telemetry.svg",
+    "screenshots": [
+      { "url": "/img/projects/telemetry-1.svg", "caption": "Live ingestion dashboard" },
+      { "url": "/img/projects/telemetry-2.svg", "caption": "Per-device drill-down" }
+    ],
+    "links": [
+      { "label": "GitHub repo", "url": "https://github.com/example-alex-rivera/telemetry-pipeline" },
+      { "label": "Live demo", "url": "https://demo.example.dev/telemetry" }
+    ],
+    "proofs": [
+      { "label": "Load-test report", "url": "/proofs/sample-report.svg", "kind": "Pdf" }
+    ],
+    "featured": true,
+    "sortOrder": 1
+  },
+  {
+    "title": "Ledger API — high-throughput licensing service",
+    "slug": "ledger-api",
+    "role": "Backend engineer",
+    "org": "Fabrikam Labs",
+    "period": "2021–2022",
+    "summary": "A licensing/validation API fronting a platform that handles very high request volumes with predictable latency.",
+    "category": "Backend Systems",
+    "problem": "License validation was a hot path on every product request; any slowdown rippled across the whole platform.",
+    "approach": "Designed a cache-first read path with careful invalidation, bounded bulk operations, and exhaustive load testing before every release.",
+    "impact": [
+      "Fronts a platform handling ~20k requests/second",
+      "Sub-10ms average response on the validation hot path",
+      "Delivered on time with zero major production incidents"
+    ],
+    "tech": [".NET Core", "C#", "Microservices", "MS SQL Server", "Redis"],
+    "heroImage": "/img/projects/ledger.svg",
+    "screenshots": [],
+    "links": [
+      { "label": "GitHub repo", "url": "https://github.com/example-alex-rivera/ledger-api" }
+    ],
+    "proofs": [
+      { "label": "Benchmark summary", "url": "/proofs/sample-report.svg", "kind": "Pdf" }
+    ],
+    "featured": true,
+    "sortOrder": 2
+  },
+  {
+    "title": "Edge Sensor Hub (IoT)",
+    "slug": "edge-sensor-hub",
+    "role": "Maker",
+    "org": null,
+    "period": "2024",
+    "summary": "An ESP32-based sensor hub monitoring water level and air quality — systems thinking from the silicon up.",
+    "category": "IoT / Embedded",
+    "problem": "Continuously monitor environmental readings and surface them reliably from constrained, battery-powered hardware.",
+    "approach": "ESP32 running MicroPython sampling multiple sensors, buffering readings offline, and reporting telemetry to a small .NET collector over MQTT.",
+    "impact": [
+      "End-to-end embedded telemetry from sensor to web readout",
+      "Runs for weeks on a single battery charge"
+    ],
+    "tech": ["ESP32", "MicroPython", "MQTT", ".NET"],
+    "heroImage": "/img/projects/edge.svg",
+    "screenshots": [
+      { "url": "/img/projects/edge-1.svg", "caption": "Breadboard prototype" }
+    ],
+    "links": [
+      { "label": "Write-up", "url": "https://github.com/example-alex-rivera/edge-sensor-hub" }
+    ],
+    "proofs": [],
+    "featured": true,
+    "sortOrder": 3
+  },
+  {
+    "title": "Insight Dashboard — analytics for product teams",
+    "slug": "insight-dashboard",
+    "role": "Full-stack engineer",
+    "org": "Nimbus Systems",
+    "period": "2025",
+    "summary": "A self-serve analytics dashboard letting product teams slice usage data without writing SQL.",
+    "category": "Data / Analytics",
+    "problem": "Product managers depended on engineers for every ad-hoc data question, creating a constant bottleneck.",
+    "approach": "Built a query-builder UI over a star-schema read model, with saved views and role-based access.",
+    "impact": [
+      "Removed ~80% of ad-hoc data requests from the engineering queue"
+    ],
+    "tech": [".NET", "PostgreSQL", "Razor Pages", "Chart.js"],
+    "heroImage": "/img/projects/insight.svg",
+    "screenshots": [],
+    "links": [],
+    "proofs": [],
+    "featured": false,
+    "sortOrder": 4
+  },
+  {
+    "title": "DocuMind — RAG assistant over internal docs",
+    "slug": "documind",
+    "role": "AI engineer",
+    "org": "Nimbus Systems",
+    "period": "2025–present",
+    "summary": "A retrieval-augmented assistant that answers questions over an internal knowledge base with cited sources.",
+    "category": "Applied AI",
+    "problem": "Engineers wasted hours searching scattered wikis and runbooks for answers that already existed somewhere.",
+    "approach": "Chunked and embedded the docs into a vector store, added a retrieval + re-ranking step, and grounded every answer with citations back to the source.",
+    "impact": [
+      "Answers grounded in source docs with inline citations",
+      "Median time-to-answer down from minutes to seconds"
+    ],
+    "tech": [".NET", "Azure AI Services", "Vector search", "C#"],
+    "heroImage": "/img/projects/rag.svg",
+    "screenshots": [],
+    "links": [
+      { "label": "GitHub repo", "url": "https://github.com/example-alex-rivera/documind" }
+    ],
+    "proofs": [],
+    "featured": false,
+    "sortOrder": 5
+  }
+]

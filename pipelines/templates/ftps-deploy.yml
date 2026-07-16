@@ -1,0 +1,102 @@
+# Reusable FTPS deploy steps.
+# 1) Upload app_offline.htm  -> ANCM stops the app, releasing the .exe file lock.
+# 2) Upload the published site (overwrite).
+# 3) Delete app_offline.htm  -> app restarts on the next request.
+# 4) Post-deploy health check -> fail the deployment if the app doesn't come up.
+#
+# The published artifact is auto-downloaded to $(Pipeline.Workspace)/site in a
+# deployment job.
+
+parameters:
+  - name: remoteRoot
+    type: string
+  - name: healthUrl
+    type: string
+  - name: connectionString
+    type: string
+    default: ''
+
+steps:
+  # Inject the SQL Server connection string into the published artifact as
+  # appsettings.Production.json. The value comes from a SECRET pipeline variable
+  # (mapped to env at runtime), so it never lives in the repo. Skipped if empty.
+  - powershell: |
+      $cs = $env:CONNSTR
+      if ([string]::IsNullOrWhiteSpace($cs)) {
+        Write-Host "No connection string configured for this environment; skipping."
+      } else {
+        $path = Join-Path "$(Pipeline.Workspace)/site" "appsettings.Production.json"
+        $obj = @{ ConnectionStrings = @{ Default = $cs } }
+        ($obj | ConvertTo-Json -Depth 5) | Set-Content -Path $path -Encoding UTF8
+        Write-Host "Wrote appsettings.Production.json ($($cs.Length) chars) to the artifact."
+      }
+    env:
+      CONNSTR: ${{ parameters.connectionString }}
+    displayName: 'Inject connection string (appsettings.Production.json)'
+
+  - powershell: |
+      $ErrorActionPreference = 'Stop'
+      [Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+      $ftpHost = "$(Ftp.Host)".TrimEnd('/') -replace '^ftp[s]?://',''
+      $root = "${{ parameters.remoteRoot }}".Trim('/')
+      $uri  = "ftp://$ftpHost/$root/app_offline.htm"
+      Write-Host "Uploading app_offline.htm -> $uri"
+      $req = [Net.FtpWebRequest]::Create($uri)
+      $req.Method = [Net.WebRequestMethods+Ftp]::UploadFile
+      $req.Credentials = New-Object Net.NetworkCredential("$(Ftp.User)", "$(Ftp.Password)")
+      $req.EnableSsl = $true
+      $req.UsePassive = $true
+      $body = [Text.Encoding]::UTF8.GetBytes("<h1>Deploying&hellip;</h1>")
+      $req.ContentLength = $body.Length
+      $s = $req.GetRequestStream(); $s.Write($body,0,$body.Length); $s.Close()
+      $resp = $req.GetResponse(); Write-Host $resp.StatusDescription; $resp.Close()
+    displayName: 'Take app offline (app_offline.htm)'
+
+  - task: FtpUpload@2
+    displayName: 'Upload published site'
+    inputs:
+      credentialsOption: 'inputs'
+      serverUrl: 'ftps://$(Ftp.Host)'
+      username: '$(Ftp.User)'
+      password: '$(Ftp.Password)'
+      rootDirectory: '$(Pipeline.Workspace)/site'
+      filePatterns: '**'
+      remoteDirectory: '${{ parameters.remoteRoot }}'
+      clean: false
+      cleanContents: false
+      preservePaths: true
+      trustSSL: true
+      overwrite: true
+      enableUtf8: true
+
+  - powershell: |
+      $ErrorActionPreference = 'Stop'
+      [Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+      $ftpHost = "$(Ftp.Host)".TrimEnd('/') -replace '^ftp[s]?://',''
+      $root = "${{ parameters.remoteRoot }}".Trim('/')
+      $uri  = "ftp://$ftpHost/$root/app_offline.htm"
+      Write-Host "Deleting app_offline.htm -> $uri"
+      $req = [Net.FtpWebRequest]::Create($uri)
+      $req.Method = [Net.WebRequestMethods+Ftp]::DeleteFile
+      $req.Credentials = New-Object Net.NetworkCredential("$(Ftp.User)", "$(Ftp.Password)")
+      $req.EnableSsl = $true
+      $req.UsePassive = $true
+      $resp = $req.GetResponse(); Write-Host $resp.StatusDescription; $resp.Close()
+    displayName: 'Bring app online (remove app_offline.htm)'
+
+  - powershell: |
+      $ErrorActionPreference = 'Stop'
+      $url = "${{ parameters.healthUrl }}"
+      Write-Host "Health check: $url"
+      $ok = $false
+      for ($i = 1; $i -le 12 -and -not $ok; $i++) {
+        try {
+          $r = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 15
+          if ($r.StatusCode -eq 200) { Write-Host "Healthy (200) after attempt $i"; $ok = $true }
+          else { Write-Host "attempt $i -> HTTP $($r.StatusCode)"; Start-Sleep -Seconds 5 }
+        } catch {
+          Write-Host "attempt $i -> $($_.Exception.Message)"; Start-Sleep -Seconds 5
+        }
+      }
+      if (-not $ok) { throw "Post-deploy health check FAILED for $url" }
+    displayName: 'Post-deploy health check'

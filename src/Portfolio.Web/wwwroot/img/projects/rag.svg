@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="DocuMind (RAG)">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#be185d"/><stop offset="1" stop-color="#0f172a"/></linearGradient></defs>
+  <rect width="1200" height="675" fill="url(#g)"/>
+  <g fill="none" stroke="#ffffff22" stroke-width="1">
+    <path d="M0 507 C200 460 400 560 600 507 C800 454 1000 560 1200 507"/>
+  </g>
+  <text x="60" y="360" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" fill="#f8fafc">DocuMind (RAG)</text>
+  <text x="60" y="410" font-family="Consolas, monospace" font-size="24" fill="#93c5fd">// demo placeholder image</text>
+</svg>

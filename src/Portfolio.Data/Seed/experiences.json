@@ -1,0 +1,59 @@
+[
+  {
+    "company": "Nimbus Systems",
+    "title": "Senior Software Engineer",
+    "start": "2025",
+    "end": null,
+    "current": true,
+    "summary": "Bringing applied AI into production .NET systems on the cloud — the current chapter of a backend career pivoting toward AI.",
+    "highlights": [
+      "Building applied-AI features on Azure and OpenAI-compatible models",
+      "Pursuing the cloud AI certification path",
+      "Fluent with agentic developer tooling"
+    ],
+    "tech": [".NET", "Azure", "Azure AI Services", "C#"],
+    "sortOrder": 1
+  },
+  {
+    "company": "Contoso Cloud",
+    "title": "Senior Software Engineer",
+    "start": "2022",
+    "end": "2025",
+    "current": false,
+    "summary": "Senior backend engineer on distributed .NET systems and microservices at scale; mentored junior engineers.",
+    "highlights": [
+      "Designed and operated high-throughput microservices behind a licensing platform",
+      "Owned reliability and performance of data-heavy services",
+      "Introduced CI/CD pipelines and infrastructure-as-code"
+    ],
+    "tech": [".NET Core", "C#", "Microservices", "MS SQL Server", "Azure"],
+    "sortOrder": 2
+  },
+  {
+    "company": "Fabrikam Labs",
+    "title": "Software Engineer",
+    "start": "2019",
+    "end": "2022",
+    "current": false,
+    "summary": "Delivered and led backend systems across licensing, access, and data-heavy services.",
+    "highlights": [
+      "Led the access-service rebuild delivered on time with a strong reliability record",
+      "Built streaming export paths for multi-million-row datasets"
+    ],
+    "tech": [".NET Core", "C#", "Microservices", "MS SQL Server"],
+    "sortOrder": 3
+  },
+  {
+    "company": "Northwind Trading Co.",
+    "title": "Software Engineer",
+    "start": "2016",
+    "end": "2019",
+    "current": false,
+    "summary": "Early-career .NET engineering across a range of business systems.",
+    "highlights": [
+      "Built and maintained .NET business applications end to end"
+    ],
+    "tech": [".NET", "C#", "MS SQL Server"],
+    "sortOrder": 4
+  }
+]

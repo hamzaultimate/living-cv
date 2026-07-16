@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Scaling .NET microservices without losing your latency budget",
+    "type": "Talk",
+    "youtubeId": "aqz-KE-bpKQ",
+    "event": "DemoConf",
+    "date": "2025-05-14",
+    "url": "https://example.dev/talks/scaling-dotnet",
+    "sortOrder": 1
+  },
+  {
+    "title": "From backend to applied AI: a practical RAG walkthrough",
+    "type": "Video",
+    "youtubeId": "aqz-KE-bpKQ",
+    "event": "Cloud Meetup",
+    "date": "2025-09-02",
+    "url": "https://example.dev/talks/practical-rag",
+    "sortOrder": 2
+  }
+]

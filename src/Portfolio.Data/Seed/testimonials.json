@@ -1,0 +1,31 @@
+// Testimonials/recommendations. Add entries and redeploy — the section appears on the
+// home page automatically once at least one exists. All entries below are fictional demo content.
+[
+  {
+    "quote": "Alex rebuilt our telemetry hot path and it just stopped being a problem. Events stopped dropping, dashboards went real-time, and the on-call pages disappeared.",
+    "author": "Jordan Lee",
+    "authorTitle": "Engineering Manager, Contoso Cloud",
+    "relation": "Managed the author directly",
+    "sourceUrl": "https://www.linkedin.com/in/example-jordan-lee/",
+    "featured": true,
+    "sortOrder": 1
+  },
+  {
+    "quote": "One of the few engineers who can reason about a query plan and a soldering iron in the same afternoon. Deeply reliable under load — both the systems and the person.",
+    "author": "Priya Nair",
+    "authorTitle": "Staff Engineer, Fabrikam Labs",
+    "relation": "Worked alongside the author",
+    "sourceUrl": null,
+    "featured": true,
+    "sortOrder": 2
+  },
+  {
+    "quote": "Brought applied AI into our product without any of the usual hand-waving — grounded, cited, and actually shippable. Raised the bar for the whole team.",
+    "author": "Sam Okafor",
+    "authorTitle": "Product Lead, Nimbus Systems",
+    "relation": "Cross-functional partner",
+    "sourceUrl": "https://www.linkedin.com/in/example-sam-okafor/",
+    "featured": true,
+    "sortOrder": 3
+  }
+]

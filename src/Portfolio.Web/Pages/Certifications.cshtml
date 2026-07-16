@@ -1,0 +1,137 @@
+@page "/certifications"
+@using Microsoft.AspNetCore.Html
+@inject PortfolioContentService Repo
+@{
+    ViewData["Title"] = "Certifications";
+    ViewData["Description"] = "Certifications earned, in progress, and planned — including the Azure AI path.";
+    var certs = await Repo.GetCertificationsAsync();
+    var withBadge = certs.Where(c => !string.IsNullOrWhiteSpace(c.BadgeImageUrl)).ToList();
+    var rest = certs.Where(c => string.IsNullOrWhiteSpace(c.BadgeImageUrl)).ToList();
+
+    string BadgeClass(CertificationStatus s) => s switch
+    {
+        CertificationStatus.Earned => "badge badge-earned",
+        CertificationStatus.InProgress => "badge badge-progress",
+        _ => "badge badge-planned",
+    };
+    string BadgeText(CertificationStatus s) => s switch
+    {
+        CertificationStatus.Earned => "Earned",
+        CertificationStatus.InProgress => "In progress",
+        _ => "Planned",
+    };
+
+    // Issuer branding: logo mark + brand colour, matched by a keyword in the issuer name.
+    // Falls back to a generic certificate ribbon in the site accent colour.
+    (IHtmlContent Logo, string Color) IssuerBrand(string issuer)
+    {
+        var i = (issuer ?? "").ToLowerInvariant();
+        if (i.Contains("microsoft") || i.Contains("azure"))
+            return (new HtmlString(
+                "<svg viewBox='0 0 23 23' class='h-6 w-6' aria-hidden='true'>" +
+                "<path fill='#F25022' d='M0 0h11v11H0z'/><path fill='#7FBA00' d='M12 0h11v11H12z'/>" +
+                "<path fill='#00A4EF' d='M0 12h11v11H0z'/><path fill='#FFB900' d='M12 12h11v11H12z'/></svg>"),
+                "#00A4EF");
+        if (i.Contains("anthropic") || i.Contains("claude"))
+            return (new HtmlString(
+                "<svg viewBox='0 0 24 24' class='h-6 w-6' fill='#D97757' aria-hidden='true'>" +
+                "<path d='M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.541Zm-.3712 10.223 2.2914-5.9456 2.2914 5.9456Z'/></svg>"),
+                "#D97757");
+        if (i.Contains("linkedin"))
+            return (new HtmlString(
+                "<svg viewBox='0 0 24 24' class='h-6 w-6' fill='#0A66C2' aria-hidden='true'>" +
+                "<path d='M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z'/></svg>"),
+                "#0A66C2");
+        return (new HtmlString(
+            "<svg viewBox='0 0 24 24' class='h-6 w-6 text-accent' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'>" +
+            "<circle cx='12' cy='9' r='6'/><path d='M8.5 13.5 7 22l5-3 5 3-1.5-8.5'/></svg>"),
+            "rgb(96 165 250)");
+    }
+}
+
+<section class="container-page py-16 md:py-20">
+    <p class="eyebrow">Certifications</p>
+    <h1 class="mt-3 text-3xl md:text-4xl">Credentials &amp; learning</h1>
+    <p class="lead">What's earned, what's in flight, and where I'm headed next.</p>
+
+    @if (certs.Count == 0)
+    {
+        <p class="mt-10 font-mono text-sm text-muted">// certifications load from the database</p>
+    }
+
+    @if (withBadge.Count > 0)
+    {
+        <div class="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+            @foreach (var c in withBadge)
+            {
+                <article class="card flex flex-col items-center text-center">
+                    @if (!string.IsNullOrWhiteSpace(c.CredentialUrl))
+                    {
+                        <a href="@c.CredentialUrl" target="_blank" rel="noopener" title="Verify credential">
+                            <img src="@c.BadgeImageUrl" alt="@c.Name badge" class="mx-auto h-28 w-28 object-contain" width="112" height="112" loading="lazy" />
+                        </a>
+                    }
+                    else
+                    {
+                        <img src="@c.BadgeImageUrl" alt="@c.Name badge" class="mx-auto h-28 w-28 object-contain" width="112" height="112" loading="lazy" />
+                    }
+                    <h2 class="mt-4 text-sm text-text">@c.Name</h2>
+                    <p class="mt-1 font-mono text-xs text-muted">@c.Issuer</p>
+                    <span class="@BadgeClass(c.Status) mt-3">@BadgeText(c.Status)</span>
+                    @if (!string.IsNullOrWhiteSpace(c.CertificateUrl))
+                    {
+                        <a href="@c.CertificateUrl" target="_blank" rel="noopener" class="btn btn-ghost mt-4 !px-3 !py-1.5 text-xs">
+                            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                            View certificate
+                        </a>
+                    }
+                </article>
+            }
+        </div>
+    }
+
+    @if (rest.Count > 0)
+    {
+        <div class="mt-8 grid gap-6 sm:grid-cols-2">
+            @foreach (var c in rest)
+            {
+                var brand = IssuerBrand(c.Issuer);
+                <article class="card group flex flex-col overflow-hidden !p-0">
+                    <div class="flex items-center gap-3 border-b border-border px-6 py-4"
+                         style="background: linear-gradient(135deg, @(brand.Color)26, transparent 70%);">
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2">
+                            @brand.Logo
+                        </span>
+                        <p class="font-mono text-xs text-muted">@c.Issuer</p>
+                        <span class="@BadgeClass(c.Status) ml-auto shrink-0">@BadgeText(c.Status)</span>
+                    </div>
+                    <div class="flex flex-1 flex-col gap-2 px-6 pb-6 pt-4">
+                        <h2 class="text-lg text-text">@c.Name</h2>
+                        @if (!string.IsNullOrWhiteSpace(c.Category) || !string.IsNullOrWhiteSpace(c.Date))
+                        {
+                            <p class="font-mono text-xs text-muted">
+                                @c.Category@(string.IsNullOrWhiteSpace(c.Category) || string.IsNullOrWhiteSpace(c.Date) ? "" : " · ")@c.Date
+                            </p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(c.CertificateUrl) || !string.IsNullOrWhiteSpace(c.CredentialUrl))
+                        {
+                            <div class="mt-auto flex flex-wrap gap-3 pt-4">
+                                @if (!string.IsNullOrWhiteSpace(c.CertificateUrl))
+                                {
+                                    <a href="@c.CertificateUrl" target="_blank" rel="noopener" class="btn btn-primary !px-3 !py-1.5 text-xs">
+                                        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        View certificate
+                                    </a>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(c.CredentialUrl))
+                                {
+                                    <a href="@c.CredentialUrl" target="_blank" rel="noopener" class="btn btn-ghost !px-3 !py-1.5 text-xs">View credential →</a>
+                                }
+                            </div>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" role="img" aria-label="Certificate">
+  <rect width="900" height="640" fill="#f8fafc"/>
+  <rect x="24" y="24" width="852" height="592" fill="none" stroke="#1d4ed8" stroke-width="6"/>
+  <rect x="40" y="40" width="820" height="560" fill="none" stroke="#93c5fd" stroke-width="2"/>
+  <text x="450" y="180" text-anchor="middle" font-family="Georgia, serif" font-size="40" fill="#0f172a">Certificate of Completion</text>
+  <text x="450" y="300" text-anchor="middle" font-family="Georgia, serif" font-size="30" fill="#1d4ed8">Alex Rivera</text>
+  <text x="450" y="360" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" fill="#475569">This is a fictional demo certificate placeholder.</text>
+  <text x="450" y="520" text-anchor="middle" font-family="Consolas, monospace" font-size="14" fill="#94a3b8">// replace with your real certificate PDF or image</text>
+</svg>

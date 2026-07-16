@@ -1,0 +1,192 @@
+@page
+@model IndexModel
+@inject IOptions<SiteOptions> SiteOpt
+@{
+    ViewData["Title"] = "Home";
+    var site = SiteOpt.Value;
+    var sameAs = new[] { site.HasLinkedIn ? site.LinkedIn : null, site.HasGitHub ? site.GitHub : null, site.HasYouTube ? site.YouTube : null }
+        .Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+    var person = new Dictionary<string, object?>
+    {
+        ["@context"] = "https://schema.org",
+        ["@type"] = "Person",
+        ["name"] = site.OwnerName,
+        ["jobTitle"] = site.JobTitle,
+        ["url"] = site.Url,
+        ["knowsAbout"] = site.KnowsAbout,
+    };
+    if (site.HasEmail) person["email"] = site.Email;
+    if (site.HasPhone) person["telephone"] = site.Phone;
+    if (sameAs.Length > 0) person["sameAs"] = sameAs;
+    var jsonLd = System.Text.Json.JsonSerializer.Serialize(person);
+}
+<script type="application/ld+json">@Html.Raw(jsonLd)</script>
+
+<!-- HERO -->
+<section class="relative overflow-hidden border-b border-border/60">
+    <div class="grid-backdrop pointer-events-none absolute inset-0" aria-hidden="true"></div>
+    <svg class="pointer-events-none absolute inset-x-0 top-28 h-40 w-full text-accent opacity-[0.18]" viewBox="0 0 1260 160" preserveAspectRatio="none" aria-hidden="true">
+        <path class="waveform-path" fill="none" stroke="currentColor" stroke-width="1.5"
+              d="M0,80 C60,30 120,130 180,80 C240,30 300,130 360,80 C420,30 480,130 540,80 C600,30 660,130 720,80 C780,30 840,130 900,80 C960,30 1020,130 1080,80 C1140,30 1200,130 1260,80" />
+    </svg>
+
+    <div class="container-page relative flex flex-col-reverse items-start gap-10 py-24 md:flex-row md:items-center md:justify-between md:py-32">
+        <div>
+            <p class="eyebrow">@site.Hero.Eyebrow</p>
+            <h1 class="mt-5 max-w-4xl text-4xl font-semibold leading-[1.1] md:text-6xl">
+                @site.Hero.Headline
+                <span class="text-accent">@site.Hero.HeadlineAccent</span>
+            </h1>
+            <p class="mt-6 max-w-2xl text-lg text-muted">@site.Hero.Lede</p>
+            <div class="mt-8 flex flex-wrap gap-3">
+                @if (site.HasLinkedIn)
+                {
+                    <a href="@site.LinkedIn" target="_blank" rel="me noopener" class="btn btn-primary">LinkedIn</a>
+                }
+                @if (site.HasGitHub)
+                {
+                    <a href="@site.GitHub" target="_blank" rel="me noopener" class="btn btn-ghost">GitHub</a>
+                }
+                <a href="/cv" class="btn btn-ghost">Download CV</a>
+            </div>
+        </div>
+        @if (Model.HasPhoto)
+        {
+            <div class="relative shrink-0">
+                <div class="absolute -inset-2 rounded-full border border-accent/30" aria-hidden="true"></div>
+                <img src="~/img/profile.jpg" alt="@site.OwnerName"
+                     class="h-40 w-40 rounded-full border border-border object-cover md:h-56 md:w-56"
+                     width="224" height="224" fetchpriority="high" />
+            </div>
+        }
+    </div>
+</section>
+
+@if (site.Metrics.Count > 0)
+{
+    <!-- METRICS -->
+    <section class="border-b border-border/60">
+        <div class="container-page grid grid-cols-2 gap-8 py-12 md:grid-cols-4">
+            @foreach (var m in site.Metrics)
+            {
+                <div>
+                    <div class="metric-value">@m.Value@if (!string.IsNullOrWhiteSpace(m.Unit)) {<span class="text-lg text-muted"> @m.Unit</span>}</div>
+                    <div class="metric-label">@m.Label</div>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+<!-- FEATURED WORK -->
+<section id="work" class="container-page py-16 md:py-20">
+    <p class="eyebrow">Selected work</p>
+    <h2 class="mt-3 text-2xl md:text-3xl">Case studies</h2>
+
+    @if (Model.FeaturedProjects.Count > 0)
+    {
+        <div class="mt-8 grid gap-5 md:grid-cols-3">
+            @foreach (var p in Model.FeaturedProjects)
+            {
+                <article class="card group flex flex-col">
+                    @if (!string.IsNullOrWhiteSpace(p.HeroImage))
+                    {
+                        <a href="/projects/@p.Slug" class="-mx-6 -mt-6 mb-4 block overflow-hidden rounded-t-lg border-b border-border/60">
+                            @if (Media.IsVideo(p.HeroImage))
+                            {
+                                <video class="aspect-video w-full object-cover" muted playsinline preload="metadata">
+                                    <source src="@p.HeroImage" />
+                                </video>
+                            }
+                            else
+                            {
+                                <img src="@p.HeroImage" alt="@p.Title screenshot" loading="lazy"
+                                     class="aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                            }
+                        </a>
+                    }
+                    <h3 class="text-lg text-text"><a href="/projects/@p.Slug" class="hover:text-accent">@p.Title</a></h3>
+                    <p class="mt-2 text-sm text-muted">@p.Summary</p>
+                    @if (p.Impact.Count > 0)
+                    {
+                        <ul class="mt-4 space-y-1.5">
+                            @foreach (var m in p.Impact)
+                            {
+                                <li class="font-mono text-xs text-accent">▸ @m</li>
+                            }
+                        </ul>
+                    }
+                    @if (p.Tech.Count > 0)
+                    {
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            @foreach (var t in p.Tech)
+                            {
+                                <span class="rounded border border-border px-2 py-0.5 font-mono text-[11px] text-muted">@t</span>
+                            }
+                        </div>
+                    }
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="mt-6 font-mono text-sm text-muted">// case studies stream from the database — full grid arrives in Phase 2</p>
+    }
+</section>
+
+@if (Model.Testimonials.Count > 0)
+{
+    <!-- TESTIMONIALS -->
+    <section class="border-t border-border/60">
+        <div class="container-page py-16 md:py-20">
+            <p class="eyebrow">What people say</p>
+            <h2 class="mt-3 text-2xl md:text-3xl">Testimonials</h2>
+            <div class="mt-8 grid gap-5 md:grid-cols-2">
+                @foreach (var t in Model.Testimonials)
+                {
+                    <figure class="card flex flex-col">
+                        <svg class="h-6 w-6 text-accent/60" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M9.6 5C6 7 4 10 4 13.6 4 16.4 5.8 18 8 18c2 0 3.5-1.5 3.5-3.4 0-1.9-1.4-3.2-3.2-3.2-.3 0-.7 0-.8.1.3-1.8 1.9-3.8 3.7-4.9L9.6 5Zm9 0c-3.6 2-5.6 5-5.6 8.6 0 2.8 1.8 4.4 4 4.4 2 0 3.5-1.5 3.5-3.4 0-1.9-1.4-3.2-3.2-3.2-.3 0-.7 0-.8.1.3-1.8 1.9-3.8 3.7-4.9L18.6 5Z"/>
+                        </svg>
+                        <blockquote class="mt-3 flex-1 text-sm leading-relaxed text-text/90">@t.Quote</blockquote>
+                        <figcaption class="mt-5">
+                            <p class="font-mono text-sm text-accent">@t.Author</p>
+                            @if (!string.IsNullOrWhiteSpace(t.AuthorTitle))
+                            {
+                                <p class="mt-0.5 font-mono text-xs text-muted">@t.AuthorTitle</p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(t.SourceUrl))
+                            {
+                                <a href="@t.SourceUrl" target="_blank" rel="noopener" class="mt-1 inline-block font-mono text-xs text-muted underline decoration-border underline-offset-2 hover:text-accent">source →</a>
+                            }
+                        </figcaption>
+                    </figure>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<!-- CONTACT -->
+<section id="contact" class="border-t border-border/60">
+    <div class="container-page py-16 md:py-20">
+        <p class="eyebrow">Contact</p>
+        <h2 class="mt-3 max-w-2xl text-2xl md:text-3xl">Let's talk systems — backend, cloud, or AI.</h2>
+        <div class="mt-6 flex flex-wrap gap-3">
+            @if (site.HasEmail)
+            {
+                <a href="@site.EmailHref" class="btn btn-primary">Email</a>
+            }
+            @if (site.HasLinkedIn)
+            {
+                <a href="@site.LinkedIn" target="_blank" rel="me noopener" class="btn btn-ghost">LinkedIn</a>
+            }
+            @if (site.HasGitHub)
+            {
+                <a href="@site.GitHub" target="_blank" rel="me noopener" class="btn btn-ghost">GitHub</a>
+            }
+            <a href="/contact" class="btn btn-ghost">All contact options →</a>
+        </div>
+    </div>
+</section>

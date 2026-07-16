@@ -1,0 +1,254 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Self-hosted variable fonts (latin subset, 400–700). */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+}
+
+@layer base {
+  /* Design tokens as RGB channels so Tailwind opacity modifiers work and themes can swap. */
+  :root, :root[data-theme="dark"] {
+    --c-bg: 11 15 20;
+    --c-surface: 17 24 33;
+    --c-surface-2: 24 33 43;
+    --c-border: 36 48 64;
+    --c-text: 230 237 243;
+    --c-muted: 136 150 165;
+    --c-accent: 96 165 250;
+    --c-accent-strong: 147 197 253;
+    color-scheme: dark;
+  }
+
+  :root[data-theme="light"] {
+    --c-bg: 247 249 251;
+    --c-surface: 255 255 255;
+    --c-surface-2: 240 243 246;
+    --c-border: 214 222 230;
+    --c-text: 15 23 32;
+    --c-muted: 82 96 112;
+    --c-accent: 37 99 235;
+    --c-accent-strong: 29 78 216;
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-bg text-text font-sans antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight;
+  }
+
+  a {
+    @apply transition-colors;
+  }
+
+  ::selection {
+    background: rgb(var(--c-accent) / 0.25);
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--c-accent));
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+}
+
+/* Theme toggle icon visibility */
+.icon-sun, .icon-moon { display: none; }
+:root[data-theme="dark"] .icon-sun { display: block; }
+:root[data-theme="light"] .icon-moon { display: block; }
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-content px-6 md:px-8;
+  }
+
+  /* Monospace utility label — the "engineering" voice */
+  .eyebrow {
+    @apply font-mono text-xs uppercase tracking-eyebrow text-accent;
+  }
+
+  .metric-value {
+    @apply font-mono text-3xl md:text-4xl text-text;
+  }
+
+  .metric-label {
+    @apply font-mono text-xs uppercase tracking-eyebrow text-muted mt-1;
+  }
+
+  .btn {
+    @apply inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition;
+  }
+
+  .btn-primary {
+    @apply border border-accent/30 bg-accent/10 text-accent hover:bg-accent/20 hover:border-accent/50;
+  }
+
+  .btn-ghost {
+    @apply border border-border text-text hover:border-accent/50 hover:text-accent;
+  }
+
+  .card {
+    @apply rounded-lg border border-border bg-surface p-6 transition hover:border-accent/40;
+  }
+
+  .nav-link {
+    @apply font-mono text-sm text-muted hover:text-text transition-colors;
+  }
+
+  .lead {
+    @apply mt-4 max-w-2xl text-lg text-muted;
+  }
+
+  .tag {
+    @apply rounded border border-border px-2 py-0.5 font-mono text-[11px] text-muted;
+  }
+
+  /* Work-page domain filter chips */
+  .filter-chip {
+    @apply rounded-full border border-border px-3 py-1 font-mono text-xs text-muted transition hover:border-accent/50 hover:text-text;
+  }
+  .filter-chip.is-active {
+    @apply border-accent/50 bg-accent/10 text-accent;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider;
+  }
+  .badge-earned { @apply border-accent/40 bg-accent/10 text-accent; }
+  .badge-progress { @apply border-amber-400/40 bg-amber-400/10 text-amber-300; }
+  .badge-planned { @apply border-border text-muted; }
+
+  /* Rendered Markdown (blog) */
+  .article { @apply leading-relaxed text-text/90; }
+  .article h2 { @apply mt-10 mb-3 text-2xl; }
+  .article h3 { @apply mt-8 mb-2 text-xl; }
+  .article p { @apply my-4; }
+  .article ul { @apply my-4 list-disc space-y-1 pl-6 text-muted; }
+  .article ol { @apply my-4 list-decimal space-y-1 pl-6 text-muted; }
+  .article a { @apply text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent; }
+  .article code { @apply rounded bg-surface-2 px-1.5 py-0.5 font-mono text-sm text-accent; }
+  .article pre { @apply my-5 overflow-x-auto rounded-lg border border-border bg-surface p-4 text-sm; }
+  .article pre code { @apply bg-transparent p-0 text-text; }
+  .article blockquote { @apply my-5 border-l-2 border-accent/50 pl-4 italic text-muted; }
+
+  /* Faint engineered grid backdrop */
+  .grid-backdrop {
+    background-image:
+      linear-gradient(to right, rgb(var(--c-border) / 0.5) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(var(--c-border) / 0.5) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+}
+
+/* Screenshot lightbox */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: rgb(var(--c-bg) / 0.92);
+  backdrop-filter: blur(4px);
+}
+.lightbox.hidden { display: none; }
+.lightbox-figure {
+  margin: 0;
+  max-width: min(100%, 1200px);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+.lightbox-img,
+.lightbox-video {
+  max-width: 100%;
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(var(--c-border));
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.5);
+}
+.lightbox-video { width: min(100%, 1200px); background: #000; }
+.lightbox-caption {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.8125rem;
+  color: rgb(var(--c-muted));
+  text-align: center;
+}
+.lightbox-close,
+.lightbox-nav {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(var(--c-border));
+  background: rgb(var(--c-surface) / 0.8);
+  color: rgb(var(--c-text));
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.lightbox-close:hover,
+.lightbox-nav:hover { border-color: rgb(var(--c-accent) / 0.6); color: rgb(var(--c-accent)); }
+.lightbox-nav { width: 3rem; height: 3rem; border-radius: 9999px; font-size: 1.75rem; line-height: 1; }
+.lightbox-close {
+  position: absolute;
+  top: clamp(1rem, 3vw, 2rem);
+  right: clamp(1rem, 3vw, 2rem);
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  font-size: 1rem;
+}
+@media (max-width: 640px) {
+  .lightbox-nav { position: absolute; bottom: 1rem; }
+  .lightbox-prev { left: 1rem; }
+  .lightbox-next { right: 1rem; }
+}
+
+/* Telemetry waveform — the signature motif. Static unless motion is welcome. */
+@media (prefers-reduced-motion: no-preference) {
+  .waveform-path {
+    stroke-dasharray: 8 6;
+    animation: telemetry-scroll 3.5s linear infinite;
+  }
+}
+
+@keyframes telemetry-scroll {
+  to {
+    stroke-dashoffset: -140;
+  }
+}
+
+/* Print styles — CV renders clean on paper (light, ink-friendly). */
+@media print {
+  header, footer, .no-print { display: none !important; }
+  body { background: #fff !important; color: #111 !important; }
+  .print-light, .print-light * { color: #111 !important; background: transparent !important; border-color: #ccc !important; }
+  a { color: #111 !important; text-decoration: none !important; }
+  .container-page { max-width: 100% !important; padding: 0 !important; }
+}

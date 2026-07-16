@@ -1,0 +1,49 @@
+@page "/blog/{slug}"
+@inject PortfolioContentService Repo
+@{
+    var slug = RouteData.Values["slug"]?.ToString() ?? "";
+    var post = await Repo.GetBlogPostAsync(slug);
+    if (post is null)
+    {
+        Response.StatusCode = 404;
+        ViewData["Title"] = "Not found";
+    }
+    else
+    {
+        ViewData["Title"] = post.Title;
+        ViewData["Description"] = post.Description;
+    }
+}
+
+@if (post is null)
+{
+    <section class="container-page py-24 text-center">
+        <p class="eyebrow">404</p>
+        <h1 class="mt-3 text-3xl">Post not found</h1>
+        <a href="/blog" class="btn btn-ghost mt-6">← Back to blog</a>
+    </section>
+}
+else
+{
+    <article class="container-page py-16 md:py-20">
+        <a href="/blog" class="font-mono text-xs text-muted hover:text-accent">← blog</a>
+        <header class="mt-6 max-w-2xl">
+            <p class="font-mono text-xs text-muted">
+                @post.Date.ToString("MMM d, yyyy") · @Md.ReadingMinutes(post.BodyMarkdown) min read
+            </p>
+            <h1 class="mt-3 text-3xl leading-tight md:text-4xl">@post.Title</h1>
+            @if (post.Tags.Count > 0)
+            {
+                <div class="mt-4 flex flex-wrap gap-2">
+                    @foreach (var t in post.Tags)
+                    {
+                        <span class="tag">#@t</span>
+                    }
+                </div>
+            }
+        </header>
+        <div class="article mt-10 max-w-2xl">
+            @Html.Raw(Md.ToHtml(post.BodyMarkdown))
+        </div>
+    </article>
+}
