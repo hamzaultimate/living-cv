@@ -131,6 +131,11 @@
     @apply border-accent/50 bg-accent/10 text-accent;
   }
 
+  /* Theme-aware profile photo: dark portrait by default, swap to the light one in the light theme. */
+  .profile-photo--light { display: none; }
+  :root[data-theme="light"] .profile-photo--dark { display: none; }
+  :root[data-theme="light"] .profile-photo--light { display: block; }
+
   .badge {
     @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider;
   }

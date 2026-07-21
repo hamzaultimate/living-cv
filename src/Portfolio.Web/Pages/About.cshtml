@@ -51,8 +51,14 @@
             @if (site.HasPhoto)
             {
                 <img src="@site.PhotoUrl" alt="@site.OwnerName"
-                     class="w-full max-w-xs rounded-lg border border-border object-cover"
+                     class="profile-photo profile-photo--dark w-full max-w-xs rounded-lg border border-border object-cover"
                      width="320" height="320" loading="lazy" />
+                @if (site.HasPhotoLight)
+                {
+                    <img src="@site.PhotoUrlLight" alt="@site.OwnerName"
+                         class="profile-photo profile-photo--light w-full max-w-xs rounded-lg border border-border object-cover"
+                         width="320" height="320" loading="lazy" />
+                }
             }
             @if (!string.IsNullOrWhiteSpace(site.About.CurrentlyNote))
             {

@@ -52,6 +52,11 @@ else
                 <button type="button" data-share="linkedin" data-url="/blog/@post.Slug" data-title="@post.Title" class="btn btn-ghost !px-3 !py-1.5 text-xs">LinkedIn</button>
             </div>
         </header>
+        @if (!string.IsNullOrWhiteSpace(post.Cover))
+        {
+            <img src="@post.Cover" alt="@post.Title" width="1200" height="630"
+                 class="mt-8 aspect-video w-full max-w-2xl rounded-lg border border-border object-cover" />
+        }
         <div class="article mt-10 max-w-2xl">
             @Html.Raw(Md.ToHtml(post.BodyMarkdown))
         </div>

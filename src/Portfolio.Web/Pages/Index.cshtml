@@ -55,8 +55,14 @@
             <div class="relative shrink-0">
                 <div class="absolute -inset-2 rounded-full border border-accent/30" aria-hidden="true"></div>
                 <img src="@site.PhotoUrl" alt="@site.OwnerName"
-                     class="h-40 w-40 rounded-full border border-border object-cover md:h-56 md:w-56"
+                     class="profile-photo profile-photo--dark h-40 w-40 rounded-full border border-border object-cover md:h-56 md:w-56"
                      width="224" height="224" fetchpriority="high" />
+                @if (site.HasPhotoLight)
+                {
+                    <img src="@site.PhotoUrlLight" alt="@site.OwnerName"
+                         class="profile-photo profile-photo--light h-40 w-40 rounded-full border border-border object-cover md:h-56 md:w-56"
+                         width="224" height="224" loading="lazy" />
+                }
             </div>
         }
     </div>
