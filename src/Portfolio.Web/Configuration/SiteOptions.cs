@@ -31,9 +31,14 @@ public class SiteOptions
     public List<string> KnowsAbout { get; set; } = new();
 
     /// <summary>Optional profile photo URL/path, e.g. "/img/profile.jpg". Empty = no photo shown.
-    /// Must be a real, served asset (drop the file in wwwroot/img and rebuild).</summary>
+    /// Must be a real, served asset (drop the file in wwwroot/img and rebuild). Used for the dark theme.</summary>
     public string? PhotoUrl { get; set; }
     public bool HasPhoto => !string.IsNullOrWhiteSpace(PhotoUrl);
+
+    /// <summary>Optional alternate photo shown in the light theme (e.g. a light-background portrait).
+    /// When empty, <see cref="PhotoUrl"/> is used for both themes.</summary>
+    public string? PhotoUrlLight { get; set; }
+    public bool HasPhotoLight => !string.IsNullOrWhiteSpace(PhotoUrlLight);
 
     // ── Home page ───────────────────────────────────────────────────────────
     public HeroOptions Hero { get; set; } = new();

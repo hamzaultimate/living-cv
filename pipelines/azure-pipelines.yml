@@ -57,15 +57,15 @@ stages:
           - script: dotnet restore "$(webProject)"
             displayName: Restore
 
+          # Self-contained multi-file (NOT single-file): QuestPDF's native SkiaSharp
+          # dependency fails to resolve from a single-file bundle and crashes at startup.
           - script: >
               dotnet publish "$(webProject)"
               -c $(buildConfiguration)
               -r $(targetRuntime)
               --self-contained true
-              -p:PublishSingleFile=true
-              -p:IncludeNativeLibrariesForSelfExtract=true
               -o "$(Build.ArtifactStagingDirectory)/site"
-            displayName: Publish (single-file)
+            displayName: Publish (self-contained)
 
           - publish: '$(Build.ArtifactStagingDirectory)/site'
             artifact: site

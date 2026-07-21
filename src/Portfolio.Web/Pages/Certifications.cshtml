@@ -3,10 +3,11 @@
 @inject PortfolioContentService Repo
 @{
     ViewData["Title"] = "Certifications";
-    ViewData["Description"] = "Certifications earned, in progress, and planned — including the Azure AI path.";
+    ViewData["Description"] = "Certifications earned, in progress, and planned — grouped by issuer.";
     var certs = await Repo.GetCertificationsAsync();
-    var withBadge = certs.Where(c => !string.IsNullOrWhiteSpace(c.BadgeImageUrl)).ToList();
-    var rest = certs.Where(c => string.IsNullOrWhiteSpace(c.BadgeImageUrl)).ToList();
+    // Group by issuer, ordering groups by the lowest sortOrder they contain so the most
+    // prominent issuers lead. Filter chips and grouped sections share this order.
+    var groups = certs.GroupBy(c => c.Issuer).OrderBy(g => g.Min(c => c.SortOrder)).ToList();
 
     string BadgeClass(CertificationStatus s) => s switch
     {
@@ -58,79 +59,73 @@
     {
         <p class="mt-10 font-mono text-sm text-muted">// certifications load from the database</p>
     }
-
-    @if (withBadge.Count > 0)
+    else
     {
-        <div class="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
-            @foreach (var c in withBadge)
+        <div class="mt-10 flex flex-wrap gap-2" data-cert-filter role="group" aria-label="Filter certifications by issuer">
+            <button type="button" class="filter-chip is-active" data-filter="all" aria-pressed="true">All</button>
+            @foreach (var g in groups)
             {
-                <article class="card flex flex-col items-center text-center">
-                    @if (!string.IsNullOrWhiteSpace(c.CredentialUrl))
-                    {
-                        <a href="@c.CredentialUrl" target="_blank" rel="noopener" title="Verify credential">
-                            <img src="@c.BadgeImageUrl" alt="@c.Name badge" class="mx-auto h-28 w-28 object-contain" width="112" height="112" loading="lazy" />
-                        </a>
-                    }
-                    else
-                    {
-                        <img src="@c.BadgeImageUrl" alt="@c.Name badge" class="mx-auto h-28 w-28 object-contain" width="112" height="112" loading="lazy" />
-                    }
-                    <h2 class="mt-4 text-sm text-text">@c.Name</h2>
-                    <p class="mt-1 font-mono text-xs text-muted">@c.Issuer</p>
-                    <span class="@BadgeClass(c.Status) mt-3">@BadgeText(c.Status)</span>
-                    @if (!string.IsNullOrWhiteSpace(c.CertificateUrl))
-                    {
-                        <a href="@c.CertificateUrl" target="_blank" rel="noopener" class="btn btn-ghost mt-4 !px-3 !py-1.5 text-xs">
-                            <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-                            View certificate
-                        </a>
-                    }
-                </article>
+                <button type="button" class="filter-chip" data-filter="@g.Key.ToLowerInvariant()" aria-pressed="false">
+                    @g.Key <span class="opacity-60">@g.Count()</span>
+                </button>
             }
         </div>
-    }
 
-    @if (rest.Count > 0)
-    {
-        <div class="mt-8 grid gap-6 sm:grid-cols-2">
-            @foreach (var c in rest)
+        <div class="mt-10 space-y-12" data-cert-groups>
+            @foreach (var g in groups)
             {
-                var brand = IssuerBrand(c.Issuer);
-                <article class="card group flex flex-col overflow-hidden !p-0">
-                    <div class="flex items-center gap-3 border-b border-border px-6 py-4"
-                         style="background: linear-gradient(135deg, @(brand.Color)26, transparent 70%);">
-                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2">
-                            @brand.Logo
-                        </span>
-                        <p class="font-mono text-xs text-muted">@c.Issuer</p>
-                        <span class="@BadgeClass(c.Status) ml-auto shrink-0">@BadgeText(c.Status)</span>
-                    </div>
-                    <div class="flex flex-1 flex-col gap-2 px-6 pb-6 pt-4">
-                        <h2 class="text-lg text-text">@c.Name</h2>
-                        @if (!string.IsNullOrWhiteSpace(c.Category) || !string.IsNullOrWhiteSpace(c.Date))
+                var brand = IssuerBrand(g.Key);
+                <div data-issuer="@g.Key.ToLowerInvariant()">
+                    <h2 class="flex items-center gap-2.5 border-b border-border pb-3 font-mono text-sm uppercase tracking-wider text-muted">
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2">@brand.Logo</span>
+                        @g.Key
+                        <span class="ml-1 rounded-full border border-border px-2 py-0.5 text-[11px] normal-case tracking-normal text-muted">@g.Count()</span>
+                    </h2>
+                    <div class="mt-5 grid gap-6 sm:grid-cols-2">
+                        @foreach (var c in g)
                         {
-                            <p class="font-mono text-xs text-muted">
-                                @c.Category@(string.IsNullOrWhiteSpace(c.Category) || string.IsNullOrWhiteSpace(c.Date) ? "" : " · ")@c.Date
-                            </p>
-                        }
-                        @if (!string.IsNullOrWhiteSpace(c.CertificateUrl) || !string.IsNullOrWhiteSpace(c.CredentialUrl))
-                        {
-                            <div class="mt-auto flex flex-wrap gap-3 pt-4">
-                                @if (!string.IsNullOrWhiteSpace(c.CertificateUrl))
-                                {
-                                    <a href="@c.CertificateUrl" target="_blank" rel="noopener" class="btn btn-primary !px-3 !py-1.5 text-xs">
-                                        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-                                        View certificate
-                                    </a>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(c.CredentialUrl))
-                                {
-                                    <a href="@c.CredentialUrl" target="_blank" rel="noopener" class="btn btn-ghost !px-3 !py-1.5 text-xs">View credential →</a>
-                                }
-                            </div>
+                            <article class="card group flex flex-col overflow-hidden !p-0">
+                                <div class="flex items-center gap-3 border-b border-border px-6 py-4"
+                                     style="background: linear-gradient(135deg, @(brand.Color)26, transparent 70%);">
+                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2">
+                                        @brand.Logo
+                                    </span>
+                                    <p class="font-mono text-xs text-muted">@c.Issuer</p>
+                                    <span class="@BadgeClass(c.Status) ml-auto shrink-0">@BadgeText(c.Status)</span>
+                                </div>
+                                <div class="flex flex-1 flex-col gap-2 px-6 pb-6 pt-4">
+                                    @if (!string.IsNullOrWhiteSpace(c.BadgeImageUrl))
+                                    {
+                                        <img src="@c.BadgeImageUrl" alt="@c.Name badge" class="h-16 w-16 object-contain" width="64" height="64" loading="lazy" />
+                                    }
+                                    <h3 class="text-lg text-text">@c.Name</h3>
+                                    @if (!string.IsNullOrWhiteSpace(c.Category) || !string.IsNullOrWhiteSpace(c.Date))
+                                    {
+                                        <p class="font-mono text-xs text-muted">
+                                            @c.Category@(string.IsNullOrWhiteSpace(c.Category) || string.IsNullOrWhiteSpace(c.Date) ? "" : " · ")@c.Date
+                                        </p>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(c.CertificateUrl) || !string.IsNullOrWhiteSpace(c.CredentialUrl))
+                                    {
+                                        <div class="mt-auto flex flex-wrap gap-3 pt-4">
+                                            @if (!string.IsNullOrWhiteSpace(c.CertificateUrl))
+                                            {
+                                                <a href="@c.CertificateUrl" target="_blank" rel="noopener" class="btn btn-primary !px-3 !py-1.5 text-xs">
+                                                    <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                    View certificate
+                                                </a>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(c.CredentialUrl))
+                                            {
+                                                <a href="@c.CredentialUrl" target="_blank" rel="noopener" class="btn btn-ghost !px-3 !py-1.5 text-xs">View credential →</a>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </article>
                         }
                     </div>
-                </article>
+                </div>
             }
         </div>
     }

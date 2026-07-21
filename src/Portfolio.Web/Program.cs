@@ -83,7 +83,7 @@ app.MapGet("/cv.pdf", async (PortfolioContentService repo, IOptions<SiteOptions>
     var site = siteOpt.Value;
     var roles = await repo.GetExperiencesAsync();
     var skills = await repo.GetSkillsAsync();
-    var order = new[] { "Backend", "Architecture", "Cloud/DevOps", "Data", "AI", "Embedded/IoT" };
+    var order = new[] { "Backend", "Frontend", "Architecture", "Cloud/DevOps", "Data", "AI", "Embedded/IoT" };
     var groups = skills.GroupBy(s => s.Group)
         .OrderBy(g => { var i = Array.IndexOf(order, g.Key); return i < 0 ? int.MaxValue : i; })
         .ToList();

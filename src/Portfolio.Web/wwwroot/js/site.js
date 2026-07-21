@@ -86,6 +86,29 @@
     });
   }
 
+  // Certifications issuer filter. Chips toggle which issuer groups are visible; purely client-side.
+  const certFilterBar = document.querySelector('[data-cert-filter]');
+  const certGroups = document.querySelector('[data-cert-groups]');
+  if (certFilterBar && certGroups) {
+    const chips = Array.prototype.slice.call(certFilterBar.querySelectorAll('[data-filter]'));
+    const sections = Array.prototype.slice.call(certGroups.querySelectorAll('[data-issuer]'));
+    certFilterBar.addEventListener('click', function (e) {
+      const chip = e.target.closest('[data-filter]');
+      if (!chip) return;
+      const filter = chip.getAttribute('data-filter');
+      chips.forEach(function (c) {
+        const active = c === chip;
+        c.classList.toggle('is-active', active);
+        c.setAttribute('aria-pressed', String(active));
+      });
+      sections.forEach(function (sec) {
+        const iss = (sec.getAttribute('data-issuer') || '').toLowerCase();
+        const show = filter === 'all' || iss === filter.toLowerCase();
+        sec.classList.toggle('hidden', !show);
+      });
+    });
+  }
+
   // Media lightbox for project galleries. Each [data-lightbox-gallery] is its own set,
   // so cards on the work grid page through their own media (not each other's).
   // Progressive enhancement: without JS the thumbnails/images/videos still render inline.
