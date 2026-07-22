@@ -97,7 +97,7 @@
     });
   }
 
-  // Certification issuer chips toggle which groups are visible.
+  // Certifications issuer filter. Chips toggle which issuer groups are visible; purely client-side.
   const certFilterBar = document.querySelector('[data-cert-filter]');
   const certGroups = document.querySelector('[data-cert-groups]');
   if (certFilterBar && certGroups) {
@@ -120,7 +120,9 @@
     });
   }
 
-  // Lightbox behavior for project galleries with a progressive-enhancement fallback.
+  // Media lightbox for project galleries. Each [data-lightbox-gallery] is its own set,
+  // so cards on the work grid page through their own media (not each other's).
+  // Progressive enhancement: without JS the thumbnails/images/videos still render inline.
   const galleries = Array.prototype.slice.call(document.querySelectorAll('[data-lightbox-gallery]'))
     .map(function (g) { return Array.prototype.slice.call(g.querySelectorAll('[data-lightbox-item]')); })
     .filter(function (list) { return list.length > 0; });
