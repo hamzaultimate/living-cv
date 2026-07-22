@@ -3,6 +3,7 @@
 @{
     var slug = RouteData.Values["slug"]?.ToString() ?? "";
     var p = await Repo.GetProjectAsync(slug);
+    string? breadcrumbLd = null;
     if (p is null)
     {
         Response.StatusCode = 404;
@@ -12,7 +13,26 @@
     {
         ViewData["Title"] = p.Title;
         ViewData["Description"] = p.Summary;
+        if (!string.IsNullOrWhiteSpace(p.HeroImage) && !Media.IsVideo(p.HeroImage)) ViewData["OgImage"] = p.HeroImage;
+
+        var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+        var crumbs = new object[]
+        {
+            new Dictionary<string, object?> { ["@type"] = "ListItem", ["position"] = 1, ["name"] = "Home", ["item"] = absBase },
+            new Dictionary<string, object?> { ["@type"] = "ListItem", ["position"] = 2, ["name"] = "Work", ["item"] = $"{absBase}/projects" },
+            new Dictionary<string, object?> { ["@type"] = "ListItem", ["position"] = 3, ["name"] = p.Title, ["item"] = $"{absBase}/projects/{p.Slug}" },
+        };
+        breadcrumbLd = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object?>
+        {
+            ["@context"] = "https://schema.org",
+            ["@type"] = "BreadcrumbList",
+            ["itemListElement"] = crumbs,
+        });
     }
+}
+@if (breadcrumbLd is not null)
+{
+    <script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>
 }
 
 @if (p is null)

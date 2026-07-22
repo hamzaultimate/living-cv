@@ -1,11 +1,19 @@
 @inject IOptions<SiteOptions> SiteOpt
 @{
     var site = SiteOpt.Value;
-    var pageTitle = $"{ViewData["Title"]} · {site.OwnerName}";
+    // Most pages get "Section · Name". The homepage leads with the name + role instead —
+    // that's what people actually search ("<name> <job title>"), and it's the page most
+    // likely to rank for a name search, so it gets the full literal title via FullTitle.
+    var pageTitle = ViewData["FullTitle"] as string ?? $"{ViewData["Title"]} · {site.OwnerName}";
     var pageDesc = ViewData["Description"] as string ?? site.Summary;
     var absBase = $"{Context.Request.Scheme}://{Context.Request.Host}";
     var absUrl = $"{absBase}{Context.Request.Path}";
-    var ogImage = $"{absBase}/og.png";
+    // Blog posts and project case studies pass their own cover/hero image (relative path)
+    // so a link shared on LinkedIn/X shows the actual post, not the generic name card.
+    var ogImageOverride = ViewData["OgImage"] as string;
+    var ogImage = string.IsNullOrWhiteSpace(ogImageOverride)
+        ? $"{absBase}/og.png"
+        : ogImageOverride.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? ogImageOverride : $"{absBase}{ogImageOverride}";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -25,6 +33,12 @@
     </script>
     <title>@pageTitle</title>
     <meta name="description" content="@pageDesc" />
+    @if (ViewData["Robots"] as string is { Length: > 0 } robots)
+    {
+        <meta name="robots" content="@robots" />
+    }
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="color-scheme" content="light dark" />
     <link rel="canonical" href="@absUrl" />
 
     <meta property="og:type" content="website" />
@@ -33,19 +47,25 @@
     <meta property="og:description" content="@pageDesc" />
     <meta property="og:url" content="@absUrl" />
     <meta property="og:image" content="@ogImage" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    @if (ogImageOverride is null)
+    {
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+    }
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="@pageTitle" />
     <meta name="twitter:description" content="@pageDesc" />
     <meta name="twitter:image" content="@ogImage" />
 
-    <link rel="icon" href="~/favicon.ico" />
+    <link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="~/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="~/apple-touch-icon.png" />
     <link rel="preload" href="~/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="~/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
 </head>
 <body class="flex min-h-screen flex-col">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-accent focus:px-4 focus:py-2 focus:text-bg">Skip to content</a>
     <header class="sticky top-0 z-40 border-b border-border/70 bg-bg/80 backdrop-blur">
         <div class="container-page flex h-16 items-center justify-between">
             <a href="/" class="font-display text-lg font-semibold tracking-tight text-text transition-colors hover:text-accent">
@@ -58,6 +78,7 @@
                 <a class="nav-link" href="/skills">skills</a>
                 <a class="nav-link" href="/certifications">certs</a>
                 <a class="nav-link" href="/blog">blog</a>
+                <a class="nav-link" href="/talks">talks</a>
                 <a class="nav-link" href="/cv">cv</a>
             </nav>
             <div class="flex items-center gap-3">
@@ -85,13 +106,14 @@
                 <a class="nav-link py-2" href="/skills">skills</a>
                 <a class="nav-link py-2" href="/certifications">certifications</a>
                 <a class="nav-link py-2" href="/blog">blog</a>
+                <a class="nav-link py-2" href="/talks">talks</a>
                 <a class="nav-link py-2" href="/cv">cv</a>
                 <a class="nav-link py-2" href="/contact">contact</a>
             </div>
         </nav>
     </header>
 
-    <main class="flex-1">
+    <main id="main-content" class="flex-1">
         @RenderBody()
     </main>
 

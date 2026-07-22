@@ -8,7 +8,6 @@ namespace Portfolio.Web.Configuration;
 /// </summary>
 public class SiteOptions
 {
-    // ── Identity ────────────────────────────────────────────────────────────
     /// <summary>Full name, used in titles, the CV, OG image, and schema.org.</summary>
     public string OwnerName { get; set; } = "Your Name";
 
@@ -40,14 +39,11 @@ public class SiteOptions
     public string? PhotoUrlLight { get; set; }
     public bool HasPhotoLight => !string.IsNullOrWhiteSpace(PhotoUrlLight);
 
-    // ── Home page ───────────────────────────────────────────────────────────
     public HeroOptions Hero { get; set; } = new();
     public List<MetricOption> Metrics { get; set; } = new();
 
-    // ── About page ──────────────────────────────────────────────────────────
     public AboutOptions About { get; set; } = new();
 
-    // ── Contact + profile links ─────────────────────────────────────────────
     public string? Phone { get; set; }
     public string? WhatsApp { get; set; } // digits only, country code first, e.g. 15550100
     public string? Email { get; set; }

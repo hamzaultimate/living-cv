@@ -2,8 +2,9 @@
 @model IndexModel
 @inject IOptions<SiteOptions> SiteOpt
 @{
-    ViewData["Title"] = "Home";
     var site = SiteOpt.Value;
+    ViewData["Title"] = "Home";
+    ViewData["FullTitle"] = $"{site.OwnerName} — {site.Role}";
     var sameAs = new[] { site.HasLinkedIn ? site.LinkedIn : null, site.HasGitHub ? site.GitHub : null, site.HasYouTube ? site.YouTube : null }
         .Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
     var person = new Dictionary<string, object?>
@@ -137,7 +138,10 @@
     }
     else
     {
-        <p class="mt-6 font-mono text-sm text-muted">// case studies stream from the database — full grid arrives in Phase 2</p>
+        <div class="mt-6 rounded-lg border border-border bg-surface-2/70 p-6 text-sm text-muted">
+            <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">Featured work coming soon</p>
+            <p class="mt-3 max-w-2xl">Once the database is seeded, this section will showcase your featured projects and case studies.</p>
+        </div>
     }
 </section>
 
