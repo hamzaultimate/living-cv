@@ -50,14 +50,17 @@ SQL Server Express). The local connection string is already set in
 `src/Portfolio.Web/appsettings.Development.json` and points at `(localdb)\MSSQLLocalDB`.
 
 ```bash
+dotnet restore
 dotnet run --project src/Portfolio.Web
 ```
 
 On first run the app **applies EF Core migrations and seeds the demo content automatically**.
-Open the printed `https://localhost:xxxx` URL. Health check: `/health`.
+It launches over HTTPS by default, so open the printed `https://localhost:7239` URL (or the generated local HTTPS port). Health check: `/health`.
 
 > No database configured? The site still runs — DB-backed pages show empty states and
 > `/health/db` reports the status.
+
+For a fuller walkthrough, see [docs/new-user-guide.md](docs/new-user-guide.md).
 
 ## Make it yours
 
@@ -87,10 +90,11 @@ Set the production database via the `ConnectionStrings__Default` environment var
 src/Portfolio.Web/                ASP.NET Core Razor Pages app
   Configuration/SiteOptions.cs    Bound identity/content config ("Site" section)
   Pages/                          Razor Pages
+  appsettings.json                Default site identity and public content
 src/Portfolio.Data/               EF Core entities, migrations, and JSON seed data
   Seed/                           Seed content (edit these to change the site)
   Seeding/PortfolioSeeder.cs      Authoritative upsert-by-natural-key seeder
-docs/                             Notes and design system
+docs/                             Notes, design system, and onboarding guides
 ```
 
 ## Contributing

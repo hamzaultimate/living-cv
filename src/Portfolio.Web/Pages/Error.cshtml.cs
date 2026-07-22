@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -15,6 +16,9 @@ public class ErrorModel : PageModel
     public void OnGet()
     {
         RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        // The exception handler re-execution otherwise leaves this at 200 OK — a soft-error
+        // page that's technically indexable and gives crawlers no signal to skip it.
+        HttpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
     }
 }
 

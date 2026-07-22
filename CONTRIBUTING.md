@@ -10,11 +10,14 @@ meant to be forked, personalised, and improved together.
 2. **Fork & clone** the repository.
 3. **Run it:**
    ```bash
-   dotnet run --project src/Portfolio.Web
+   dotnet restore
+dotnet run --project src/Portfolio.Web
    ```
    Migrations apply and the demo content seeds automatically on first run. The local
    connection string is already set in `appsettings.Development.json` (LocalDB — no secret).
-4. Open the printed `https://localhost:xxxx` URL and confirm `/health` returns `200`.
+4. Open the printed HTTPS URL (for example `https://localhost:7239`) and confirm `/health` returns `200`.
+5. If the browser warns about the local development certificate, trust it with `dotnet dev-certs https --trust`.
+6. For a more detailed walkthrough, review [docs/new-user-guide.md](docs/new-user-guide.md).
 
 ## Branching model
 

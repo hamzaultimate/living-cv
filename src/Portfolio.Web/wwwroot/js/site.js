@@ -1,30 +1,41 @@
-// Minimal, dependency-free interactions.
 (function () {
-  // Mobile menu
   const btn = document.getElementById('menu-btn');
   const nav = document.getElementById('mobile-nav');
   if (btn && nav) {
+    const closeMenu = function () {
+      nav.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+    };
     btn.addEventListener('click', function () {
       const open = nav.classList.toggle('hidden') === false;
       btn.setAttribute('aria-expanded', String(open));
     });
+    nav.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', closeMenu);
+    });
   }
 
-  // Light/dark theme toggle (initial theme is set inline in <head> to avoid a flash)
   const themeBtn = document.getElementById('theme-btn');
+  const setTheme = function (theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.style.colorScheme = theme;
+    if (themeBtn) {
+      themeBtn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+      themeBtn.setAttribute('aria-pressed', String(theme === 'dark'));
+    }
+    try { localStorage.setItem('theme', theme); } catch (e) { /* ignore */ }
+  };
   if (themeBtn) {
     themeBtn.addEventListener('click', function () {
       const current = document.documentElement.getAttribute('data-theme');
       const next = current === 'light' ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', next);
-      try { localStorage.setItem('theme', next); } catch (e) { /* ignore */ }
+      setTheme(next);
     });
   }
 
-  // Share buttons. data-share="copy" uses the native Web Share sheet when available
-  // (mobile), else copies the link with brief "Copied!" feedback. data-share="x" / "linkedin"
-  // open the platform share intent. URLs are relative in markup and resolved to absolute here,
-  // so no server-side host handling is needed. Progressive enhancement.
+  const initialTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  setTheme(initialTheme);
+
   document.addEventListener('click', function (e) {
     const el = e.target.closest('[data-share]');
     if (!el) return;
@@ -63,7 +74,7 @@
     }
   });
 
-  // Work-page domain filter. Chips toggle which project cards are visible; purely client-side.
+  // Project filter chips toggle which cards are visible.
   const filterBar = document.querySelector('[data-project-filter]');
   const grid = document.querySelector('[data-project-grid]');
   if (filterBar && grid) {

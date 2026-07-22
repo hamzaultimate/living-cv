@@ -57,7 +57,10 @@
 
     @if (certs.Count == 0)
     {
-        <p class="mt-10 font-mono text-sm text-muted">// certifications load from the database</p>
+        <div class="mt-10 rounded-lg border border-border bg-surface-2/70 p-8 text-sm text-muted">
+            <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">No credentials yet</p>
+            <p class="mt-3 max-w-2xl">Add a few certifications or badges to populate this section with your learning milestones.</p>
+        </div>
     }
     else
     {
