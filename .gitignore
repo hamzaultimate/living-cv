@@ -14,8 +14,10 @@ artifacts/
 logs/
 *.log
 
-## Tailwind standalone CLI (downloaded at build time)
-/tools/
+## Tailwind standalone CLI (downloaded at build time) — ignore the download,
+## but keep tracked tool projects (e.g. tools/CvAtsReview) under version control.
+/tools/*
+!/tools/CvAtsReview/
 stdout*.log
 
 ## Visual Studio / Rider / VS Code

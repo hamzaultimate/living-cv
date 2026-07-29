@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Portfolio.Data;
 using Portfolio.Data.Entities;
+using Portfolio.Web.Configuration;
 
 namespace Portfolio.Web.Services;
 
@@ -69,4 +70,30 @@ public class PortfolioContentService
 
     public Task<List<Testimonial>> GetTestimonialsAsync() =>
         QueryAsync(db => db.Testimonials.OrderBy(t => t.SortOrder).ToListAsync(), new List<Testimonial>());
+
+    public async Task<CvData> BuildCvDataAsync(SiteOptions site)
+    {
+        var roles = await GetExperiencesAsync();
+        var skills = await GetSkillsAsync();
+        var certs = await GetCertificationsAsync();
+        var projects = await GetFeaturedProjectsAsync();
+
+        var groups = skills.GroupBy(s => s.Group)
+            .OrderBy(g => { var i = Array.IndexOf(CvSkillGroupOrder.Order, g.Key); return i < 0 ? int.MaxValue : i; })
+            .ToList();
+
+        var contacts = new[] { site.HasEmail ? site.Email : null, site.HasPhone ? site.Phone : null, site.HasLinkedIn ? site.LinkedIn : null, site.HasGitHub ? site.GitHub : null }
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x!)
+            .ToList();
+
+        return new CvData(site.OwnerName, site.Role, site.Summary, contacts, roles, groups, projects, certs, site.Url);
+    }
+}
+
+/// <summary>The canonical ordering for CV/PDF skill groups. Shared by the web app and the offline
+/// ATS review tool so both build an identical CvData snapshot from the same content.</summary>
+public static class CvSkillGroupOrder
+{
+    public static readonly string[] Order = { "Backend", "Architecture", "Cloud/DevOps", "Data", "AI", "Embedded/IoT" };
 }
