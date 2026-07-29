@@ -16,6 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Register the app services, configuration, and content pipeline.
 builder.Services.AddRazorPages();
 builder.Services.AddScoped<PortfolioContentService>();
+builder.Services.AddSingleton(new CvAtsReportProvider(Path.Combine(AppContext.BaseDirectory, "Seed")));
 builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
 builder.Services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
 
@@ -104,22 +105,7 @@ app.MapHealthChecks("/health/db", new HealthCheckOptions
 app.MapGet("/cv.pdf", async (PortfolioContentService repo, IOptions<SiteOptions> siteOpt) =>
 {
     var site = siteOpt.Value;
-    var roles = await repo.GetExperiencesAsync();
-    var skills = await repo.GetSkillsAsync();
-    var order = new[] { "Backend", "Frontend", "Architecture", "Cloud/DevOps", "Data", "AI", "Embedded/IoT" };
-    var groups = skills.GroupBy(s => s.Group)
-        .OrderBy(g => { var i = Array.IndexOf(order, g.Key); return i < 0 ? int.MaxValue : i; })
-        .ToList();
-    var projects = await repo.GetFeaturedProjectsAsync();
-    var certs = await repo.GetCertificationsAsync();
-    var contacts = new[] { site.HasEmail ? site.Email : null, site.HasPhone ? site.Phone : null, site.HasLinkedIn ? site.LinkedIn : null, site.HasGitHub ? site.GitHub : null }
-        .Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x!).ToList();
-
-    var data = new CvData(
-        site.OwnerName,
-        site.Role,
-        site.Summary,
-        contacts, roles, groups, projects, certs, site.Url);
+    var data = await repo.BuildCvDataAsync(site);
 
     var bytes = new CvDocument(data).GeneratePdf();
     var fileName = $"{site.OwnerName.ToLowerInvariant().Replace(' ', '-')}-cv.pdf";

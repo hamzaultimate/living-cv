@@ -3,4 +3,10 @@
     <Project Path="src/Portfolio.Data/Portfolio.Data.csproj" />
     <Project Path="src/Portfolio.Web/Portfolio.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Portfolio.Web.Tests/Portfolio.Web.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/CvAtsReview/CvAtsReview.csproj" />
+  </Folder>
 </Solution>
