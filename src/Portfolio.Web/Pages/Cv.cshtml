@@ -13,7 +13,10 @@
     var certs = data.Certifications;
     var contacts = data.Contacts;
     var atsReport = AtsReportProvider.GetReport();
+    var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+    var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("CV", "/cv"));
 }
+<script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>
 
 <section class="container-page py-16 md:py-20 print-light">
     <div class="flex flex-wrap items-start justify-between gap-4">

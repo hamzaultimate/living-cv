@@ -62,6 +62,10 @@ The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed
 
 Add images under [src/Portfolio.Web/wwwroot/img](../src/Portfolio.Web/wwwroot/img) and point the `Site:PhotoUrl` setting to them.
 
+### SEO and analytics
+
+Every page ships schema.org JSON-LD (breadcrumbs, plus `Person`/`WebSite`/`CreativeWork`/`BlogPosting` where relevant) with no configuration needed. GA4 analytics is opt-in: set `Site:GoogleAnalyticsId` in `appsettings.json` to your Measurement ID to enable it, or leave it blank to omit the analytics script entirely. See [docs/seo-analytics.md](seo-analytics.md) for the full picture, including why the `dev.` subdomain never reaches production analytics.
+
 ## 4. Recommended development workflow
 
 A typical contributor loop looks like this:

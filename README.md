@@ -28,7 +28,10 @@ testable the moment you run it. Swap in your own details to make it yours.
   share buttons), Talks (YouTube embeds), **CV** (HTML + generated **PDF**), Contact
 - **CV ATS-readiness badge** — 8 deterministic checks (contact info, quantified impact, date
   consistency, etc.) scored offline by a console tool, no runtime API calls or keys
-- `og.png` share image, `sitemap.xml`, `robots.txt`, and schema.org JSON-LD — all generated
+- `og.png` share image, `sitemap.xml`, `robots.txt`, and schema.org JSON-LD (`Person`,
+  `WebSite`, `BreadcrumbList`, `CreativeWork`, `BlogPosting`) — all generated
+- Optional **GA4 analytics** via `Site.GoogleAnalyticsId` — omitted entirely when unset, and
+  auto-disabled on `dev.*` subdomains so local/dev traffic never reaches production analytics
 - **Authoritative JSON seeder** — the seed files are the single source of truth; edit one,
   restart, and rows are added / updated / removed to match
 - Health checks at `/health` (liveness) and `/health/db` (DB readiness)
@@ -75,6 +78,10 @@ Everything personal lives in two places — **no code changes required**:
    Each file has a header comment describing its shape.
 
 Add images under `src/Portfolio.Web/wwwroot/img/`; set `Site:PhotoUrl` to show your photo.
+
+To enable GA4 analytics, set `Site:GoogleAnalyticsId` to your Measurement ID (`G-XXXXXXXXXX`);
+leave it blank to ship with no analytics script at all. See
+[docs/seo-analytics.md](docs/seo-analytics.md) for how structured data and analytics are wired up.
 
 The `/cv` page's ATS score badge is generated offline, not on every request — after editing CV
 content, regenerate it with `dotnet run --project tools/CvAtsReview` and commit the updated
