@@ -26,6 +26,8 @@ testable the moment you run it. Swap in your own details to make it yours.
 - Pages: Home, About, Experience, **Work** (case studies with image galleries + lightbox),
   Skills, **Certifications** (badge grid + branded issuer cards), **Blog** (Markdown, drafts,
   share buttons), Talks (YouTube embeds), **CV** (HTML + generated **PDF**), Contact
+- **CV ATS-readiness badge** — 8 deterministic checks (contact info, quantified impact, date
+  consistency, etc.) scored offline by a console tool, no runtime API calls or keys
 - `og.png` share image, `sitemap.xml`, `robots.txt`, and schema.org JSON-LD (`Person`,
   `WebSite`, `BreadcrumbList`, `CreativeWork`, `BlogPosting`) — all generated
 - Optional **GA4 analytics** via `Site.GoogleAnalyticsId` — omitted entirely when unset, and
@@ -81,6 +83,10 @@ To enable GA4 analytics, set `Site:GoogleAnalyticsId` to your Measurement ID (`G
 leave it blank to ship with no analytics script at all. See
 [docs/seo-analytics.md](docs/seo-analytics.md) for how structured data and analytics are wired up.
 
+The `/cv` page's ATS score badge is generated offline, not on every request — after editing CV
+content, regenerate it with `dotnet run --project tools/CvAtsReview` and commit the updated
+`ats-report.json`. See [docs/cv-ats-scoring.md](docs/cv-ats-scoring.md) for how the scoring works.
+
 ## Build & publish
 
 ```bash
@@ -100,7 +106,10 @@ src/Portfolio.Web/                ASP.NET Core Razor Pages app
   appsettings.json                Default site identity and public content
 src/Portfolio.Data/               EF Core entities, migrations, and JSON seed data
   Seed/                           Seed content (edit these to change the site)
+  Seed/ats-report.json            Generated CV ATS-readiness report (see docs/cv-ats-scoring.md)
   Seeding/PortfolioSeeder.cs      Authoritative upsert-by-natural-key seeder
+tests/Portfolio.Web.Tests/        Unit tests
+tools/CvAtsReview/                Offline console tool that regenerates ats-report.json
 docs/                             Notes, design system, and onboarding guides
 ```
 

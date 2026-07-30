@@ -81,6 +81,16 @@ If you change the data model, create a migration:
 dotnet ef migrations add <Name> --project src/Portfolio.Data --startup-project src/Portfolio.Web
 ```
 
+If you change CV-relevant content (experience, projects, skills, certifications, or your `Site`
+identity fields), regenerate the `/cv` page's ATS-readiness report so the badge stays in sync:
+
+```bash
+dotnet run --project tools/CvAtsReview
+```
+
+This writes `src/Portfolio.Data/Seed/ats-report.json`, which should be committed alongside your
+content change. See [docs/cv-ats-scoring.md](cv-ats-scoring.md) for how the score is calculated.
+
 ## 5. Common issues
 
 ### LocalDB is not available
