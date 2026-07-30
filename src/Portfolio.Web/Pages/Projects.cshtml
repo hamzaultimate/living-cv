@@ -20,7 +20,10 @@
 
     @if (projects.Count == 0)
     {
-        <p class="mt-10 font-mono text-sm text-muted">// projects load from the database</p>
+        <div class="mt-10 rounded-lg border border-border bg-surface-2/70 p-8 text-sm text-muted">
+            <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">No projects yet</p>
+            <p class="mt-3 max-w-2xl">Seed content will appear here once the database has been initialized. Until then, this space is ready for your case studies.</p>
+        </div>
     }
     else
     {
@@ -37,8 +40,7 @@
         <div class="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3" data-project-grid>
             @foreach (var p in projects)
             {
-                // Gallery mode: a project with an uploaded screenshot/video leads with its media and
-                // opens a lightbox you can page through. Projects with no media keep the details card.
+                // Projects with media can open a lightbox; those without media keep the details card.
                 var media = new List<(string Url, string? Caption)>();
                 if (!string.IsNullOrWhiteSpace(p.HeroImage)) { media.Add((p.HeroImage!, null)); }
                 foreach (var s in p.Screenshots) { media.Add((s.Url, s.Caption)); }

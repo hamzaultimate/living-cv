@@ -1,8 +1,12 @@
 @page "/blog/{slug}"
 @inject PortfolioContentService Repo
+@inject IOptions<SiteOptions> SiteOpt
 @{
+    var site = SiteOpt.Value;
     var slug = RouteData.Values["slug"]?.ToString() ?? "";
     var post = await Repo.GetBlogPostAsync(slug);
+    string? jsonLd = null;
+    string? breadcrumbLd = null;
     if (post is null)
     {
         Response.StatusCode = 404;
@@ -12,7 +16,41 @@
     {
         ViewData["Title"] = post.Title;
         ViewData["Description"] = post.Description;
+        if (!string.IsNullOrWhiteSpace(post.Cover)) ViewData["OgImage"] = post.Cover;
+        var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+        var article = new Dictionary<string, object?>
+        {
+            ["@context"] = "https://schema.org",
+            ["@type"] = "BlogPosting",
+            ["headline"] = post.Title,
+            ["description"] = post.Description,
+            ["datePublished"] = post.Date.ToString("yyyy-MM-dd"),
+            ["url"] = $"{absBase}/blog/{post.Slug}",
+            ["mainEntityOfPage"] = $"{absBase}/blog/{post.Slug}",
+            ["author"] = new Dictionary<string, object?> { ["@type"] = "Person", ["name"] = site.OwnerName, ["url"] = site.Url },
+        };
+        if (!string.IsNullOrWhiteSpace(post.Cover)) article["image"] = $"{absBase}{post.Cover}";
+        jsonLd = System.Text.Json.JsonSerializer.Serialize(article);
+
+        // Lets Google render "Home > Blog > Post Title" in place of the raw URL in results.
+        var crumbs = new object[]
+        {
+            new Dictionary<string, object?> { ["@type"] = "ListItem", ["position"] = 1, ["name"] = "Home", ["item"] = absBase },
+            new Dictionary<string, object?> { ["@type"] = "ListItem", ["position"] = 2, ["name"] = "Blog", ["item"] = $"{absBase}/blog" },
+            new Dictionary<string, object?> { ["@type"] = "ListItem", ["position"] = 3, ["name"] = post.Title, ["item"] = $"{absBase}/blog/{post.Slug}" },
+        };
+        breadcrumbLd = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object?>
+        {
+            ["@context"] = "https://schema.org",
+            ["@type"] = "BreadcrumbList",
+            ["itemListElement"] = crumbs,
+        });
     }
+}
+@if (jsonLd is not null)
+{
+    <script type="application/ld+json">@Html.Raw(jsonLd)</script>
+    <script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>
 }
 
 @if (post is null)
