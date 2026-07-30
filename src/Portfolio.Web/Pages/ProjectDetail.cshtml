@@ -1,9 +1,11 @@
 @page "/projects/{slug}"
 @inject PortfolioContentService Repo
+@inject IOptions<SiteOptions> SiteOpt
 @{
     var slug = RouteData.Values["slug"]?.ToString() ?? "";
     var p = await Repo.GetProjectAsync(slug);
     string? breadcrumbLd = null;
+    string? projectLd = null;
     if (p is null)
     {
         Response.StatusCode = 404;
@@ -15,24 +17,30 @@
         ViewData["Description"] = p.Summary;
         if (!string.IsNullOrWhiteSpace(p.HeroImage) && !Media.IsVideo(p.HeroImage)) ViewData["OgImage"] = p.HeroImage;
 
+        var site = SiteOpt.Value;
         var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
-        var crumbs = new object[]
-        {
-            new Dictionary<string, object?> { ["@type"] = "ListItem", ["position"] = 1, ["name"] = "Home", ["item"] = absBase },
-            new Dictionary<string, object?> { ["@type"] = "ListItem", ["position"] = 2, ["name"] = "Work", ["item"] = $"{absBase}/projects" },
-            new Dictionary<string, object?> { ["@type"] = "ListItem", ["position"] = 3, ["name"] = p.Title, ["item"] = $"{absBase}/projects/{p.Slug}" },
-        };
-        breadcrumbLd = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object?>
+        breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Work", "/projects"), (p.Title, $"/projects/{p.Slug}"));
+
+        // No reliable ISO datePublished for a case study (Period is free text like
+        // "2022-2023"), so it's omitted rather than guessed — same reasoning as the
+        // sitemap's <lastmod> omission for project routes.
+        var project = new Dictionary<string, object?>
         {
             ["@context"] = "https://schema.org",
-            ["@type"] = "BreadcrumbList",
-            ["itemListElement"] = crumbs,
-        });
+            ["@type"] = "CreativeWork",
+            ["name"] = p.Title,
+            ["description"] = p.Summary,
+            ["url"] = $"{absBase}/projects/{p.Slug}",
+            ["author"] = new Dictionary<string, object?> { ["@type"] = "Person", ["name"] = site.OwnerName, ["url"] = site.Url },
+        };
+        if (p.Tech.Count > 0) project["keywords"] = string.Join(", ", p.Tech);
+        projectLd = System.Text.Json.JsonSerializer.Serialize(project);
     }
 }
 @if (breadcrumbLd is not null)
 {
     <script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>
+    <script type="application/ld+json">@Html.Raw(projectLd)</script>
 }
 
 @if (p is null)
