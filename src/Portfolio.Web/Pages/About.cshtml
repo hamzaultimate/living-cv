@@ -3,7 +3,11 @@
 @{
     ViewData["Title"] = "About";
     var site = SiteOpt.Value;
-    ViewData["Description"] = site.Summary;
+    // site.Summary (used verbatim on /cv) runs ~200 chars — too long for a meta description
+    // (Bing/Google truncate/flag outside ~70-160), so About gets its own short version.
+    ViewData["Description"] = $"{site.OwnerName} — {site.JobTitle} with 9+ years building reliable, high-performance .NET systems, now bringing applied AI into production.";
+    var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+    var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("About", "/about"));
 
     // Keep the icon set aligned with the configured value-prop cards by position.
     var propIcons = new[]
@@ -14,6 +18,7 @@
         "<circle cx='12' cy='12' r='3' /><path d='M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1' />",
     };
 }
+<script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>
 
 <section class="container-page py-16 md:py-20">
     <p class="eyebrow">About</p>

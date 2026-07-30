@@ -4,7 +4,10 @@
     ViewData["Title"] = "Blog";
     ViewData["Description"] = "Notes on .NET, distributed systems, performance, and applied AI.";
     var posts = await Repo.GetBlogPostsAsync();
+    var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+    var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Blog", "/blog"));
 }
+<script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>
 
 <section class="container-page py-16 md:py-20">
     <p class="eyebrow">Blog</p>

@@ -23,6 +23,11 @@ public class SiteOptions
     /// <summary>Canonical public URL of the site, e.g. "https://example.dev".</summary>
     public string Url { get; set; } = "";
 
+    /// <summary>GA4 measurement ID, e.g. "G-XXXXXXXXXX". Empty = analytics script omitted entirely
+    /// (also skipped on the dev subdomain regardless of this value — see _Layout.cshtml).</summary>
+    public string? GoogleAnalyticsId { get; set; }
+    public bool HasGoogleAnalytics => !string.IsNullOrWhiteSpace(GoogleAnalyticsId);
+
     /// <summary>One-paragraph professional summary — used on the CV and as the default meta description.</summary>
     public string Summary { get; set; } = "";
 

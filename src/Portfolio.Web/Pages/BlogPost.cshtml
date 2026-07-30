@@ -33,18 +33,7 @@
         jsonLd = System.Text.Json.JsonSerializer.Serialize(article);
 
         // Lets Google render "Home > Blog > Post Title" in place of the raw URL in results.
-        var crumbs = new object[]
-        {
-            new Dictionary<string, object?> { ["@type"] = "ListItem", ["position"] = 1, ["name"] = "Home", ["item"] = absBase },
-            new Dictionary<string, object?> { ["@type"] = "ListItem", ["position"] = 2, ["name"] = "Blog", ["item"] = $"{absBase}/blog" },
-            new Dictionary<string, object?> { ["@type"] = "ListItem", ["position"] = 3, ["name"] = post.Title, ["item"] = $"{absBase}/blog/{post.Slug}" },
-        };
-        breadcrumbLd = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object?>
-        {
-            ["@context"] = "https://schema.org",
-            ["@type"] = "BreadcrumbList",
-            ["itemListElement"] = crumbs,
-        });
+        breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Blog", "/blog"), (post.Title, $"/blog/{post.Slug}"));
     }
 }
 @if (jsonLd is not null)
