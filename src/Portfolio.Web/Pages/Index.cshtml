@@ -4,7 +4,11 @@
 @{
     var site = SiteOpt.Value;
     ViewData["Title"] = "Home";
-    ViewData["FullTitle"] = $"{site.OwnerName} — {site.Role}";
+    // Search engines truncate/flag title >~65 chars and description outside ~70-160 chars.
+    // site.Role and site.Summary are the long-form versions used on /cv and the CV PDF —
+    // give the homepage its own shorter copy instead of shortening those shared strings.
+    ViewData["FullTitle"] = $"{site.OwnerName} — {site.JobTitle}, .NET & AI";
+    ViewData["Description"] = $"{site.OwnerName} is a {site.JobTitle} with 9+ years building high-performance .NET systems, now building agentic AI products in production.";
     var sameAs = new[] { site.HasLinkedIn ? site.LinkedIn : null, site.HasGitHub ? site.GitHub : null, site.HasYouTube ? site.YouTube : null }
         .Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
     var person = new Dictionary<string, object?>

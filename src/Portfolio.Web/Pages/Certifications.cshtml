@@ -8,6 +8,8 @@
     // Group by issuer, ordering groups by the lowest sortOrder they contain so the most
     // prominent issuers lead. Filter chips and grouped sections share this order.
     var groups = certs.GroupBy(c => c.Issuer).OrderBy(g => g.Min(c => c.SortOrder)).ToList();
+    var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+    var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Certifications", "/certifications"));
 
     string BadgeClass(CertificationStatus s) => s switch
     {
@@ -49,6 +51,7 @@
             "rgb(96 165 250)");
     }
 }
+<script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>
 
 <section class="container-page py-16 md:py-20">
     <p class="eyebrow">Certifications</p>

@@ -14,12 +14,35 @@
     var ogImage = string.IsNullOrWhiteSpace(ogImageOverride)
         ? $"{absBase}/og.png"
         : ogImageOverride.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? ogImageOverride : $"{absBase}{ogImageOverride}";
+    // Same dev-subdomain exclusion as robots.txt (Program.cs) — don't let local/dev
+    // browsing pollute production analytics.
+    var isDevHost = Context.Request.Host.Host.StartsWith("dev.", StringComparison.OrdinalIgnoreCase);
+    var showAnalytics = site.HasGoogleAnalytics && !isDevHost;
+    // Site-wide identity markup — separate from the homepage's Person schema, which
+    // describes the person rather than the site itself. Every page carries this.
+    var websiteLd = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object?>
+    {
+        ["@context"] = "https://schema.org",
+        ["@type"] = "WebSite",
+        ["name"] = site.OwnerName,
+        ["url"] = site.Url,
+    });
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    @if (showAnalytics)
+    {
+        <script async src="https://www.googletagmanager.com/gtag/js?id=@site.GoogleAnalyticsId"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() { dataLayer.push(arguments); }
+            gtag('js', new Date());
+            gtag('config', '@site.GoogleAnalyticsId');
+        </script>
+    }
     <script>
         (function () {
             try {
@@ -40,6 +63,7 @@
     <meta name="theme-color" content="#0f172a" />
     <meta name="color-scheme" content="light dark" />
     <link rel="canonical" href="@absUrl" />
+    <script type="application/ld+json">@Html.Raw(websiteLd)</script>
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="@site.OwnerName" />

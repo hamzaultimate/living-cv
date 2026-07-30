@@ -5,7 +5,10 @@
     ViewData["Title"] = "Experience";
     ViewData["Description"] = $"{SiteOpt.Value.OwnerName}'s engineering experience — reverse-chronological, outcome-focused work history.";
     var roles = await Repo.GetExperiencesAsync();
+    var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+    var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Experience", "/experience"));
 }
+<script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>
 
 <section class="container-page py-16 md:py-20">
     <p class="eyebrow">Experience</p>
