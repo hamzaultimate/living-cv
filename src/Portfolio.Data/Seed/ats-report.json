@@ -1,0 +1,50 @@
+{
+  "ruleScore": 80,
+  "aiScore": null,
+  "combinedScore": 80,
+  "findings": [
+    {
+      "category": "Contact",
+      "passed": true,
+      "message": "Email plus at least one other contact method present."
+    },
+    {
+      "category": "Summary",
+      "passed": true,
+      "message": "Summary is 192 characters."
+    },
+    {
+      "category": "Experience",
+      "passed": true,
+      "message": "4 experience entries, all with Company/Title/Start."
+    },
+    {
+      "category": "Impact",
+      "passed": false,
+      "message": "Only 29% of highlight/impact lines are quantified (target 50%\u002B)."
+    },
+    {
+      "category": "Length",
+      "passed": true,
+      "message": "No highlight, summary, or impact line exceeds 220 characters."
+    },
+    {
+      "category": "Skills",
+      "passed": true,
+      "message": "6 skill groups, none empty."
+    },
+    {
+      "category": "Dates",
+      "passed": true,
+      "message": "All experience dates use a consistent \u0027YYYY\u0027 format."
+    },
+    {
+      "category": "Bonus",
+      "passed": true,
+      "message": "Certifications and/or projects present."
+    }
+  ],
+  "aiStrengths": [],
+  "aiCritiques": [],
+  "generatedAtUtc": "2026-07-29T00:46:26.2569445+00:00"
+}

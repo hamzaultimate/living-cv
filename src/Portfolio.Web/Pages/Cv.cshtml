@@ -1,18 +1,18 @@
 @page "/cv"
 @inject PortfolioContentService Repo
 @inject IOptions<SiteOptions> SiteOpt
+@inject CvAtsReportProvider AtsReportProvider
 @{
     ViewData["Title"] = "CV";
     var site = SiteOpt.Value;
     ViewData["Description"] = $"Curriculum vitae — {site.OwnerName}, {site.JobTitle}.";
-    var roles = await Repo.GetExperiencesAsync();
-    var skills = await Repo.GetSkillsAsync();
-    var certs = await Repo.GetCertificationsAsync();
-    var projects = await Repo.GetFeaturedProjectsAsync();
-    var order = new[] { "Backend", "Architecture", "Cloud/DevOps", "Data", "AI", "Embedded/IoT" };
-    var groups = skills.GroupBy(s => s.Group).OrderBy(g => { var i = Array.IndexOf(order, g.Key); return i < 0 ? int.MaxValue : i; });
-    var contacts = new[] { site.HasEmail ? site.Email : null, site.HasPhone ? site.Phone : null, site.HasLinkedIn ? site.LinkedIn : null, site.HasGitHub ? site.GitHub : null }
-        .Where(x => !string.IsNullOrWhiteSpace(x));
+    var data = await Repo.BuildCvDataAsync(site);
+    var roles = data.Experience;
+    var groups = data.SkillGroups;
+    var projects = data.Projects;
+    var certs = data.Certifications;
+    var contacts = data.Contacts;
+    var atsReport = AtsReportProvider.GetReport();
 }
 
 <section class="container-page py-16 md:py-20 print-light">
@@ -25,9 +25,50 @@
                 <p class="mt-2 font-mono text-xs text-muted">@string.Join("  ·  ", contacts)</p>
             }
         </div>
-        <div class="flex gap-3 no-print">
+        <div class="flex flex-wrap items-start gap-3 no-print">
             <a href="/cv.pdf" class="btn btn-primary">Download PDF</a>
             <button onclick="window.print()" class="btn btn-ghost">Print</button>
+            @if (atsReport is not null)
+            {
+                <details>
+                    <summary class="btn btn-ghost">ATS Score: @atsReport.CombinedScore/100</summary>
+                    <div class="card mt-3 max-w-md text-sm">
+                        <p class="font-mono text-xs text-muted">
+                            Rules @atsReport.RuleScore/100
+                            @if (atsReport.AiScore.HasValue)
+                            {
+                                <text> · AI review @atsReport.AiScore/100</text>
+                            }
+                        </p>
+                        <ul class="mt-2 space-y-1">
+                            @foreach (var finding in atsReport.Findings)
+                            {
+                                <li class="@(finding.Passed ? "text-muted" : "text-accent")">@(finding.Passed ? "✓" : "✗") @finding.Message</li>
+                            }
+                        </ul>
+                        @if (atsReport.AiStrengths.Count > 0)
+                        {
+                            <p class="mt-3 font-mono text-xs text-muted">Strengths</p>
+                            <ul class="mt-1 space-y-1">
+                                @foreach (var strength in atsReport.AiStrengths)
+                                {
+                                    <li>@strength</li>
+                                }
+                            </ul>
+                        }
+                        @if (atsReport.AiCritiques.Count > 0)
+                        {
+                            <p class="mt-3 font-mono text-xs text-muted">To improve</p>
+                            <ul class="mt-1 space-y-1">
+                                @foreach (var critique in atsReport.AiCritiques)
+                                {
+                                    <li>△ @critique</li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </details>
+            }
         </div>
     </div>
 
@@ -59,7 +100,7 @@
         </div>
     }
 
-    @if (skills.Count > 0)
+    @if (groups.Count > 0)
     {
         <h2 class="mt-12 text-xl">Skills</h2>
         <div class="mt-4 space-y-2">
