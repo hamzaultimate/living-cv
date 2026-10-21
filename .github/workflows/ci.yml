@@ -31,3 +31,6 @@ jobs:
 
       - name: Build
         run: dotnet build src/Portfolio.Web/Portfolio.Web.csproj -c Release --no-restore
+
+      - name: Test
+        run: dotnet test tests/Portfolio.Web.Tests/Portfolio.Web.Tests.csproj -c Release
