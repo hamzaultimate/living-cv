@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -209,5 +210,231 @@ public class SiteProfileProviderTests
 
         using var check = database.CreateContext();
         Assert.Equal(1, await check.SiteProfiles.CountAsync());
+    }
+
+    private static async Task<T> Eventually<T>(Func<Task<T>> read, Func<T, bool> done)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (true)
+        {
+            var value = await read();
+            if (done(value) || DateTime.UtcNow > deadline) return value;
+            await Task.Delay(20);
+        }
+    }
+
+    private static async Task Rename(TestDatabase database, string name)
+    {
+        using var db = database.CreateContext();
+        (await db.SiteProfiles.SingleAsync()).OwnerName = name;
+        await db.SaveChangesAsync();
+    }
+
+    private static SiteProfileProvider CreateCustom(
+        IServiceCollection services, TimeSpan? cacheDuration = null, TimeSpan? firstLoadTimeout = null)
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["ConnectionStrings:Default"] = "test" }).Build();
+        return new SiteProfileProvider(
+            services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>(),
+            new MemoryCache(new MemoryCacheOptions()),
+            Options.Create(Defaults()),
+            config,
+            NullLogger<SiteProfileProvider>.Instance,
+            cacheDuration,
+            firstLoadTimeout);
+    }
+
+    [Fact]
+    public async Task OverLongConfigValues_AreTrimmedAndTruncatedToTheColumnLimits()
+    {
+        using var database = new TestDatabase();
+        var defaults = Defaults();
+        defaults.OwnerName = "  " + new string('n', 500) + "  ";
+        defaults.BrandName = new string('b', 100);
+        defaults.Role = new string('r', 400);
+        defaults.Url = "https://example.dev/" + new string('u', 400);
+        defaults.GoogleAnalyticsId = new string('g', 80);
+        defaults.PhotoUrl = new string('p', 500);
+        defaults.TemplateKey = new string('t', 90);
+        var (provider, _) = Create(database, defaults);
+
+        var site = await provider.GetAsync();
+
+        using var db = database.CreateContext();
+        var row = await db.SiteProfiles.SingleAsync();
+        Assert.Equal(SiteProfile.MaxLength.OwnerName, row.OwnerName.Length);
+        Assert.Equal(new string('n', 200), row.OwnerName);
+        Assert.Equal(SiteProfile.MaxLength.BrandName, row.BrandName.Length);
+        Assert.Equal(SiteProfile.MaxLength.Role, row.Role.Length);
+        Assert.Equal(SiteProfile.MaxLength.Url, row.Url.Length);
+        Assert.Equal(SiteProfile.MaxLength.GoogleAnalyticsId, row.GoogleAnalyticsId!.Length);
+        Assert.Equal(SiteProfile.MaxLength.PhotoUrl, row.PhotoUrl!.Length);
+        Assert.Equal(SiteProfile.MaxLength.TemplateKey, row.TemplateKey.Length);
+        Assert.Equal(row.OwnerName, site.OwnerName);
+    }
+
+    [Fact]
+    public async Task OverLongConfigValues_AreFittedInAuthoritativeMode()
+    {
+        using var database = new TestDatabase();
+        using (var db = database.CreateContext())
+        {
+            db.SiteProfiles.Add(new SiteProfile { OwnerName = "Edited" });
+            await db.SaveChangesAsync();
+        }
+        var defaults = Defaults();
+        defaults.OwnerName = new string('n', 500);
+        var (provider, _) = Create(database, defaults, seedMode: "Authoritative");
+
+        await provider.GetAsync();
+
+        using var check = database.CreateContext();
+        Assert.Equal(SiteProfile.MaxLength.OwnerName, (await check.SiteProfiles.SingleAsync()).OwnerName.Length);
+    }
+
+    [Fact]
+    public async Task InsertRace_ReadsTheRowTheOtherInstanceInserted()
+    {
+        using var database = new TestDatabase();
+        var services = new ServiceCollection();
+        services.AddScoped(_ => new PortfolioDbContext(new DbContextOptionsBuilder<PortfolioDbContext>()
+            .UseSqlite(database.Connection)
+            .AddInterceptors(new InsertFirstInterceptor(database))
+            .Options));
+        var provider = CreateCustom(services);
+
+        var site = await provider.GetAsync();
+
+        Assert.Equal("Raced", site.OwnerName);
+    }
+
+    [Fact]
+    public async Task NonDuplicateInsertFailure_IsNotMaskedAsARace_AndFallsBackToDefaults()
+    {
+        using var database = new TestDatabase();
+        var services = new ServiceCollection();
+        services.AddScoped(_ => new PortfolioDbContext(new DbContextOptionsBuilder<PortfolioDbContext>()
+            .UseSqlite(database.Connection)
+            .AddInterceptors(new FailingSaveInterceptor())
+            .Options));
+        var provider = CreateCustom(services);
+
+        var site = await provider.GetAsync();
+
+        Assert.Equal("Alex Rivera", site.OwnerName);
+        using var check = database.CreateContext();
+        Assert.Equal(0, await check.SiteProfiles.CountAsync());
+    }
+
+    [Fact]
+    public async Task ExpiredProfile_IsServedImmediatelyWhileRefreshingInTheBackground()
+    {
+        using var database = new TestDatabase();
+        var gate = new ManualResetEventSlim(true);
+        var services = new ServiceCollection();
+        services.AddScoped(_ => { gate.Wait(); return database.CreateContext(); });
+        var provider = CreateCustom(services, cacheDuration: TimeSpan.FromMilliseconds(50));
+        var first = await provider.GetAsync();
+        await Rename(database, "Renamed");
+        await Task.Delay(120);
+
+        gate.Reset(); // the refresh now blocks on the database
+        var stale = await provider.GetAsync().WaitAsync(TimeSpan.FromSeconds(2));
+        var staleAgain = await provider.GetAsync().WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Same(first, stale);
+        Assert.Same(first, staleAgain);
+        gate.Set();
+        var refreshed = await Eventually(() => provider.GetAsync(), s => s.OwnerName == "Renamed");
+        Assert.Equal("Renamed", refreshed.OwnerName);
+    }
+
+    [Fact]
+    public async Task ExpiredProfile_KeepsServingTheLastGoodOneWhenTheRefreshFails()
+    {
+        using var database = new TestDatabase();
+        var fail = false;
+        var services = new ServiceCollection();
+        services.AddScoped(_ => fail ? throw new InvalidOperationException("db down") : database.CreateContext());
+        var provider = CreateCustom(services, cacheDuration: TimeSpan.FromMilliseconds(50));
+        var first = await provider.GetAsync();
+        await Rename(database, "Stored");
+        fail = true;
+        await Task.Delay(120);
+
+        await provider.GetAsync();
+        await Task.Delay(100);
+
+        Assert.Same(first, await provider.GetAsync());
+    }
+
+    [Fact]
+    public async Task FirstLoad_ServesConfigDefaultsAfterTheTimeout_ThenPicksUpTheDatabase()
+    {
+        using var database = new TestDatabase();
+        using (var db = database.CreateContext())
+        {
+            db.SiteProfiles.Add(new SiteProfile { OwnerName = "From Database" });
+            await db.SaveChangesAsync();
+        }
+        var gate = new ManualResetEventSlim(false);
+        var services = new ServiceCollection();
+        services.AddScoped(_ => { gate.Wait(); return database.CreateContext(); });
+        var provider = CreateCustom(services, firstLoadTimeout: TimeSpan.FromMilliseconds(100));
+
+        var site = await provider.GetAsync().WaitAsync(TimeSpan.FromSeconds(3));
+
+        Assert.Equal("Alex Rivera", site.OwnerName);
+        gate.Set();
+        var loaded = await Eventually(() => provider.GetAsync(), s => s.OwnerName == "From Database");
+        Assert.Equal("From Database", loaded.OwnerName);
+    }
+
+    [Fact]
+    public async Task Invalidate_IsNotUndoneByALoadThatWasAlreadyInFlight()
+    {
+        using var database = new TestDatabase();
+        var entered = new SemaphoreSlim(0);
+        var gate = new ManualResetEventSlim(false);
+        var services = new ServiceCollection();
+        services.AddScoped(_ => { entered.Release(); gate.Wait(); return database.CreateContext(); });
+        var provider = CreateCustom(services, firstLoadTimeout: TimeSpan.FromSeconds(10));
+
+        var inFlight = provider.GetAsync();
+        Assert.True(await entered.WaitAsync(TimeSpan.FromSeconds(5)));
+        provider.Invalidate();
+        gate.Set();
+        Assert.Equal("Alex Rivera", (await inFlight).OwnerName);
+
+        await Rename(database, "Renamed");
+
+        // The abandoned load must not have repopulated the cache with the old profile.
+        Assert.Equal("Renamed", (await provider.GetAsync()).OwnerName);
+    }
+
+    private sealed class InsertFirstInterceptor(TestDatabase database) : SaveChangesInterceptor
+    {
+        private bool _done;
+
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            if (!_done)
+            {
+                _done = true;
+                using var other = database.CreateContext();
+                other.SiteProfiles.Add(new SiteProfile { OwnerName = "Raced" });
+                await other.SaveChangesAsync(cancellationToken);
+            }
+            return result;
+        }
+    }
+
+    private sealed class FailingSaveInterceptor : SaveChangesInterceptor
+    {
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default) =>
+            throw new DbUpdateException("string or binary data would be truncated", new InvalidOperationException("truncation"));
     }
 }

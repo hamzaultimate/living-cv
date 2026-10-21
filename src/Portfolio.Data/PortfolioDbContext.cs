@@ -23,17 +23,17 @@ public class PortfolioDbContext : DbContext
             // Singleton: the only legal row has Id = 1.
             e.Property(x => x.Id).ValueGeneratedNever();
             e.ToTable(t => t.HasCheckConstraint("CK_SiteProfiles_Singleton", "[Id] = 1"));
-            e.Property(x => x.OwnerName).HasMaxLength(200);
-            e.Property(x => x.BrandName).HasMaxLength(80);
-            e.Property(x => x.Role).HasMaxLength(300);
-            e.Property(x => x.JobTitle).HasMaxLength(200);
-            e.Property(x => x.Url).HasMaxLength(300);
-            e.Property(x => x.GoogleAnalyticsId).HasMaxLength(40);
-            e.Property(x => x.PhotoUrl).HasMaxLength(400);
-            e.Property(x => x.PhotoUrlLight).HasMaxLength(400);
-            e.Property(x => x.TemplateKey).HasMaxLength(60);
-            e.Property(x => x.ThemeKey).HasMaxLength(60);
-            e.Property(x => x.AccentColor).HasMaxLength(40);
+            e.Property(x => x.OwnerName).HasMaxLength(SiteProfile.MaxLength.OwnerName);
+            e.Property(x => x.BrandName).HasMaxLength(SiteProfile.MaxLength.BrandName);
+            e.Property(x => x.Role).HasMaxLength(SiteProfile.MaxLength.Role);
+            e.Property(x => x.JobTitle).HasMaxLength(SiteProfile.MaxLength.JobTitle);
+            e.Property(x => x.Url).HasMaxLength(SiteProfile.MaxLength.Url);
+            e.Property(x => x.GoogleAnalyticsId).HasMaxLength(SiteProfile.MaxLength.GoogleAnalyticsId);
+            e.Property(x => x.PhotoUrl).HasMaxLength(SiteProfile.MaxLength.PhotoUrl);
+            e.Property(x => x.PhotoUrlLight).HasMaxLength(SiteProfile.MaxLength.PhotoUrlLight);
+            e.Property(x => x.TemplateKey).HasMaxLength(SiteProfile.MaxLength.TemplateKey);
+            e.Property(x => x.ThemeKey).HasMaxLength(SiteProfile.MaxLength.ThemeKey);
+            e.Property(x => x.AccentColor).HasMaxLength(SiteProfile.MaxLength.AccentColor);
             e.OwnsOne(x => x.Hero, o => o.ToJson());
             e.OwnsMany(x => x.Metrics, o => o.ToJson());
             e.OwnsOne(x => x.About, o =>

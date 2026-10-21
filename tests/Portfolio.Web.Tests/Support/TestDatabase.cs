@@ -19,6 +19,8 @@ public sealed class TestDatabase : IDisposable
         }
     }
 
+    public SqliteConnection Connection => _connection;
+
     public DbContextOptions<PortfolioDbContext> Options =>
         new DbContextOptionsBuilder<PortfolioDbContext>().UseSqlite(_connection).Options;
 

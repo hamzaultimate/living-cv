@@ -54,6 +54,29 @@ public static class SiteProfileMapper
         return p;
     }
 
+    /// <summary>Trims the length-limited text columns and truncates them to their maximum lengths.</summary>
+    public static void FitToColumns(SiteProfile p)
+    {
+        p.OwnerName = Fit(p.OwnerName, SiteProfile.MaxLength.OwnerName)!;
+        p.BrandName = Fit(p.BrandName, SiteProfile.MaxLength.BrandName)!;
+        p.Role = Fit(p.Role, SiteProfile.MaxLength.Role)!;
+        p.JobTitle = Fit(p.JobTitle, SiteProfile.MaxLength.JobTitle)!;
+        p.Url = Fit(p.Url, SiteProfile.MaxLength.Url)!;
+        p.GoogleAnalyticsId = Fit(p.GoogleAnalyticsId, SiteProfile.MaxLength.GoogleAnalyticsId);
+        p.PhotoUrl = Fit(p.PhotoUrl, SiteProfile.MaxLength.PhotoUrl);
+        p.PhotoUrlLight = Fit(p.PhotoUrlLight, SiteProfile.MaxLength.PhotoUrlLight);
+        p.TemplateKey = Fit(p.TemplateKey, SiteProfile.MaxLength.TemplateKey)!;
+        p.ThemeKey = Fit(p.ThemeKey, SiteProfile.MaxLength.ThemeKey);
+        p.AccentColor = Fit(p.AccentColor, SiteProfile.MaxLength.AccentColor);
+    }
+
+    private static string? Fit(string? value, int max)
+    {
+        if (value is null) return null;
+        value = value.Trim();
+        return value.Length > max ? value[..max].TrimEnd() : value;
+    }
+
     /// <summary>Overwrites every profile field from <paramref name="o"/>.</summary>
     public static void CopyTo(SiteOptions o, SiteProfile p)
     {

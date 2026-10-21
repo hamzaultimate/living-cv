@@ -6,6 +6,22 @@ namespace Portfolio.Data.Entities;
 /// </summary>
 public class SiteProfile
 {
+    /// <summary>Column maximum lengths, shared by the model configuration and anything that writes the row.</summary>
+    public static class MaxLength
+    {
+        public const int OwnerName = 200;
+        public const int BrandName = 80;
+        public const int Role = 300;
+        public const int JobTitle = 200;
+        public const int Url = 300;
+        public const int GoogleAnalyticsId = 40;
+        public const int PhotoUrl = 400;
+        public const int PhotoUrlLight = 400;
+        public const int TemplateKey = 60;
+        public const int ThemeKey = 60;
+        public const int AccentColor = 40;
+    }
+
     public const int SingletonId = 1;
 
     public int Id { get; set; } = SingletonId;
