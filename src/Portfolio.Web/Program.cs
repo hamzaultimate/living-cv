@@ -210,3 +210,5 @@ static async Task MigrateAndSeedAsync(WebApplication app)
         app.Logger.LogError(ex, "Database migrate/seed failed — site still starts; DB features may be unavailable.");
     }
 }
+
+public partial class Program;
