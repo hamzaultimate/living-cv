@@ -11,7 +11,7 @@ namespace Portfolio.Web.Security;
 /// Why it exists: the account lockout is global (one account, so every failed attempt counts, whatever name was
 /// typed), which lets a stranger keep the owner locked out by failing on purpose. A browser that holds a valid
 /// cookie is not turned away by that lockout; it still has to give the correct password and is still subject to the
-/// per-address throttle. The cookie is useless on its own, and an attacker who never signed in has none.
+/// per-address throttle (its own, separate allowance, keyed by the cookie). The cookie is useless on its own, and an attacker who never signed in has none.
 ///
 /// The cookie is encrypted and signed with Data Protection and bound to the current password hash, so it stops
 /// working when the password is reset (including <c>reset-owner</c>). It is deliberately not bound to the security
@@ -38,8 +38,23 @@ public sealed class KnownDevices
     public string Issue(OwnerAccount account) =>
         _protector.Protect($"{Binding(account)}|{_time.GetUtcNow().ToUnixTimeSeconds()}");
 
-    public bool IsValid(string? token, OwnerAccount account)
+    /// <summary>
+    /// True when the token is one this installation issued and it has not expired. It does not need the account, so it
+    /// is cheap enough to run before any database work; <see cref="IsValid"/> adds the password binding.
+    /// </summary>
+    public bool IsSealed(string? token) => TryOpen(token, out _);
+
+    public bool IsValid(string? token, OwnerAccount account) =>
+        TryOpen(token, out var binding) &&
+        CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(binding), Encoding.UTF8.GetBytes(Binding(account)));
+
+    /// <summary>Throttle key for a browser holding a genuine token, so it has its own allowance apart from its address.</summary>
+    public static string ThrottleKey(string token) =>
+        "dev:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
+
+    private bool TryOpen(string? token, out string binding)
     {
+        binding = "";
         if (string.IsNullOrEmpty(token) || token.Length > 1024) return false;
         try
         {
@@ -47,7 +62,8 @@ public sealed class KnownDevices
             if (parts.Length != 2 || !long.TryParse(parts[1], out var issued)) return false;
             var age = _time.GetUtcNow() - DateTimeOffset.FromUnixTimeSeconds(issued);
             if (age > Lifetime || age < TimeSpan.FromMinutes(-5)) return false;
-            return CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(parts[0]), Encoding.UTF8.GetBytes(Binding(account)));
+            binding = parts[0];
+            return true;
         }
         catch (CryptographicException)
         {

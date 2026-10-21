@@ -25,7 +25,7 @@ public readonly record struct SignInContext(string? ClientKey = null, string? De
 /// Attempts are serialised in-process, so parallel guesses cannot overshoot the limit and the
 /// expensive hash runs one at a time.
 /// A stranger could use the shared lockout to keep the owner out, so two things sit around it: a per-address
-/// throttle that turns a flood away before it reaches the account counter or the hash, and the known-device cookie
+/// throttle (per cookie for a known device) that turns a flood away before it reaches the account counter or the hash, and the known-device cookie
 /// (see <see cref="KnownDevices"/>), which lets a browser that has signed in before skip the lockout (not the password).
 /// </summary>
 public sealed class OwnerAccountService
@@ -114,9 +114,13 @@ public sealed class OwnerAccountService
     public async Task<OwnerSignInResult> SignInAsync(string? userName, string? password, SignInContext context = default, CancellationToken ct = default)
     {
         password ??= "";
-        // Per-address allowance first: a flood from one place is refused here, before it can queue for the gate,
-        // cost a hash, or touch the account's failure count.
-        if (context.ClientKey is { } client && !_throttle.TryAcquire(client))
+        // Allowance first: a flood is refused here, before it can queue for the gate, cost a hash, or touch the
+        // account's failure count. A browser holding a genuine known-device cookie (checked without the database)
+        // draws on its own allowance, so a stranger sharing its address (proxy without forwarded headers, CGNAT)
+        // cannot use up the owner's. That allowance also caps guessing with a stolen cookie, wherever it is used from.
+        // Everyone else is counted against their address.
+        var throttleKey = _devices.IsSealed(context.DeviceToken) ? KnownDevices.ThrottleKey(context.DeviceToken!) : context.ClientKey;
+        if (throttleKey is not null && !_throttle.TryAcquire(throttleKey))
             return new OwnerSignInResult(SignInOutcome.Throttled);
 
         // Sign-ins queue one at a time; a flood gets turned away rather than piling up behind the hash.
@@ -147,13 +151,13 @@ public sealed class OwnerAccountService
                 var newHash = await RecordSuccessAsync(verification == PasswordVerificationResult.SuccessRehashNeeded ? password : null, ct);
                 // Keep the returned account current: the known-device cookie issued from it is bound to the hash.
                 if (newHash is not null) account.PasswordHash = newHash;
-                if (context.ClientKey is { } ok) _throttle.Reset(ok);
+                if (throttleKey is not null) _throttle.Reset(throttleKey);
                 return new OwnerSignInResult(SignInOutcome.Succeeded, account);
             }
 
             // A wrong guess from a known device does not add to the shared failure count. Such a browser is not
             // subject to the lockout anyway, so counting would only lock out the owner's other devices after their
-            // own typos. Guessing from it is still bounded by the per-address throttle, and the password is still required.
+            // own typos. Guessing from it is still bounded by its own throttle allowance, and the password is still required.
             if (!knownDevice)
                 await RecordFailureAsync(now, ct);
             return new OwnerSignInResult(SignInOutcome.Failed);

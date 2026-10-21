@@ -257,6 +257,50 @@ public class OwnerAccountServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task KnownDevice_SignsInWhileTheSharedAddressAllowanceIsUsedUp()
+    {
+        var service = await WithOwnerAsync();
+        var token = await TrustedDeviceTokenAsync(service);
+        // A stranger behind the same address (or the "unknown" key) uses up that address's allowance.
+        var shared = new SignInContext(ClientKey: "unknown");
+        for (var i = 0; i < SignInThrottle.MaxAttempts; i++)
+            await service.SignInAsync("owner", "wrong password", shared);
+        Assert.Equal(SignInOutcome.Throttled, (await service.SignInAsync("owner", Password, shared)).Outcome);
+
+        var owner = new SignInContext(ClientKey: "unknown", DeviceToken: token);
+        Assert.Equal(SignInOutcome.Succeeded, (await service.SignInAsync("owner", Password, owner)).Outcome);
+    }
+
+    [Fact]
+    public async Task KnownDevice_WrongGuessesAreBoundedByTheCookiesOwnAllowance()
+    {
+        var service = await WithOwnerAsync();
+        var token = await TrustedDeviceTokenAsync(service);
+
+        // The same cookie from different addresses still draws on one allowance.
+        for (var i = 0; i < SignInThrottle.MaxAttempts; i++)
+            Assert.Equal(SignInOutcome.Failed, (await service.SignInAsync("owner", "wrong password", new SignInContext("198.51.100." + i, token))).Outcome);
+
+        Assert.Equal(SignInOutcome.Throttled, (await service.SignInAsync("owner", Password, new SignInContext("203.0.113.50", token))).Outcome);
+
+        // Another browser's allowance is separate.
+        Assert.Equal(SignInOutcome.Succeeded, (await service.SignInAsync("owner", Password, new SignInContext(ClientKey: "203.0.113.50"))).Outcome);
+    }
+
+    [Fact]
+    public async Task BrowsersWithoutAGenuineCookie_StillShareTheirAddressAllowance()
+    {
+        var service = await WithOwnerAsync();
+        var address = "198.51.100.7";
+        for (var i = 0; i < SignInThrottle.MaxAttempts; i++)
+            await service.SignInAsync("owner", "wrong password", new SignInContext(address));
+
+        Assert.Equal(SignInOutcome.Throttled, (await service.SignInAsync("owner", Password, new SignInContext(address))).Outcome);
+        // A made-up cookie does not earn a fresh allowance.
+        Assert.Equal(SignInOutcome.Throttled, (await service.SignInAsync("owner", Password, new SignInContext(address, "not-a-real-token"))).Outcome);
+    }
+
+    [Fact]
     public async Task Throttle_RejectedAttemptsDoNotTouchTheAccountCounter()
     {
         var service = await WithOwnerAsync();
