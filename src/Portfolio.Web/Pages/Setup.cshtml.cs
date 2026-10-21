@@ -79,8 +79,8 @@ public partial class SetupModel : PageModel
                 return NotFound();
             default:
                 _logger.LogInformation("Owner account created.");
-                TempData["Flash"] = "Owner account created. Sign in to continue.";
-                return Redirect(AdminAuth.LoginPath);
+                TempData[Admin.AdminPageModel.FlashKey] = "Owner account created. Sign in to continue.";
+                return RedirectToPage("/Admin/Login");
         }
     }
 

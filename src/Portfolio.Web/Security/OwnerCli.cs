@@ -4,7 +4,7 @@ using Portfolio.Data.Entities;
 namespace Portfolio.Web.Security;
 
 /// <summary>
-/// <c>dotnet run --project src/Portfolio.Web -- reset-owner</c>: sets a new owner password from the server's own shell.
+/// <c>dotnet run --project src/Portfolio.Web -- reset-owner</c>: sets a new owner password from the server's own shell and prints the account's user name.
 /// There is deliberately no web or email route for this; whoever can run the command already controls the deployment.
 /// The command runs before the web host starts listening and exits when done.
 /// </summary>
@@ -59,7 +59,10 @@ public static class OwnerCli
                 return 1;
             }
 
-            await output.WriteLineAsync("Owner password changed. Existing sessions are signed out and any lockout is cleared.");
+            await output.WriteLineAsync("Owner password changed. Existing sessions and remembered browsers are signed out and any lockout is cleared.");
+            // Whoever can run this command already controls the deployment and the database, so showing the
+            // stored user name gives them nothing new, and it covers a forgotten name.
+            await output.WriteLineAsync($"Sign in with the user name: {await accounts.GetUserNameAsync()}");
             return 0;
         }
         catch (Exception ex)

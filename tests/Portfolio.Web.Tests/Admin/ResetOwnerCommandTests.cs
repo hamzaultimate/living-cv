@@ -63,6 +63,7 @@ public class ResetOwnerCommandTests
 
         Assert.Equal(0, code);
         Assert.DoesNotContain(NewPassword, output + err);
+        Assert.Contains($"user name: {AdminApp.UserName}", output);
         Assert.Equal(SignInOutcome.Failed, await TrySignInAsync(app, AdminApp.Password));
         Assert.Equal(SignInOutcome.Succeeded, await TrySignInAsync(app, NewPassword));
     }
