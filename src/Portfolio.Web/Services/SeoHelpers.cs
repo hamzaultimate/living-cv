@@ -6,9 +6,9 @@ namespace Portfolio.Web.Services;
 public static class SeoHelpers
 {
     /// <summary>The absolute base URL (no trailing slash) for canonical/OG/sitemap/JSON-LD links.
-    /// Taken from Site:Url so every host the app answers on (IP, hosting-panel name, dev.*, or a
+    /// Taken from the site profile Url so every host the app answers on (IP, hosting-panel name, dev.*, or a
     /// spoofed Host header) advertises the one canonical domain. Falls back to the request's own
-    /// scheme+host only when Site:Url isn't a valid http(s) URL.</summary>
+    /// scheme+host only when the profile Url isn't a valid http(s) URL.</summary>
     public static async Task<string> AbsoluteBaseAsync(HttpContext ctx)
     {
         var siteUrl = (await ctx.RequestServices.GetRequiredService<ISiteProfileProvider>().GetAsync(ctx.RequestAborted)).Url;

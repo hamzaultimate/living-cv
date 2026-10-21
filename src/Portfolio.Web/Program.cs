@@ -73,21 +73,23 @@ if (!app.Environment.IsDevelopment())
 // SEO: force a single canonical host. www.<domain> and <domain> otherwise both serve
 // 200 with their own self-referencing canonical tag, splitting ranking/link signals
 // between two hostnames Google sees as duplicates. Redirect www -> apex to match the
-// canonical/OG/sitemap URLs, which are already apex-based (Site:Url).
-var canonicalHost = Uri.TryCreate(app.Configuration["Site:Url"], UriKind.Absolute, out var siteUri) ? siteUri.Host : null;
-if (!string.IsNullOrEmpty(canonicalHost))
+// canonical/OG/sitemap URLs, which are already apex-based (the profile Url). The canonical
+// host follows the profile, so editing the Url in /admin takes effect without a restart.
+app.Use(async (ctx, next) =>
 {
-    app.Use(async (ctx, next) =>
+    var host = ctx.Request.Host.Host;
+    if (host.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
     {
-        if (ctx.Request.Host.Host.Equals($"www.{canonicalHost}", StringComparison.OrdinalIgnoreCase))
+        var siteUrl = (await ctx.RequestServices.GetRequiredService<ISiteProfileProvider>().GetAsync(ctx.RequestAborted)).Url;
+        if (Uri.TryCreate(siteUrl, UriKind.Absolute, out var siteUri) && host.Equals($"www.{siteUri.Host}", StringComparison.OrdinalIgnoreCase))
         {
-            var target = $"{ctx.Request.Scheme}://{canonicalHost}{ctx.Request.PathBase}{ctx.Request.Path}{ctx.Request.QueryString}";
+            var target = $"{ctx.Request.Scheme}://{siteUri.Host}{ctx.Request.PathBase}{ctx.Request.Path}{ctx.Request.QueryString}";
             ctx.Response.Redirect(target, permanent: true);
             return;
         }
-        await next();
-    });
-}
+    }
+    await next();
+});
 
 app.UseHttpsRedirection();
 
