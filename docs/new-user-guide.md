@@ -24,7 +24,7 @@ dotnet run --project src/Portfolio.Web
 The first run will:
 
 - apply EF Core migrations
-- seed the demo content automatically
+- seed the demo content into any empty table (existing rows are never changed)
 - launch over HTTPS by default at a local URL such as `https://localhost:7239`
 
 Open the printed URL in your browser. The app also exposes health endpoints at:
@@ -47,9 +47,11 @@ Edit the `Site` section in [src/Portfolio.Web/appsettings.json](../src/Portfolio
 - links such as GitHub, LinkedIn, and email
 - the profile photo URL
 
+These values are the defaults for the site profile. With a database, they are copied into a profile row on first run and that row is used afterwards; edit the `Site` section before the first run, or set `Seed:Mode=Authoritative` to re-apply it on every start.
+
 ### Content and pages
 
-The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed). Update those JSON files to change:
+The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed). Each table is seeded only when it is empty, so editing a seed file does not change a database that already has rows. To apply edited seed files to an existing database, set `Seed:Mode` to `Authoritative` (for example `Seed__Mode=Authoritative` as an environment variable): then rows are added, updated, and removed to match the files on every start. Update those JSON files to change:
 
 - projects
 - experience entries

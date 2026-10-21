@@ -32,8 +32,9 @@ testable the moment you run it. Swap in your own details to make it yours.
   `WebSite`, `BreadcrumbList`, `CreativeWork`, `BlogPosting`) — all generated
 - Optional **GA4 analytics** via `Site.GoogleAnalyticsId` — omitted entirely when unset, and
   auto-disabled on `dev.*` subdomains so local/dev traffic never reaches production analytics
-- **Authoritative JSON seeder** — the seed files are the single source of truth; edit one,
-  restart, and rows are added / updated / removed to match
+- **Seed-if-empty JSON seeder** — each table is filled from its seed file only when it has no
+  rows; existing rows are never updated or deleted. Set `Seed:Mode=Authoritative` to make the
+  seed files the source of truth instead (rows are added / updated / removed to match)
 - Health checks at `/health` (liveness) and `/health/db` (DB readiness)
 - Zero front-end build dependencies to *run* it (Tailwind is compiled during build)
 
@@ -72,10 +73,13 @@ For a fuller walkthrough, see [docs/new-user-guide.md](docs/new-user-guide.md).
 Everything personal lives in two places — **no code changes required**:
 
 1. **Identity & copy** → the `"Site"` section of `src/Portfolio.Web/appsettings.json`
-   (name, role, hero text, metrics, About narrative, contact links, `PhotoUrl`).
+   (name, role, hero text, metrics, About narrative, contact links, `PhotoUrl`). These values are
+   the defaults: on first run with a database they are copied into a profile row, which is read
+   from then on (without a database the config values are used directly).
 2. **Content** → the JSON files in `src/Portfolio.Data/Seed/`
    (`projects`, `experiences`, `skills`, `certifications`, `talks`, `blog`, `testimonials`).
-   Each file has a header comment describing its shape.
+   Each file has a header comment describing its shape. They seed an empty database; to re-apply
+   edited files to a populated one, set `Seed:Mode=Authoritative` (or clear the tables).
 
 Add images under `src/Portfolio.Web/wwwroot/img/`; set `Site:PhotoUrl` to show your photo.
 
@@ -107,7 +111,7 @@ src/Portfolio.Web/                ASP.NET Core Razor Pages app
 src/Portfolio.Data/               EF Core entities, migrations, and JSON seed data
   Seed/                           Seed content (edit these to change the site)
   Seed/ats-report.json            Generated CV ATS-readiness report (see docs/cv-ats-scoring.md)
-  Seeding/PortfolioSeeder.cs      Authoritative upsert-by-natural-key seeder
+  Seeding/PortfolioSeeder.cs      Seeder (seed-if-empty, or authoritative upsert-by-natural-key)
 tests/Portfolio.Web.Tests/        Unit tests
 tools/CvAtsReview/                Offline console tool that regenerates ats-report.json
 docs/                             Notes, design system, and onboarding guides
