@@ -67,6 +67,8 @@ Archetype work: Showcase exists already. New: Gallery, Results, Credentials.
 Every phase ends in a shippable, working app. Phases 0 to 4 are the critical path.
 
 ### Phase 0: Foundations (no user-visible change)
+**Status: done** (merged).
+
 - Add `SiteProfile` (singleton row): identity, hero, metrics, about, contacts, photo, `TemplateKey`,
   `ThemeKey`, `AccentColor`, section settings (JSON). `appsettings` `Site` values remain as the
   defaults used to populate it on first run.
@@ -81,6 +83,8 @@ Every phase ends in a shippable, working app. Phases 0 to 4 are the critical pat
 - Exit criteria: output of every public page is unchanged for the demo persona.
 
 ### Phase 1: Owner auth, setup key, and uploads
+**Status: done** (pending independent review).
+
 - **One-time registration, one account only.** `/setup` creates the owner account and then
   permanently closes (returns 404) once any user exists. The database holds at most one user,
   enforced by a constraint, not just by application code. Gated by `Setup:Key`. No sign-up, no
@@ -94,6 +98,33 @@ Every phase ends in a shippable, working app. Phases 0 to 4 are the critical pat
   Storage root is configurable (`Uploads:Path`) and served via a static file provider, so it can
   live outside the publish folder and survive FTPS deploys.
 - Exit criteria: owner can log in, edit profile fields and photo, see changes live.
+
+Implementation notes (decisions worth reviewing):
+- **Identity-free auth.** One fixed account does not need a user store, roles, claims tables, email
+  confirmation or external logins, so ASP.NET Core Identity's EF stack would be mostly dead weight and a
+  larger attack surface. The app uses the framework's `PasswordHasher<TUser>` (PBKDF2-HMAC-SHA512, random
+  salt, 210,000 iterations stored in the hash, rehash-on-login) plus cookie authentication, and one
+  `OwnerAccounts` table. Password policy: 12 to 128 characters.
+- **Single account in the database.** `OwnerAccounts` has `Id` as primary key and `CHECK ([Id] = 1)`, like
+  `SiteProfiles`. Setup inserts without a read-then-write check, so two concurrent `/setup` posts cannot both
+  win: the second insert violates the key and is answered with 404.
+- **Lockout on the account row** (failed count and lockout end, so it survives restarts and applies across
+  instances), 5 failures then 15 minutes. With one account every failed attempt counts against it
+  whatever user name was typed, so case, whitespace or invented names cannot dodge it. The cost is that a
+  stranger can keep the owner locked out; the 15 minute window, the CLI reset (which clears the lockout) and
+  the absence of any other account make that the safer failure. Sign-in attempts are serialised in-process
+  and a decoy hash equalises timing for a missing account. No per-IP limiter: behind IIS/ANCM the client
+  address is not reliable without forwarded-header configuration.
+- **Setup key** is compared in constant time over SHA-256 digests, must be 16+ characters, and wrong guesses
+  are throttled globally (5 then 15 minutes). `/setup` is a 404 when the key is unset, the database is
+  unavailable, or any account exists.
+- **Sessions:** `__Host-` prefixed, `Secure`, `HttpOnly`, `SameSite=Strict` cookie, 30 minute sliding window,
+  12 hour absolute cap, and a security stamp that `reset-owner` rotates, which ends every session.
+- **Uploads** use SkiaSharp (explicit `PackageReference`: QuestPDF 2026 ships its own private Skia binding,
+  so SkiaSharp is not a transitive dependency after all). Header-first size checks, orientation applied,
+  metadata dropped by re-encoding from pixels, 25 megapixel / 10,000 px source caps, 1600 px output cap.
+- **Output cache:** the "Generated" policy is now tagged `Generated`; saving the profile evicts that tag
+  and invalidates `ISiteProfileProvider`.
 
 ### Phase 2: Template engine v1
 - `TemplateDefinition` manifest (JSON, in repo): key, name, profession, archetype, section list,

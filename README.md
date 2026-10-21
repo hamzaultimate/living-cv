@@ -35,6 +35,9 @@ testable the moment you run it. Swap in your own details to make it yours.
 - **Seed-if-empty JSON seeder** — each table is filled from its seed file only when it has no
   rows; existing rows are never updated or deleted. Set `Seed:Mode=Authoritative` to make the
   seed files the source of truth instead (rows are added / updated / removed to match)
+- **Owner admin** at `/admin`: one-time `/setup` (gated by a `Setup:Key`) creates the single owner account;
+  cookie sign-in with lockout, a profile editor, and photo upload (re-encoded, metadata stripped,
+  stored outside `wwwroot`). See [docs/new-user-guide.md](docs/new-user-guide.md#3-claim-the-site-and-use-the-admin)
 - Health checks at `/health` (liveness) and `/health/db` (DB readiness)
 - Zero front-end build dependencies to *run* it (Tailwind is compiled during build)
 
@@ -81,7 +84,12 @@ Everything personal lives in two places — **no code changes required**:
    Each file has a header comment describing its shape. They seed an empty database; to re-apply
    edited files to a populated one, set `Seed:Mode=Authoritative` (or clear the tables).
 
-Add images under `src/Portfolio.Web/wwwroot/img/`; set `Site:PhotoUrl` to show your photo.
+After the first run you can also edit the profile and upload your photo in the browser at `/admin`
+(see [Claim the site](docs/new-user-guide.md#3-claim-the-site-and-use-the-admin)); the database then
+holds your edits and `Site` is only the starting point. Uploaded photos are stored in `Uploads:Path`
+(default `App_Data/uploads`), which must be a persistent folder that your deploy does not replace.
+
+Otherwise, add images under `src/Portfolio.Web/wwwroot/img/` and set `Site:PhotoUrl`.
 
 To enable GA4 analytics, set `Site:GoogleAnalyticsId` to your Measurement ID (`G-XXXXXXXXXX`);
 leave it blank to ship with no analytics script at all. See
@@ -101,12 +109,18 @@ dotnet publish src/Portfolio.Web/Portfolio.Web.csproj -c Release \
 Set the production database via the `ConnectionStrings__Default` environment variable (or
 `appsettings.Production.json`). **Never commit real credentials.**
 
+To create the owner account on a fresh deployment, also set `Setup__Key` (a long random value, server
+side only) and open `/setup` once. Keep `Uploads:Path` on a persistent folder. Details in the
+[new user guide](docs/new-user-guide.md#3-claim-the-site-and-use-the-admin).
+
 ## Project structure
 
 ```
 src/Portfolio.Web/                ASP.NET Core Razor Pages app
   Configuration/SiteOptions.cs    Bound identity/content config ("Site" section)
-  Pages/                          Razor Pages
+  Pages/                          Razor Pages (Pages/Admin is the owner area, Pages/Setup.cshtml the one-time setup)
+  Security/                       Owner account, cookie sign-in, setup key gate, reset-owner command
+  Uploads/                        Image processing (SkiaSharp re-encode) and upload storage
   appsettings.json                Default site identity and public content
 src/Portfolio.Data/               EF Core entities, migrations, and JSON seed data
   Seed/                           Seed content (edit these to change the site)

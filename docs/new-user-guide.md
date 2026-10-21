@@ -34,7 +34,78 @@ Open the printed URL in your browser. The app also exposes health endpoints at:
 
 > If you do not have a database configured yet, the site can still start, but database-backed pages may show empty states until you provide a valid connection string.
 
-## 3. Personalize the site
+## 3. Claim the site and use the admin
+
+A fresh deployment has no owner. The first person with the **setup key** claims it; after that
+`/setup` returns 404 for good. There is exactly one account: no sign-up, no second user, no roles
+(the database itself refuses a second account row).
+
+### First run
+
+1. Choose a long random value (16+ characters) as the setup key and give it to the app **on the
+   server only**, for example as an environment variable (`Setup__Key`) or in an
+   `appsettings.Production.json` that is not committed. The `Setup:Key` entry in
+   `appsettings.json` is intentionally empty: empty or shorter than 16 characters means `/setup` is
+   disabled.
+2. Start the app and open `/setup`. Enter the key, pick a user name and a password (12 to 128
+   characters) and submit. Wrong keys are throttled: after 5 wrong guesses `/setup` refuses everything,
+   even the right key, for 15 minutes.
+3. Sign in at `/admin/login`. From `/admin` you can edit the profile (`/admin/profile`) and the
+   photo (`/admin/photo`). Saving a profile takes effect immediately, including the CV PDF, the
+   share image and the sitemap.
+4. Remove `Setup__Key` from the server when you are done; it has no further use.
+
+Sign-in locks for 15 minutes after 5 consecutive failures (any user name counts, because there is
+only one account). Sessions last 30 minutes of inactivity and 12 hours at most.
+
+> The site must be served over HTTPS outside Development: the sign-in, anti-forgery and flash cookies
+> are `Secure` and the app refuses to issue them on plain HTTP. Behind a TLS-terminating reverse
+> proxy (anything other than IIS/ANCM), set `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` so the app
+> sees the original `https` scheme.
+
+### Forgot the password
+
+There is no email reset. Whoever can run commands on the server resets it from the app folder:
+
+```bash
+dotnet run --project src/Portfolio.Web -- reset-owner        # development checkout
+dotnet Portfolio.Web.dll reset-owner                         # published app (Portfolio.Web.exe on Windows)
+```
+
+It prompts twice for the new password without echoing it, then clears any lockout and signs out all
+existing sessions. For scripts, pipe the password with `--password-stdin` or set
+`OWNER_NEW_PASSWORD` for that one command (and unset it afterwards). The command talks to the
+database, prints a result and exits; it never starts the web server.
+
+### Uploaded photos and where they live
+
+Photos are uploaded at `/admin/photo`: JPEG, PNG or WebP up to 5 MB (`Uploads:MaxBytes`). Each file
+is decoded and re-encoded (so location and camera details are removed, rotation is applied, and
+anything hidden inside the file is discarded), scaled to at most 1600 px on the long edge, saved under
+a random name and served from `/uploads/<name>`. SVG, GIF and anything that is not a real raster
+image is rejected.
+
+Files are stored in `Uploads:Path`:
+
+| Setting | Meaning |
+|---|---|
+| empty (default) | `App_Data/uploads` under the app folder: outside `wwwroot` and never served as a static asset |
+| relative path | resolved against the app folder |
+| absolute path | used as is (for example `D:\data\portfolio-uploads` or `/var/lib/portfolio/uploads`) |
+
+**Deploying:** the folder must survive deployments. The bundled pipeline uploads over FTPS without
+clearing the target, so the default survives it, but any deploy that replaces the whole site folder
+(a "clean" upload, a container image, a new slot) will delete the photo. In that case set
+`Uploads__Path` to a persistent location outside the deployed folder, and back that folder up.
+The process needs write access to it. The profile stores only the `/uploads/...` URL, so restoring
+the folder restores the photos.
+
+Sign-in cookies and anti-forgery tokens are encrypted with ASP.NET Core Data Protection keys. If the
+host does not keep those keys across restarts you will simply be asked to sign in again; configure a
+persistent key location if that matters to you.
+
+## 4. Personalize the site
+
 
 The app is designed so you can make it your own without editing code.
 
@@ -47,7 +118,7 @@ Edit the `Site` section in [src/Portfolio.Web/appsettings.json](../src/Portfolio
 - links such as GitHub, LinkedIn, and email
 - the profile photo URL
 
-These values are the defaults for the site profile. With a database, they are copied into a profile row on first run and that row is used afterwards; edit the `Site` section before the first run, or set `Seed:Mode=Authoritative` to re-apply it on every start.
+These values are the defaults for the site profile. With a database, they are copied into a profile row on first run and that row is used afterwards; edit the `Site` section before the first run, or set `Seed:Mode=Authoritative` to re-apply it on every start. Once you have an owner account you can change all of these in the browser at `/admin/profile` instead.
 
 ### Content and pages
 
@@ -62,13 +133,13 @@ The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed
 
 ### Images
 
-Add images under [src/Portfolio.Web/wwwroot/img](../src/Portfolio.Web/wwwroot/img) and point the `Site:PhotoUrl` setting to them.
+Easiest: upload your photo at `/admin/photo` (see above). Alternatively add images under [src/Portfolio.Web/wwwroot/img](../src/Portfolio.Web/wwwroot/img) and point the `Site:PhotoUrl` setting to them. With no photo the home page shows a monogram of your initials.
 
 ### SEO and analytics
 
 Every page ships schema.org JSON-LD (breadcrumbs, plus `Person`/`WebSite`/`CreativeWork`/`BlogPosting` where relevant) with no configuration needed. GA4 analytics is opt-in: set `Site:GoogleAnalyticsId` in `appsettings.json` to your Measurement ID to enable it, or leave it blank to omit the analytics script entirely. See [docs/seo-analytics.md](seo-analytics.md) for the full picture, including why the `dev.` subdomain never reaches production analytics.
 
-## 4. Recommended development workflow
+## 5. Recommended development workflow
 
 A typical contributor loop looks like this:
 
@@ -93,7 +164,7 @@ dotnet run --project tools/CvAtsReview
 This writes `src/Portfolio.Data/Seed/ats-report.json`, which should be committed alongside your
 content change. See [docs/cv-ats-scoring.md](cv-ats-scoring.md) for how the score is calculated.
 
-## 5. Common issues
+## 6. Common issues
 
 ### LocalDB is not available
 
@@ -111,11 +182,11 @@ dotnet dev-certs https --trust
 
 That usually means the database was not initialized successfully. Check the `/health/db` endpoint and review the startup logs in the terminal.
 
-## 6. Project layout
+## 7. Project layout
 
 A quick map of the repository:
 
-- [src/Portfolio.Web](../src/Portfolio.Web) — Razor Pages app, configuration, and static assets
+- [src/Portfolio.Web](../src/Portfolio.Web) — Razor Pages app, configuration, and static assets (`Pages/Admin` owner area, `Security` sign-in, `Uploads` image handling)
 - [src/Portfolio.Data](../src/Portfolio.Data) — EF Core context, entities, and seed content
 - [docs](../docs) — implementation notes and design documentation
 

@@ -29,3 +29,7 @@ This template never commits secrets. When you deploy your own instance:
 - Set the database connection string via the `ConnectionStrings__Default` environment variable
   (or `appsettings.Production.json`) — never commit real credentials.
 - Keep deployment secrets (FTP, DB) in your CI provider's secret store, not in the repo.
+- Set `Setup__Key` (a long random value) only on the server, only until you have created the owner account
+  at `/setup`, and never commit it. Empty means `/setup` is disabled.
+- Keep `Uploads:Path` on a persistent folder that is not served as static content and that your deploy does not replace.
+- Reset a forgotten owner password from the server with `reset-owner` (see `docs/new-user-guide.md`); there is no email reset.

@@ -37,6 +37,16 @@ describe what you changed and why.
   `src/Portfolio.Data/Seed/`. Profession-specific copy (SEO patterns, skill-group order) belongs in
   `src/Portfolio.Web/Templates/<key>/template.json`. Please don't hardcode names, copy, or data
   into Razor pages. Read site identity through `ISiteProfileProvider`, not `IOptions<SiteOptions>`.
+- Admin pages live under `src/Portfolio.Web/Pages/Admin`, which is protected as a whole (`AuthorizeFolder`
+  plus a deny-by-default check). Add new admin pages there, inherit `AdminPageModel`, keep every
+  state-changing action a POST (anti-forgery is automatic for Razor Pages), and call `ProfileEditor` (or
+  an equivalent) so the profile cache and the "Generated" output cache are invalidated after writes. A page
+  that must be public inside that folder needs an explicit `[AllowAnonymous]`; `AdminAccessTests` fails on
+  any other unauthenticated admin route. Admin and setup pages are styled by `wwwroot/css/admin.css`, not
+  Tailwind (they are excluded from the Tailwind scan so they never change the public stylesheet).
+- Never trust an upload: go through `ImageProcessor` and `UploadStore`, which sniff the bytes, re-encode,
+  and generate the file name. The owner account is created only by `/setup` and reset only by
+  `dotnet run --project src/Portfolio.Web -- reset-owner`; do not add other account paths.
 - Seeding is seed-if-empty by default: a table is filled only when it has no rows and existing
   rows are never changed. Use `Seed:Mode=Authoritative` if you want seed files to overwrite and
   delete rows.
