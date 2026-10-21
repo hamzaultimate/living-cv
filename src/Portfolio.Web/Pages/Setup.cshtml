@@ -1,0 +1,35 @@
+@page "/setup"
+@model SetupModel
+@{
+    Layout = "/Pages/Admin/_AdminLayout.cshtml";
+    ViewData["Title"] = "Set up";
+}
+<section class="adm-card adm-narrow">
+    <h1>Create the owner account</h1>
+    <p class="adm-lede">This page closes for good once the account exists.</p>
+    <form method="post" asp-page="/Setup" novalidate>
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="adm-flash adm-flash-error" role="alert" asp-validation-summary="All"></div>
+        }
+        <div class="adm-field">
+            <label for="SetupKey">Setup key</label>
+            <input asp-for="SetupKey" type="password" autocomplete="off" maxlength="256" required />
+            <span class="adm-hint">The value of <code>Setup:Key</code> from your server configuration.</span>
+        </div>
+        <div class="adm-field">
+            <label for="UserName">User name</label>
+            <input asp-for="UserName" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="64" required />
+        </div>
+        <div class="adm-field">
+            <label for="Password">Password</label>
+            <input asp-for="Password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required />
+            <span class="adm-hint">12 to 128 characters.</span>
+        </div>
+        <div class="adm-field">
+            <label for="ConfirmPassword">Confirm password</label>
+            <input asp-for="ConfirmPassword" type="password" autocomplete="new-password" maxlength="128" required />
+        </div>
+        <button type="submit" class="adm-btn adm-btn-primary">Create account</button>
+    </form>
+</section>

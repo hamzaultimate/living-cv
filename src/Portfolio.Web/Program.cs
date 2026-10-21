@@ -8,13 +8,19 @@ using Portfolio.Data;
 using Portfolio.Data.Seeding;
 using Portfolio.Web.Configuration;
 using Portfolio.Web.Health;
+using Portfolio.Web.Security;
 using Portfolio.Web.Services;
 using QuestPDF.Fluent;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Register the app services, configuration, and content pipeline.
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages(o =>
+{
+    // Everything under /Admin needs the signed-in owner; only the login page opts out (see Login.cshtml.cs).
+    o.Conventions.AuthorizeFolder("/Admin");
+});
+builder.Services.AddOwnerAuth(builder.Environment);
 builder.Services.AddScoped<PortfolioContentService>();
 builder.Services.AddSingleton(new CvAtsReportProvider(Path.Combine(AppContext.BaseDirectory, "Seed")));
 builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
@@ -32,7 +38,8 @@ builder.Services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
 builder.Services.AddOutputCache(o =>
     o.AddPolicy("Generated", p =>
     {
-        p.Expire(TimeSpan.FromHours(1)).SetVaryByQuery(Array.Empty<string>());
+        // Tagged so a profile save can evict every generated asset at once (see ProfileEditor).
+        p.Expire(TimeSpan.FromHours(1)).SetVaryByQuery(Array.Empty<string>()).Tag(OutputCacheTags.Generated);
         if (builder.Environment.IsDevelopment()) p.NoCache();
     }));
 
@@ -56,6 +63,13 @@ builder.Services.AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>("database", tags: new[] { "db" });
 
 var app = builder.Build();
+
+// Operator command: runs against the database and exits before the web host starts serving.
+if (OwnerCli.IsCommand(args))
+{
+    Environment.ExitCode = await OwnerCli.RunAsync(app.Services, args, Console.In, Console.Out, Console.Error);
+    return;
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -103,10 +117,15 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
+// Admin and setup responses are marked private and non-indexable before anything can cache them.
+app.UsePrivateAreaHeaders();
+
 app.UseRouting();
 
 app.UseOutputCache();
 
+app.UseAuthentication();
+app.UseAdminDenyByDefault();
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -183,7 +202,7 @@ app.MapGet("/robots.txt", async (HttpContext ctx) =>
     var isDev = ctx.Request.Host.Host.StartsWith("dev.", StringComparison.OrdinalIgnoreCase);
     var body = isDev
         ? "User-agent: *\nDisallow: /\n"
-        : $"User-agent: *\nAllow: /\n\nSitemap: {baseUrl}/sitemap.xml\n";
+        : $"User-agent: *\nAllow: /\nDisallow: /admin\n\nSitemap: {baseUrl}/sitemap.xml\n";
     return Results.Text(body, "text/plain");
 });
 

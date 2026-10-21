@@ -1,0 +1,23 @@
+@page "/admin/login"
+@model LoginModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+<section class="adm-card adm-narrow">
+    <h1>Sign in</h1>
+    <form method="post" asp-page="/Admin/Login" asp-route-returnUrl="@Model.ReturnUrl" novalidate>
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="adm-flash adm-flash-error" role="alert" asp-validation-summary="ModelOnly"></div>
+        }
+        <div class="adm-field">
+            <label for="UserName">User name</label>
+            <input asp-for="UserName" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="128" required autofocus />
+        </div>
+        <div class="adm-field">
+            <label for="Password">Password</label>
+            <input asp-for="Password" type="password" autocomplete="current-password" maxlength="128" required />
+        </div>
+        <button type="submit" class="adm-btn adm-btn-primary">Sign in</button>
+    </form>
+</section>

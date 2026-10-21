@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./Pages/**/*.cshtml'],
+  // Admin and setup pages use wwwroot/css/admin.css, so they stay out of the public stylesheet build.
+  content: ['./Pages/**/*.cshtml', '!./Pages/Admin/**', '!./Pages/Setup.cshtml'],
   theme: {
     extend: {
       colors: {

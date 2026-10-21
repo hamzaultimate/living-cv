@@ -1,0 +1,17 @@
+@page "/admin"
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<h1>Dashboard</h1>
+<p class="adm-lede">Signed in as <strong>@User.Identity?.Name</strong>.</p>
+<div class="adm-grid">
+    <a class="adm-card adm-tile" href="/admin/profile">
+        <h2>Profile</h2>
+        <p>Name, headline, summary, contact links, metrics and the About page.</p>
+    </a>
+    <a class="adm-card adm-tile" href="/admin/photo">
+        <h2>Photo</h2>
+        <p>Upload or remove the profile photo shown on the home and About pages.</p>
+    </a>
+</div>
