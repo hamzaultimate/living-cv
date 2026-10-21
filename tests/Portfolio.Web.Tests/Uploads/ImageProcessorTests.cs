@@ -97,38 +97,62 @@ public class ImageProcessorTests
     }
 
     [Theory]
-    [InlineData(1, 40, 20)]
-    [InlineData(6, 20, 40)]   // rotate 90 clockwise: the left (red) half ends up on top
-    [InlineData(8, 20, 40)]  // rotate 90 counter-clockwise: the left (red) half ends up at the bottom
-    [InlineData(3, 40, 20)]  // rotate 180: red moves to the right
-    [InlineData(2, 40, 20)]  // mirror: red moves to the right
-    public async Task ExifOrientation_IsAppliedBeforeMetadataIsDropped(int orientation, int width, int height)
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    [InlineData(5)]
+    [InlineData(6)]
+    [InlineData(7)]
+    [InlineData(8)]
+    public async Task ExifOrientation_IsAppliedBeforeMetadataIsDropped_ForAllEightOrientations(int orientation)
     {
-        var jpeg = TestImages.WithJpegSegments(TestImages.Split(SKEncodedImageFormat.Jpeg, 40, 20), TestImages.ExifOrientation(orientation));
+        const int displayWidth = 40, displayHeight = 20;
+        var jpeg = TestImages.QuadrantsStoredForOrientation(orientation, displayWidth, displayHeight);
 
         var result = await _processor.ProcessAsync(jpeg);
 
-        Assert.Equal((width, height), (result.Width, result.Height));
+        Assert.Equal((displayWidth, displayHeight), (result.Width, result.Height));
         using var output = TestImages.Decode(result.Bytes);
-        Assert.Equal((width, height), (output.Width, output.Height));
-        var first = output.GetPixel(width / 4, height / 4);
-        var last = output.GetPixel(width - 1 - width / 4, height - 1 - height / 4);
-        var firstIsRed = first.Red > 200 && first.Blue < 60;
-        var lastIsBlue = last.Blue > 200 && last.Red < 60;
-        switch (orientation)
+        Assert.Equal((displayWidth, displayHeight), (output.Width, output.Height));
+        foreach (var (x, y) in new[] { (displayWidth / 4, displayHeight / 4), (3 * displayWidth / 4, displayHeight / 4),
+                     (displayWidth / 4, 3 * displayHeight / 4), (3 * displayWidth / 4, 3 * displayHeight / 4) })
         {
-            case 1:
-            case 6:
-                Assert.True(firstIsRed && lastIsBlue, $"orientation {orientation}: top-left should be red, bottom-right blue");
-                break;
-            case 8:
-                Assert.True(first.Blue > 200 && last.Red > 200, "orientation 8: top should be blue, bottom red");
-                break;
-            default:
-                Assert.True(first.Blue > 200 && last.Red > 200, $"orientation {orientation}: top-left should be blue, bottom-right red");
-                break;
+            var expected = TestImages.QuadrantColor(x, y, displayWidth, displayHeight);
+            var actual = output.GetPixel(x, y);
+            Assert.True(Math.Abs(actual.Red - expected.Red) < 40 && Math.Abs(actual.Green - expected.Green) < 40 && Math.Abs(actual.Blue - expected.Blue) < 40,
+                $"orientation {orientation}: pixel ({x},{y}) is {actual}, expected about {expected}");
         }
         Assert.False(Contains(result.Bytes, "Exif"));
+    }
+
+    [Fact]
+    public async Task WideGamutPhotos_AreConvertedToSrgb_NotReadAsIfTheyWereSrgb()
+    {
+        // Display P3 primaries: the same numbers mean a more saturated colour than in sRGB.
+        var p3 = SKColorSpace.CreateRgb(SKColorSpaceTransferFn.Srgb, SKColorSpaceXyz.DisplayP3);
+        var source = new SKColor(200, 100, 100);
+        // Raw pixel values tagged as Display P3 (no conversion on the way in).
+        var raw = new byte[16 * 16 * 4];
+        for (var i = 0; i < raw.Length; i += 4) (raw[i], raw[i + 1], raw[i + 2], raw[i + 3]) = (source.Red, source.Green, source.Blue, 255);
+        using var tagged = SKImage.FromPixelCopy(new SKImageInfo(16, 16, SKColorType.Rgba8888, SKAlphaType.Opaque, p3), raw);
+        byte[] png;
+        using (var data = tagged.Encode(SKEncodedImageFormat.Png, 100))
+            png = data.ToArray();
+
+        // What the same pixels are in sRGB, as the graphics library itself computes it.
+        using var asSrgb = new SKBitmap(new SKImageInfo(16, 16, SKColorType.Rgba8888, SKAlphaType.Opaque, SKColorSpace.CreateSrgb()));
+        Assert.True(tagged.ReadPixels(asSrgb.Info, asSrgb.GetPixels(), asSrgb.RowBytes, 0, 0));
+        var expected = asSrgb.GetPixel(8, 8);
+        Assert.True(Math.Abs(expected.Red - source.Red) > 8, "the test colour must actually change when converted");
+
+        var result = await _processor.ProcessAsync(png);
+
+        using var output = TestImages.Decode(result.Bytes);
+        var actual = output.GetPixel(8, 8);
+        Assert.InRange(actual.Red, expected.Red - 3, expected.Red + 3);
+        Assert.InRange(actual.Green, expected.Green - 3, expected.Green + 3);
+        Assert.InRange(actual.Blue, expected.Blue - 3, expected.Blue + 3);
     }
 
     [Fact]

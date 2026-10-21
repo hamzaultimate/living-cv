@@ -23,6 +23,56 @@ public static class TestImages
         return data.ToArray();
     }
 
+    public static readonly SKColor TopLeftColor = new(255, 0, 0);
+    public static readonly SKColor TopRightColor = new(0, 255, 0);
+    public static readonly SKColor BottomLeftColor = new(0, 0, 255);
+    public static readonly SKColor BottomRightColor = new(255, 255, 0);
+
+    /// <summary>
+    /// The pixels as stored in a file whose EXIF orientation is <paramref name="orientation"/> (1 to 8), such that a
+    /// viewer applying that orientation shows an upright image of <paramref name="displayWidth"/> by
+    /// <paramref name="displayHeight"/> with four different colours in its corners (see the colour fields). Because every quadrant differs, any wrong rotation or flip shows.
+    /// </summary>
+    public static byte[] QuadrantsStoredForOrientation(int orientation, int displayWidth, int displayHeight)
+    {
+        var swapped = orientation >= 5;
+        var storedWidth = swapped ? displayHeight : displayWidth;
+        var storedHeight = swapped ? displayWidth : displayHeight;
+        using var bitmap = new SKBitmap(new SKImageInfo(storedWidth, storedHeight, SKColorType.Rgba8888, SKAlphaType.Opaque));
+        for (var ys = 0; ys < storedHeight; ys++)
+        {
+            for (var xs = 0; xs < storedWidth; xs++)
+            {
+                // Where this stored pixel appears once the orientation is applied.
+                var (x, y) = orientation switch
+                {
+                    1 => (xs, ys),
+                    2 => (storedWidth - 1 - xs, ys),
+                    3 => (storedWidth - 1 - xs, storedHeight - 1 - ys),
+                    4 => (xs, storedHeight - 1 - ys),
+                    5 => (ys, xs),
+                    6 => (storedHeight - 1 - ys, xs),
+                    7 => (storedHeight - 1 - ys, storedWidth - 1 - xs),
+                    8 => (ys, storedWidth - 1 - xs),
+                    _ => throw new ArgumentOutOfRangeException(nameof(orientation)),
+                };
+                bitmap.SetPixel(xs, ys, QuadrantColor(x, y, displayWidth, displayHeight));
+            }
+        }
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Jpeg, 100);
+        return WithJpegSegments(data.ToArray(), ExifOrientation(orientation));
+    }
+
+    public static SKColor QuadrantColor(int x, int y, int width, int height) =>
+        (x < width / 2, y < height / 2) switch
+        {
+            (true, true) => TopLeftColor,
+            (false, true) => TopRightColor,
+            (true, false) => BottomLeftColor,
+            _ => BottomRightColor,
+        };
+
     public static SKBitmap Decode(byte[] bytes) => SKBitmap.Decode(bytes) ?? throw new InvalidOperationException("Not an image");
 
     /// <summary>Random-looking pixels, so the encoded file is large.</summary>

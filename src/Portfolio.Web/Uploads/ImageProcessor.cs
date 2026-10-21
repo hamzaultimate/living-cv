@@ -29,22 +29,22 @@ public sealed class ImageProcessor
     private const int JpegQuality = 85;
     private const int WebpQuality = 85;
 
-    // Decoding is memory-heavy; one at a time keeps the worst case bounded.
-    private static readonly SemaphoreSlim Gate = new(1, 1);
+    // Decoding is memory-heavy; one at a time per processor (it is a singleton) keeps the worst case bounded.
+    private readonly SemaphoreSlim _gate = new(1, 1);
 
     private enum Kind { Jpeg, Png, Webp }
 
     public async Task<ProcessedImage> ProcessAsync(byte[] data, CancellationToken ct = default)
     {
         var kind = Sniff(data) ?? throw new ImageRejectedException("Unsupported file. Upload a JPEG, PNG or WebP image.");
-        await Gate.WaitAsync(ct);
+        await _gate.WaitAsync(ct);
         try
         {
             return await Task.Run(() => Process(data, kind), ct);
         }
         finally
         {
-            Gate.Release();
+            _gate.Release();
         }
     }
 
@@ -72,7 +72,9 @@ public sealed class ImageProcessor
             throw new ImageRejectedException("The image is too large in pixels. Resize it to under 25 megapixels (for example 5000 by 5000) and try again.");
 
         // Each step replaces the previous bitmap, so at most two full-size copies exist at once.
-        var current = new SKBitmap(new SKImageInfo(info.Width, info.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
+        // Decoding into sRGB converts photos tagged with a wider colour space (Display P3, Adobe RGB) instead of
+        // reading their values as sRGB, which would wash the colours out once the profile is dropped on re-encode.
+        var current = new SKBitmap(new SKImageInfo(info.Width, info.Height, SKColorType.Rgba8888, SKAlphaType.Premul, SKColorSpace.CreateSrgb()));
         try
         {
             if (codec.GetPixels(current.Info, current.GetPixels()) != SKCodecResult.Success)
