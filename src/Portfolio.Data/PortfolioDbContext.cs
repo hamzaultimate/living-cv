@@ -15,6 +15,7 @@ public class PortfolioDbContext : DbContext
     public DbSet<Talk> Talks => Set<Talk>();
     public DbSet<Testimonial> Testimonials => Set<Testimonial>();
     public DbSet<SiteProfile> SiteProfiles => Set<SiteProfile>();
+    public DbSet<OwnerAccount> OwnerAccounts => Set<OwnerAccount>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -42,6 +43,17 @@ public class PortfolioDbContext : DbContext
                 o.OwnsMany(a => a.ValueProps);
             });
             e.OwnsMany(x => x.Sections, o => o.ToJson());
+        });
+
+        b.Entity<OwnerAccount>(e =>
+        {
+            // Single account: the primary key plus this check leave room for exactly one row (Id = 1),
+            // so a concurrent second insert fails in the database rather than relying on app code.
+            e.Property(x => x.Id).ValueGeneratedNever();
+            e.ToTable(t => t.HasCheckConstraint("CK_OwnerAccounts_Singleton", "[Id] = 1"));
+            e.Property(x => x.UserName).HasMaxLength(OwnerAccount.MaxLength.UserName);
+            e.Property(x => x.PasswordHash).HasMaxLength(OwnerAccount.MaxLength.PasswordHash);
+            e.Property(x => x.SecurityStamp).HasMaxLength(OwnerAccount.MaxLength.SecurityStamp);
         });
 
         b.Entity<Project>(e =>

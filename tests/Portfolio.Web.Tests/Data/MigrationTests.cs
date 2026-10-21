@@ -31,5 +31,8 @@ public class MigrationTests
         Assert.Contains("CREATE TABLE [SiteProfiles]", script);
         Assert.Contains("CK_SiteProfiles_Singleton", script);
         Assert.Contains("[OwnerName] nvarchar(200)", script);
+        Assert.Contains("CREATE TABLE [OwnerAccounts]", script);
+        Assert.Contains("CK_OwnerAccounts_Singleton", script);
+        Assert.Contains("CHECK ([Id] = 1)", script);
     }
 }
