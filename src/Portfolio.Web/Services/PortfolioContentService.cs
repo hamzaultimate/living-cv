@@ -25,6 +25,11 @@ public class PortfolioContentService
 
     public bool DatabaseConfigured => !string.IsNullOrWhiteSpace(_config.GetConnectionString("Default"));
 
+    /// <summary>True once any query on this (scoped) instance failed and returned its fallback.
+    /// Not set when the database simply isn't configured. Callers use it to avoid caching output
+    /// built from a transient failure.</summary>
+    public bool HadFallback { get; private set; }
+
     private async Task<T> QueryAsync<T>(Func<PortfolioDbContext, Task<T>> query, T fallback)
     {
         if (!DatabaseConfigured) return fallback;
@@ -37,6 +42,7 @@ public class PortfolioContentService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Content query failed; returning fallback.");
+            HadFallback = true;
             return fallback;
         }
     }

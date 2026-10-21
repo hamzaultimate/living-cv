@@ -27,7 +27,7 @@
        (MSBuild's DownloadFile task - no PowerShell/curl needed) and run before build/publish.
        The binary is named per platform, so switching OS never reuses the wrong one.
        If the download fails (offline), the committed wwwroot/css/app.css is used as-is with a warning.
-       CI passes -p:TailwindRequired=true to turn that fallback into a build error. -->
+       CI and the Azure publish pass -p:TailwindRequired=true to turn that fallback into a build error. -->
   <PropertyGroup>
     <TailwindVersion>3.4.17</TailwindVersion>
     <TailwindInput>Styles/app.css</TailwindInput>

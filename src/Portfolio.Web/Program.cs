@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -23,8 +24,14 @@ builder.Services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
 // The PDF CV, OG image, and sitemap are generated on demand and are CPU/DB-heavy, but their
 // inputs only change on restart (config + reseed). Cache them server-side so a burst of
 // requests renders once (output caching also coalesces concurrent misses) instead of once each.
+// Query keys are ignored so ?r=<random> can't force a fresh render per request, and caching is
+// off in Development so edits show up immediately.
 builder.Services.AddOutputCache(o =>
-    o.AddPolicy("Generated", p => p.Expire(TimeSpan.FromHours(1))));
+    o.AddPolicy("Generated", p =>
+    {
+        p.Expire(TimeSpan.FromHours(1)).SetVaryByQuery(Array.Empty<string>());
+        if (builder.Environment.IsDevelopment()) p.NoCache();
+    }));
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
@@ -114,10 +121,11 @@ app.MapHealthChecks("/health/db", new HealthCheckOptions
 });
 
 // Generate the PDF CV from the same content source used by the site pages.
-app.MapGet("/cv.pdf", async (PortfolioContentService repo, IOptions<SiteOptions> siteOpt) =>
+app.MapGet("/cv.pdf", async (HttpContext ctx, PortfolioContentService repo, IOptions<SiteOptions> siteOpt) =>
 {
     var site = siteOpt.Value;
     var data = await repo.BuildCvDataAsync(site);
+    SkipCacheIfFallback(ctx, repo);
 
     var bytes = new CvDocument(data).GeneratePdf();
     var fileName = $"{site.OwnerName.ToLowerInvariant().Replace(' ', '-')}-cv.pdf";
@@ -147,6 +155,7 @@ app.MapGet("/sitemap.xml", async (HttpContext ctx, PortfolioContentService repo)
     };
     urls.AddRange((await repo.GetProjectsAsync()).Select(p => ($"/projects/{p.Slug}", (string?)null)));
     urls.AddRange((await repo.GetBlogPostsAsync()).Select(b => ($"/blog/{b.Slug}", (string?)b.Date.ToString("yyyy-MM-dd"))));
+    SkipCacheIfFallback(ctx, repo);
 
     var sb = new StringBuilder();
     sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -176,6 +185,14 @@ app.MapGet("/robots.txt", (HttpContext ctx) =>
 await MigrateAndSeedAsync(app);
 
 app.Run();
+
+// A query that hit its empty fallback (transient DB failure) would otherwise be cached as a
+// 200 with empty content for the full hour, so keep that response out of the output cache.
+static void SkipCacheIfFallback(HttpContext ctx, PortfolioContentService repo)
+{
+    if (repo.HadFallback && ctx.Features.Get<IOutputCacheFeature>() is { } cache)
+        cache.Context.AllowCacheStorage = false;
+}
 
 // Write a simple JSON payload for the database health endpoint. Descriptions and errors
 // (server/db names, exception text) are included only when `detailed` is set.

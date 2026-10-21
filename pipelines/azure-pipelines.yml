@@ -64,6 +64,7 @@ stages:
               -c $(buildConfiguration)
               -r $(targetRuntime)
               --self-contained true
+              -p:TailwindRequired=true
               -o "$(Build.ArtifactStagingDirectory)/site"
             displayName: Publish (self-contained)
 

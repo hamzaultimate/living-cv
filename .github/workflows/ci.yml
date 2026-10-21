@@ -27,13 +27,17 @@ jobs:
         with:
           global-json-file: global.json
 
-      # TailwindRequired=true makes the build fail if the Tailwind CLI can't be downloaded,
-      # instead of silently falling back to the committed wwwroot/css/app.css.
       - name: Restore
         run: dotnet restore Portfolio.slnx
 
+      # TailwindRequired=true makes the build fail if the Tailwind CLI can't be downloaded,
+      # instead of silently falling back to the committed wwwroot/css/app.css.
       - name: Build
         run: dotnet build Portfolio.slnx -c Release --no-restore -p:TailwindRequired=true
+
+      # If this fails, the build regenerated app.css: commit the updated file.
+      - name: Check committed Tailwind CSS is up to date
+        run: git diff --exit-code -- src/Portfolio.Web/wwwroot/css/app.css
 
       - name: Test
         run: dotnet test Portfolio.slnx -c Release --no-build
