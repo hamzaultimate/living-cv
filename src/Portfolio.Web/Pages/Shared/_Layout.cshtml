@@ -1,6 +1,6 @@
-@inject IOptions<SiteOptions> SiteOpt
+@inject ISiteProfileProvider SiteProfile
 @{
-    var site = SiteOpt.Value;
+    var site = await SiteProfile.GetAsync();
     // Most pages get "Section · Name". The homepage leads with the name + role instead —
     // that's what people actually search ("<name> <job title>"), and it's the page most
     // likely to rank for a name search, so it gets the full literal title via FullTitle.

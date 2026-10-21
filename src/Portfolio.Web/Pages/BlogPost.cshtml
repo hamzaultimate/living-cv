@@ -1,8 +1,8 @@
 @page "/blog/{slug}"
 @inject PortfolioContentService Repo
-@inject IOptions<SiteOptions> SiteOpt
+@inject ISiteProfileProvider SiteProfile
 @{
-    var site = SiteOpt.Value;
+    var site = await SiteProfile.GetAsync();
     var slug = RouteData.Values["slug"]?.ToString() ?? "";
     var post = await Repo.GetBlogPostAsync(slug);
     string? jsonLd = null;

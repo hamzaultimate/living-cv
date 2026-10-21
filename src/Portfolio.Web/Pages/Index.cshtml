@@ -1,9 +1,9 @@
 @page
 @model IndexModel
-@inject IOptions<SiteOptions> SiteOpt
+@inject ISiteProfileProvider SiteProfile
 @inject ITemplateCatalog Templates
 @{
-    var site = SiteOpt.Value;
+    var site = await SiteProfile.GetAsync();
     var seo = Templates.Get(site.TemplateKey).Seo;
     ViewData["Title"] = "Home";
     // Search engines truncate/flag title >~65 chars and description outside ~70-160 chars.

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Options;
 using Portfolio.Data;
 using Portfolio.Data.Seeding;
 using Portfolio.Web.Configuration;
@@ -18,6 +17,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddScoped<PortfolioContentService>();
 builder.Services.AddSingleton(new CvAtsReportProvider(Path.Combine(AppContext.BaseDirectory, "Seed")));
 builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ISiteProfileProvider, SiteProfileProvider>();
 builder.Services.AddSingleton<ITemplateCatalog>(sp =>
     new TemplateCatalog(Path.Combine(AppContext.BaseDirectory, "Templates"), sp.GetRequiredService<ILogger<TemplateCatalog>>()));
 builder.Services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
@@ -104,9 +105,9 @@ app.MapHealthChecks("/health/db", new HealthCheckOptions
 });
 
 // Generate the PDF CV from the same content source used by the site pages.
-app.MapGet("/cv.pdf", async (PortfolioContentService repo, IOptions<SiteOptions> siteOpt) =>
+app.MapGet("/cv.pdf", async (PortfolioContentService repo, ISiteProfileProvider profile) =>
 {
-    var site = siteOpt.Value;
+    var site = await profile.GetAsync();
     var data = await repo.BuildCvDataAsync(site);
 
     var bytes = new CvDocument(data).GeneratePdf();
@@ -115,9 +116,9 @@ app.MapGet("/cv.pdf", async (PortfolioContentService repo, IOptions<SiteOptions>
 });
 
 // Generate the Open Graph image from the current site identity.
-app.MapGet("/og.png", (IOptions<SiteOptions> siteOpt) =>
+app.MapGet("/og.png", async (ISiteProfileProvider profile) =>
 {
-    var s = siteOpt.Value;
+    var s = await profile.GetAsync();
     var domainLabel = (s.Url ?? "").Replace("https://", "").Replace("http://", "").TrimEnd('/').ToUpperInvariant();
     var tagline = string.Join(" ", new[] { s.Hero.Headline, s.Hero.HeadlineAccent }.Where(x => !string.IsNullOrWhiteSpace(x)));
     return Results.File(OgImage.Generate(s.OwnerName, s.Role, domainLabel, tagline), "image/png");
@@ -201,6 +202,7 @@ static async Task MigrateAndSeedAsync(WebApplication app)
         await db.Database.MigrateAsync(cts.Token);
         var seedDir = Path.Combine(AppContext.BaseDirectory, "Seed");
         await PortfolioSeeder.SeedAsync(db, seedDir, app.Configuration.GetSeedMode(), app.Logger, cts.Token);
+        await scope.ServiceProvider.GetRequiredService<ISiteProfileProvider>().GetAsync(cts.Token);
         app.Logger.LogInformation("Database migrated and seeded.");
     }
     catch (Exception ex)

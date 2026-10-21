@@ -1,6 +1,6 @@
 @page "/projects/{slug}"
 @inject PortfolioContentService Repo
-@inject IOptions<SiteOptions> SiteOpt
+@inject ISiteProfileProvider SiteProfile
 @{
     var slug = RouteData.Values["slug"]?.ToString() ?? "";
     var p = await Repo.GetProjectAsync(slug);
@@ -17,7 +17,7 @@
         ViewData["Description"] = p.Summary;
         if (!string.IsNullOrWhiteSpace(p.HeroImage) && !Media.IsVideo(p.HeroImage)) ViewData["OgImage"] = p.HeroImage;
 
-        var site = SiteOpt.Value;
+        var site = await SiteProfile.GetAsync();
         var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
         breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Work", "/projects"), (p.Title, $"/projects/{p.Slug}"));
 

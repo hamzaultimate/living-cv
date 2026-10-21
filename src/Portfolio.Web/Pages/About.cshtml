@@ -1,9 +1,9 @@
 @page "/about"
-@inject IOptions<SiteOptions> SiteOpt
+@inject ISiteProfileProvider SiteProfile
 @inject ITemplateCatalog Templates
 @{
     ViewData["Title"] = "About";
-    var site = SiteOpt.Value;
+    var site = await SiteProfile.GetAsync();
     // site.Summary (used verbatim on /cv) runs ~200 chars — too long for a meta description
     // (Bing/Google truncate/flag outside ~70-160), so About gets its own short version.
     ViewData["Description"] = TemplateSeo.Apply(Templates.Get(site.TemplateKey).Seo.AboutDescription, site);

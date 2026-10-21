@@ -1,8 +1,8 @@
 @page "/contact"
-@inject IOptions<SiteOptions> SiteOpt
+@inject ISiteProfileProvider SiteProfile
 @{
     ViewData["Title"] = "Contact";
-    var site = SiteOpt.Value;
+    var site = await SiteProfile.GetAsync();
     ViewData["Description"] = $"Get in touch with {site.OwnerName} — email, phone, WhatsApp, LinkedIn, or GitHub.";
     var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
     var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Contact", "/contact"));
