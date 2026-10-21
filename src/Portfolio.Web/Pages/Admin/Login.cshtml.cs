@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Portfolio.Data.Entities;
 using Portfolio.Web.Security;
-using Portfolio.Web.Uploads;
 
 namespace Portfolio.Web.Pages.Admin;
 

@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.WebUtilities;
+using Portfolio.Web.Uploads;
 
-namespace Portfolio.Web.Uploads;
+namespace Portfolio.Web.Security;
 
 /// <summary>
 /// Caps the request body of a page before anything reads it. Razor Pages validate the antiforgery token in an

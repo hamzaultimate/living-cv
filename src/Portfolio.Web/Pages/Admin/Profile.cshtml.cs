@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Portfolio.Web.Uploads;
+using Portfolio.Web.Security;
 using Portfolio.Web.Services;
 
 namespace Portfolio.Web.Pages.Admin;

@@ -71,8 +71,10 @@ public class SiteOptions
         {
             var words = OwnerName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             if (words.Length == 0) return "?";
-            var first = char.ToUpperInvariant(words[0][0]).ToString();
-            return words.Length == 1 ? first : first + char.ToUpperInvariant(words[^1][0]);
+            // A text element, not a char: a name starting with an emoji or a supplementary-plane letter must not be split in half.
+            static string Initial(string word) => System.Globalization.StringInfo.GetNextTextElement(word).ToUpperInvariant();
+            var first = Initial(words[0]);
+            return words.Length == 1 ? first : first + Initial(words[^1]);
         }
     }
 

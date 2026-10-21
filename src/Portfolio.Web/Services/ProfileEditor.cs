@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using Portfolio.Data;
 using Portfolio.Data.Entities;
-using Portfolio.Web.Security;
 
 namespace Portfolio.Web.Services;
 

@@ -1,4 +1,4 @@
-namespace Portfolio.Web.Security;
+namespace Portfolio.Web.Services;
 
 public static class OutputCacheTags
 {
