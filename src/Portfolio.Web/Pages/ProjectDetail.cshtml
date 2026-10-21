@@ -18,7 +18,7 @@
         if (!string.IsNullOrWhiteSpace(p.HeroImage) && !Media.IsVideo(p.HeroImage)) ViewData["OgImage"] = p.HeroImage;
 
         var site = await SiteProfile.GetAsync();
-        var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+        var absBase = await SeoHelpers.AbsoluteBaseAsync(HttpContext);
         breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Work", "/projects"), (p.Title, $"/projects/{p.Slug}"));
 
         // No reliable ISO datePublished for a case study (Period is free text like

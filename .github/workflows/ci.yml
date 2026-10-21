@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [develop]
+    branches: [develop, main]
   pull_request:
-    branches: [develop]
+    branches: [develop, main]
 
 permissions:
   contents: read
@@ -16,8 +16,9 @@ concurrency:
 jobs:
   build:
     name: Build (.NET 10)
-    # Windows matches the project's toolchain (win-x64 publish + the Tailwind CLI step).
-    runs-on: windows-latest
+    # The build is cross-platform (the Tailwind CLI step picks the right standalone binary per OS),
+    # so Linux is used for speed; the Azure deploy publishes win-x64 separately.
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
@@ -27,10 +28,16 @@ jobs:
           global-json-file: global.json
 
       - name: Restore
-        run: dotnet restore src/Portfolio.Web/Portfolio.Web.csproj
+        run: dotnet restore Portfolio.slnx
 
+      # TailwindRequired=true makes the build fail if the Tailwind CLI can't be downloaded,
+      # instead of silently falling back to the committed wwwroot/css/app.css.
       - name: Build
-        run: dotnet build src/Portfolio.Web/Portfolio.Web.csproj -c Release --no-restore
+        run: dotnet build Portfolio.slnx -c Release --no-restore -p:TailwindRequired=true
+
+      # If this fails, the build regenerated app.css: commit the updated file.
+      - name: Check committed Tailwind CSS is up to date
+        run: git diff --exit-code -- src/Portfolio.Web/wwwroot/css/app.css
 
       - name: Test
-        run: dotnet test tests/Portfolio.Web.Tests/Portfolio.Web.Tests.csproj -c Release
+        run: dotnet test Portfolio.slnx -c Release --no-build

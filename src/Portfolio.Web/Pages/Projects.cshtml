@@ -11,7 +11,7 @@
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .OrderBy(c => c)
         .ToList();
-    var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+    var absBase = await SeoHelpers.AbsoluteBaseAsync(HttpContext);
     var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Work", "/projects"));
 }
 <script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>

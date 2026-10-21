@@ -17,7 +17,7 @@
         ViewData["Title"] = post.Title;
         ViewData["Description"] = post.Description;
         if (!string.IsNullOrWhiteSpace(post.Cover)) ViewData["OgImage"] = post.Cover;
-        var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+        var absBase = await SeoHelpers.AbsoluteBaseAsync(HttpContext);
         var article = new Dictionary<string, object?>
         {
             ["@context"] = "https://schema.org",

@@ -7,7 +7,7 @@
     // site.Summary (used verbatim on /cv) runs ~200 chars — too long for a meta description
     // (Bing/Google truncate/flag outside ~70-160), so About gets its own short version.
     ViewData["Description"] = TemplateSeo.Apply(Templates.Get(site.TemplateKey).Seo.AboutDescription, site);
-    var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+    var absBase = await SeoHelpers.AbsoluteBaseAsync(HttpContext);
     var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("About", "/about"));
 
     // Keep the icon set aligned with the configured value-prop cards by position.

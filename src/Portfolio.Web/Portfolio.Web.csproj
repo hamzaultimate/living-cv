@@ -27,26 +27,59 @@
   </ItemGroup>
 
   <!-- ================= Tailwind CSS (compiled at build; no Node needed) =================
-       The standalone Tailwind CLI is downloaded once to /tools and run before build/publish.
-       If the download fails (offline), the committed wwwroot/css/app.css is used as-is. -->
+       The standalone Tailwind CLI for the current OS/architecture is downloaded once to /tools
+       (MSBuild's DownloadFile task - no PowerShell/curl needed) and run before build/publish.
+       The binary is named per platform, so switching OS never reuses the wrong one.
+       If the download fails (offline), the committed wwwroot/css/app.css is used as-is with a warning.
+       CI and the Azure publish pass -p:TailwindRequired=true to turn that fallback into a build error. -->
   <PropertyGroup>
     <TailwindVersion>3.4.17</TailwindVersion>
-    <TailwindExe>$(MSBuildProjectDirectory)\..\..\tools\tailwindcss.exe</TailwindExe>
-    <TailwindInput>Styles\app.css</TailwindInput>
-    <TailwindOutput>wwwroot\css\app.css</TailwindOutput>
+    <TailwindInput>Styles/app.css</TailwindInput>
+    <TailwindOutput>wwwroot/css/app.css</TailwindOutput>
+    <TailwindRequired Condition="'$(TailwindRequired)' == ''">false</TailwindRequired>
+    <TailwindArch>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant())</TailwindArch>
   </PropertyGroup>
 
-  <Target Name="EnsureTailwind" Condition="!Exists('$(TailwindExe)')">
-    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(TailwindExe)'))" />
-    <Message Importance="high" Text="Downloading Tailwind CLI v$(TailwindVersion)..." />
-    <Exec ContinueOnError="true"
-          Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;[Net.ServicePointManager]::SecurityProtocol='Tls12'; Invoke-WebRequest -Uri 'https://github.com/tailwindlabs/tailwindcss/releases/download/v$(TailwindVersion)/tailwindcss-windows-x64.exe' -OutFile '$(TailwindExe)'&quot;" />
+  <!-- Release assets: tailwindcss-{windows|linux|macos}-{x64|arm64}[.exe]; only x64/arm64 exist. -->
+  <PropertyGroup Condition="'$(TailwindArch)' == 'x64' Or '$(TailwindArch)' == 'arm64'">
+    <TailwindOs Condition="$([MSBuild]::IsOSPlatform('Windows'))">windows</TailwindOs>
+    <TailwindOs Condition="'$(TailwindOs)' == '' And $([MSBuild]::IsOSPlatform('Linux'))">linux</TailwindOs>
+    <TailwindOs Condition="'$(TailwindOs)' == '' And $([MSBuild]::IsOSPlatform('OSX'))">macos</TailwindOs>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TailwindOs)' != ''">
+    <TailwindAsset>tailwindcss-$(TailwindOs)-$(TailwindArch)</TailwindAsset>
+    <TailwindAsset Condition="'$(TailwindOs)' == 'windows'">$(TailwindAsset).exe</TailwindAsset>
+    <TailwindToolsDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../tools'))</TailwindToolsDir>
+    <TailwindExeName>v$(TailwindVersion)-$(TailwindAsset)</TailwindExeName>
+    <TailwindExe>$([System.IO.Path]::Combine('$(TailwindToolsDir)', '$(TailwindExeName)'))</TailwindExe>
+  </PropertyGroup>
+
+  <Target Name="EnsureTailwind" Condition="'$(TailwindExe)' != '' And !Exists('$(TailwindExe)')">
+    <MakeDir Directories="$(TailwindToolsDir)" />
+    <Message Importance="high" Text="Downloading Tailwind CLI v$(TailwindVersion) ($(TailwindAsset))..." />
+    <!-- Download to a temp name first so an interrupted download never leaves a broken binary behind. -->
+    <DownloadFile SourceUrl="https://github.com/tailwindlabs/tailwindcss/releases/download/v$(TailwindVersion)/$(TailwindAsset)"
+                  DestinationFolder="$(TailwindToolsDir)"
+                  DestinationFileName="$(TailwindExeName).download"
+                  Retries="2"
+                  ContinueOnError="true" />
+    <Copy Condition="'$(MSBuildLastTaskResult)' == 'true' And Exists('$(TailwindExe).download')"
+          SourceFiles="$(TailwindExe).download" DestinationFiles="$(TailwindExe)" ContinueOnError="true" />
+    <Delete Files="$(TailwindExe).download" ContinueOnError="true" />
+    <Exec Condition="'$(TailwindOs)' != 'windows' And Exists('$(TailwindExe)')"
+          Command="chmod +x &quot;$(TailwindExe)&quot;" ContinueOnError="true" />
   </Target>
 
   <Target Name="BuildTailwind" BeforeTargets="BeforeBuild;BeforeCompile;BeforePublish" DependsOnTargets="EnsureTailwind">
-    <Message Condition="Exists('$(TailwindExe)')" Importance="high" Text="Compiling Tailwind CSS -> $(TailwindOutput)" />
-    <Exec Condition="Exists('$(TailwindExe)')" Command="&quot;$(TailwindExe)&quot; -i &quot;$(TailwindInput)&quot; -o &quot;$(TailwindOutput)&quot; --minify" />
-    <Warning Condition="!Exists('$(TailwindExe)')" Text="Tailwind CLI unavailable; using committed wwwroot/css/app.css." />
+    <PropertyGroup>
+      <TailwindAvailable>false</TailwindAvailable>
+      <TailwindAvailable Condition="'$(TailwindExe)' != '' And Exists('$(TailwindExe)')">true</TailwindAvailable>
+    </PropertyGroup>
+    <Message Condition="'$(TailwindAvailable)' == 'true'" Importance="high" Text="Compiling Tailwind CSS -> $(TailwindOutput)" />
+    <Exec Condition="'$(TailwindAvailable)' == 'true'" Command="&quot;$(TailwindExe)&quot; -i &quot;$(TailwindInput)&quot; -o &quot;$(TailwindOutput)&quot; --minify" />
+    <Warning Condition="'$(TailwindAvailable)' != 'true' And '$(TailwindRequired)' != 'true'" Text="Tailwind CLI unavailable; using committed wwwroot/css/app.css." />
+    <Error Condition="'$(TailwindAvailable)' != 'true' And '$(TailwindRequired)' == 'true'" Text="Tailwind CLI unavailable (TailwindRequired=true); refusing to fall back to the committed wwwroot/css/app.css." />
   </Target>
 
 </Project>
