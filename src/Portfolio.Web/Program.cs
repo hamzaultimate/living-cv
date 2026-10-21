@@ -18,6 +18,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddScoped<PortfolioContentService>();
 builder.Services.AddSingleton(new CvAtsReportProvider(Path.Combine(AppContext.BaseDirectory, "Seed")));
 builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
+builder.Services.AddSingleton<ITemplateCatalog>(sp =>
+    new TemplateCatalog(Path.Combine(AppContext.BaseDirectory, "Templates"), sp.GetRequiredService<ILogger<TemplateCatalog>>()));
 builder.Services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
