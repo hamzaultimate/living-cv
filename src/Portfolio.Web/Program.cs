@@ -20,6 +20,12 @@ builder.Services.AddSingleton(new CvAtsReportProvider(Path.Combine(AppContext.Ba
 builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
 builder.Services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
 
+// The PDF CV, OG image, and sitemap are generated on demand and are CPU/DB-heavy, but their
+// inputs only change on restart (config + reseed). Cache them server-side so a burst of
+// requests renders once (output caching also coalesces concurrent misses) instead of once each.
+builder.Services.AddOutputCache(o =>
+    o.AddPolicy("Generated", p => p.Expire(TimeSpan.FromHours(1))));
+
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 var connectionString = builder.Configuration.GetConnectionString("Default");
@@ -87,18 +93,24 @@ app.Use(async (ctx, next) =>
 
 app.UseRouting();
 
+app.UseOutputCache();
+
 app.UseAuthorization();
 
 app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
 
-// Liveness (no DB dependency — used by the deploy pipeline) and DB readiness.
+// Liveness (no DB dependency — used by the deploy pipeline) and DB readiness. The DB check's
+// description/error name the server, database, and raw exception text, so they're only
+// returned in Development; elsewhere the endpoint reports bare status and the details go to
+// the app log (the health check service logs failing checks).
+var detailedHealth = app.Environment.IsDevelopment();
 app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = c => !c.Tags.Contains("db") });
 app.MapHealthChecks("/health/db", new HealthCheckOptions
 {
     Predicate = c => c.Tags.Contains("db"),
-    ResponseWriter = WriteHealthJson,
+    ResponseWriter = (ctx, report) => WriteHealthJson(ctx, report, detailedHealth),
 });
 
 // Generate the PDF CV from the same content source used by the site pages.
@@ -110,7 +122,7 @@ app.MapGet("/cv.pdf", async (PortfolioContentService repo, IOptions<SiteOptions>
     var bytes = new CvDocument(data).GeneratePdf();
     var fileName = $"{site.OwnerName.ToLowerInvariant().Replace(' ', '-')}-cv.pdf";
     return Results.File(bytes, "application/pdf", fileName);
-});
+}).CacheOutput("Generated");
 
 // Generate the Open Graph image from the current site identity.
 app.MapGet("/og.png", (IOptions<SiteOptions> siteOpt) =>
@@ -119,14 +131,16 @@ app.MapGet("/og.png", (IOptions<SiteOptions> siteOpt) =>
     var domainLabel = (s.Url ?? "").Replace("https://", "").Replace("http://", "").TrimEnd('/').ToUpperInvariant();
     var tagline = string.Join(" ", new[] { s.Hero.Headline, s.Hero.HeadlineAccent }.Where(x => !string.IsNullOrWhiteSpace(x)));
     return Results.File(OgImage.Generate(s.OwnerName, s.Role, domainLabel, tagline), "image/png");
-});
+}).CacheOutput("Generated");
 
 // Expose sitemap and robots routes for search engines. Blog posts carry a real publish
 // date, so they get <lastmod> to help crawlers prioritise re-fetching fresh content;
 // static/project routes have no reliable last-changed date, so it's omitted rather than guessed.
+// URLs use Site:Url (via AbsoluteBase), never the request Host, so the sitemap always lists the
+// canonical domain.
 app.MapGet("/sitemap.xml", async (HttpContext ctx, PortfolioContentService repo) =>
 {
-    var baseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}";
+    var baseUrl = SeoHelpers.AbsoluteBase(ctx);
     var urls = new List<(string Path, string? LastMod)> {
         ("/", null), ("/about", null), ("/experience", null), ("/projects", null), ("/skills", null),
         ("/certifications", null), ("/blog", null), ("/talks", null), ("/cv", null), ("/contact", null),
@@ -146,12 +160,12 @@ app.MapGet("/sitemap.xml", async (HttpContext ctx, PortfolioContentService repo)
     }
     sb.AppendLine("</urlset>");
     return Results.Content(sb.ToString(), "application/xml");
-});
+}).CacheOutput("Generated");
 
 // Allow indexing in production and keep development subdomains out of search results.
 app.MapGet("/robots.txt", (HttpContext ctx) =>
 {
-    var baseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}";
+    var baseUrl = SeoHelpers.AbsoluteBase(ctx);
     var isDev = ctx.Request.Host.Host.StartsWith("dev.", StringComparison.OrdinalIgnoreCase);
     var body = isDev
         ? "User-agent: *\nDisallow: /\n"
@@ -163,8 +177,9 @@ await MigrateAndSeedAsync(app);
 
 app.Run();
 
-// Write a simple JSON payload for the database health endpoint so setup issues are visible.
-static Task WriteHealthJson(HttpContext ctx, Microsoft.Extensions.Diagnostics.HealthChecks.HealthReport report)
+// Write a simple JSON payload for the database health endpoint. Descriptions and errors
+// (server/db names, exception text) are included only when `detailed` is set.
+static Task WriteHealthJson(HttpContext ctx, Microsoft.Extensions.Diagnostics.HealthChecks.HealthReport report, bool detailed)
 {
     ctx.Response.ContentType = "application/json";
     var payload = new
@@ -174,8 +189,8 @@ static Task WriteHealthJson(HttpContext ctx, Microsoft.Extensions.Diagnostics.He
         {
             name = e.Key,
             status = e.Value.Status.ToString(),
-            description = e.Value.Description,
-            error = e.Value.Exception?.Message,
+            description = detailed ? e.Value.Description : null,
+            error = detailed ? e.Value.Exception?.Message : null,
         }),
     };
     return ctx.Response.WriteAsJsonAsync(payload);

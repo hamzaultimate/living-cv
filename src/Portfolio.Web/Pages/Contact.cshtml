@@ -4,7 +4,7 @@
     ViewData["Title"] = "Contact";
     var site = SiteOpt.Value;
     ViewData["Description"] = $"Get in touch with {site.OwnerName} — email, phone, WhatsApp, LinkedIn, or GitHub.";
-    var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+    var absBase = SeoHelpers.AbsoluteBase(HttpContext);
     var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Contact", "/contact"));
 }
 <script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>
