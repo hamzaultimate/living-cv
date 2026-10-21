@@ -17,7 +17,7 @@ namespace Portfolio.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.9")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -227,6 +227,99 @@ namespace Portfolio.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("Portfolio.Data.Entities.SiteProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AccentColor")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("BrandName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GitHub")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GoogleAnalyticsId")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.PrimitiveCollection<string>("KnowsAbout")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LinkedIn")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhotoUrl")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("PhotoUrlLight")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.PrimitiveCollection<string>("SecondaryEmails")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TemplateKey")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("ThemeKey")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("WhatsApp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("YouTube")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SiteProfiles", t =>
+                        {
+                            t.HasCheckConstraint("CK_SiteProfiles_Singleton", "[Id] = 1");
+                        });
                 });
 
             modelBuilder.Entity("Portfolio.Data.Entities.Skill", b =>
@@ -447,6 +540,146 @@ namespace Portfolio.Data.Migrations
                     b.Navigation("Proofs");
 
                     b.Navigation("Screenshots");
+                });
+
+            modelBuilder.Entity("Portfolio.Data.Entities.SiteProfile", b =>
+                {
+                    b.OwnsOne("Portfolio.Data.Entities.ProfileAbout", "About", b1 =>
+                        {
+                            b1.Property<int>("SiteProfileId");
+
+                            b1.Property<string>("CurrentlyNote");
+
+                            b1.PrimitiveCollection<string>("Focus")
+                                .IsRequired();
+
+                            b1.Property<string>("Headline");
+
+                            b1.PrimitiveCollection<string>("Paragraphs")
+                                .IsRequired();
+
+                            b1.HasKey("SiteProfileId");
+
+                            b1.ToTable("SiteProfiles");
+
+                            b1
+                                .ToJson("About")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SiteProfileId");
+
+                            b1.OwnsMany("Portfolio.Data.Entities.ProfileValueProp", "ValueProps", b2 =>
+                                {
+                                    b2.Property<int>("ProfileAboutSiteProfileId");
+
+                                    b2.Property<int>("__synthesizedOrdinal")
+                                        .ValueGeneratedOnAddOrUpdate();
+
+                                    b2.Property<string>("Body")
+                                        .IsRequired();
+
+                                    b2.Property<string>("Title")
+                                        .IsRequired();
+
+                                    b2.HasKey("ProfileAboutSiteProfileId", "__synthesizedOrdinal");
+
+                                    b2.ToTable("SiteProfiles");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("ProfileAboutSiteProfileId");
+                                });
+
+                            b1.Navigation("ValueProps");
+                        });
+
+                    b.OwnsOne("Portfolio.Data.Entities.ProfileHero", "Hero", b1 =>
+                        {
+                            b1.Property<int>("SiteProfileId");
+
+                            b1.Property<string>("Eyebrow");
+
+                            b1.Property<string>("Headline");
+
+                            b1.Property<string>("HeadlineAccent");
+
+                            b1.Property<string>("Lede");
+
+                            b1.HasKey("SiteProfileId");
+
+                            b1.ToTable("SiteProfiles");
+
+                            b1
+                                .ToJson("Hero")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SiteProfileId");
+                        });
+
+                    b.OwnsMany("Portfolio.Data.Entities.ProfileMetric", "Metrics", b1 =>
+                        {
+                            b1.Property<int>("SiteProfileId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAddOrUpdate();
+
+                            b1.Property<string>("Label");
+
+                            b1.Property<string>("Unit");
+
+                            b1.Property<string>("Value")
+                                .IsRequired();
+
+                            b1.HasKey("SiteProfileId", "__synthesizedOrdinal");
+
+                            b1.ToTable("SiteProfiles");
+
+                            b1
+                                .ToJson("Metrics")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SiteProfileId");
+                        });
+
+                    b.OwnsMany("Portfolio.Data.Entities.SectionSetting", "Sections", b1 =>
+                        {
+                            b1.Property<int>("SiteProfileId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAddOrUpdate();
+
+                            b1.Property<bool>("Enabled");
+
+                            b1.Property<string>("Key")
+                                .IsRequired();
+
+                            b1.Property<string>("Label");
+
+                            b1.Property<int>("SortOrder");
+
+                            b1.HasKey("SiteProfileId", "__synthesizedOrdinal");
+
+                            b1.ToTable("SiteProfiles");
+
+                            b1
+                                .ToJson("Sections")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SiteProfileId");
+                        });
+
+                    b.Navigation("About")
+                        .IsRequired();
+
+                    b.Navigation("Hero")
+                        .IsRequired();
+
+                    b.Navigation("Metrics");
+
+                    b.Navigation("Sections");
                 });
 #pragma warning restore 612, 618
         }

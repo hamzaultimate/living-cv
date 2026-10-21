@@ -14,9 +14,36 @@ public class PortfolioDbContext : DbContext
     public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
     public DbSet<Talk> Talks => Set<Talk>();
     public DbSet<Testimonial> Testimonials => Set<Testimonial>();
+    public DbSet<SiteProfile> SiteProfiles => Set<SiteProfile>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<SiteProfile>(e =>
+        {
+            // Singleton: the only legal row has Id = 1.
+            e.Property(x => x.Id).ValueGeneratedNever();
+            e.ToTable(t => t.HasCheckConstraint("CK_SiteProfiles_Singleton", "[Id] = 1"));
+            e.Property(x => x.OwnerName).HasMaxLength(200);
+            e.Property(x => x.BrandName).HasMaxLength(80);
+            e.Property(x => x.Role).HasMaxLength(300);
+            e.Property(x => x.JobTitle).HasMaxLength(200);
+            e.Property(x => x.Url).HasMaxLength(300);
+            e.Property(x => x.GoogleAnalyticsId).HasMaxLength(40);
+            e.Property(x => x.PhotoUrl).HasMaxLength(400);
+            e.Property(x => x.PhotoUrlLight).HasMaxLength(400);
+            e.Property(x => x.TemplateKey).HasMaxLength(60);
+            e.Property(x => x.ThemeKey).HasMaxLength(60);
+            e.Property(x => x.AccentColor).HasMaxLength(40);
+            e.OwnsOne(x => x.Hero, o => o.ToJson());
+            e.OwnsMany(x => x.Metrics, o => o.ToJson());
+            e.OwnsOne(x => x.About, o =>
+            {
+                o.ToJson();
+                o.OwnsMany(a => a.ValueProps);
+            });
+            e.OwnsMany(x => x.Sections, o => o.ToJson());
+        });
+
         b.Entity<Project>(e =>
         {
             e.HasIndex(x => x.Slug).IsUnique();
