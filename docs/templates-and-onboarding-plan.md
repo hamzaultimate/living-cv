@@ -81,8 +81,12 @@ Every phase ends in a shippable, working app. Phases 0 to 4 are the critical pat
 - Exit criteria: output of every public page is unchanged for the demo persona.
 
 ### Phase 1: Owner auth, setup key, and uploads
-- Single-owner cookie auth with hashed password, `/admin/login`, lockout, anti-forgery, secure
-  cookie settings. First-run owner creation gated by `Setup:Key`.
+- **One-time registration, one account only.** `/setup` creates the owner account and then
+  permanently closes (returns 404) once any user exists. The database holds at most one user,
+  enforced by a constraint, not just by application code. Gated by `Setup:Key`. No sign-up, no
+  second account, no roles. Password reset is an out-of-band CLI command run by whoever has the
+  code (`dotnet run -- reset-owner`).
+- Cookie auth with hashed password, `/admin/login`, lockout, anti-forgery, secure cookie settings.
 - `/admin` shell (layout, nav, flash messages) with a "Profile" editor so the first UI-managed
   data exists end to end.
 - Image upload service: size and type limits, magic-byte check, re-encode with SkiaSharp (already
@@ -159,7 +163,12 @@ Each template needs a preset, theme, starter content, thumbnail, and a11y/contra
 | Healthcare/legal content sensitivity | Preset copy warns against patient/client data |
 | EF migration on populated DBs | Additive migrations only; no renames (D3) |
 
-## 6. Working agreement
+## 6. Template rules
+
+See [template-authoring-guide.md](template-authoring-guide.md). Templates are data plus an
+archetype, validated by automated tests, so a new profession needs no code changes.
+
+## 7. Working agreement
 
 - Implementation by Sonnet 5.5; each phase gets an independent review by Opus 5.5 before merge,
   and review findings are fixed before the next phase starts.
