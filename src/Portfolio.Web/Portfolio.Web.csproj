@@ -29,6 +29,13 @@
     </PackageReference>
   </ItemGroup>
 
+  <!-- The SkiaSharp native package ships a ~96 MB debug symbol file for win-x64 that nothing at runtime reads; keep it out of the publish output. -->
+  <Target Name="DropNativeDebugSymbols" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Filename)%(Extension)' == 'libSkiaSharp.pdb'" />
+    </ItemGroup>
+  </Target>
+
   <!-- ================= Tailwind CSS (compiled at build; no Node needed) =================
        The standalone Tailwind CLI for the current OS/architecture is downloaded once to /tools
        (MSBuild's DownloadFile task - no PowerShell/curl needed) and run before build/publish.
