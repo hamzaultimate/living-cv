@@ -187,6 +187,9 @@ static Task WriteHealthJson(HttpContext ctx, Microsoft.Extensions.Diagnostics.He
 // Apply EF Core migrations and seed content without blocking startup.
 static async Task MigrateAndSeedAsync(WebApplication app)
 {
+    var seedMode = app.Configuration.GetSeedMode(app.Logger);
+    app.Logger.LogInformation("Seed mode: {SeedMode}", seedMode);
+
     var cs = app.Configuration.GetConnectionString("Default");
     if (string.IsNullOrWhiteSpace(cs))
     {
@@ -201,7 +204,7 @@ static async Task MigrateAndSeedAsync(WebApplication app)
         var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
         await db.Database.MigrateAsync(cts.Token);
         var seedDir = Path.Combine(AppContext.BaseDirectory, "Seed");
-        await PortfolioSeeder.SeedAsync(db, seedDir, app.Configuration.GetSeedMode(), app.Logger, cts.Token);
+        await PortfolioSeeder.SeedAsync(db, seedDir, seedMode, app.Logger, cts.Token);
         await scope.ServiceProvider.GetRequiredService<ISiteProfileProvider>().GetAsync(cts.Token);
         app.Logger.LogInformation("Database migrated and seeded.");
     }

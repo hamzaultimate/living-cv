@@ -156,6 +156,23 @@ public class PortfolioSeederTests
         }
     }
 
+    [Theory]
+    [InlineData(2)]
+    [InlineData(7)]
+    [InlineData(-1)]
+    public async Task UndefinedMode_IsNonDestructive(int value)
+    {
+        using var database = new TestDatabase();
+        using var files = Files();
+        using var db = database.CreateContext();
+        db.Projects.Add(new Project { Title = "Mine", Slug = "mine", Summary = "Kept" });
+        await db.SaveChangesAsync();
+
+        await PortfolioSeeder.SeedAsync(db, files.Path, (SeedMode)value);
+
+        Assert.Equal(new[] { "mine" }, await db.Projects.Select(p => p.Slug).ToArrayAsync());
+    }
+
     [Fact]
     public async Task Authoritative_EmptySeedFileNeverWipesATable()
     {

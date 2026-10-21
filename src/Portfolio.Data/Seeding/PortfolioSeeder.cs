@@ -73,11 +73,12 @@ public static class PortfolioSeeder
                             cur.Relation = inc.Relation; cur.Featured = inc.Featured; cur.SortOrder = inc.SortOrder; });
     }
 
+    // Only an explicit Authoritative takes the destructive path; any other value behaves as IfEmpty.
     private static async Task UpsertAsync<T>(
         PortfolioDbContext db, string dir, string file, DbSet<T> set,
         Func<T, string> key, SeedMode mode, ILogger? log, CancellationToken ct, Action<T, T> copy) where T : class
     {
-        if (mode == SeedMode.IfEmpty && await set.AnyAsync(ct))
+        if (mode != SeedMode.Authoritative && await set.AnyAsync(ct))
         {
             log?.LogInformation("Table not empty, skipping seed: {file}", file);
             return;
@@ -95,7 +96,7 @@ public static class PortfolioSeeder
         catch (Exception ex) { log?.LogError(ex, "Failed to parse seed file {file}", file); return; }
         if (items is null || items.Count == 0) { log?.LogInformation("Seed file empty: {file}", file); return; }
 
-        if (mode == SeedMode.IfEmpty)
+        if (mode != SeedMode.Authoritative)
         {
             set.AddRange(items);
             await db.SaveChangesAsync(ct);
