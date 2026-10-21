@@ -24,7 +24,7 @@ public sealed class ImageProcessor
 
     /// <summary>Upper bounds on the source, checked before decoding so a tiny file cannot expand into gigabytes.</summary>
     public const int MaxSourceSide = 10_000;
-    public const long MaxSourcePixels = 36_000_000;
+    public const long MaxSourcePixels = 25_000_000;
 
     private const int JpegQuality = 85;
     private const int WebpQuality = 85;
@@ -69,25 +69,40 @@ public sealed class ImageProcessor
         if (info.Width <= 0 || info.Height <= 0)
             throw new ImageRejectedException("That file could not be read as an image.");
         if (info.Width > MaxSourceSide || info.Height > MaxSourceSide || (long)info.Width * info.Height > MaxSourcePixels)
-            throw new ImageRejectedException("The image is too large in pixels. Resize it to under 36 megapixels (for example 6000 by 6000) and try again.");
+            throw new ImageRejectedException("The image is too large in pixels. Resize it to under 25 megapixels (for example 5000 by 5000) and try again.");
 
-        using var decoded = new SKBitmap(new SKImageInfo(info.Width, info.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
-        if (codec.GetPixels(decoded.Info, decoded.GetPixels()) != SKCodecResult.Success)
-            throw new ImageRejectedException("That file could not be read as an image.");
-
-        using var oriented = ApplyOrigin(decoded, codec.EncodedOrigin);
-        using var sized = Fit(oriented ?? decoded);
-        var final = sized ?? oriented ?? decoded;
-
-        using var image = SKImage.FromBitmap(final);
-        var (format, extension, contentType, quality) = kind switch
+        // Each step replaces the previous bitmap, so at most two full-size copies exist at once.
+        var current = new SKBitmap(new SKImageInfo(info.Width, info.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
+        try
         {
-            Kind.Jpeg => (SKEncodedImageFormat.Jpeg, ".jpg", "image/jpeg", JpegQuality),
-            Kind.Png => (SKEncodedImageFormat.Png, ".png", "image/png", 100),
-            _ => (SKEncodedImageFormat.Webp, ".webp", "image/webp", WebpQuality),
-        };
-        using var encoded = image.Encode(format, quality) ?? throw new ImageRejectedException("That image could not be processed.");
-        return new ProcessedImage(encoded.ToArray(), extension, contentType, final.Width, final.Height);
+            if (codec.GetPixels(current.Info, current.GetPixels()) != SKCodecResult.Success)
+                throw new ImageRejectedException("That file could not be read as an image.");
+
+            if (ApplyOrigin(current, codec.EncodedOrigin) is { } oriented)
+            {
+                current.Dispose();
+                current = oriented;
+            }
+            if (Fit(current) is { } sized)
+            {
+                current.Dispose();
+                current = sized;
+            }
+
+            using var image = SKImage.FromBitmap(current);
+            var (format, extension, contentType, quality) = kind switch
+            {
+                Kind.Jpeg => (SKEncodedImageFormat.Jpeg, ".jpg", "image/jpeg", JpegQuality),
+                Kind.Png => (SKEncodedImageFormat.Png, ".png", "image/png", 100),
+                _ => (SKEncodedImageFormat.Webp, ".webp", "image/webp", WebpQuality),
+            };
+            using var encoded = image.Encode(format, quality) ?? throw new ImageRejectedException("That image could not be processed.");
+            return new ProcessedImage(encoded.ToArray(), extension, contentType, current.Width, current.Height);
+        }
+        finally
+        {
+            current.Dispose();
+        }
     }
 
     /// <summary>Returns a rotated/flipped copy so the pixels are upright, or null when the image is already upright.</summary>

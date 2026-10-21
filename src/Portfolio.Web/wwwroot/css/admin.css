@@ -73,3 +73,4 @@
 .adm-photo { width: 10rem; height: 10rem; border-radius: 50%; object-fit: cover; border: 1px solid var(--adm-border); display: block; margin-bottom: 1rem; }
 .adm-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
 @media (max-width: 40rem) { .adm-row, .adm-row-2 { grid-template-columns: 1fr; } }
+.adm-field textarea.adm-tall { min-height: 12rem; }

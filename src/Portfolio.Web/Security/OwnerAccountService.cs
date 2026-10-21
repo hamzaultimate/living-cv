@@ -26,6 +26,7 @@ public sealed class OwnerAccountService
     public static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
 
     private static readonly SemaphoreSlim SignInGate = new(1, 1);
+    private static readonly TimeSpan GateTimeout = TimeSpan.FromSeconds(5);
 
     private readonly PortfolioDbContext _db;
     private readonly OwnerPasswordHasher _hasher;
@@ -89,7 +90,9 @@ public sealed class OwnerAccountService
     public async Task<OwnerSignInResult> SignInAsync(string? userName, string? password, CancellationToken ct = default)
     {
         password ??= "";
-        await SignInGate.WaitAsync(ct);
+        // Sign-ins queue one at a time; a flood gets turned away rather than piling up behind the hash.
+        if (!await SignInGate.WaitAsync(GateTimeout, ct))
+            return new OwnerSignInResult(SignInOutcome.Failed);
         try
         {
             var account = await _db.OwnerAccounts.AsNoTracking().FirstOrDefaultAsync(a => a.Id == OwnerAccount.SingletonId, ct);
@@ -100,11 +103,9 @@ public sealed class OwnerAccountService
             }
 
             var now = _time.GetUtcNow().UtcDateTime;
+            // No password check while locked: it would only give a flood something expensive to ask for.
             if (account.LockoutEndUtc is { } until && until > now)
-            {
-                _hasher.SpendVerificationCost(password);
                 return new OwnerSignInResult(SignInOutcome.LockedOut);
-            }
 
             // Always verify against the real hash, even when the name is wrong, so timing does not reveal which part failed.
             var verification = _hasher.Verify(account.PasswordHash, password);

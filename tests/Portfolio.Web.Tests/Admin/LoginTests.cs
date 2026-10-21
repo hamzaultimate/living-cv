@@ -208,6 +208,51 @@ public class LoginTests
     }
 
     [Fact]
+    public async Task ASession_EndsAfterTheAbsoluteLimit_EvenIfTheCookieIsStillFresh()
+    {
+        using var app = new AdminApp();
+        var client = await app.SignedInClientAsync();
+
+        // An active owner keeps sliding the cookie forward...
+        for (var elapsed = TimeSpan.Zero; elapsed < AdminAuth.MaxSessionAge - TimeSpan.FromMinutes(25); elapsed += TimeSpan.FromMinutes(20))
+        {
+            app.Clock.Advance(TimeSpan.FromMinutes(20));
+            Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/admin")).StatusCode);
+        }
+
+        // ...but only up to the cap.
+        // (the last refresh was at 11h40, so the cookie itself is still within its 30 minutes at 12h05)
+        app.Clock.Advance(TimeSpan.FromMinutes(25));
+        Assert.Equal(HttpStatusCode.Redirect, (await client.GetAsync("/admin")).StatusCode);
+    }
+
+    [Fact]
+    public async Task PublicPages_DoNotNeedTheDatabaseToAcceptAnOwnersCookie()
+    {
+        using var app = new AdminApp();
+        var client = await app.SignedInClientAsync();
+
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/about")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/")).StatusCode);
+    }
+
+    [Fact]
+    public async Task AdminPages_CarryARestrictiveContentSecurityPolicy()
+    {
+        using var app = new AdminApp();
+        var client = await app.SignedInClientAsync();
+
+        foreach (var path in new[] { "/admin", "/admin/login", "/admin/profile", "/admin/photo" })
+        {
+            var csp = string.Join(";", (await client.GetAsync(path)).Headers.GetValues("Content-Security-Policy"));
+            Assert.Contains("default-src 'none'", csp);
+            Assert.Contains("frame-ancestors 'none'", csp);
+            Assert.DoesNotContain("unsafe-inline", csp);
+        }
+        Assert.DoesNotContain("style=", await client.GetStringAsync("/admin/profile"));
+    }
+
+    [Fact]
     public async Task AdminResponses_AreNeverCached_AndNotIndexable()
     {
         using var app = new AdminApp();

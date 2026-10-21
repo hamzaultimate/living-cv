@@ -16,11 +16,13 @@ public class LoginModel : PageModel
 {
     private readonly OwnerAccountService _accounts;
     private readonly ILogger<LoginModel> _logger;
+    private readonly TimeProvider _time;
 
-    public LoginModel(OwnerAccountService accounts, ILogger<LoginModel> logger)
+    public LoginModel(OwnerAccountService accounts, ILogger<LoginModel> logger, TimeProvider time)
     {
         _accounts = accounts;
         _logger = logger;
+        _time = time;
     }
 
     [BindProperty(SupportsGet = true)]
@@ -52,7 +54,7 @@ public class LoginModel : PageModel
 
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
-            AdminAuth.CreatePrincipal(result.Account),
+            AdminAuth.CreatePrincipal(result.Account, _time.GetUtcNow()),
             new AuthenticationProperties { IsPersistent = false, AllowRefresh = true });
         return LocalRedirect(AdminAuth.SafeReturnUrl(Url, ReturnUrl));
     }
