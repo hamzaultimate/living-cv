@@ -207,6 +207,46 @@ public class LoginTests
     }
 
     [Fact]
+    public async Task Logout_StillSignsOut_WhenTheStampCannotBeRotated()
+    {
+        using var database = new TestDatabase(createSchema: false);
+        var services = new ServiceCollection().AddSingleton<Microsoft.AspNetCore.Authentication.IAuthenticationService, RecordingAuthenticationService>().BuildServiceProvider();
+        var accounts = new OwnerAccountService(database.CreateContext(), new OwnerPasswordHasher(), new SignInGate(),
+            new SignInThrottle(TimeProvider.System), null!, TimeProvider.System, Microsoft.Extensions.Logging.Abstractions.NullLogger<OwnerAccountService>.Instance);
+        var http = new Microsoft.AspNetCore.Http.DefaultHttpContext { RequestServices = services };
+        var model = new Portfolio.Web.Pages.Admin.LogoutModel(accounts, Microsoft.Extensions.Logging.Abstractions.NullLogger<Portfolio.Web.Pages.Admin.LogoutModel>.Instance)
+        {
+            PageContext = new Microsoft.AspNetCore.Mvc.RazorPages.PageContext { HttpContext = http },
+            TempData = new TempDataDictionary(http, new NullTempDataProvider()),
+        };
+
+        var result = await model.OnPostAsync();
+
+        Assert.IsType<RedirectToPageResult>(result);
+        Assert.True(((RecordingAuthenticationService)services.GetRequiredService<Microsoft.AspNetCore.Authentication.IAuthenticationService>()).SignedOut);
+    }
+
+    private sealed class NullTempDataProvider : ITempDataProvider
+    {
+        public IDictionary<string, object> LoadTempData(Microsoft.AspNetCore.Http.HttpContext context) => new Dictionary<string, object>();
+        public void SaveTempData(Microsoft.AspNetCore.Http.HttpContext context, IDictionary<string, object> values) { }
+    }
+
+    private sealed class RecordingAuthenticationService : Microsoft.AspNetCore.Authentication.IAuthenticationService
+    {
+        public bool SignedOut { get; private set; }
+        public Task<Microsoft.AspNetCore.Authentication.AuthenticateResult> AuthenticateAsync(Microsoft.AspNetCore.Http.HttpContext context, string? scheme) => throw new NotSupportedException();
+        public Task ChallengeAsync(Microsoft.AspNetCore.Http.HttpContext context, string? scheme, Microsoft.AspNetCore.Authentication.AuthenticationProperties? properties) => throw new NotSupportedException();
+        public Task ForbidAsync(Microsoft.AspNetCore.Http.HttpContext context, string? scheme, Microsoft.AspNetCore.Authentication.AuthenticationProperties? properties) => throw new NotSupportedException();
+        public Task SignInAsync(Microsoft.AspNetCore.Http.HttpContext context, string? scheme, System.Security.Claims.ClaimsPrincipal principal, Microsoft.AspNetCore.Authentication.AuthenticationProperties? properties) => throw new NotSupportedException();
+        public Task SignOutAsync(Microsoft.AspNetCore.Http.HttpContext context, string? scheme, Microsoft.AspNetCore.Authentication.AuthenticationProperties? properties)
+        {
+            SignedOut = true;
+            return Task.CompletedTask;
+        }
+    }
+
+    [Fact]
     public async Task ResettingThePassword_EndsExistingSessions()
     {
         using var app = new AdminApp();
