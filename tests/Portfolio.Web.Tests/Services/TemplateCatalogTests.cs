@@ -104,6 +104,64 @@ public class TemplateCatalogTests
         finally { Directory.Delete(dir, recursive: true); }
     }
 
+    private static string TempTemplates()
+    {
+        var dir = Directory.CreateTempSubdirectory().FullName;
+        Directory.CreateDirectory(Path.Combine(dir, "software"));
+        File.Copy(Path.Combine(TemplatesDir, "software", "template.json"), Path.Combine(dir, "software", "template.json"));
+        return dir;
+    }
+
+    private static string Manifest(string key) =>
+        File.ReadAllText(Path.Combine(TemplatesDir, "software", "template.json"))
+            .Replace("\"key\": \"software\"", $"\"key\": \"{key}\"");
+
+    [Fact]
+    public void FoldersStartingWithUnderscore_AreSkipped()
+    {
+        var dir = TempTemplates();
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(dir, "_draft"));
+            File.WriteAllText(Path.Combine(dir, "_draft", "template.json"), Manifest("_draft"));
+
+            Assert.Equal(new[] { "software" }, new TemplateCatalog(dir).All.Select(t => t.Key));
+        }
+        finally { Directory.Delete(dir, recursive: true); }
+    }
+
+    [Fact]
+    public void NestedManifests_AreNotDiscovered()
+    {
+        var dir = TempTemplates();
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(dir, "software", "nested", "deep"));
+            File.WriteAllText(Path.Combine(dir, "software", "nested", "template.json"), Manifest("nested"));
+            File.WriteAllText(Path.Combine(dir, "software", "nested", "deep", "template.json"), Manifest("deep"));
+
+            Assert.Equal(new[] { "software" }, new TemplateCatalog(dir).All.Select(t => t.Key));
+        }
+        finally { Directory.Delete(dir, recursive: true); }
+    }
+
+    [Fact]
+    public void ManifestKey_MustMatchItsFolderName()
+    {
+        var dir = TempTemplates();
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(dir, "chef"));
+            File.WriteAllText(Path.Combine(dir, "chef", "template.json"), Manifest("baker"));
+
+            var catalog = new TemplateCatalog(dir);
+
+            Assert.Equal(new[] { "software" }, catalog.All.Select(t => t.Key));
+            Assert.Equal("software", catalog.Get("baker").Key);
+        }
+        finally { Directory.Delete(dir, recursive: true); }
+    }
+
     [Fact]
     public void MissingDefaultTemplate_Throws()
     {

@@ -12,7 +12,8 @@ public interface ITemplateCatalog
 }
 
 /// <summary>Loads presets from <c>Templates/&lt;key&gt;/template.json</c> under a base directory.
-/// A manifest that cannot be read is skipped with a logged error.</summary>
+/// Only direct subfolders are scanned, and folders starting with "_" are ignored. A manifest that
+/// cannot be read, or whose key differs from its folder name, is skipped with a logged error.</summary>
 public class TemplateCatalog : ITemplateCatalog
 {
     public const string DefaultKey = "software";
@@ -29,13 +30,20 @@ public class TemplateCatalog : ITemplateCatalog
     {
         if (Directory.Exists(templatesDir))
         {
-            foreach (var file in Directory.EnumerateFiles(templatesDir, "template.json", SearchOption.AllDirectories))
+            foreach (var folder in Directory.EnumerateDirectories(templatesDir))
             {
+                var name = Path.GetFileName(folder);
+                if (name.StartsWith('_')) continue;
+
+                var file = Path.Combine(folder, "template.json");
+                if (!File.Exists(file)) continue;
                 try
                 {
                     var preset = JsonSerializer.Deserialize<TemplatePreset>(File.ReadAllText(file), Json);
                     if (preset is null || string.IsNullOrWhiteSpace(preset.Key))
                         throw new InvalidDataException("Manifest has no key.");
+                    if (!string.Equals(preset.Key, name, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidDataException($"Manifest key '{preset.Key}' does not match folder '{name}'.");
                     if (!_byKey.TryAdd(preset.Key, preset))
                         throw new InvalidDataException($"Duplicate template key '{preset.Key}'.");
                 }
