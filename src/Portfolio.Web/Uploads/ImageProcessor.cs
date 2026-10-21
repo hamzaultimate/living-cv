@@ -127,7 +127,7 @@ public sealed class ImageProcessor
         var result = new SKBitmap(new SKImageInfo(swap ? source.Height : source.Width, swap ? source.Width : source.Height, source.ColorType, source.AlphaType));
         using var canvas = new SKCanvas(result);
         canvas.SetMatrix(m);
-        canvas.DrawBitmap(source, 0, 0);
+        canvas.DrawBitmap(source, 0f, 0f, new SKSamplingOptions(SKFilterMode.Nearest), null);
         return result;
     }
 

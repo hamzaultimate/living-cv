@@ -198,6 +198,13 @@ public class PhotoUploadTests
         Assert.Equal(HttpStatusCode.BadRequest, noToken.StatusCode);
 
         Assert.Empty(Directory.GetFiles(app.UploadsPath));
+
+        await UploadAsync(client, png, "a.png");
+        var kept = await StoredPhotoAsync(app);
+        var removeWithoutToken = await AdminApp.PostFormAsync(client, "/admin/photo?handler=Remove", token: null, []);
+        Assert.Equal(HttpStatusCode.BadRequest, removeWithoutToken.StatusCode);
+        Assert.Equal(kept, await StoredPhotoAsync(app));
+        Assert.True(File.Exists(FileFor(app, kept!)));
     }
 
     [Fact]
