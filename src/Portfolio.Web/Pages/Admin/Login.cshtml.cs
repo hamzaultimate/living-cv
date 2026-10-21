@@ -17,10 +17,12 @@ public class LoginModel : PageModel
     private readonly OwnerAccountService _accounts;
     private readonly ILogger<LoginModel> _logger;
     private readonly TimeProvider _time;
+    private readonly KnownDevices _devices;
 
-    public LoginModel(OwnerAccountService accounts, ILogger<LoginModel> logger, TimeProvider time)
+    public LoginModel(OwnerAccountService accounts, KnownDevices devices, ILogger<LoginModel> logger, TimeProvider time)
     {
         _accounts = accounts;
+        _devices = devices;
         _logger = logger;
         _time = time;
     }
@@ -42,7 +44,8 @@ public class LoginModel : PageModel
         // Oversized input is refused before any hashing; the message is the same as for any other failure.
         var plausible = UserName.Length is > 0 and <= OwnerAccount.MaxLength.UserName * 2
             && Password.Length is > 0 and <= PasswordPolicy.MaxLength;
-        var result = plausible ? await _accounts.SignInAsync(UserName, Password, ct) : new OwnerSignInResult(SignInOutcome.Failed);
+        var context = new SignInContext(SignInThrottle.KeyFor(HttpContext.Connection.RemoteIpAddress), _devices.Read(HttpContext));
+        var result = plausible ? await _accounts.SignInAsync(UserName, Password, context, ct) : new OwnerSignInResult(SignInOutcome.Failed);
 
         if (result.Outcome != SignInOutcome.Succeeded || result.Account is null)
         {
@@ -56,6 +59,7 @@ public class LoginModel : PageModel
             CookieAuthenticationDefaults.AuthenticationScheme,
             AdminAuth.CreatePrincipal(result.Account, _time.GetUtcNow()),
             new AuthenticationProperties { IsPersistent = false, AllowRefresh = true });
+        _devices.Append(HttpContext, result.Account);
         return LocalRedirect(AdminAuth.SafeReturnUrl(Url, ReturnUrl));
     }
 }

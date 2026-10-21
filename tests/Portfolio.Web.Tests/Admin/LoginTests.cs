@@ -1,5 +1,9 @@
 using System.Net;
+using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Portfolio.Web.Security;
 using Portfolio.Web.Tests.Support;
 using Xunit;
@@ -41,6 +45,14 @@ public class LoginTests
         Assert.Contains("path=/", cookie, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("expires=", cookie, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("domain=", cookie, StringComparison.OrdinalIgnoreCase);
+
+        var device = Assert.Single(response.Headers.GetValues("Set-Cookie"), c => c.StartsWith("__Host-lcv-device=", StringComparison.Ordinal));
+        Assert.Contains("secure", device, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("httponly", device, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("samesite=strict", device, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("path=/", device, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("max-age=", device, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("domain=", device, StringComparison.OrdinalIgnoreCase);
 
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/admin")).StatusCode);
     }
@@ -227,13 +239,125 @@ public class LoginTests
     }
 
     [Fact]
-    public async Task PublicPages_DoNotNeedTheDatabaseToAcceptAnOwnersCookie()
+    public async Task PublicPages_ServeNormally_ForASignedInOwner()
     {
         using var app = new AdminApp();
         var client = await app.SignedInClientAsync();
 
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/about")).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/")).StatusCode);
+    }
+
+    [Fact]
+    public async Task OnlyAdminRequests_SlideTheSessionCookie()
+    {
+        using var app = new AdminApp();
+        var client = await app.SignedInClientAsync();
+        static bool Renewed(HttpResponseMessage r) =>
+            r.Headers.TryGetValues("Set-Cookie", out var cookies) && cookies.Any(c => c.StartsWith("__Host-lcv-admin=", StringComparison.Ordinal));
+
+        app.Clock.Advance(TimeSpan.FromMinutes(20));
+        Assert.False(Renewed(await client.GetAsync("/about")));
+        Assert.False(Renewed(await client.GetAsync("/")));
+        Assert.True(Renewed(await client.GetAsync("/admin")));
+    }
+
+    [Fact]
+    public void PrivateCookies_AreScopedToTheWholeSite_SoTheHostPrefixIsAccepted()
+    {
+        using var app = new AdminApp();
+
+        Assert.Equal("/", app.Services.GetRequiredService<IOptions<AntiforgeryOptions>>().Value.Cookie.Path);
+        Assert.Equal("/", app.Services.GetRequiredService<IOptions<CookieTempDataProviderOptions>>().Value.Cookie.Path);
+    }
+
+    private static bool SignedIn(HttpResponseMessage r) => r.StatusCode == HttpStatusCode.Redirect;
+
+    [Fact]
+    public async Task AStrangerLockingTheAccount_DoesNotLockTheOwnersTrustedBrowser()
+    {
+        using var app = new AdminApp();
+        var owner = app.NewClient("192.0.2.10");
+        await app.RunSetupAsync(owner);
+        Assert.True(SignedIn(await AdminApp.SignInAsync(owner)));   // this browser now holds the device cookie
+        var logout = await AdminApp.PostFormAsync(owner, "/admin/logout", await AdminApp.GetTokenAsync(owner, "/admin"), []);
+        Assert.Equal(HttpStatusCode.Redirect, logout.StatusCode);
+
+        var stranger = app.NewClient("198.51.100.77");
+        for (var i = 0; i < OwnerAccountService.MaxFailedAttempts; i++)
+            await AdminApp.SignInAsync(stranger, password: "not the right password");
+
+        // A browser without the cookie is locked out, even with the right password...
+        Assert.False(SignedIn(await AdminApp.SignInAsync(app.NewClient("203.0.113.5"))));
+        // ...but the owner's own browser still gets in, and that clears the lockout for everyone.
+        Assert.True(SignedIn(await AdminApp.SignInAsync(owner)));
+        Assert.Equal(HttpStatusCode.OK, (await owner.GetAsync("/admin")).StatusCode);
+        Assert.True(SignedIn(await AdminApp.SignInAsync(app.NewClient("203.0.113.5"))));
+    }
+
+    [Fact]
+    public async Task ATrustedBrowser_StillNeedsTheRightPassword()
+    {
+        using var app = new AdminApp();
+        var owner = app.NewClient("192.0.2.10");
+        await app.RunSetupAsync(owner);
+        Assert.True(SignedIn(await AdminApp.SignInAsync(owner)));
+        await AdminApp.PostFormAsync(owner, "/admin/logout", await AdminApp.GetTokenAsync(owner, "/admin"), []);
+
+        Assert.False(SignedIn(await AdminApp.SignInAsync(owner, password: "not the right password")));
+        Assert.Equal(HttpStatusCode.Redirect, (await owner.GetAsync("/admin")).StatusCode);
+    }
+
+    [Fact]
+    public async Task ResettingThePassword_RevokesTrustedBrowsers()
+    {
+        using var app = new AdminApp();
+        var owner = app.NewClient("192.0.2.10");
+        await app.RunSetupAsync(owner);
+        Assert.True(SignedIn(await AdminApp.SignInAsync(owner)));
+
+        const string newPassword = "a brand new long password";
+        using (var scope = app.Services.CreateScope())
+            Assert.True(await scope.ServiceProvider.GetRequiredService<OwnerAccountService>().ResetPasswordAsync(newPassword));
+        var stranger = app.NewClient("198.51.100.77");
+        for (var i = 0; i < OwnerAccountService.MaxFailedAttempts; i++)
+            await AdminApp.SignInAsync(stranger, password: "not the right password");
+
+        // The old device cookie no longer counts, so the lockout applies to this browser too.
+        Assert.False(SignedIn(await AdminApp.SignInAsync(owner, password: newPassword)));
+    }
+
+    [Fact]
+    public async Task OneAddress_IsThrottled_AfterTooManyAttempts_AndRecoversAfterTheWindow()
+    {
+        using var app = new AdminApp();
+        await app.RunSetupAsync(app.NewClient());
+        var flooder = app.NewClient("198.51.100.77");
+
+        for (var i = 0; i < SignInThrottle.MaxAttempts; i++)
+            await AdminApp.SignInAsync(flooder, password: "not the right password");
+
+        Assert.False(SignedIn(await AdminApp.SignInAsync(flooder)));
+        // Another address is unaffected by the flood (it only meets the account lockout the first five attempts caused).
+        Assert.False(SignedIn(await AdminApp.SignInAsync(app.NewClient("192.0.2.10"), password: "wrong")));
+
+        app.Clock.Advance(SignInThrottle.Window + TimeSpan.FromSeconds(1));
+        Assert.True(SignedIn(await AdminApp.SignInAsync(flooder)));
+    }
+
+    [Fact]
+    public async Task SigningOut_EndsEveryOtherSessionOfTheAccount()
+    {
+        using var app = new AdminApp();
+        var first = await app.SignedInClientAsync();
+        var second = app.NewClient();
+        Assert.True(SignedIn(await AdminApp.SignInAsync(second)));
+        Assert.Equal(HttpStatusCode.OK, (await second.GetAsync("/admin")).StatusCode);
+
+        var token = await AdminApp.GetTokenAsync(first, "/admin");
+        Assert.Equal(HttpStatusCode.Redirect, (await AdminApp.PostFormAsync(first, "/admin/logout", token, [])).StatusCode);
+
+        Assert.Equal(HttpStatusCode.Redirect, (await second.GetAsync("/admin")).StatusCode);
     }
 
     [Fact]

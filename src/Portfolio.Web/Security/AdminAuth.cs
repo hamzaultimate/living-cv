@@ -28,6 +28,10 @@ public static class AdminAuth
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<OwnerPasswordHasher>();
         services.AddSingleton<SetupKeyGate>();
+        services.AddSingleton<SignInGate>();
+        services.AddSingleton<SignInThrottle>();
+        services.AddSingleton(sp => new KnownDevices(sp.GetRequiredService<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>(),
+            sp.GetRequiredService<TimeProvider>(), prefix + "lcv-device", alwaysSecure: !env.IsDevelopment()));
         services.AddScoped<OwnerAccountService>();
 
         services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -43,7 +47,10 @@ public static class AdminAuth
                 o.LogoutPath = AdminPath + "/logout";
                 o.ReturnUrlParameter = "returnUrl";
                 o.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-                o.SlidingExpiration = true;
+                // The framework's own sliding renewal would also fire on public pages (a visit to /about would extend an
+                // admin session), and a handler cannot cancel it from the validate event. So it is off, and the admin
+                // area renews the cookie itself below.
+                o.SlidingExpiration = false;
                 o.Events.OnValidatePrincipal = async ctx =>
                 {
                     // Only the admin area acts on the session, so only admin requests pay for the check.
@@ -52,7 +59,13 @@ public static class AdminAuth
                     {
                         ctx.RejectPrincipal();
                         await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                        return;
                     }
+
+                    // Slide the window once more than half of it has gone, as the framework does (admin requests only).
+                    var now = ctx.HttpContext.RequestServices.GetRequiredService<TimeProvider>().GetUtcNow();
+                    if (ctx.Properties.IssuedUtc is { } issued && now - issued > o.ExpireTimeSpan / 2)
+                        ctx.ShouldRenew = true;
                 };
             });
 
@@ -61,6 +74,7 @@ public static class AdminAuth
         services.AddAntiforgery(o =>
         {
             o.Cookie.Name = prefix + "lcv-af";
+            o.Cookie.Path = "/";
             o.Cookie.HttpOnly = true;
             o.Cookie.SameSite = SameSiteMode.Strict;
             o.Cookie.SecurePolicy = secure;
@@ -68,6 +82,7 @@ public static class AdminAuth
         services.Configure<CookieTempDataProviderOptions>(o =>
         {
             o.Cookie.Name = prefix + "lcv-flash";
+            o.Cookie.Path = "/";
             o.Cookie.SecurePolicy = secure;
             o.Cookie.SameSite = SameSiteMode.Strict;
         });

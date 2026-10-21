@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
@@ -20,6 +21,23 @@ public sealed class FakeClock : TimeProvider
     public override DateTimeOffset GetUtcNow() => _now;
 
     public void Advance(TimeSpan by) => _now += by;
+}
+
+/// <summary>The test server has no network peer; a request can name its client address in this header instead.</summary>
+internal sealed class TestClientAddressFilter : IStartupFilter
+{
+    public const string Header = "X-Test-Client-Ip";
+
+    public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
+    {
+        app.Use((ctx, nxt) =>
+        {
+            if (ctx.Request.Headers.TryGetValue(Header, out var ip) && System.Net.IPAddress.TryParse(ip.ToString(), out var address))
+                ctx.Connection.RemoteIpAddress = address;
+            return nxt();
+        });
+        next(app);
+    };
 }
 
 /// <summary>
@@ -79,6 +97,7 @@ public sealed class AdminApp : WebApplicationFactory<Program>
                          && d.ServiceType.GetGenericArguments().Contains(typeof(PortfolioDbContext))).ToList())
                 services.Remove(d);
             services.AddDbContext<PortfolioDbContext>(o => o.UseSqlite(_connection));
+            services.AddTransient<IStartupFilter, TestClientAddressFilter>();
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
 
@@ -97,6 +116,14 @@ public sealed class AdminApp : WebApplicationFactory<Program>
         AllowAutoRedirect = false,
         HandleCookies = true,
     });
+
+    /// <summary>Like <see cref="NewClient()"/>, but every request claims to come from the given address.</summary>
+    public HttpClient NewClient(string clientAddress)
+    {
+        var client = NewClient();
+        client.DefaultRequestHeaders.Add(TestClientAddressFilter.Header, clientAddress);
+        return client;
+    }
 
     public static readonly Regex TokenPattern =
         new("name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"", RegexOptions.Compiled);
