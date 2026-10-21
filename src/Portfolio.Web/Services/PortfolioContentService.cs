@@ -14,12 +14,14 @@ public class PortfolioContentService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IConfiguration _config;
+    private readonly ITemplateCatalog _templates;
     private readonly ILogger<PortfolioContentService> _logger;
 
-    public PortfolioContentService(IServiceScopeFactory scopeFactory, IConfiguration config, ILogger<PortfolioContentService> logger)
+    public PortfolioContentService(IServiceScopeFactory scopeFactory, IConfiguration config, ITemplateCatalog templates, ILogger<PortfolioContentService> logger)
     {
         _scopeFactory = scopeFactory;
         _config = config;
+        _templates = templates;
         _logger = logger;
     }
 
@@ -84,9 +86,7 @@ public class PortfolioContentService
         var certs = await GetCertificationsAsync();
         var projects = await GetFeaturedProjectsAsync();
 
-        var groups = skills.GroupBy(s => s.Group)
-            .OrderBy(g => { var i = Array.IndexOf(CvSkillGroupOrder.Order, g.Key); return i < 0 ? int.MaxValue : i; })
-            .ToList();
+        var groups = GroupSkills(skills, _templates.Get(site.TemplateKey).SkillGroups);
 
         var contacts = new[] { site.HasEmail ? site.Email : null, site.HasPhone ? site.Phone : null, site.HasLinkedIn ? site.LinkedIn : null, site.HasGitHub ? site.GitHub : null }
             .Where(x => !string.IsNullOrWhiteSpace(x))
@@ -95,11 +95,11 @@ public class PortfolioContentService
 
         return new CvData(site.OwnerName, site.Role, site.Summary, contacts, roles, groups, projects, certs, site.Url);
     }
-}
 
-/// <summary>The canonical ordering for CV/PDF skill groups. Shared by the web app and the offline
-/// ATS review tool so both build an identical CvData snapshot from the same content.</summary>
-public static class CvSkillGroupOrder
-{
-    public static readonly string[] Order = { "Backend", "Architecture", "Cloud/DevOps", "Data", "AI", "Embedded/IoT" };
+    /// <summary>Groups skills for the CV, ordered by <paramref name="groupOrder"/> (unlisted groups last).
+    /// Shared with the offline ATS review tool so both build an identical CvData snapshot.</summary>
+    public static List<IGrouping<string, Skill>> GroupSkills(IEnumerable<Skill> skills, IList<string> groupOrder) =>
+        skills.GroupBy(s => s.Group)
+            .OrderBy(g => { var i = groupOrder.IndexOf(g.Key); return i < 0 ? int.MaxValue : i; })
+            .ToList();
 }

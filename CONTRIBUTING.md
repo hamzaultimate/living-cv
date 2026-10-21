@@ -13,7 +13,7 @@ meant to be forked, personalised, and improved together.
    dotnet restore
 dotnet run --project src/Portfolio.Web
    ```
-   Migrations apply and the demo content seeds automatically on first run. The local
+   Migrations apply and the demo content seeds into empty tables automatically on first run. The local
    connection string is already set in `appsettings.Development.json` (LocalDB — no secret).
 4. Open the printed HTTPS URL (for example `https://localhost:7239`) and confirm `/health` returns `200`.
 5. If the browser warns about the local development certificate, trust it with `dotnet dev-certs https --trust`.
@@ -34,10 +34,15 @@ describe what you changed and why.
 
 - **Content is data, never hardcoded markup.** Site identity/copy belongs in the `"Site"`
   config section (`SiteOptions`); page content belongs in the JSON seed files under
-  `src/Portfolio.Data/Seed/`. Please don't hardcode names, copy, or data into Razor pages.
+  `src/Portfolio.Data/Seed/`. Profession-specific copy (SEO patterns, skill-group order) belongs in
+  `src/Portfolio.Web/Templates/<key>/template.json`. Please don't hardcode names, copy, or data
+  into Razor pages. Read site identity through `ISiteProfileProvider`, not `IOptions<SiteOptions>`.
+- Seeding is seed-if-empty by default: a table is filled only when it has no rows and existing
+  rows are never changed. Use `Seed:Mode=Authoritative` if you want seed files to overwrite and
+  delete rows.
 - Match the style of the surrounding code (naming, comment density, idioms).
 - Razor Pages are server-rendered — keep them accessible and SEO-friendly.
-- Run `dotnet build` before pushing; the build should be warning-clean.
+- Run `dotnet build` and `dotnet test` before pushing; the build should be warning-clean and the tests green.
 - If you add or change an entity, add an EF Core migration:
   ```bash
   dotnet ef migrations add <Name> --project src/Portfolio.Data --startup-project src/Portfolio.Web

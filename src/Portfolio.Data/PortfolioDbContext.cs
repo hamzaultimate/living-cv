@@ -14,9 +14,36 @@ public class PortfolioDbContext : DbContext
     public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
     public DbSet<Talk> Talks => Set<Talk>();
     public DbSet<Testimonial> Testimonials => Set<Testimonial>();
+    public DbSet<SiteProfile> SiteProfiles => Set<SiteProfile>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<SiteProfile>(e =>
+        {
+            // Singleton: the only legal row has Id = 1.
+            e.Property(x => x.Id).ValueGeneratedNever();
+            e.ToTable(t => t.HasCheckConstraint("CK_SiteProfiles_Singleton", "[Id] = 1"));
+            e.Property(x => x.OwnerName).HasMaxLength(SiteProfile.MaxLength.OwnerName);
+            e.Property(x => x.BrandName).HasMaxLength(SiteProfile.MaxLength.BrandName);
+            e.Property(x => x.Role).HasMaxLength(SiteProfile.MaxLength.Role);
+            e.Property(x => x.JobTitle).HasMaxLength(SiteProfile.MaxLength.JobTitle);
+            e.Property(x => x.Url).HasMaxLength(SiteProfile.MaxLength.Url);
+            e.Property(x => x.GoogleAnalyticsId).HasMaxLength(SiteProfile.MaxLength.GoogleAnalyticsId);
+            e.Property(x => x.PhotoUrl).HasMaxLength(SiteProfile.MaxLength.PhotoUrl);
+            e.Property(x => x.PhotoUrlLight).HasMaxLength(SiteProfile.MaxLength.PhotoUrlLight);
+            e.Property(x => x.TemplateKey).HasMaxLength(SiteProfile.MaxLength.TemplateKey);
+            e.Property(x => x.ThemeKey).HasMaxLength(SiteProfile.MaxLength.ThemeKey);
+            e.Property(x => x.AccentColor).HasMaxLength(SiteProfile.MaxLength.AccentColor);
+            e.OwnsOne(x => x.Hero, o => o.ToJson());
+            e.OwnsMany(x => x.Metrics, o => o.ToJson());
+            e.OwnsOne(x => x.About, o =>
+            {
+                o.ToJson();
+                o.OwnsMany(a => a.ValueProps);
+            });
+            e.OwnsMany(x => x.Sections, o => o.ToJson());
+        });
+
         b.Entity<Project>(e =>
         {
             e.HasIndex(x => x.Slug).IsUnique();

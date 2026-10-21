@@ -29,9 +29,8 @@ var skills = (await LoadSeedAsync<Skill>(seedDir, "skills.json")).OrderBy(s => s
 var projects = (await LoadSeedAsync<Project>(seedDir, "projects.json")).Where(p => p.Featured).OrderBy(p => p.SortOrder).ToList();
 var certifications = (await LoadSeedAsync<Certification>(seedDir, "certifications.json")).OrderBy(c => c.SortOrder).ToList();
 
-var skillGroups = skills.GroupBy(s => s.Group)
-    .OrderBy(g => { var i = Array.IndexOf(CvSkillGroupOrder.Order, g.Key); return i < 0 ? int.MaxValue : i; })
-    .ToList();
+var templates = new TemplateCatalog(Path.Combine(repoRoot, "src", "Portfolio.Web", "Templates"));
+var skillGroups = PortfolioContentService.GroupSkills(skills, templates.Get(site.TemplateKey).SkillGroups);
 
 var contacts = new[] { site.HasEmail ? site.Email : null, site.HasPhone ? site.Phone : null, site.HasLinkedIn ? site.LinkedIn : null, site.HasGitHub ? site.GitHub : null }
     .Where(x => !string.IsNullOrWhiteSpace(x))

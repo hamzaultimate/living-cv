@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Options;
 using Portfolio.Data;
 using Portfolio.Data.Seeding;
 using Portfolio.Web.Configuration;
@@ -19,6 +18,10 @@ builder.Services.AddRazorPages();
 builder.Services.AddScoped<PortfolioContentService>();
 builder.Services.AddSingleton(new CvAtsReportProvider(Path.Combine(AppContext.BaseDirectory, "Seed")));
 builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ISiteProfileProvider, SiteProfileProvider>();
+builder.Services.AddSingleton<ITemplateCatalog>(sp =>
+    new TemplateCatalog(Path.Combine(AppContext.BaseDirectory, "Templates"), sp.GetRequiredService<ILogger<TemplateCatalog>>()));
 builder.Services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
 
 // The PDF CV, OG image, and sitemap are generated on demand and are CPU/DB-heavy, but their
@@ -121,9 +124,9 @@ app.MapHealthChecks("/health/db", new HealthCheckOptions
 });
 
 // Generate the PDF CV from the same content source used by the site pages.
-app.MapGet("/cv.pdf", async (HttpContext ctx, PortfolioContentService repo, IOptions<SiteOptions> siteOpt) =>
+app.MapGet("/cv.pdf", async (HttpContext ctx, PortfolioContentService repo, ISiteProfileProvider profile) =>
 {
-    var site = siteOpt.Value;
+    var site = await profile.GetAsync();
     var data = await repo.BuildCvDataAsync(site);
     SkipCacheIfFallback(ctx, repo);
 
@@ -133,9 +136,9 @@ app.MapGet("/cv.pdf", async (HttpContext ctx, PortfolioContentService repo, IOpt
 }).CacheOutput("Generated");
 
 // Generate the Open Graph image from the current site identity.
-app.MapGet("/og.png", (IOptions<SiteOptions> siteOpt) =>
+app.MapGet("/og.png", async (ISiteProfileProvider profile) =>
 {
-    var s = siteOpt.Value;
+    var s = await profile.GetAsync();
     var domainLabel = (s.Url ?? "").Replace("https://", "").Replace("http://", "").TrimEnd('/').ToUpperInvariant();
     var tagline = string.Join(" ", new[] { s.Hero.Headline, s.Hero.HeadlineAccent }.Where(x => !string.IsNullOrWhiteSpace(x)));
     return Results.File(OgImage.Generate(s.OwnerName, s.Role, domainLabel, tagline), "image/png");
@@ -144,11 +147,11 @@ app.MapGet("/og.png", (IOptions<SiteOptions> siteOpt) =>
 // Expose sitemap and robots routes for search engines. Blog posts carry a real publish
 // date, so they get <lastmod> to help crawlers prioritise re-fetching fresh content;
 // static/project routes have no reliable last-changed date, so it's omitted rather than guessed.
-// URLs use Site:Url (via AbsoluteBase), never the request Host, so the sitemap always lists the
+// URLs use the site profile Url (via AbsoluteBaseAsync), never the request Host, so the sitemap always lists the
 // canonical domain.
 app.MapGet("/sitemap.xml", async (HttpContext ctx, PortfolioContentService repo) =>
 {
-    var baseUrl = SeoHelpers.AbsoluteBase(ctx);
+    var baseUrl = await SeoHelpers.AbsoluteBaseAsync(ctx);
     var urls = new List<(string Path, string? LastMod)> {
         ("/", null), ("/about", null), ("/experience", null), ("/projects", null), ("/skills", null),
         ("/certifications", null), ("/blog", null), ("/talks", null), ("/cv", null), ("/contact", null),
@@ -172,9 +175,9 @@ app.MapGet("/sitemap.xml", async (HttpContext ctx, PortfolioContentService repo)
 }).CacheOutput("Generated");
 
 // Allow indexing in production and keep development subdomains out of search results.
-app.MapGet("/robots.txt", (HttpContext ctx) =>
+app.MapGet("/robots.txt", async (HttpContext ctx) =>
 {
-    var baseUrl = SeoHelpers.AbsoluteBase(ctx);
+    var baseUrl = await SeoHelpers.AbsoluteBaseAsync(ctx);
     var isDev = ctx.Request.Host.Host.StartsWith("dev.", StringComparison.OrdinalIgnoreCase);
     var body = isDev
         ? "User-agent: *\nDisallow: /\n"
@@ -216,6 +219,9 @@ static Task WriteHealthJson(HttpContext ctx, Microsoft.Extensions.Diagnostics.He
 // Apply EF Core migrations and seed content without blocking startup.
 static async Task MigrateAndSeedAsync(WebApplication app)
 {
+    var seedMode = app.Configuration.GetSeedMode(app.Logger);
+    app.Logger.LogInformation("Seed mode: {SeedMode}", seedMode);
+
     var cs = app.Configuration.GetConnectionString("Default");
     if (string.IsNullOrWhiteSpace(cs))
     {
@@ -230,7 +236,8 @@ static async Task MigrateAndSeedAsync(WebApplication app)
         var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
         await db.Database.MigrateAsync(cts.Token);
         var seedDir = Path.Combine(AppContext.BaseDirectory, "Seed");
-        await PortfolioSeeder.SeedAsync(db, seedDir, app.Logger, cts.Token);
+        await PortfolioSeeder.SeedAsync(db, seedDir, seedMode, app.Logger, cts.Token);
+        await scope.ServiceProvider.GetRequiredService<ISiteProfileProvider>().GetAsync(cts.Token);
         app.Logger.LogInformation("Database migrated and seeded.");
     }
     catch (Exception ex)
@@ -238,3 +245,5 @@ static async Task MigrateAndSeedAsync(WebApplication app)
         app.Logger.LogError(ex, "Database migrate/seed failed — site still starts; DB features may be unavailable.");
     }
 }
+
+public partial class Program;

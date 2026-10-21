@@ -1,6 +1,4 @@
 using System.Text.Json;
-using Microsoft.Extensions.Options;
-using Portfolio.Web.Configuration;
 
 namespace Portfolio.Web.Services;
 
@@ -11,9 +9,9 @@ public static class SeoHelpers
     /// Taken from Site:Url so every host the app answers on (IP, hosting-panel name, dev.*, or a
     /// spoofed Host header) advertises the one canonical domain. Falls back to the request's own
     /// scheme+host only when Site:Url isn't a valid http(s) URL.</summary>
-    public static string AbsoluteBase(HttpContext ctx)
+    public static async Task<string> AbsoluteBaseAsync(HttpContext ctx)
     {
-        var siteUrl = ctx.RequestServices.GetService<IOptions<SiteOptions>>()?.Value.Url;
+        var siteUrl = (await ctx.RequestServices.GetRequiredService<ISiteProfileProvider>().GetAsync(ctx.RequestAborted)).Url;
         return TryGetBase(siteUrl, out var b) ? b : $"{ctx.Request.Scheme}://{ctx.Request.Host}";
     }
 

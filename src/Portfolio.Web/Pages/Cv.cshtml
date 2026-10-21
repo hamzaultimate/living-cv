@@ -1,10 +1,10 @@
 @page "/cv"
 @inject PortfolioContentService Repo
-@inject IOptions<SiteOptions> SiteOpt
+@inject ISiteProfileProvider SiteProfile
 @inject CvAtsReportProvider AtsReportProvider
 @{
     ViewData["Title"] = "CV";
-    var site = SiteOpt.Value;
+    var site = await SiteProfile.GetAsync();
     ViewData["Description"] = $"Curriculum vitae — {site.OwnerName}, {site.JobTitle}.";
     var data = await Repo.BuildCvDataAsync(site);
     var roles = data.Experience;
@@ -13,7 +13,7 @@
     var certs = data.Certifications;
     var contacts = data.Contacts;
     var atsReport = AtsReportProvider.GetReport();
-    var absBase = SeoHelpers.AbsoluteBase(HttpContext);
+    var absBase = await SeoHelpers.AbsoluteBaseAsync(HttpContext);
     var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("CV", "/cv"));
 }
 <script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>

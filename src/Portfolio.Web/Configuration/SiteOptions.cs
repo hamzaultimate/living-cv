@@ -4,7 +4,8 @@ namespace Portfolio.Web.Configuration;
 /// The entire public identity of the site, bound from the "Site" config section. This is the
 /// single place to personalise a fork: name, role, hero copy, metrics, the About narrative, and
 /// contact links all live here so the Razor pages and CV/OG generators stay content-free.
-/// All values are public info that is safe to commit.
+/// All values are public info that is safe to commit. At runtime the values are read through
+/// <c>ISiteProfileProvider</c>, which seeds the database profile from this section on first run.
 /// </summary>
 public class SiteOptions
 {
@@ -57,6 +58,12 @@ public class SiteOptions
     public string? GitHub { get; set; }
     public string? YouTube { get; set; }
 
+    /// <summary>Profession preset key (see <c>Templates/&lt;key&gt;/template.json</c>).</summary>
+    public string TemplateKey { get; set; } = "software";
+    public string? ThemeKey { get; set; }
+    public string? AccentColor { get; set; }
+    public List<SectionOption> Sections { get; set; } = new();
+
     public bool HasPhone => !string.IsNullOrWhiteSpace(Phone);
     public bool HasWhatsApp => !string.IsNullOrWhiteSpace(WhatsApp);
     public bool HasEmail => !string.IsNullOrWhiteSpace(Email);
@@ -106,4 +113,13 @@ public class ValuePropOption
 {
     public string Title { get; set; } = "";
     public string Body { get; set; } = "";
+}
+
+/// <summary>Per-section overrides: label, visibility, and order.</summary>
+public class SectionOption
+{
+    public string Key { get; set; } = "";
+    public string? Label { get; set; }
+    public bool Enabled { get; set; } = true;
+    public int SortOrder { get; set; }
 }

@@ -1,0 +1,13 @@
+{
+  "key": "software",
+  "name": "Software & IT",
+  "profession": "Software engineer",
+  "description": "Case-study showcase for software engineers and IT professionals.",
+  "archetype": "showcase",
+  "skillGroups": ["Backend", "Architecture", "Cloud/DevOps", "Data", "AI", "Embedded/IoT"],
+  "seo": {
+    "title": "{name} — {title}, .NET & AI",
+    "description": "{name} is a {title} with 9+ years building high-performance .NET systems, now building agentic AI products in production.",
+    "aboutDescription": "{name} — {title} with 9+ years building reliable, high-performance .NET systems, now bringing applied AI into production."
+  }
+}

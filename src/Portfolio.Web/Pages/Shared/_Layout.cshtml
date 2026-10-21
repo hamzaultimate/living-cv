@@ -1,12 +1,12 @@
-@inject IOptions<SiteOptions> SiteOpt
+@inject ISiteProfileProvider SiteProfile
 @{
-    var site = SiteOpt.Value;
+    var site = await SiteProfile.GetAsync();
     // Most pages get "Section · Name". The homepage leads with the name + role instead —
     // that's what people actually search ("<name> <job title>"), and it's the page most
     // likely to rank for a name search, so it gets the full literal title via FullTitle.
     var pageTitle = ViewData["FullTitle"] as string ?? $"{ViewData["Title"]} · {site.OwnerName}";
     var pageDesc = ViewData["Description"] as string ?? site.Summary;
-    var absBase = SeoHelpers.AbsoluteBase(Context);
+    var absBase = await SeoHelpers.AbsoluteBaseAsync(Context);
     var absUrl = $"{absBase}{Context.Request.Path}";
     // Blog posts and project case studies pass their own cover/hero image (relative path)
     // so a link shared on LinkedIn/X shows the actual post, not the generic name card.
