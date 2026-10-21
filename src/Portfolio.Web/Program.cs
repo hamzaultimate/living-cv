@@ -198,7 +198,7 @@ static async Task MigrateAndSeedAsync(WebApplication app)
         var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
         await db.Database.MigrateAsync(cts.Token);
         var seedDir = Path.Combine(AppContext.BaseDirectory, "Seed");
-        await PortfolioSeeder.SeedAsync(db, seedDir, app.Logger, cts.Token);
+        await PortfolioSeeder.SeedAsync(db, seedDir, app.Configuration.GetSeedMode(), app.Logger, cts.Token);
         app.Logger.LogInformation("Database migrated and seeded.");
     }
     catch (Exception ex)

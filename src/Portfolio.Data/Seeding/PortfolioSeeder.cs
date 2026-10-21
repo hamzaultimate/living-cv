@@ -6,11 +6,22 @@ using Portfolio.Data.Entities;
 
 namespace Portfolio.Data.Seeding;
 
+/// <summary>How <see cref="PortfolioSeeder"/> reconciles seed files with existing rows.</summary>
+public enum SeedMode
+{
+    /// <summary>Seed a table only when it has no rows; never update or delete existing rows.</summary>
+    IfEmpty,
+
+    /// <summary>Make each table match its seed file: add, update, and delete by natural key.</summary>
+    Authoritative,
+}
+
 /// <summary>
-/// Idempotent, authoritative seeder: reads JSON files from the Seed folder and makes each
-/// table match its seed file, keyed by a natural key (slug / name / company+title). Safe to
-/// run on every startup — editing a seed file and redeploying adds new rows, updates matching
-/// ones, and removes rows no longer present. The seed files are the single source of truth.
+/// Idempotent seeder: reads JSON files from the Seed folder. By default (<see cref="SeedMode.IfEmpty"/>)
+/// a table is seeded only when it has no rows, so content edited in the database is never touched.
+/// In <see cref="SeedMode.Authoritative"/> mode each table is made to match its seed file, keyed by a
+/// natural key (slug / name / company+title): new rows are added, matching ones updated, and rows no
+/// longer present removed, so the seed files are the single source of truth.
 /// Content is data, never hardcoded markup.
 /// </summary>
 public static class PortfolioSeeder
@@ -22,7 +33,7 @@ public static class PortfolioSeeder
         AllowTrailingCommas = true,
     };
 
-    public static async Task SeedAsync(PortfolioDbContext db, string seedDir, ILogger? log = null, CancellationToken ct = default)
+    public static async Task SeedAsync(PortfolioDbContext db, string seedDir, SeedMode mode = SeedMode.IfEmpty, ILogger? log = null, CancellationToken ct = default)
     {
         if (!Directory.Exists(seedDir))
         {
@@ -30,42 +41,48 @@ public static class PortfolioSeeder
             return;
         }
 
-        await UpsertAsync(db, seedDir, "skills.json", db.Skills, x => x.Name, log, ct,
+        await UpsertAsync(db, seedDir, "skills.json", db.Skills, x => x.Name, mode, log, ct,
             (cur, inc) => { cur.Group = inc.Group; cur.SortOrder = inc.SortOrder; });
 
-        await UpsertAsync(db, seedDir, "experiences.json", db.Experiences, x => $"{x.Company}|{x.Title}", log, ct,
+        await UpsertAsync(db, seedDir, "experiences.json", db.Experiences, x => $"{x.Company}|{x.Title}", mode, log, ct,
             (cur, inc) => { cur.Start = inc.Start; cur.End = inc.End; cur.Current = inc.Current; cur.Summary = inc.Summary;
                             cur.Highlights = inc.Highlights; cur.Tech = inc.Tech; cur.SortOrder = inc.SortOrder; });
 
-        await UpsertAsync(db, seedDir, "projects.json", db.Projects, x => x.Slug, log, ct,
+        await UpsertAsync(db, seedDir, "projects.json", db.Projects, x => x.Slug, mode, log, ct,
             (cur, inc) => { cur.Title = inc.Title; cur.Role = inc.Role; cur.Org = inc.Org; cur.Period = inc.Period;
                             cur.Summary = inc.Summary; cur.Category = inc.Category; cur.Problem = inc.Problem; cur.Approach = inc.Approach;
                             cur.HeroImage = inc.HeroImage; cur.Screenshots = inc.Screenshots;
                             cur.Impact = inc.Impact; cur.Tech = inc.Tech; cur.Links = inc.Links; cur.Proofs = inc.Proofs;
                             cur.Featured = inc.Featured; cur.SortOrder = inc.SortOrder; });
 
-        await UpsertAsync(db, seedDir, "certifications.json", db.Certifications, x => x.Name, log, ct,
+        await UpsertAsync(db, seedDir, "certifications.json", db.Certifications, x => x.Name, mode, log, ct,
             (cur, inc) => { cur.Issuer = inc.Issuer; cur.Status = inc.Status; cur.Date = inc.Date;
                             cur.CredentialUrl = inc.CredentialUrl; cur.Category = inc.Category; cur.BadgeImageUrl = inc.BadgeImageUrl;
                             cur.CertificateUrl = inc.CertificateUrl; cur.Proofs = inc.Proofs; cur.SortOrder = inc.SortOrder; });
 
-        await UpsertAsync(db, seedDir, "talks.json", db.Talks, x => x.Title, log, ct,
+        await UpsertAsync(db, seedDir, "talks.json", db.Talks, x => x.Title, mode, log, ct,
             (cur, inc) => { cur.Type = inc.Type; cur.YoutubeId = inc.YoutubeId; cur.Event = inc.Event;
                             cur.Date = inc.Date; cur.Url = inc.Url; cur.SortOrder = inc.SortOrder; });
 
-        await UpsertAsync(db, seedDir, "blog.json", db.BlogPosts, x => x.Slug, log, ct,
+        await UpsertAsync(db, seedDir, "blog.json", db.BlogPosts, x => x.Slug, mode, log, ct,
             (cur, inc) => { cur.Title = inc.Title; cur.Description = inc.Description; cur.Date = inc.Date; cur.Tags = inc.Tags;
                             cur.Draft = inc.Draft; cur.Cover = inc.Cover; cur.BodyMarkdown = inc.BodyMarkdown; });
 
-        await UpsertAsync(db, seedDir, "testimonials.json", db.Testimonials, x => $"{x.Author}|{x.Quote[..Math.Min(40, x.Quote.Length)]}", log, ct,
+        await UpsertAsync(db, seedDir, "testimonials.json", db.Testimonials, x => $"{x.Author}|{x.Quote[..Math.Min(40, x.Quote.Length)]}", mode, log, ct,
             (cur, inc) => { cur.Quote = inc.Quote; cur.AuthorTitle = inc.AuthorTitle; cur.SourceUrl = inc.SourceUrl;
                             cur.Relation = inc.Relation; cur.Featured = inc.Featured; cur.SortOrder = inc.SortOrder; });
     }
 
     private static async Task UpsertAsync<T>(
         PortfolioDbContext db, string dir, string file, DbSet<T> set,
-        Func<T, string> key, ILogger? log, CancellationToken ct, Action<T, T> copy) where T : class
+        Func<T, string> key, SeedMode mode, ILogger? log, CancellationToken ct, Action<T, T> copy) where T : class
     {
+        if (mode == SeedMode.IfEmpty && await set.AnyAsync(ct))
+        {
+            log?.LogInformation("Table not empty, skipping seed: {file}", file);
+            return;
+        }
+
         var path = Path.Combine(dir, file);
         if (!File.Exists(path)) { log?.LogInformation("Seed file absent, skipping: {file}", file); return; }
 
@@ -77,6 +94,14 @@ public static class PortfolioSeeder
         }
         catch (Exception ex) { log?.LogError(ex, "Failed to parse seed file {file}", file); return; }
         if (items is null || items.Count == 0) { log?.LogInformation("Seed file empty: {file}", file); return; }
+
+        if (mode == SeedMode.IfEmpty)
+        {
+            set.AddRange(items);
+            await db.SaveChangesAsync(ct);
+            log?.LogInformation("Seeded {file}: +{added}", file, items.Count);
+            return;
+        }
 
         var byKey = (await set.ToListAsync(ct)).ToDictionary(key, StringComparer.OrdinalIgnoreCase);
         var incomingKeys = new HashSet<string>(items.Select(key), StringComparer.OrdinalIgnoreCase);
