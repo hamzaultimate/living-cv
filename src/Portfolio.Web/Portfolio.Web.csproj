@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Markdig" Version="0.45.0" />
+    <PackageReference Include="Markdig" Version="1.4.0" />
     <PackageReference Include="QuestPDF" Version="2026.7.2" />
   </ItemGroup>
 
