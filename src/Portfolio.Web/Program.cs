@@ -10,6 +10,7 @@ using Portfolio.Web.Configuration;
 using Portfolio.Web.Health;
 using Portfolio.Web.Security;
 using Portfolio.Web.Services;
+using Portfolio.Web.Uploads;
 using QuestPDF.Fluent;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,9 @@ builder.Services.AddRazorPages(o =>
 });
 builder.Services.AddOwnerAuth(builder.Environment);
 builder.Services.AddScoped<ProfileEditor>();
+builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection("Uploads"));
+builder.Services.AddSingleton<UploadStore>();
+builder.Services.AddSingleton<ImageProcessor>();
 builder.Services.AddScoped<PortfolioContentService>();
 builder.Services.AddSingleton(new CvAtsReportProvider(Path.Combine(AppContext.BaseDirectory, "Seed")));
 builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
@@ -117,6 +121,31 @@ app.Use(async (ctx, next) =>
     ctx.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
     await next();
 });
+
+// Uploaded photos live outside wwwroot and are served from /uploads. File names are random and never reused, so
+// they can be cached for a year; only the three raster types we write are served, and never sniffed as anything else.
+var uploads = app.Services.GetRequiredService<UploadStore>();
+if (uploads.EnsureRoot())
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        RequestPath = UploadStore.RequestPath,
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploads.Root),
+        ServeUnknownFileTypes = false,
+        ContentTypeProvider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider(new Dictionary<string, string>
+        {
+            [".jpg"] = "image/jpeg",
+            [".png"] = "image/png",
+            [".webp"] = "image/webp",
+        }),
+        OnPrepareResponse = ctx =>
+        {
+            ctx.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+            ctx.Context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+            ctx.Context.Response.Headers["Content-Security-Policy"] = "default-src 'none'; sandbox";
+        },
+    });
+}
 
 // Admin and setup responses are marked private and non-indexable before anything can cache them.
 app.UsePrivateAreaHeaders();

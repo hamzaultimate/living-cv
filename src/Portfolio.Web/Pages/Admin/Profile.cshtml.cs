@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Portfolio.Web.Uploads;
 using Portfolio.Web.Services;
 
 namespace Portfolio.Web.Pages.Admin;
 
 // A profile form is a few kilobytes of text; anything much larger is not from this page.
-[RequestSizeLimit(256 * 1024)]
+[BodyLimit(256 * 1024)]
 public class ProfileModel : AdminPageModel
 {
     private readonly ProfileEditor _editor;

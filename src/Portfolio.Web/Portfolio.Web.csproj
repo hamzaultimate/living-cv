@@ -17,6 +17,9 @@
   <ItemGroup>
     <PackageReference Include="QuestPDF" Version="2026.9.1" />
     <PackageReference Include="Markdig" Version="1.4.0" />
+    <!-- Image uploads: decode, orient, resize and re-encode (strips metadata). Not pulled in by QuestPDF, which ships its own private Skia binding. -->
+    <PackageReference Include="SkiaSharp" Version="4.153.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.153.1" />
   </ItemGroup>
 
   <ItemGroup>

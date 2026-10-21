@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Portfolio.Web.Uploads;
 
 namespace Portfolio.Web.Pages.Admin;
 
-[RequestSizeLimit(16 * 1024)]
+[BodyLimit(16 * 1024)]
 public class LogoutModel : AdminPageModel
 {
     // Signing out changes state, so it is POST-only (and antiforgery-protected); a GET just goes home.

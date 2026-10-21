@@ -64,6 +64,18 @@ public class SiteOptions
     public string? AccentColor { get; set; }
     public List<SectionOption> Sections { get; set; } = new();
 
+    /// <summary>Up to two initials from <see cref="OwnerName"/> (first and last word), for the monogram shown when there is no photo.</summary>
+    public string Initials
+    {
+        get
+        {
+            var words = OwnerName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (words.Length == 0) return "?";
+            var first = char.ToUpperInvariant(words[0][0]).ToString();
+            return words.Length == 1 ? first : first + char.ToUpperInvariant(words[^1][0]);
+        }
+    }
+
     public bool HasPhone => !string.IsNullOrWhiteSpace(Phone);
     public bool HasWhatsApp => !string.IsNullOrWhiteSpace(WhatsApp);
     public bool HasEmail => !string.IsNullOrWhiteSpace(Email);

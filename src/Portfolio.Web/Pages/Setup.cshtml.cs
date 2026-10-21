@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Portfolio.Data.Entities;
 using Portfolio.Web.Security;
+using Portfolio.Web.Uploads;
 
 namespace Portfolio.Web.Pages;
 
@@ -13,7 +14,7 @@ namespace Portfolio.Web.Pages;
 /// a database is available and no account has been created yet; once an account exists it stays closed.
 /// </summary>
 [AllowAnonymous]
-[RequestSizeLimit(16 * 1024)]
+[BodyLimit(16 * 1024)]
 public partial class SetupModel : PageModel
 {
     private readonly OwnerAccountService _accounts;
