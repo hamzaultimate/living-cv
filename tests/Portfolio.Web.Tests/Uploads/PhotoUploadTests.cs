@@ -129,6 +129,51 @@ public class PhotoUploadTests
         Assert.Empty(Directory.GetFiles(app.UploadsPath));
     }
 
+    /// <summary>Hides its length, so the request goes out chunked with no Content-Length header.</summary>
+    private sealed class UnknownLengthContent(byte[] bytes) : HttpContent
+    {
+        protected override Task SerializeToStreamAsync(Stream stream, System.Net.TransportContext? context) => stream.WriteAsync(bytes).AsTask();
+        protected override bool TryComputeLength(out long length) { length = -1; return false; }
+    }
+
+    private static HttpRequestMessage ChunkedUpload(string token, byte[] file)
+    {
+        var boundary = "----lcv" + Guid.NewGuid().ToString("N");
+        var head = System.Text.Encoding.ASCII.GetBytes(
+            $"--{boundary}\r\nContent-Disposition: form-data; name=\"__RequestVerificationToken\"\r\n\r\n{token}\r\n" +
+            $"--{boundary}\r\nContent-Disposition: form-data; name=\"Photo\"; filename=\"p.png\"\r\nContent-Type: image/png\r\n\r\n");
+        var tail = System.Text.Encoding.ASCII.GetBytes($"\r\n--{boundary}--\r\n");
+        var body = new UnknownLengthContent([.. head, .. file, .. tail]);
+        body.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data; boundary=" + boundary);
+        var request = new HttpRequestMessage(HttpMethod.Post, "/admin/photo?handler=Upload") { Content = body };
+        request.Headers.TransferEncodingChunked = true;
+        return request;
+    }
+
+    [Fact]
+    public async Task ABodyWithNoContentLength_IsCutOffAtTheCap_AndNothingIsStored()
+    {
+        using var app = AdminApp.Create(AdminApp.SetupKey, new Dictionary<string, string?> { ["Uploads:MaxBytes"] = "100000" });
+        var client = await app.SignedInClientAsync();
+
+        // Control: the same chunked, length-less framing works for a small valid image.
+        var ok = ChunkedUpload(await AdminApp.GetTokenAsync(client, "/admin/photo"), TestImages.Split(SKEncodedImageFormat.Png, 32, 32));
+        Assert.Equal(HttpStatusCode.Redirect, (await client.SendAsync(ok)).StatusCode);
+        Assert.Null(ok.Content!.Headers.ContentLength);
+        var before = await StoredPhotoAsync(app);
+        var filesBefore = Directory.GetFiles(app.UploadsPath).Length;
+
+        var huge = ChunkedUpload(await AdminApp.GetTokenAsync(client, "/admin/photo"), new byte[2_000_000]);
+        var response = await client.SendAsync(huge);
+
+        Assert.Null(huge.Content!.Headers.ContentLength);
+        // The test server has no network layer, so it is the form reader's limit that stops the body (a 400 from the
+        // antiforgery check that reads it); Kestrel's own limit would answer 413. Either way nothing is stored.
+        Assert.True((int)response.StatusCode >= 400, $"expected a refusal, got {(int)response.StatusCode}");
+        Assert.Equal(before, await StoredPhotoAsync(app));
+        Assert.Equal(filesBefore, Directory.GetFiles(app.UploadsPath).Length);
+    }
+
     [Fact]
     public async Task ReplacingThePhoto_DeletesTheOldFile()
     {
