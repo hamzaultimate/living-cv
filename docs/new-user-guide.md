@@ -66,7 +66,10 @@ account lockout or the password check, so one address cannot burn through the ac
 Second, once you have signed in from a browser, it keeps a signed `lcv-device` cookie (one year,
 `HttpOnly`, `Secure`, `SameSite=Strict`) and that browser is not stopped by the lockout: it still has
 to supply the right password. A browser without the cookie, such as a new device, waits out the
-15 minutes or uses `reset-owner`. Resetting the password invalidates the cookie everywhere.
+15 minutes or uses `reset-owner`. Resetting the password invalidates the cookie everywhere, and so does
+anything that changes the stored password hash, such as an automatic rehash when the hashing settings
+are upgraded at a later sign-in. A browser holding the cookie also gets its own sign-in allowance,
+separate from its address, so someone sharing the owner's address cannot use it up.
 
 The per-address limit uses the address the server sees. Directly on IIS (in-process) that is the
 visitor's real address. Behind any other reverse proxy or load balancer, every visitor appears to come
@@ -77,7 +80,9 @@ applies to all visitors together.
 > are `Secure` and the app refuses to issue them on plain HTTP. Behind a TLS-terminating reverse
 > proxy (anything other than IIS/ANCM), set `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` so the app
 > sees the original `https` scheme and client address. That setting trusts the forwarded headers from
-> any sender, so only use it when the app can be reached through the proxy alone.
+> any sender, so only use it when the app can be reached through the proxy alone, and only behind a
+> proxy that appends to or overwrites `X-Forwarded-For`. A proxy that passes the header through lets an
+> attacker send a different value on every request and get a fresh per-address allowance each time.
 
 ### Forgot the password
 
@@ -125,7 +130,20 @@ the folder restores the photos.
 
 Sign-in cookies and anti-forgery tokens are encrypted with ASP.NET Core Data Protection keys. If the
 host does not keep those keys across restarts you will simply be asked to sign in again; configure a
-persistent key location if that matters to you.
+persistent key location if that matters to you. The trusted-browser cookie depends on the same keys: if
+they are lost on every restart or recycle (IIS without a loaded user profile, containers without a
+mounted volume), trusted browsers stop working and the lockout protection above silently goes away
+(it fails closed, so nobody gets in who should not, but the owner can be locked out again).
+
+On IIS, enable "Load User Profile" for the application pool so the default key folder is kept. Elsewhere
+the app has no setting for this, so add one line to `src/Portfolio.Web/Program.cs`, pointing at a folder
+that survives restarts (a mounted volume in a container):
+
+```csharp
+builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo("/var/lib/living-cv/keys"));
+```
+
+Keep that folder private: anyone who can read the keys can forge the cookies.
 
 ## 4. Personalize the site
 
