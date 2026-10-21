@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Portfolio.Data.Entities;
@@ -19,16 +20,24 @@ public class ProfileEditorTests
     private sealed class RecordingStore : IOutputCacheStore
     {
         public List<string> EvictedTags { get; } = [];
-        public ValueTask EvictByTagAsync(string tag, CancellationToken cancellationToken) { EvictedTags.Add(tag); return ValueTask.CompletedTask; }
+        public List<CancellationToken> EvictionTokens { get; } = [];
+        public ValueTask EvictByTagAsync(string tag, CancellationToken cancellationToken)
+        {
+            EvictedTags.Add(tag);
+            EvictionTokens.Add(cancellationToken);
+            return ValueTask.CompletedTask;
+        }
         public ValueTask<byte[]?> GetAsync(string key, CancellationToken cancellationToken) => ValueTask.FromResult<byte[]?>(null);
         public ValueTask SetAsync(string key, byte[] value, string[]? tags, TimeSpan validFor, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 
     private sealed class CountingProvider : ISiteProfileProvider
     {
-        public int Invalidations { get; private set; }
+        public List<SiteOptions> Primed { get; } = [];
+        public int Version => Primed.Count;
         public Task<SiteOptions> GetAsync(CancellationToken ct = default) => Task.FromResult(new SiteOptions());
-        public void Invalidate() => Invalidations++;
+        public void Invalidate() { }
+        public void Prime(SiteOptions saved) => Primed.Add(saved);
     }
 
     private static ProfileForm ValidForm(Action<ProfileForm>? edit = null)
@@ -51,9 +60,22 @@ public class ProfileEditorTests
 
         using var check = test.CreateContext();
         Assert.Equal("Renamed Person", (await check.SiteProfiles.SingleAsync()).OwnerName);
-        Assert.Equal(1, provider.Invalidations);
+        Assert.Equal("Renamed Person", Assert.Single(provider.Primed).OwnerName);
         Assert.Equal([OutputCacheTags.Generated], store.EvictedTags);
         Assert.Equal("Generated", OutputCacheTags.Generated);
+    }
+
+    [Fact]
+    public async Task Save_RunsItsCleanupWithoutTheRequestToken_BecauseTheRowIsAlreadyCommitted()
+    {
+        using var test = new TestDatabase();
+        var store = new RecordingStore();
+        using var db = test.CreateContext();
+        using var cts = new CancellationTokenSource();
+
+        await new ProfileEditor(db, new CountingProvider(), store).SaveAsync(ValidForm(), cts.Token);
+
+        Assert.False(Assert.Single(store.EvictionTokens).CanBeCanceled);
     }
 
     [Fact]
@@ -93,7 +115,7 @@ public class ProfileEditorTests
         Assert.Null(await editor.SetPhotoAsync("/uploads/a.jpg"));
         Assert.Equal("/uploads/a.jpg", await editor.SetPhotoAsync(null));
 
-        Assert.Equal(2, provider.Invalidations);
+        Assert.Equal(["/uploads/a.jpg", null], provider.Primed.Select(p => p.PhotoUrl));
         Assert.Equal(2, store.EvictedTags.Count);
     }
 
@@ -112,7 +134,6 @@ public class ProfileEditorTests
             var row = await db.SiteProfiles.SingleAsync();
             row.Url = "https://sneaky.example";
             await db.SaveChangesAsync();
-            scope.ServiceProvider.GetRequiredService<ISiteProfileProvider>().Invalidate();
         }
         Assert.Contains("https://owner.example/about", await anonymous.GetStringAsync("/sitemap.xml"));
 
@@ -130,6 +151,42 @@ public class ProfileEditorTests
         Assert.Contains("Edited Name", await anonymous.GetStringAsync("/"));
         Assert.Equal(HttpStatusCode.OK, (await anonymous.GetAsync("/og.png")).StatusCode);
         Assert.Contains("Profile saved", await client.GetStringAsync("/admin"));
+    }
+
+    /// <summary>An output cache that stores entries but ignores eviction, as if a render finished after the eviction ran.</summary>
+    private sealed class NeverEvictingStore : IOutputCacheStore
+    {
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte[]> _entries = new();
+        public ValueTask EvictByTagAsync(string tag, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+        public ValueTask<byte[]?> GetAsync(string key, CancellationToken cancellationToken) =>
+            ValueTask.FromResult(_entries.TryGetValue(key, out var v) ? v : null);
+        public ValueTask SetAsync(string key, byte[] value, string[]? tags, TimeSpan validFor, CancellationToken cancellationToken)
+        {
+            _entries[key] = value;
+            return ValueTask.CompletedTask;
+        }
+    }
+
+    [Fact]
+    public async Task GeneratedOutput_RenderedFromTheOldProfile_IsNeverServedAfterASave_EvenIfEvictionMissedIt()
+    {
+        using var app = new AdminApp();
+        using var host = app.WithWebHostBuilder(b => b.ConfigureServices(services =>
+            services.Replace(ServiceDescriptor.Singleton<IOutputCacheStore, NeverEvictingStore>())));
+        var client = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        Assert.Contains("https://owner.example/about", await client.GetStringAsync("/sitemap.xml"));
+
+        using (var scope = host.Services.CreateScope())
+        {
+            var editor = scope.ServiceProvider.GetRequiredService<ProfileEditor>();
+            var form = ProfileForm.From(await editor.LoadAsync());
+            form.Url = "https://edited.example";
+            await editor.SaveAsync(form);
+        }
+
+        var sitemap = await client.GetStringAsync("/sitemap.xml");
+        Assert.Contains("https://edited.example/about", sitemap);
+        Assert.DoesNotContain("owner.example", sitemap);
     }
 
     [Fact]

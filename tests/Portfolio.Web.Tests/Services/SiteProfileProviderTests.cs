@@ -171,6 +171,37 @@ public class SiteProfileProviderTests
     }
 
     [Fact]
+    public async Task Prime_ServesTheSavedProfile_NotTheDefaults_EvenWhenTheDatabaseCannotAnswer()
+    {
+        using var database = new TestDatabase(createSchema: false);
+        var (provider, _) = Create(database);
+        var saved = Defaults();
+        saved.OwnerName = "Saved Name";
+        var before = provider.Version;
+
+        provider.Prime(saved);
+
+        Assert.NotEqual(before, provider.Version);
+        Assert.Same(saved, await provider.GetAsync());
+    }
+
+    [Fact]
+    public async Task Invalidate_AndPrime_EachChangeTheVersion()
+    {
+        using var database = new TestDatabase();
+        var (provider, _) = Create(database);
+        await provider.GetAsync();
+        var first = provider.Version;
+
+        provider.Invalidate();
+        var afterInvalidate = provider.Version;
+        provider.Prime(Defaults());
+
+        Assert.NotEqual(first, afterInvalidate);
+        Assert.NotEqual(afterInvalidate, provider.Version);
+    }
+
+    [Fact]
     public async Task NoDatabaseConfigured_ReturnsConfigDefaults()
     {
         var defaults = Defaults();

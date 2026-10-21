@@ -43,8 +43,11 @@ builder.Services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
 builder.Services.AddOutputCache(o =>
     o.AddPolicy("Generated", p =>
     {
-        // Tagged so a profile save can evict every generated asset at once (see ProfileEditor).
-        p.Expire(TimeSpan.FromHours(1)).SetVaryByQuery(Array.Empty<string>()).Tag(OutputCacheTags.Generated);
+        // Tagged so a profile save can evict every generated asset at once (see ProfileEditor). Also keyed on the
+        // profile version: a render that started before a save read the old profile and is stored under the old key,
+        // so the eviction cannot be undone by a request that was already in flight.
+        p.Expire(TimeSpan.FromHours(1)).SetVaryByQuery(Array.Empty<string>()).Tag(OutputCacheTags.Generated)
+            .VaryByValue(ctx => new KeyValuePair<string, string>("profile", ctx.RequestServices.GetRequiredService<ISiteProfileProvider>().Version.ToString()));
         if (builder.Environment.IsDevelopment()) p.NoCache();
     }));
 

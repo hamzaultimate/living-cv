@@ -16,6 +16,12 @@ public interface ISiteProfileProvider
 
     /// <summary>Drops the cached profile so the next read reloads it from the database.</summary>
     void Invalidate();
+
+    /// <summary>Replaces the cached profile with one that has just been saved, so no read falls back to the configured defaults in between.</summary>
+    void Prime(SiteOptions saved);
+
+    /// <summary>Changes every time the profile is invalidated or primed. Cached output keyed on it cannot outlive a save.</summary>
+    int Version { get; }
 }
 
 /// <summary>
@@ -49,6 +55,7 @@ public class SiteProfileProvider : ISiteProfileProvider
     private SiteOptions? _lastGood;
     private Task<SiteOptions>? _inflight;
     private int _generation;
+    private int _version;
     private bool _synced;
 
     public SiteProfileProvider(IServiceScopeFactory scopeFactory, IMemoryCache cache, IOptions<SiteOptions> defaults,
@@ -90,6 +97,21 @@ public class SiteProfileProvider : ISiteProfileProvider
         }
     }
 
+    public int Version => Volatile.Read(ref _version);
+
+    /// <summary>Makes the saved profile the current one (and the stale copy). A load already in flight is abandoned.</summary>
+    public void Prime(SiteOptions saved)
+    {
+        lock (_gate)
+        {
+            _generation++;
+            _version++;
+            _lastGood = saved;
+            _inflight = null;
+            _cache.Set(CacheKey, saved, _cacheDuration);
+        }
+    }
+
     /// <summary>Drops the cached profile (including the stale copy) so the next read reloads it.
     /// A load already in flight is abandoned: its result is not cached.</summary>
     public void Invalidate()
@@ -97,6 +119,7 @@ public class SiteProfileProvider : ISiteProfileProvider
         lock (_gate)
         {
             _generation++;
+            _version++;
             _lastGood = null;
             _inflight = null;
             _cache.Remove(CacheKey);

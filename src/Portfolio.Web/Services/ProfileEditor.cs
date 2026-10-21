@@ -57,8 +57,11 @@ public class ProfileEditor
     private async Task CommitAsync(SiteProfile profile, CancellationToken ct)
     {
         await _db.SaveChangesAsync(ct);
-        // Order matters: drop the profile cache first so anything regenerated after the eviction reads the new row.
-        _provider.Invalidate();
-        await _outputCache.EvictByTagAsync(OutputCacheTags.Generated, ct);
+        // The row is committed, so the cleanup below must run to completion even if the request is cancelled now:
+        // stopping halfway would leave the old profile or old generated files being served.
+        // Order matters: hand the provider the saved profile first (this also changes its version, which the
+        // "Generated" cache varies on, so a render that read the old profile can never be served again), then evict.
+        _provider.Prime(SiteProfileMapper.ToOptions(profile));
+        await _outputCache.EvictByTagAsync(OutputCacheTags.Generated, CancellationToken.None);
     }
 }
