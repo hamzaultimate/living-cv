@@ -111,20 +111,36 @@ Implementation notes (decisions worth reviewing):
 - **Lockout on the account row** (failed count and lockout end, so it survives restarts and applies across
   instances), 5 failures then 15 minutes. With one account every failed attempt counts against it
   whatever user name was typed, so case, whitespace or invented names cannot dodge it. The cost is that a
-  stranger can keep the owner locked out; the 15 minute window, the CLI reset (which clears the lockout) and
-  the absence of any other account make that the safer failure. Sign-in attempts are serialised in-process
-  and a decoy hash equalises timing for a missing account. No per-IP limiter: behind IIS/ANCM the client
-  address is not reliable without forwarded-header configuration.
+  stranger could keep the owner locked out, so that is mitigated in two ways rather than accepted:
+  a per-client-address throttle (10 attempts per 15 minutes, in memory, IPv6 grouped by /64) that runs
+  before the account counter, the sign-in gate and the hash; and a signed known-device cookie
+  (`lcv-device`, Data Protection, one year, bound to a digest of the password hash) that exempts a browser
+  that has signed in before from the lockout while still requiring the password and the per-address limit.
+  Failed guesses from such a browser do not add to the shared count: it is not subject to the lockout, so
+  counting would only lock the owner's other devices after their own typos. The cookie is bound to the
+  password hash, not the security stamp, because sign-out rotates the stamp (to end other sessions) and that
+  must not revoke trusted browsers; `reset-owner` changes the hash, which does. Sign-in attempts are
+  serialised per instance with a 5 second bounded wait, and a decoy hash equalises timing for a missing
+  account. The per-address key is the connection address: it is the real client on IIS in-process, and behind
+  any other proxy it is only meaningful once forwarded headers are configured for that proxy (an
+  earlier note here claimed IIS hides the address; that is wrong for in-process hosting).
 - **Setup key** is compared in constant time over SHA-256 digests, must be 16+ characters, and wrong guesses
-  are throttled globally (5 then 15 minutes). `/setup` is a 404 when the key is unset, the database is
+  are throttled globally (5 then 15 minutes) in memory, so a restart clears the count. `/setup` is a 404 when the key is unset, the database is
   unavailable, or any account exists.
 - **Sessions:** `__Host-` prefixed, `Secure`, `HttpOnly`, `SameSite=Strict` cookie, 30 minute sliding window,
-  12 hour absolute cap, and a security stamp that `reset-owner` rotates, which ends every session.
+  12 hour absolute cap, and a security stamp that `reset-owner` and sign-out rotate, which ends every session.
+  Renewal of the sliding window happens on `/admin` requests only (the framework's own renewal is off,
+  because it cannot be switched off per path). `reset-owner` prints the account's user name; on IIS it needs
+  `ConnectionStrings__Default` set in the shell it is run from.
 - **Uploads** use SkiaSharp (explicit `PackageReference`: QuestPDF 2026 ships its own private Skia binding,
   so SkiaSharp is not a transitive dependency after all). Header-first size checks, orientation applied,
   metadata dropped by re-encoding from pixels, 25 megapixel / 10,000 px source caps, 1600 px output cap.
-- **Output cache:** the "Generated" policy is now tagged `Generated`; saving the profile evicts that tag
-  and invalidates `ISiteProfileProvider`.
+- **Output cache:** the "Generated" policy is tagged `Generated` and also varies on the profile provider's
+  version. Saving the profile primes `ISiteProfileProvider` with the saved values (bumping the version) and
+  then evicts the tag, so output rendered from the old profile by a request already in flight is stored under
+  a key nobody asks for again. Cleanup after the commit ignores the request's cancellation token.
+- **Seed:Mode=Authoritative and the admin:** it overwrites the stored profile from config once per process,
+  discarding `/admin` edits, and resets the photo URL, orphaning the uploaded file.
 
 ### Phase 2: Template engine v1
 - `TemplateDefinition` manifest (JSON, in repo): key, name, profession, archetype, section list,

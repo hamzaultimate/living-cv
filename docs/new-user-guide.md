@@ -49,19 +49,35 @@ A fresh deployment has no owner. The first person with the **setup key** claims 
    disabled.
 2. Start the app and open `/setup`. Enter the key, pick a user name and a password (12 to 128
    characters) and submit. Wrong keys are throttled: after 5 wrong guesses `/setup` refuses everything,
-   even the right key, for 15 minutes.
+   even the right key, for 15 minutes. That count is kept in the app's memory, shared by all visitors, so
+   restarting the app clears it; it is a brake on guessing, not a permanent lock.
 3. Sign in at `/admin/login`. From `/admin` you can edit the profile (`/admin/profile`) and the
    photo (`/admin/photo`). Saving a profile takes effect immediately, including the CV PDF, the
    share image and the sitemap.
 4. Remove `Setup__Key` from the server when you are done; it has no further use.
 
 Sign-in locks for 15 minutes after 5 consecutive failures (any user name counts, because there is
-only one account). Sessions last 30 minutes of inactivity and 12 hours at most.
+only one account). Sessions last 30 minutes of inactivity and 12 hours at most; signing out also ends
+the account's other sessions.
+
+Because that lockout is shared, a stranger could fail on purpose to keep you out. Two things prevent
+that. First, each client address may make only 10 sign-in attempts per 15 minutes, counted before the
+account lockout or the password check, so one address cannot burn through the account's allowance.
+Second, once you have signed in from a browser, it keeps a signed `lcv-device` cookie (one year,
+`HttpOnly`, `Secure`, `SameSite=Strict`) and that browser is not stopped by the lockout: it still has
+to supply the right password. A browser without the cookie, such as a new device, waits out the
+15 minutes or uses `reset-owner`. Resetting the password invalidates the cookie everywhere.
+
+The per-address limit uses the address the server sees. Directly on IIS (in-process) that is the
+visitor's real address. Behind any other reverse proxy or load balancer, every visitor appears to come
+from the proxy unless forwarded headers are configured for it (see the note below), and the limit then
+applies to all visitors together.
 
 > The site must be served over HTTPS outside Development: the sign-in, anti-forgery and flash cookies
 > are `Secure` and the app refuses to issue them on plain HTTP. Behind a TLS-terminating reverse
 > proxy (anything other than IIS/ANCM), set `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` so the app
-> sees the original `https` scheme.
+> sees the original `https` scheme and client address. That setting trusts the forwarded headers from
+> any sender, so only use it when the app can be reached through the proxy alone.
 
 ### Forgot the password
 
@@ -72,10 +88,17 @@ dotnet run --project src/Portfolio.Web -- reset-owner        # development check
 dotnet Portfolio.Web.dll reset-owner                         # published app (Portfolio.Web.exe on Windows)
 ```
 
-It prompts twice for the new password without echoing it, then clears any lockout and signs out all
-existing sessions. For scripts, pipe the password with `--password-stdin` or set
+It prompts twice for the new password without echoing it, then clears any lockout, signs out all
+existing sessions and trusted browsers, and prints the account's user name, which covers a forgotten
+name too. For scripts, pipe the password with `--password-stdin` or set
 `OWNER_NEW_PASSWORD` for that one command (and unset it afterwards). The command talks to the
 database, prints a result and exits; it never starts the web server.
+
+The command reads the connection string from the same configuration as the site, in the shell you run
+it from. On IIS the site's `ConnectionStrings__Default` usually lives in the site's environment or
+application settings, which a command prompt does not have: set `ConnectionStrings__Default` in that
+shell first (for example `$env:ConnectionStrings__Default = '...'` in PowerShell), or the command fails
+with a message that the database is not configured.
 
 ### Uploaded photos and where they live
 
@@ -118,7 +141,7 @@ Edit the `Site` section in [src/Portfolio.Web/appsettings.json](../src/Portfolio
 - links such as GitHub, LinkedIn, and email
 - the profile photo URL
 
-These values are the defaults for the site profile. With a database, they are copied into a profile row on first run and that row is used afterwards; edit the `Site` section before the first run, or set `Seed:Mode=Authoritative` to re-apply it on every start. Once you have an owner account you can change all of these in the browser at `/admin/profile` instead.
+These values are the defaults for the site profile. With a database, they are copied into a profile row on first run and that row is used afterwards; edit the `Site` section before the first run, or set `Seed:Mode=Authoritative` to re-apply it on every start. Be careful with that second option once you use `/admin`: Authoritative overwrites the stored profile from the config on the first read after each start, which discards edits made in `/admin/profile`, and it replaces the photo URL, leaving an uploaded photo file in the uploads folder with nothing pointing at it. Once you have an owner account you can change all of these in the browser at `/admin/profile` instead.
 
 ### Content and pages
 
