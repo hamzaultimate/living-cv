@@ -51,7 +51,7 @@
 .adm-tile p { margin: 0; color: var(--adm-muted); }
 .adm-field { margin-bottom: 1rem; }
 .adm-field label, .adm-legend { display: block; font-weight: 600; margin-bottom: .25rem; }
-.adm-field .adm-hint { display: block; color: var(--adm-muted); font-size: .85rem; margin-top: .25rem; }
+.adm-hint { display: block; color: var(--adm-muted); font-size: .85rem; margin-top: .25rem; }
 .adm-field input[type="text"], .adm-field input[type="password"], .adm-field input[type="email"], .adm-field input[type="url"], .adm-field input[type="file"], .adm-field textarea {
   width: 100%; padding: .5rem .6rem; font: inherit; color: inherit; background: var(--adm-bg); border: 1px solid var(--adm-border); border-radius: .35rem;
 }

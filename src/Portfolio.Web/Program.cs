@@ -21,6 +21,7 @@ builder.Services.AddRazorPages(o =>
     o.Conventions.AuthorizeFolder("/Admin");
 });
 builder.Services.AddOwnerAuth(builder.Environment);
+builder.Services.AddScoped<ProfileEditor>();
 builder.Services.AddScoped<PortfolioContentService>();
 builder.Services.AddSingleton(new CvAtsReportProvider(Path.Combine(AppContext.BaseDirectory, "Seed")));
 builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
