@@ -1,11 +1,13 @@
 @page "/skills"
 @inject PortfolioContentService Repo
+@inject ISiteProfileProvider SiteProfile
+@inject ITemplateCatalog Templates
 @{
     ViewData["Title"] = "Skills";
     ViewData["Description"] = "Skills grouped by area — Backend, Architecture, Cloud/DevOps, Data, AI, and Embedded/IoT.";
     var skills = await Repo.GetSkillsAsync();
-    var order = new[] { "Backend", "Architecture", "Cloud/DevOps", "Data", "AI", "Embedded/IoT" };
-    var groups = skills.GroupBy(s => s.Group).OrderBy(g => { var i = Array.IndexOf(order, g.Key); return i < 0 ? int.MaxValue : i; });
+    var order = Templates.Get((await SiteProfile.GetAsync()).TemplateKey).SkillGroups;
+    var groups = skills.GroupBy(s => s.Group).OrderBy(g => { var i = order.IndexOf(g.Key); return i < 0 ? int.MaxValue : i; });
     var absBase = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
     var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Skills", "/skills"));
 }
