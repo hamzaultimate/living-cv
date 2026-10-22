@@ -1,0 +1,68 @@
+@model IndexModel
+@inject ISiteProfileProvider SiteProfile
+@inject RequestTemplate Template
+@{
+    var site = await SiteProfile.GetAsync();
+    var tpl = await Template.GetAsync();
+    var copy = tpl.Copy.Home;
+    if (!tpl.IsEnabled(SectionRegistry.Projects)) return;
+}
+<!-- FEATURED WORK -->
+<section id="work" class="container-page py-16 md:py-20">
+    <p class="eyebrow">@Text(copy.WorkEyebrow)</p>
+    <h2 class="mt-3 text-2xl md:text-3xl">@Text(copy.WorkHeading)</h2>
+
+    @if (Model.FeaturedProjects.Count > 0)
+    {
+        <div class="mt-8 grid gap-5 md:grid-cols-3">
+            @foreach (var p in Model.FeaturedProjects)
+            {
+                <article class="card group flex flex-col">
+                    @if (!string.IsNullOrWhiteSpace(p.HeroImage))
+                    {
+                        <a href="/projects/@p.Slug" class="-mx-6 -mt-6 mb-4 block overflow-hidden rounded-t-lg border-b border-border/60">
+                            @if (Media.IsVideo(p.HeroImage))
+                            {
+                                <video class="aspect-video w-full object-cover" muted playsinline preload="metadata">
+                                    <source src="@p.HeroImage" />
+                                </video>
+                            }
+                            else
+                            {
+                                <img src="@p.HeroImage" alt="@tpl.Copy.Projects.AltFor(p.Title)" loading="lazy"
+                                     class="aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                            }
+                        </a>
+                    }
+                    <h3 class="text-lg text-text"><a href="/projects/@p.Slug" class="hover:text-accent">@p.Title</a></h3>
+                    <p class="mt-2 text-sm text-muted">@p.Summary</p>
+                    @if (p.Impact.Count > 0)
+                    {
+                        <ul class="mt-4 space-y-1.5">
+                            @foreach (var m in p.Impact)
+                            {
+                                <li class="font-mono text-xs text-accent">▸ @m</li>
+                            }
+                        </ul>
+                    }
+                    @if (p.Tech.Count > 0)
+                    {
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            @foreach (var t in p.Tech)
+                            {
+                                <span class="rounded border border-border px-2 py-0.5 font-mono text-[11px] text-muted">@t</span>
+                            }
+                        </div>
+                    }
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="mt-6 rounded-lg border border-border bg-surface-2/70 p-6 text-sm text-muted">
+            <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">@Text(copy.WorkEmptyTitle)</p>
+            <p class="mt-3 max-w-2xl">@Text(copy.WorkEmptyBody)</p>
+        </div>
+    }
+</section>

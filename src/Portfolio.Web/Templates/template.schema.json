@@ -1,0 +1,570 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "template.schema.json",
+  "title": "Living CV template manifest",
+  "description": "Describes Templates/<key>/template.json. The app also enforces rules a schema cannot express (key equals folder name, SEO lengths after expansion, sensitive professions need guidance); run the tests after editing a manifest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "key",
+    "name",
+    "profession",
+    "description",
+    "archetype",
+    "sections",
+    "seo",
+    "copy"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "key": {
+      "type": "string",
+      "description": "Lowercase kebab-case, equal to the folder name, immutable once released.",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "maxLength": 60
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 60
+    },
+    "profession": {
+      "type": "string",
+      "maxLength": 80
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "archetype": {
+      "type": "string",
+      "description": "Layout archetype. Only showcase and credentials have layouts today.",
+      "enum": [
+        "showcase",
+        "gallery",
+        "results",
+        "credentials"
+      ]
+    },
+    "sensitive": {
+      "type": "boolean",
+      "description": "True for professions where content can identify patients or clients; requires guidance."
+    },
+    "guidance": {
+      "type": "string",
+      "description": "Shown to the owner when picking the template."
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "type": "string",
+          "description": "Value of data-template; matches [data-template=...] in Styles/themes. Omit for the base look.",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "themeColor": {
+          "type": "string",
+          "description": "Browser UI colour.",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Default order of navigation and sections. A section left out is hidden, never deleted.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "label"
+        ],
+        "properties": {
+          "key": {
+            "enum": [
+              "about",
+              "experience",
+              "projects",
+              "skills",
+              "certifications",
+              "blog",
+              "talks",
+              "testimonials",
+              "contact"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "shortLabel": {
+            "type": "string"
+          },
+          "itemLabel": {
+            "type": "string",
+            "description": "Required for projects and blog."
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      }
+    },
+    "skillGroups": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "seo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "description",
+        "aboutDescription"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Pattern, at most 65 characters once expanded."
+        },
+        "description": {
+          "type": "string",
+          "description": "Pattern, at most 160 characters once expanded."
+        },
+        "aboutDescription": {
+          "type": "string",
+          "description": "Pattern, at most 160 characters once expanded."
+        },
+        "credentialsJsonLd": {
+          "type": "boolean",
+          "description": "List enabled certifications as credentials in the home page schema.org markup."
+        }
+      }
+    },
+    "copy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layout",
+        "home",
+        "projects",
+        "experience",
+        "skills",
+        "certifications",
+        "blog",
+        "talks",
+        "contact",
+        "cv"
+      ],
+      "description": "Plain text only (no < or >). Description patterns accept {name}, {title} and {summary}.",
+      "properties": {
+        "layout": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [],
+          "properties": {
+            "footerNote": {
+              "type": "string"
+            }
+          }
+        },
+        "home": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "workEyebrow",
+            "workHeading",
+            "workEmptyTitle",
+            "workEmptyBody",
+            "testimonialsEyebrow",
+            "testimonialsHeading",
+            "contactHeading",
+            "experienceEyebrow",
+            "experienceHeading",
+            "credentialsEyebrow",
+            "credentialsHeading",
+            "skillsHeading"
+          ],
+          "properties": {
+            "workEyebrow": {
+              "type": "string"
+            },
+            "workHeading": {
+              "type": "string"
+            },
+            "workEmptyTitle": {
+              "type": "string"
+            },
+            "workEmptyBody": {
+              "type": "string"
+            },
+            "testimonialsEyebrow": {
+              "type": "string"
+            },
+            "testimonialsHeading": {
+              "type": "string"
+            },
+            "contactHeading": {
+              "type": "string"
+            },
+            "experienceEyebrow": {
+              "type": "string"
+            },
+            "experienceHeading": {
+              "type": "string"
+            },
+            "credentialsEyebrow": {
+              "type": "string"
+            },
+            "credentialsHeading": {
+              "type": "string"
+            },
+            "skillsHeading": {
+              "type": "string"
+            }
+          }
+        },
+        "projects": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "description",
+            "eyebrow",
+            "heading",
+            "lead",
+            "emptyTitle",
+            "emptyBody",
+            "filterLabel",
+            "featuredBadge",
+            "problemHeading",
+            "approachHeading",
+            "noWriteup",
+            "stackHeading",
+            "linksHeading",
+            "proofHeading",
+            "screenshotsHeading",
+            "imageAlt",
+            "galleryLabel",
+            "openImageLabel"
+          ],
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "eyebrow": {
+              "type": "string"
+            },
+            "heading": {
+              "type": "string"
+            },
+            "lead": {
+              "type": "string"
+            },
+            "emptyTitle": {
+              "type": "string"
+            },
+            "emptyBody": {
+              "type": "string"
+            },
+            "filterLabel": {
+              "type": "string"
+            },
+            "featuredBadge": {
+              "type": "string"
+            },
+            "problemHeading": {
+              "type": "string"
+            },
+            "approachHeading": {
+              "type": "string"
+            },
+            "noWriteup": {
+              "type": "string"
+            },
+            "stackHeading": {
+              "type": "string"
+            },
+            "linksHeading": {
+              "type": "string"
+            },
+            "proofHeading": {
+              "type": "string"
+            },
+            "screenshotsHeading": {
+              "type": "string"
+            },
+            "imageAlt": {
+              "type": "string"
+            },
+            "galleryLabel": {
+              "type": "string"
+            },
+            "openImageLabel": {
+              "type": "string"
+            }
+          }
+        },
+        "experience": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "description",
+            "eyebrow",
+            "heading",
+            "lead",
+            "empty"
+          ],
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "eyebrow": {
+              "type": "string"
+            },
+            "heading": {
+              "type": "string"
+            },
+            "lead": {
+              "type": "string"
+            },
+            "empty": {
+              "type": "string"
+            }
+          }
+        },
+        "skills": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "description",
+            "eyebrow",
+            "heading",
+            "lead",
+            "empty"
+          ],
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "eyebrow": {
+              "type": "string"
+            },
+            "heading": {
+              "type": "string"
+            },
+            "lead": {
+              "type": "string"
+            },
+            "empty": {
+              "type": "string"
+            }
+          }
+        },
+        "certifications": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "description",
+            "eyebrow",
+            "heading",
+            "lead",
+            "emptyTitle",
+            "emptyBody",
+            "filterLabel",
+            "statusEarned",
+            "statusInProgress",
+            "statusPlanned",
+            "viewCertificate",
+            "viewCredential"
+          ],
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "eyebrow": {
+              "type": "string"
+            },
+            "heading": {
+              "type": "string"
+            },
+            "lead": {
+              "type": "string"
+            },
+            "emptyTitle": {
+              "type": "string"
+            },
+            "emptyBody": {
+              "type": "string"
+            },
+            "filterLabel": {
+              "type": "string"
+            },
+            "statusEarned": {
+              "type": "string"
+            },
+            "statusInProgress": {
+              "type": "string"
+            },
+            "statusPlanned": {
+              "type": "string"
+            },
+            "viewCertificate": {
+              "type": "string"
+            },
+            "viewCredential": {
+              "type": "string"
+            }
+          }
+        },
+        "blog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "description",
+            "eyebrow",
+            "heading",
+            "lead",
+            "empty"
+          ],
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "eyebrow": {
+              "type": "string"
+            },
+            "heading": {
+              "type": "string"
+            },
+            "lead": {
+              "type": "string"
+            },
+            "empty": {
+              "type": "string"
+            }
+          }
+        },
+        "talks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "description",
+            "eyebrow",
+            "heading",
+            "empty",
+            "watch"
+          ],
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "eyebrow": {
+              "type": "string"
+            },
+            "heading": {
+              "type": "string"
+            },
+            "empty": {
+              "type": "string"
+            },
+            "watch": {
+              "type": "string"
+            }
+          }
+        },
+        "contact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "heading",
+            "lead"
+          ],
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "heading": {
+              "type": "string"
+            },
+            "lead": {
+              "type": "string"
+            }
+          }
+        },
+        "cv": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "experienceHeading",
+            "skillsHeading",
+            "projectsHeading",
+            "certificationsHeading"
+          ],
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "experienceHeading": {
+              "type": "string"
+            },
+            "skillsHeading": {
+              "type": "string"
+            },
+            "projectsHeading": {
+              "type": "string"
+            },
+            "certificationsHeading": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "starter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file"
+      ],
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "Sample content file in the template folder.",
+          "pattern": "^[^/\\\\]+\\.json$"
+        }
+      }
+    }
+  }
+}

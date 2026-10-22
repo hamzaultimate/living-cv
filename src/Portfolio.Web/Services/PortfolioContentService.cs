@@ -14,10 +14,10 @@ public class PortfolioContentService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IConfiguration _config;
-    private readonly ITemplateCatalog _templates;
+    private readonly TemplateResolver _templates;
     private readonly ILogger<PortfolioContentService> _logger;
 
-    public PortfolioContentService(IServiceScopeFactory scopeFactory, IConfiguration config, ITemplateCatalog templates, ILogger<PortfolioContentService> logger)
+    public PortfolioContentService(IServiceScopeFactory scopeFactory, IConfiguration config, TemplateResolver templates, ILogger<PortfolioContentService> logger)
     {
         _scopeFactory = scopeFactory;
         _config = config;
@@ -79,21 +79,28 @@ public class PortfolioContentService
     public Task<List<Testimonial>> GetTestimonialsAsync() =>
         QueryAsync(db => db.Testimonials.OrderBy(t => t.SortOrder).ToListAsync(), new List<Testimonial>());
 
-    public async Task<CvData> BuildCvDataAsync(SiteOptions site)
+    /// <summary>The CV for <paramref name="site"/>: only the sections its template has enabled, in the template's wording.
+    /// Pass <paramref name="view"/> to use a template other than the saved one (an owner preview).</summary>
+    public async Task<CvData> BuildCvDataAsync(SiteOptions site, TemplateView? view = null)
     {
-        var roles = await GetExperiencesAsync();
-        var skills = await GetSkillsAsync();
-        var certs = await GetCertificationsAsync();
-        var projects = await GetFeaturedProjectsAsync();
+        var template = view ?? _templates.Resolve(site);
+        var roles = template.IsEnabled(SectionRegistry.Experience) ? await GetExperiencesAsync() : new List<Experience>();
+        var skills = template.IsEnabled(SectionRegistry.Skills) ? await GetSkillsAsync() : new List<Skill>();
+        var certs = template.IsEnabled(SectionRegistry.Certifications) ? await GetCertificationsAsync() : new List<Certification>();
+        var projects = template.IsEnabled(SectionRegistry.Projects) ? await GetFeaturedProjectsAsync() : new List<Project>();
 
-        var groups = GroupSkills(skills, _templates.Get(site.TemplateKey).SkillGroups);
+        var groups = GroupSkills(skills, template.Definition.SkillGroups);
 
         var contacts = new[] { site.HasEmail ? site.Email : null, site.HasPhone ? site.Phone : null, site.HasLinkedIn ? site.LinkedIn : null, site.HasGitHub ? site.GitHub : null }
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Select(x => x!)
             .ToList();
 
-        return new CvData(site.OwnerName, site.Role, site.Summary, contacts, roles, groups, projects, certs, site.Url);
+        var cv = template.Copy.Cv;
+        var status = template.Copy.Certifications;
+        var headings = new CvHeadings(cv.ExperienceHeading, cv.SkillsHeading, cv.ProjectsHeading, cv.CertificationsHeading,
+            status.StatusEarned, status.StatusInProgress, status.StatusPlanned);
+        return new CvData(site.OwnerName, site.Role, site.Summary, contacts, roles, groups, projects, certs, site.Url, headings);
     }
 
     /// <summary>Groups skills for the CV, ordered by <paramref name="groupOrder"/> (unlisted groups last).

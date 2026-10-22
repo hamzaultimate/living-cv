@@ -1,26 +1,28 @@
 @page "/skills"
+@attribute [SectionPage(SectionRegistry.Skills)]
 @inject PortfolioContentService Repo
-@inject ISiteProfileProvider SiteProfile
-@inject ITemplateCatalog Templates
+@inject RequestTemplate Template
 @{
-    ViewData["Title"] = "Skills";
-    ViewData["Description"] = "Skills grouped by area — Backend, Architecture, Cloud/DevOps, Data, AI, and Embedded/IoT.";
+    var tpl = await Template.GetAsync();
+    var copy = tpl.Copy.Skills;
+    ViewData["Title"] = copy.Title;
+    ViewData["Description"] = TemplateSeo.ApplyDescription(copy.Description, tpl.Site);
     var skills = await Repo.GetSkillsAsync();
-    var order = Templates.Get((await SiteProfile.GetAsync()).TemplateKey).SkillGroups;
+    var order = tpl.Definition.SkillGroups;
     var groups = skills.GroupBy(s => s.Group).OrderBy(g => { var i = order.IndexOf(g.Key); return i < 0 ? int.MaxValue : i; });
     var absBase = await SeoHelpers.AbsoluteBaseAsync(HttpContext);
-    var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Skills", "/skills"));
+    var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), (copy.Title, "/skills"));
 }
 <script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>
 
 <section class="container-page py-16 md:py-20">
-    <p class="eyebrow">Skills</p>
-    <h1 class="mt-3 text-3xl md:text-4xl">The toolkit</h1>
-    <p class="lead">Grouped and scannable — the areas I work across, from silicon to cloud.</p>
+    <p class="eyebrow">@Text(copy.Eyebrow)</p>
+    <h1 class="mt-3 text-3xl md:text-4xl">@Text(copy.Heading)</h1>
+    <p class="lead">@Text(copy.Lead)</p>
 
     @if (skills.Count == 0)
     {
-        <p class="mt-10 font-mono text-sm text-muted">// skills load from the database</p>
+        <p class="mt-10 font-mono text-sm text-muted">@Text(copy.Empty)</p>
     }
     else
     {

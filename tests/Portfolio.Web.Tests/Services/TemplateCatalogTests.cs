@@ -30,6 +30,64 @@ public class TemplateCatalogTests
     }
 
     [Fact]
+    public void EveryShippedTemplateFolder_LoadsWithoutBeingSkipped_AndTheDefaultIsListedFirst()
+    {
+        var catalog = new TemplateCatalog(TemplatesDir);
+        var folders = Directory.EnumerateDirectories(TemplatesDir).Select(d => Path.GetFileName(d)).Where(n => !n.StartsWith('_')).OrderBy(n => n).ToList();
+
+        Assert.Equal(folders, catalog.All.Select(t => t.Key).OrderBy(k => k).ToList());
+        Assert.Contains("healthcare", folders);
+        Assert.Equal("software", catalog.All.First().Key);
+        Assert.NotNull(catalog.GetStarter("healthcare"));
+    }
+
+    [Fact]
+    public void ABrokenDefaultManifest_StopsTheCatalogFromLoading()
+    {
+        var dir = Directory.CreateTempSubdirectory("lcv-templates-").FullName;
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(dir, "software"));
+            File.WriteAllText(Path.Combine(dir, "software", "template.json"), "{ \"key\": \"software\", \"typo\": true }");
+
+            var ex = Assert.Throws<InvalidOperationException>(() => new TemplateCatalog(dir));
+            Assert.Contains("software", ex.Message);
+        }
+        finally { Directory.Delete(dir, true); }
+    }
+
+    [Theory]
+    [InlineData("Jo", "Nurse")]
+    [InlineData("Dr Alexandra Wilhelmina Featherstonehaugh-Montgomery", "Advanced Clinical Practitioner in Paediatric Intensive Care and Retrieval Medicine")]
+    public void ApplyDescription_NeverExceeds160Characters_AndCutsAtAWordBoundary(string name, string title)
+    {
+        var site = new SiteOptions { OwnerName = name, JobTitle = title, Summary = new string('x', 40) + " " + new string('y', 200) };
+
+        foreach (var pattern in new[] { "{name}, {title}. Registrations, clinical experience and professional references.", "{summary}", "Short." })
+        {
+            var text = TemplateSeo.ApplyDescription(pattern, site);
+            Assert.True(text.Length <= 160, text);
+            if (TemplateSeo.Apply(pattern, site).Length <= 160) Assert.Equal(TemplateSeo.Apply(pattern, site), text);
+            else Assert.EndsWith("…", text);
+        }
+        var cut = TemplateSeo.ApplyDescription("{name}, {title}. Registrations, clinical experience and professional references.", new SiteOptions { OwnerName = name + name, JobTitle = title + " and Education", Summary = "s" });
+        Assert.DoesNotMatch(@"[\s,;:.\-—]…$", cut);
+    }
+
+    [Fact]
+    public void ApplyDescription_NeverSplitsASurrogatePair_WhenThereIsNoSpaceToCutAt()
+    {
+        // 158 characters then an emoji (two UTF-16 units) puts the cut inside the pair.
+        var site = new SiteOptions { OwnerName = "N", JobTitle = "T", Summary = new string('a', 158) + "\U0001F600" + new string('b', 20) };
+
+        var text = TemplateSeo.ApplyDescription("{summary}", site);
+
+        Assert.True(text.Length <= 160);
+        Assert.EndsWith("…", text);
+        Assert.DoesNotContain(text, c => char.IsSurrogate(c));
+    }
+
+    [Fact]
     public void SoftwarePreset_KeepsTheCvSkillGroupOrder()
     {
         var preset = new TemplateCatalog(TemplatesDir).Get("software");

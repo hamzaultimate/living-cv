@@ -1,0 +1,127 @@
+{
+  "$schema": "../template.schema.json",
+  "key": "healthcare",
+  "name": "Healthcare",
+  "profession": "Healthcare professional",
+  "description": "Credentials-first layout for clinicians and allied health: registrations, clinical experience and references.",
+  "archetype": "credentials",
+  "sensitive": true,
+  "guidance": "Never publish patient-identifiable information: no names, dates of birth, record numbers, photographs or details that could identify a patient, relative, colleague or ward. Describe cases only in aggregate or fully anonymised, and check your employer's and regulator's confidentiality and social media policies before publishing.",
+  "theme": { "default": "healthcare", "themeColor": "#0a1418" },
+  "sections": [
+    { "key": "about", "label": "about" },
+    { "key": "certifications", "label": "licences & registrations", "shortLabel": "registrations" },
+    { "key": "experience", "label": "clinical experience", "shortLabel": "experience" },
+    { "key": "skills", "label": "clinical skills", "shortLabel": "skills" },
+    { "key": "projects", "label": "research & initiatives", "shortLabel": "initiatives", "itemLabel": "Initiative" },
+    { "key": "blog", "label": "articles", "itemLabel": "Article", "enabled": false },
+    { "key": "talks", "label": "presentations", "enabled": false },
+    { "key": "testimonials", "label": "references" },
+    { "key": "contact", "label": "contact" }
+  ],
+  "skillGroups": ["Clinical", "Procedures", "Documentation", "Languages"],
+  "seo": {
+    "title": "{name} — {title}",
+    "description": "{name}, {title}. Registrations, clinical experience and professional references.",
+    "aboutDescription": "About {name}, {title}: training, registrations and approach to patient care.",
+    "credentialsJsonLd": true
+  },
+  "starter": { "file": "starter.json" },
+  "copy": {
+    "layout": { "footerNote": "Professional portfolio. It contains no patient information." },
+    "home": {
+      "workEyebrow": "Quality & research",
+      "workHeading": "Research & initiatives",
+      "workEmptyTitle": "Initiatives coming soon",
+      "workEmptyBody": "Add the quality improvement, audit or research projects you have led or contributed to. Describe the work and its outcome, never individual patients.",
+      "testimonialsEyebrow": "References",
+      "testimonialsHeading": "What colleagues say",
+      "contactHeading": "Get in touch about roles, referrals or collaboration.",
+      "experienceEyebrow": "Practice",
+      "experienceHeading": "Clinical experience",
+      "credentialsEyebrow": "Registration",
+      "credentialsHeading": "Licences & registrations",
+      "skillsHeading": "Clinical skills"
+    },
+    "projects": {
+      "title": "Initiatives",
+      "description": "Quality improvement, audit and research initiatives: the aim, the method and the outcome.",
+      "eyebrow": "Quality & research",
+      "heading": "Research & initiatives",
+      "lead": "Projects led or contributed to: the aim, what was done and the measured outcome.",
+      "emptyTitle": "No initiatives yet",
+      "emptyBody": "Add your first initiative. Describe the work and its outcome, never individual patients.",
+      "filterLabel": "Filter initiatives by area",
+      "featuredBadge": "featured",
+      "problemHeading": "Aim",
+      "approachHeading": "Method",
+      "noWriteup": "A full description of this initiative is on the way.",
+      "stackHeading": "Tools & methods",
+      "linksHeading": "Links",
+      "proofHeading": "Evidence",
+      "screenshotsHeading": "Images",
+      "imageAlt": "{title} image",
+      "galleryLabel": "Images",
+      "openImageLabel": "Open image"
+    },
+    "experience": {
+      "title": "Experience",
+      "description": "{name}'s clinical experience: roles, settings and responsibilities, most recent first.",
+      "eyebrow": "Practice",
+      "heading": "Clinical experience",
+      "lead": "Most recent first: where I have practised, the responsibilities I held and what I contributed.",
+      "empty": "No roles have been added yet."
+    },
+    "skills": {
+      "title": "Skills",
+      "description": "Clinical and professional skills grouped by area: clinical practice, procedures, documentation and languages.",
+      "eyebrow": "Skills",
+      "heading": "Clinical skills",
+      "lead": "Grouped by area: what I am trained and competent to do.",
+      "empty": "No skills have been added yet."
+    },
+    "certifications": {
+      "title": "Licences & registrations",
+      "description": "Professional registrations, licences and training: current, in progress and planned.",
+      "eyebrow": "Registration",
+      "heading": "Licences, registrations & training",
+      "lead": "Current registrations, training under way and planned professional development.",
+      "emptyTitle": "No registrations yet",
+      "emptyBody": "Add your professional registration, licences and mandatory training.",
+      "filterLabel": "Filter by issuing body",
+      "statusEarned": "Current",
+      "statusInProgress": "In progress",
+      "statusPlanned": "Planned",
+      "viewCertificate": "View certificate",
+      "viewCredential": "Verify registration →"
+    },
+    "blog": {
+      "title": "Articles",
+      "description": "Articles on practice, education and professional development.",
+      "eyebrow": "Articles",
+      "heading": "Writing",
+      "lead": "Reflections on practice and professional development.",
+      "empty": "Articles coming soon."
+    },
+    "talks": {
+      "title": "Presentations",
+      "description": "Presentations and teaching sessions.",
+      "eyebrow": "Presentations",
+      "heading": "Coming soon",
+      "empty": "No presentations listed yet. Check back soon.",
+      "watch": "Watch →"
+    },
+    "contact": {
+      "description": "Contact {name}: email, phone or LinkedIn.",
+      "heading": "Get in touch about roles, referrals or collaboration.",
+      "lead": "The best ways to reach me. Please do not send patient information."
+    },
+    "cv": {
+      "description": "Curriculum vitae — {name}, {title}.",
+      "experienceHeading": "Clinical experience",
+      "skillsHeading": "Clinical skills",
+      "projectsHeading": "Research & initiatives",
+      "certificationsHeading": "Licences & registrations"
+    }
+  }
+}

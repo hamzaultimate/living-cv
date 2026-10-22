@@ -17,6 +17,7 @@ public static class AdminAuth
     public static readonly TimeSpan MaxSessionAge = TimeSpan.FromHours(12);
     public const string LoginPath = "/admin/login";
     public const string AdminPath = "/admin";
+    public const string TemplatePath = "/admin/template";
 
     public static IServiceCollection AddOwnerAuth(this IServiceCollection services, IWebHostEnvironment env)
     {
@@ -101,6 +102,11 @@ public static class AdminAuth
         return new ClaimsPrincipal(identity);
     }
 
+    /// <summary>True for a signed-in owner whose session is still valid (current stamp, within the age cap). Public pages never
+    /// validate the cookie themselves, so anything that grants the owner extra access outside /admin must call this.</summary>
+    public static async Task<bool> IsOwnerSessionAsync(HttpContext http) =>
+        http.User.Identity?.IsAuthenticated == true && await IsSessionValidAsync(http, http.User);
+
     /// <summary>
     /// A session is valid while its stamp still matches the account (it changes on password reset) and it is younger
     /// than <see cref="MaxSessionAge"/>: the cookie slides while the owner is active, but never past that cap.
@@ -138,8 +144,10 @@ public static class AdminAuth
                     ctx.Response.Headers.Pragma = "no-cache";
                     ctx.Response.Headers["X-Robots-Tag"] = "noindex, nofollow, noarchive";
                     // These pages load only their own stylesheet and photos and run no script of their own.
+                    // The template page also frames the public site (same origin) to preview a template.
+                    var frames = ctx.Request.Path.StartsWithSegments(TemplatePath, StringComparison.OrdinalIgnoreCase) ? " frame-src 'self';" : "";
                     ctx.Response.Headers.ContentSecurityPolicy =
-                        "default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'";
+                        $"default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self';{frames} frame-ancestors 'none'; base-uri 'none'";
                     return Task.CompletedTask;
                 });
             }

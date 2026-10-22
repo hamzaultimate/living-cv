@@ -1,0 +1,73 @@
+@page "/admin/template"
+@model TemplateModel
+@{
+    ViewData["Title"] = "Template";
+    var selected = Model.Selected;
+    var isCurrent = selected.Key == Model.CurrentKey;
+}
+<h1>Template</h1>
+<p class="adm-lede">A template decides the layout, wording and which sections the public site shows. Preview one here without saving, then switch. Switching never deletes anything: content for sections a template does not use is hidden, and returns when you switch back.</p>
+
+<div class="adm-templates" role="list">
+    @foreach (var t in Model.Templates)
+    {
+        var isSelected = t.Key == selected.Key;
+        <article class="adm-card adm-template" role="listitem" aria-current="@(isSelected ? "true" : null)">
+            <h2>@t.Name @if (t.Key == Model.CurrentKey) {<span class="adm-pill">In use</span>}</h2>
+            <p class="adm-hint">@t.Profession · @t.Archetype layout</p>
+            <p>@t.Description</p>
+            @if (!string.IsNullOrWhiteSpace(t.Guidance))
+            {
+                <p class="adm-callout"><strong>Before you publish.</strong> @t.Guidance</p>
+            }
+            <div class="adm-actions">
+                @if (!isSelected)
+                {
+                    <a class="adm-btn" href="/admin/template?show=@Uri.EscapeDataString(t.Key)">Preview</a>
+                }
+                else
+                {
+                    <span class="adm-hint">Previewing below</span>
+                }
+                @if (t.Key != Model.CurrentKey)
+                {
+                    <form method="post" asp-page="/Admin/Template">
+                        <input type="hidden" name="Key" value="@t.Key" />
+                        <button type="submit" class="adm-btn adm-btn-primary">Use @t.Name</button>
+                    </form>
+                }
+            </div>
+        </article>
+    }
+</div>
+
+<section class="adm-card" aria-labelledby="preview-heading">
+    <h2 id="preview-heading">Preview: @selected.Name@(isCurrent ? " (in use)" : "")</h2>
+    @if (!isCurrent)
+    {
+        <p class="adm-hint">This is a preview only. Nothing is saved or visible to visitors until you choose "Use @selected.Name".</p>
+    }
+    @if (Model.HiddenContent.Count > 0)
+    {
+        <p class="adm-callout">
+            <strong>Hidden but kept:</strong>
+            @string.Join(", ", Model.HiddenContent.Select(h => $"{h.Label} ({h.Count})")).
+            These stay in the database and reappear if you switch to a template that uses them.
+        </p>
+    }
+    <nav class="adm-tabs" aria-label="Preview page">
+        @foreach (var (path, label) in Model.PreviewPages)
+        {
+            <a href="/admin/template?show=@Uri.EscapeDataString(selected.Key)&tab=@Uri.EscapeDataString(path)&size=@(Model.Mobile ? "mobile" : "desktop")"
+               aria-current="@(path == Model.PreviewPath ? "page" : null)">@label</a>
+        }
+    </nav>
+    <p class="adm-hint">
+        Width:
+        <a href="/admin/template?show=@Uri.EscapeDataString(selected.Key)&tab=@Uri.EscapeDataString(Model.PreviewPath)&size=desktop">desktop</a> ·
+        <a href="/admin/template?show=@Uri.EscapeDataString(selected.Key)&tab=@Uri.EscapeDataString(Model.PreviewPath)&size=mobile">mobile</a> ·
+        <a href="@Model.PreviewUrl" target="_blank" rel="noopener">open in a new tab</a>
+    </p>
+    <iframe class="adm-preview@(Model.Mobile ? " adm-preview-mobile" : "")" src="@Model.PreviewUrl"
+            title="Preview of the @selected.Name template" referrerpolicy="same-origin"></iframe>
+</section>

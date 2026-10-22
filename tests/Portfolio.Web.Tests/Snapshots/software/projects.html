@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('theme');
+                if (t !== 'light' && t !== 'dark') {
+                    t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                }
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+        })();
+    </script>
+    <title>Work &#xB7; Alex Rivera</title>
+    <meta name="description" content="Project case studies &#x2014; problem, approach, and impact with concrete metrics." />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://owner.example/projects" />
+    <script type="application/ld&#x2B;json">{"@context":"https://schema.org","@type":"WebSite","name":"Alex Rivera","url":"https://owner.example"}</script>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Alex Rivera" />
+    <meta property="og:title" content="Work &#xB7; Alex Rivera" />
+    <meta property="og:description" content="Project case studies &#x2014; problem, approach, and impact with concrete metrics." />
+    <meta property="og:url" content="https://owner.example/projects" />
+    <meta property="og:image" content="https://owner.example/og.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Work &#xB7; Alex Rivera" />
+    <meta name="twitter:description" content="Project case studies &#x2014; problem, approach, and impact with concrete metrics." />
+    <meta name="twitter:image" content="https://owner.example/og.png" />
+
+    <link rel="icon" href="/favicon.b9s39hdsmi.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.uvb1mr534j.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.ufsnxtuijq.png" />
+    <link rel="preload" href="/fonts/space-grotesk-latin.agvvb5vkd1.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/jetbrains-mono-latin.runbf9g1yj.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/css/app.h1v6hl896s.css" />
+</head>
+<body class="flex min-h-screen flex-col">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-accent focus:px-4 focus:py-2 focus:text-bg">Skip to content</a>
+    <header class="sticky top-0 z-40 border-b border-border/70 bg-bg/80 backdrop-blur">
+        <div class="container-page flex h-16 items-center justify-between">
+            <a href="/" class="font-display text-lg font-semibold tracking-tight text-text transition-colors hover:text-accent">
+                Alex<span class="text-accent">.</span>
+            </a>
+            <nav class="hidden items-center gap-6 md:flex">
+                <a class="nav-link" href="/about">about</a>
+                <a class="nav-link" href="/experience">experience</a>
+                <a class="nav-link" href="/projects">work</a>
+                <a class="nav-link" href="/skills">skills</a>
+                <a class="nav-link" href="/certifications">certs</a>
+                <a class="nav-link" href="/blog">blog</a>
+                <a class="nav-link" href="/talks">talks</a>
+                <a class="nav-link" href="/cv">cv</a>
+            </nav>
+            <div class="flex items-center gap-3">
+                <button id="theme-btn" class="text-muted hover:text-accent" aria-label="Toggle light/dark theme">
+                    <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                    </svg>
+                    <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+                    </svg>
+                </button>
+                <a href="/contact" class="btn btn-primary hidden text-xs sm:inline-flex">Get in touch</a>
+                <button id="menu-btn" class="md:hidden text-muted hover:text-text" aria-label="Toggle menu" aria-expanded="false">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <line x1="4" y1="7" x2="20" y2="7" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="17" x2="20" y2="17" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <nav id="mobile-nav" class="hidden border-t border-border/70 md:hidden">
+            <div class="container-page flex flex-col py-3">
+                <a class="nav-link py-2" href="/about">about</a>
+                <a class="nav-link py-2" href="/experience">experience</a>
+                <a class="nav-link py-2" href="/projects">work</a>
+                <a class="nav-link py-2" href="/skills">skills</a>
+                <a class="nav-link py-2" href="/certifications">certifications</a>
+                <a class="nav-link py-2" href="/blog">blog</a>
+                <a class="nav-link py-2" href="/talks">talks</a>
+                <a class="nav-link py-2" href="/cv">cv</a>
+                <a class="nav-link py-2" href="/contact">contact</a>
+            </div>
+        </nav>
+    </header>
+
+    <main id="main-content" class="flex-1">
+        <script type="application/ld&#x2B;json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://owner.example"},{"@type":"ListItem","position":2,"name":"Work","item":"https://owner.example/projects"}]}</script>
+
+<section class="container-page py-16 md:py-20">
+    <p class="eyebrow">Selected work</p>
+    <h1 class="mt-3 text-3xl md:text-4xl">Case studies</h1>
+    <p class="lead">Mini engineering write-ups — problem → approach → impact, with the numbers that mattered.</p>
+
+            <div class="mt-10 flex flex-wrap gap-2" data-project-filter role="group" aria-label="Filter work by domain">
+                <button type="button" class="filter-chip is-active" data-filter="all" aria-pressed="true">All</button>
+                    <button type="button" class="filter-chip" data-filter="Applied AI" aria-pressed="false">Applied AI</button>
+                    <button type="button" class="filter-chip" data-filter="Backend Systems" aria-pressed="false">Backend Systems</button>
+                    <button type="button" class="filter-chip" data-filter="Data / Analytics" aria-pressed="false">Data / Analytics</button>
+                    <button type="button" class="filter-chip" data-filter="Distributed Systems" aria-pressed="false">Distributed Systems</button>
+                    <button type="button" class="filter-chip" data-filter="IoT / Embedded" aria-pressed="false">IoT / Embedded</button>
+            </div>
+        <div class="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3" data-project-grid>
+                <article class="card group flex flex-col" data-category="Distributed Systems">
+                        <div data-lightbox-gallery class="-mx-6 -mt-6 mb-4">
+                            <button type="button" data-lightbox-item data-src="/img/projects/telemetry.svg" data-caption="" data-video="false"
+                                    class="group/media relative block w-full overflow-hidden rounded-t-lg border-b border-border/60"
+                                    aria-label="View Telemetry Pipeline &#x2014; real-time ingestion at scale media">
+                                    <img src="/img/projects/telemetry.svg" alt="Telemetry Pipeline &#x2014; real-time ingestion at scale screenshot" loading="lazy"
+                                         class="aspect-video w-full object-cover transition duration-300 group-hover/media:scale-[1.03]" />
+                                <span class="pointer-events-none absolute inset-0 flex items-center justify-center bg-bg/30 opacity-0 transition group-hover/media:opacity-100">
+                                    <span class="font-mono text-xs text-text">&#x2922; view</span>
+                                </span>
+                                    <span class="absolute bottom-2 right-2 rounded bg-bg/70 px-1.5 py-0.5 font-mono text-[10px] text-text">1 / 3</span>
+                            </button>
+                                <button type="button" hidden tabindex="-1" aria-hidden="true"
+                                        data-lightbox-item data-src="/img/projects/telemetry-1.svg" data-caption="Live ingestion dashboard"
+                                        data-video="false"></button>
+                                <button type="button" hidden tabindex="-1" aria-hidden="true"
+                                        data-lightbox-item data-src="/img/projects/telemetry-2.svg" data-caption="Per-device drill-down"
+                                        data-video="false"></button>
+                        </div>
+                        <p class="mb-1 font-mono text-[10px] uppercase tracking-wider text-muted">Distributed Systems</p>
+                    <div class="flex items-start justify-between gap-3">
+                        <h2 class="text-lg">
+                            <a href="/projects/telemetry-pipeline" class="text-text hover:text-accent">Telemetry Pipeline &#x2014; real-time ingestion at scale</a>
+                        </h2>
+                            <span class="shrink-0 font-mono text-[10px] uppercase tracking-wider text-accent">featured</span>
+                    </div>
+                    <p class="mt-2 flex-1 text-sm text-muted">An event-driven pipeline ingesting millions of device events per hour with sub-second dashboards.</p>
+                        <p class="mt-4 font-mono text-xs text-accent">▸ Sustains ~20k events/second at peak with zero dropped events</p>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                                <span class="tag">.NET Core</span>
+                                <span class="tag">C#</span>
+                                <span class="tag">Azure Service Bus</span>
+                                <span class="tag">MS SQL Server</span>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-border/60 pt-3">
+                                <a href="https://github.com/example-alex-rivera/telemetry-pipeline" target="_blank" rel="noopener" class="font-mono text-xs text-muted hover:text-accent">GitHub repo ↗</a>
+                                <a href="https://demo.example.dev/telemetry" target="_blank" rel="noopener" class="font-mono text-xs text-muted hover:text-accent">Live demo ↗</a>
+                                <a href="/proofs/sample-report.svg" target="_blank" rel="noopener" class="font-mono text-xs text-accent/80 hover:text-accent">✓ Load-test report</a>
+                        </div>
+                    <a href="/projects/telemetry-pipeline" class="mt-4 font-mono text-xs text-muted group-hover:text-accent">Read case study →</a>
+                </article>
+                <article class="card group flex flex-col" data-category="Backend Systems">
+                        <div data-lightbox-gallery class="-mx-6 -mt-6 mb-4">
+                            <button type="button" data-lightbox-item data-src="/img/projects/ledger.svg" data-caption="" data-video="false"
+                                    class="group/media relative block w-full overflow-hidden rounded-t-lg border-b border-border/60"
+                                    aria-label="View Ledger API &#x2014; high-throughput licensing service media">
+                                    <img src="/img/projects/ledger.svg" alt="Ledger API &#x2014; high-throughput licensing service screenshot" loading="lazy"
+                                         class="aspect-video w-full object-cover transition duration-300 group-hover/media:scale-[1.03]" />
+                                <span class="pointer-events-none absolute inset-0 flex items-center justify-center bg-bg/30 opacity-0 transition group-hover/media:opacity-100">
+                                    <span class="font-mono text-xs text-text">&#x2922; view</span>
+                                </span>
+                            </button>
+                        </div>
+                        <p class="mb-1 font-mono text-[10px] uppercase tracking-wider text-muted">Backend Systems</p>
+                    <div class="flex items-start justify-between gap-3">
+                        <h2 class="text-lg">
+                            <a href="/projects/ledger-api" class="text-text hover:text-accent">Ledger API &#x2014; high-throughput licensing service</a>
+                        </h2>
+                            <span class="shrink-0 font-mono text-[10px] uppercase tracking-wider text-accent">featured</span>
+                    </div>
+                    <p class="mt-2 flex-1 text-sm text-muted">A licensing/validation API fronting a platform that handles very high request volumes with predictable latency.</p>
+                        <p class="mt-4 font-mono text-xs text-accent">▸ Fronts a platform handling ~20k requests/second</p>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                                <span class="tag">.NET Core</span>
+                                <span class="tag">C#</span>
+                                <span class="tag">Microservices</span>
+                                <span class="tag">MS SQL Server</span>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-border/60 pt-3">
+                                <a href="https://github.com/example-alex-rivera/ledger-api" target="_blank" rel="noopener" class="font-mono text-xs text-muted hover:text-accent">GitHub repo ↗</a>
+                                <a href="/proofs/sample-report.svg" target="_blank" rel="noopener" class="font-mono text-xs text-accent/80 hover:text-accent">✓ Benchmark summary</a>
+                        </div>
+                    <a href="/projects/ledger-api" class="mt-4 font-mono text-xs text-muted group-hover:text-accent">Read case study →</a>
+                </article>
+                <article class="card group flex flex-col" data-category="IoT / Embedded">
+                        <div data-lightbox-gallery class="-mx-6 -mt-6 mb-4">
+                            <button type="button" data-lightbox-item data-src="/img/projects/edge.svg" data-caption="" data-video="false"
+                                    class="group/media relative block w-full overflow-hidden rounded-t-lg border-b border-border/60"
+                                    aria-label="View Edge Sensor Hub (IoT) media">
+                                    <img src="/img/projects/edge.svg" alt="Edge Sensor Hub (IoT) screenshot" loading="lazy"
+                                         class="aspect-video w-full object-cover transition duration-300 group-hover/media:scale-[1.03]" />
+                                <span class="pointer-events-none absolute inset-0 flex items-center justify-center bg-bg/30 opacity-0 transition group-hover/media:opacity-100">
+                                    <span class="font-mono text-xs text-text">&#x2922; view</span>
+                                </span>
+                                    <span class="absolute bottom-2 right-2 rounded bg-bg/70 px-1.5 py-0.5 font-mono text-[10px] text-text">1 / 2</span>
+                            </button>
+                                <button type="button" hidden tabindex="-1" aria-hidden="true"
+                                        data-lightbox-item data-src="/img/projects/edge-1.svg" data-caption="Breadboard prototype"
+                                        data-video="false"></button>
+                        </div>
+                        <p class="mb-1 font-mono text-[10px] uppercase tracking-wider text-muted">IoT / Embedded</p>
+                    <div class="flex items-start justify-between gap-3">
+                        <h2 class="text-lg">
+                            <a href="/projects/edge-sensor-hub" class="text-text hover:text-accent">Edge Sensor Hub (IoT)</a>
+                        </h2>
+                            <span class="shrink-0 font-mono text-[10px] uppercase tracking-wider text-accent">featured</span>
+                    </div>
+                    <p class="mt-2 flex-1 text-sm text-muted">An ESP32-based sensor hub monitoring water level and air quality &#x2014; systems thinking from the silicon up.</p>
+                        <p class="mt-4 font-mono text-xs text-accent">▸ End-to-end embedded telemetry from sensor to web readout</p>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                                <span class="tag">ESP32</span>
+                                <span class="tag">MicroPython</span>
+                                <span class="tag">MQTT</span>
+                                <span class="tag">.NET</span>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-border/60 pt-3">
+                                <a href="https://github.com/example-alex-rivera/edge-sensor-hub" target="_blank" rel="noopener" class="font-mono text-xs text-muted hover:text-accent">Write-up ↗</a>
+                        </div>
+                    <a href="/projects/edge-sensor-hub" class="mt-4 font-mono text-xs text-muted group-hover:text-accent">Read case study →</a>
+                </article>
+                <article class="card group flex flex-col" data-category="Data / Analytics">
+                        <div data-lightbox-gallery class="-mx-6 -mt-6 mb-4">
+                            <button type="button" data-lightbox-item data-src="/img/projects/insight.svg" data-caption="" data-video="false"
+                                    class="group/media relative block w-full overflow-hidden rounded-t-lg border-b border-border/60"
+                                    aria-label="View Insight Dashboard &#x2014; analytics for product teams media">
+                                    <img src="/img/projects/insight.svg" alt="Insight Dashboard &#x2014; analytics for product teams screenshot" loading="lazy"
+                                         class="aspect-video w-full object-cover transition duration-300 group-hover/media:scale-[1.03]" />
+                                <span class="pointer-events-none absolute inset-0 flex items-center justify-center bg-bg/30 opacity-0 transition group-hover/media:opacity-100">
+                                    <span class="font-mono text-xs text-text">&#x2922; view</span>
+                                </span>
+                            </button>
+                        </div>
+                        <p class="mb-1 font-mono text-[10px] uppercase tracking-wider text-muted">Data / Analytics</p>
+                    <div class="flex items-start justify-between gap-3">
+                        <h2 class="text-lg">
+                            <a href="/projects/insight-dashboard" class="text-text hover:text-accent">Insight Dashboard &#x2014; analytics for product teams</a>
+                        </h2>
+                    </div>
+                    <p class="mt-2 flex-1 text-sm text-muted">A self-serve analytics dashboard letting product teams slice usage data without writing SQL.</p>
+                        <p class="mt-4 font-mono text-xs text-accent">▸ Removed ~80% of ad-hoc data requests from the engineering queue</p>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                                <span class="tag">.NET</span>
+                                <span class="tag">PostgreSQL</span>
+                                <span class="tag">Razor Pages</span>
+                                <span class="tag">Chart.js</span>
+                        </div>
+                    <a href="/projects/insight-dashboard" class="mt-4 font-mono text-xs text-muted group-hover:text-accent">Read case study →</a>
+                </article>
+                <article class="card group flex flex-col" data-category="Applied AI">
+                        <div data-lightbox-gallery class="-mx-6 -mt-6 mb-4">
+                            <button type="button" data-lightbox-item data-src="/img/projects/rag.svg" data-caption="" data-video="false"
+                                    class="group/media relative block w-full overflow-hidden rounded-t-lg border-b border-border/60"
+                                    aria-label="View DocuMind &#x2014; RAG assistant over internal docs media">
+                                    <img src="/img/projects/rag.svg" alt="DocuMind &#x2014; RAG assistant over internal docs screenshot" loading="lazy"
+                                         class="aspect-video w-full object-cover transition duration-300 group-hover/media:scale-[1.03]" />
+                                <span class="pointer-events-none absolute inset-0 flex items-center justify-center bg-bg/30 opacity-0 transition group-hover/media:opacity-100">
+                                    <span class="font-mono text-xs text-text">&#x2922; view</span>
+                                </span>
+                            </button>
+                        </div>
+                        <p class="mb-1 font-mono text-[10px] uppercase tracking-wider text-muted">Applied AI</p>
+                    <div class="flex items-start justify-between gap-3">
+                        <h2 class="text-lg">
+                            <a href="/projects/documind" class="text-text hover:text-accent">DocuMind &#x2014; RAG assistant over internal docs</a>
+                        </h2>
+                    </div>
+                    <p class="mt-2 flex-1 text-sm text-muted">A retrieval-augmented assistant that answers questions over an internal knowledge base with cited sources.</p>
+                        <p class="mt-4 font-mono text-xs text-accent">▸ Answers grounded in source docs with inline citations</p>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                                <span class="tag">.NET</span>
+                                <span class="tag">Azure AI Services</span>
+                                <span class="tag">Vector search</span>
+                                <span class="tag">C#</span>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-border/60 pt-3">
+                                <a href="https://github.com/example-alex-rivera/documind" target="_blank" rel="noopener" class="font-mono text-xs text-muted hover:text-accent">GitHub repo ↗</a>
+                        </div>
+                    <a href="/projects/documind" class="mt-4 font-mono text-xs text-muted group-hover:text-accent">Read case study →</a>
+                </article>
+        </div>
+</section>
+
+    </main>
+
+    <footer class="border-t border-border/70">
+        <div class="container-page flex flex-col gap-4 py-8 md:flex-row md:items-center md:justify-between">
+            <p class="font-mono text-xs text-muted">© YEAR Alex Rivera</p>
+            <div class="flex flex-wrap gap-4 font-mono text-xs">
+                    <a class="text-muted hover:text-accent" href="https://www.linkedin.com/in/example-alex-rivera/" rel="me noopener" target="_blank">LinkedIn</a>
+                    <a class="text-muted hover:text-accent" href="https://github.com/example-alex-rivera" rel="me noopener" target="_blank">GitHub</a>
+                    <a class="text-muted hover:text-accent" href="mailto:alex.rivera@example.dev">Email</a>
+            </div>
+            <p class="font-mono text-xs text-muted">ASP.NET Core · SQL Server · Plesk</p>
+        </div>
+    </footer>
+
+    <script src="/js/site.ptab7q2bjh.js"></script>
+    
+</body>
+</html>

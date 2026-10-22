@@ -1,13 +1,122 @@
 {
+  "$schema": "../template.schema.json",
   "key": "software",
   "name": "Software & IT",
   "profession": "Software engineer",
   "description": "Case-study showcase for software engineers and IT professionals.",
   "archetype": "showcase",
+  "sections": [
+    { "key": "about", "label": "about" },
+    { "key": "experience", "label": "experience" },
+    { "key": "projects", "label": "work", "itemLabel": "Case study" },
+    { "key": "skills", "label": "skills" },
+    { "key": "certifications", "label": "certifications", "shortLabel": "certs" },
+    { "key": "blog", "label": "blog", "itemLabel": "Post" },
+    { "key": "talks", "label": "talks" },
+    { "key": "testimonials", "label": "testimonials" },
+    { "key": "contact", "label": "contact" }
+  ],
   "skillGroups": ["Backend", "Architecture", "Cloud/DevOps", "Data", "AI", "Embedded/IoT"],
   "seo": {
     "title": "{name} — {title}, .NET & AI",
     "description": "{name} is a {title} with 9+ years building high-performance .NET systems, now building agentic AI products in production.",
     "aboutDescription": "{name} — {title} with 9+ years building reliable, high-performance .NET systems, now bringing applied AI into production."
+  },
+  "copy": {
+    "layout": { "footerNote": "ASP.NET Core · SQL Server · Plesk" },
+    "home": {
+      "workEyebrow": "Selected work",
+      "workHeading": "Case studies",
+      "workEmptyTitle": "Featured work coming soon",
+      "workEmptyBody": "Once the database is seeded, this section will showcase your featured projects and case studies.",
+      "testimonialsEyebrow": "What people say",
+      "testimonialsHeading": "Testimonials",
+      "contactHeading": "Let's talk systems — backend, cloud, or AI.",
+      "experienceEyebrow": "Experience",
+      "experienceHeading": "Where I've built",
+      "credentialsEyebrow": "Credentials",
+      "credentialsHeading": "Certifications",
+      "skillsHeading": "The toolkit"
+    },
+    "projects": {
+      "title": "Work",
+      "description": "Project case studies — problem, approach, and impact with concrete metrics.",
+      "eyebrow": "Selected work",
+      "heading": "Case studies",
+      "lead": "Mini engineering write-ups — problem → approach → impact, with the numbers that mattered.",
+      "emptyTitle": "No projects yet",
+      "emptyBody": "Seed content will appear here once the database has been initialized. Until then, this space is ready for your case studies.",
+      "filterLabel": "Filter work by domain",
+      "featuredBadge": "featured",
+      "problemHeading": "Problem",
+      "approachHeading": "Approach",
+      "noWriteup": "A full write-up for this project is on the way.",
+      "stackHeading": "Stack",
+      "linksHeading": "Links",
+      "proofHeading": "Proof",
+      "screenshotsHeading": "Screenshots",
+      "imageAlt": "{title} screenshot",
+      "galleryLabel": "Screenshots",
+      "openImageLabel": "Open screenshot"
+    },
+    "experience": {
+      "title": "Experience",
+      "description": "{name}'s engineering experience — reverse-chronological, outcome-focused work history.",
+      "eyebrow": "Experience",
+      "heading": "Where I've built",
+      "lead": "Reverse-chronological, outcome-focused. What the systems did, and my part in them.",
+      "empty": "// experience loads from the database"
+    },
+    "skills": {
+      "title": "Skills",
+      "description": "Skills grouped by area — Backend, Architecture, Cloud/DevOps, Data, AI, and Embedded/IoT.",
+      "eyebrow": "Skills",
+      "heading": "The toolkit",
+      "lead": "Grouped and scannable — the areas I work across, from silicon to cloud.",
+      "empty": "// skills load from the database"
+    },
+    "certifications": {
+      "title": "Certifications",
+      "description": "Certifications earned, in progress, and planned — grouped by issuer.",
+      "eyebrow": "Certifications",
+      "heading": "Credentials & learning",
+      "lead": "What's earned, what's in flight, and where I'm headed next.",
+      "emptyTitle": "No credentials yet",
+      "emptyBody": "Add a few certifications or badges to populate this section with your learning milestones.",
+      "filterLabel": "Filter certifications by issuer",
+      "statusEarned": "Earned",
+      "statusInProgress": "In progress",
+      "statusPlanned": "Planned",
+      "viewCertificate": "View certificate",
+      "viewCredential": "View credential →"
+    },
+    "blog": {
+      "title": "Blog",
+      "description": "Notes on .NET, distributed systems, performance, and applied AI.",
+      "eyebrow": "Blog",
+      "heading": "Writing",
+      "lead": "Specific, credible notes from real work — .NET, performance, and applied AI.",
+      "empty": "// posts coming soon"
+    },
+    "talks": {
+      "title": "Talks & Videos",
+      "description": "Talks and videos — coming soon.",
+      "eyebrow": "Talks & Videos",
+      "heading": "Coming soon",
+      "empty": "No talks or videos yet — this space is wired and ready for YouTube content. Check back soon.",
+      "watch": "Watch →"
+    },
+    "contact": {
+      "description": "Get in touch with {name} — email, phone, WhatsApp, LinkedIn, or GitHub.",
+      "heading": "Let's talk systems — backend, cloud, or AI.",
+      "lead": "The fastest ways to reach me. I read everything."
+    },
+    "cv": {
+      "description": "Curriculum vitae — {name}, {title}.",
+      "experienceHeading": "Experience",
+      "skillsHeading": "Skills",
+      "projectsHeading": "Selected projects",
+      "certificationsHeading": "Certifications"
+    }
   }
 }

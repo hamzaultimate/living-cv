@@ -1,0 +1,14 @@
+@page "/not-found"
+@{
+    // Served for a request to a page of a section the template does not have (see NotFoundPage), so it looks like a missing
+    // page. It names nothing about why, so it cannot reveal which sections exist. Unknown addresses keep their plain 404.
+    Response.StatusCode = 404;
+    ViewData["Title"] = "Not found";
+    ViewData["Robots"] = "noindex,nofollow";
+}
+
+<section class="container-page py-24 text-center">
+    <p class="eyebrow">404</p>
+    <h1 class="mt-3 text-3xl">Page not found</h1>
+    <a href="/" class="btn btn-ghost mt-6">← Back to home</a>
+</section>
