@@ -149,6 +149,75 @@ public class LegacySeedPinTests
         Assert.NotNull(await MarkerAsync(t));
     }
 
+    private static string SeedCopy(Action<string> change)
+    {
+        var dir = Directory.CreateTempSubdirectory("lcv-seed-").FullName;
+        foreach (var file in Directory.GetFiles(SeedDir)) File.Copy(file, Path.Combine(dir, Path.GetFileName(file)));
+        change(dir);
+        return dir;
+    }
+
+    [Theory]
+    [InlineData("missing", "talks.json")]
+    [InlineData("unreadable", "talks.json")]
+    [InlineData("missing", "skills.json")]
+    [InlineData("unreadable", "blog.json")]
+    public async Task AMissingOrUnreadableSeedFile_DoesNotPinTheSite_TheNextStartWithIntactFilesCompletesIt(string problem, string file)
+    {
+        using var t = new TestDatabase();
+        await AddProfileAsync(t, Site.Legacy);
+        var damaged = SeedCopy(dir =>
+        {
+            if (problem == "missing") File.Delete(Path.Combine(dir, file));
+            else File.WriteAllText(Path.Combine(dir, file), "{ this is not json");
+        });
+
+        Assert.True(await RestartAsync(t, seedDir: damaged)); // the other tables are seeded as before ...
+        var partial = await CountsAsync(t);
+        Assert.Equal(0, partial[file.Replace(".json", "") switch { "blog" => "posts", var n => n }]);
+        Assert.Contains(partial, c => c.Value > 0);
+        Assert.Null(await MarkerAsync(t)); // ... but the pass did not finish, so the site is not pinned
+
+        Assert.True(await RestartAsync(t)); // intact files: the missing table is filled now
+        Assert.All(await CountsAsync(t), c => Assert.True(c.Value > 0, $"{c.Key} was not completed"));
+        Assert.NotNull(await MarkerAsync(t));
+    }
+
+    [Fact]
+    public async Task TheSeederReportsWhetherEveryFileWasRead()
+    {
+        using var t = new TestDatabase();
+        using var db = t.CreateContext();
+        var damaged = SeedCopy(dir => File.Delete(Path.Combine(dir, "talks.json")));
+
+        Assert.False(await PortfolioSeeder.SeedAsync(db, damaged));
+        Assert.False(await PortfolioSeeder.SeedAsync(db, Path.Combine(Path.GetTempPath(), "lcv-no-such-seed-folder")));
+        Assert.True(await PortfolioSeeder.SeedAsync(db, SeedDir));
+        Assert.True(await PortfolioSeeder.SeedAsync(db, damaged)); // every other table has rows now, and the missing file's table has them too
+    }
+
+    /// <summary>The restart goes through Program: migrate, seed, create the profile row, record the pass.</summary>
+    [Fact]
+    public async Task ADevelopmentCheckout_WithNoSetupKeyOwnerOrProfileRow_IsPinnedByItsFirstStart_AndARestartThroughProgramRefillsNothing()
+    {
+        using var first = AdminApp.StartedWithMigrations(setupKey: null);
+        _ = first.Server; // starts the host: Program seeds the demo persona into the empty database and creates the profile row
+        var seeded = await DemoSite.RowCountsAsync(first);
+        Assert.All(seeded.Where(c => c.Key != "profiles"), c => Assert.True(c.Value > 0, $"{c.Key} was not seeded by the first start"));
+        Assert.Equal(1, seeded["profiles"]);
+        using (var db = first.CreateDbContext())
+        {
+            Assert.NotNull(await db.SiteProfiles.Select(p => p.ContentSeededAt).SingleAsync());
+            foreach (var table in Tables) await table.Clear(db);
+        }
+
+        using var second = AdminApp.StartedWithMigrations(setupKey: null, restartOf: first);
+        _ = second.Server;
+
+        var after = await DemoSite.RowCountsAsync(second);
+        Assert.All(after.Where(c => c.Key != "profiles"), c => Assert.Equal(0, c.Value));
+    }
+
     [Theory]
     [InlineData(Site.Published)]
     [InlineData(Site.Skipped)]

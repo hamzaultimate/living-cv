@@ -30,20 +30,28 @@ public static class FirstRun
         return state is null || state.OnboardingCompletedAt is null;
     }
 
+    /// <summary>What the start-up seeding step did: whether it seeded at all, and whether every seed file was read (so the pass can be recorded).</summary>
+    public readonly record struct StartupSeed(bool Ran, bool Complete);
+
     /// <summary>The start-up seeding step: seeds unless <see cref="ShouldDeferContentSeedAsync"/> says the wizard owns the decision.</summary>
     public static async Task<bool> SeedAtStartupAsync(PortfolioDbContext db, string seedDir, SeedMode mode, bool setupKeyConfigured,
+        Microsoft.Extensions.Logging.ILogger? log = null, CancellationToken ct = default) =>
+        (await SeedAtStartupDetailedAsync(db, seedDir, mode, setupKeyConfigured, log, ct)).Ran;
+
+    /// <summary>Like <see cref="SeedAtStartupAsync"/>, and says whether the pass was complete. Records the pass when it was (and the profile row exists).</summary>
+    public static async Task<StartupSeed> SeedAtStartupDetailedAsync(PortfolioDbContext db, string seedDir, SeedMode mode, bool setupKeyConfigured,
         Microsoft.Extensions.Logging.ILogger? log = null, CancellationToken ct = default)
     {
         if (await ShouldDeferContentSeedAsync(db, setupKeyConfigured, mode, ct))
         {
             log?.LogInformation("The onboarding wizard owns the demo content: it is not seeded at start-up.");
-            return false;
+            return new StartupSeed(false, false);
         }
-        await PortfolioSeeder.SeedAsync(db, seedDir, mode, log, ct);
+        var complete = await PortfolioSeeder.SeedAsync(db, seedDir, mode, log, ct);
         // Recorded only after every table has been through the pass, so a crash part-way leaves the site unpinned and the next start finishes it.
-        // A missing seed folder means nothing was seeded, so there is no pass to record.
-        if (Directory.Exists(seedDir)) await MarkContentSeededAsync(db, ct);
-        return true;
+        // A missing seed folder, or a seed file that is missing or cannot be read, means the pass did not finish: the next start tries again.
+        if (complete) await MarkContentSeededAsync(db, ct);
+        return new StartupSeed(true, complete);
     }
 
     /// <summary>
