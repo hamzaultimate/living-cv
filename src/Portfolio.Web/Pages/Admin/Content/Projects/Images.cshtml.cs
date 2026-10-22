@@ -116,7 +116,7 @@ public class ImagesModel : ContentPageModel
         project.Screenshots = project.Screenshots.Where(s => s.Url != url).ToList();
         if (await Writer.CommitAsync(ct) != SaveOutcome.Saved) return ListWithError(ConflictMessage);
 
-        await Writer.DeleteUploadsAsync([url], id, ct);
+        await Writer.DeleteUploadsAsync([url], id);
         Flash("Image removed.");
         return RedirectToPage(new { id });
     }

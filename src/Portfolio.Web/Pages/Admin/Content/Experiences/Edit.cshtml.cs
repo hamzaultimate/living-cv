@@ -61,8 +61,10 @@ public class EditModel : ContentPageModel
         var company = c.Text(nameof(Form.Company), "company", Form.Company, 200, required: true);
         var title = c.Text(nameof(Form.Title), "title", Form.Title, 200, required: true);
         // The seeder identifies a role by "company|title", so a bar in either would let two different roles share a key.
-        if (company?.Contains('|') == true) c.Error(nameof(Form.Company), $"{View.Label("company")} cannot contain the | character.");
-        if (title?.Contains('|') == true) c.Error(nameof(Form.Title), $"{View.Label("title")} cannot contain the | character.");
+        // A value the row already has is kept as stored, so an older entry with a bar can still be saved untouched.
+        var storedRole = id is null ? null : await Db.Experiences.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (company?.Contains('|') == true && company != storedRole?.Company) c.Error(nameof(Form.Company), $"{View.Label("company")} cannot contain the | character.");
+        if (title?.Contains('|') == true && title != storedRole?.Title) c.Error(nameof(Form.Title), $"{View.Label("title")} cannot contain the | character.");
         var start = c.Text(nameof(Form.Start), "start", Form.Start, 30, required: true);
         var summary = c.Paragraph(nameof(Form.Summary), "summary", Form.Summary, SummaryMax, required: true);
         PartialDate? startDate = null;

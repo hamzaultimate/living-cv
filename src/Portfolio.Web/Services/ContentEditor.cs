@@ -28,9 +28,11 @@ public class ContentEditor
     private readonly PortfolioDbContext _db;
     private readonly ProfileEditor _profile;
     private readonly UploadStore _uploads;
+    private readonly ILogger<ContentEditor>? _log;
 
-    public ContentEditor(PortfolioDbContext db, ProfileEditor profile, UploadStore uploads)
+    public ContentEditor(PortfolioDbContext db, ProfileEditor profile, UploadStore uploads, ILogger<ContentEditor>? log = null)
     {
+        _log = log;
         _db = db;
         _profile = profile;
         _uploads = uploads;
@@ -113,17 +115,20 @@ public class ContentEditor
 
     /// <summary>Deletes uploaded files that nothing points at any more. Only generated <c>/uploads/…</c> addresses are touched (the store ignores
     /// everything else, such as the images that ship with the site), and a file another row still uses is kept.</summary>
-    public async Task DeleteUploadsAsync(IEnumerable<string?> urls, int? exceptProjectId, CancellationToken ct)
+    public async Task DeleteUploadsAsync(IEnumerable<string?> urls, int? exceptProjectId)
     {
-        // The row change is committed, so this runs to completion whatever the request does, and a failure here must not fail the save.
-        try
+        // The row change is committed, so this runs to completion whatever the request does, and a failure on one file must neither fail
+        // the save nor stop the others. A file left behind is harmless.
+        foreach (var url in urls.Where(u => !string.IsNullOrEmpty(u)).Distinct())
         {
-            foreach (var url in urls.Where(u => !string.IsNullOrEmpty(u)).Distinct())
+            try
+            {
                 if (!await IsUploadReferencedAsync(url!, exceptProjectId, CancellationToken.None)) _uploads.TryDelete(url);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            // A file left behind is harmless; the entry is already saved.
+            }
+            catch (Exception ex)
+            {
+                _log?.LogWarning(ex, "Could not clean up the uploaded file {File}.", System.IO.Path.GetFileName(url));
+            }
         }
     }
 

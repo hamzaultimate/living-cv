@@ -32,13 +32,17 @@ public class ContentReviewFixTests
         var page = await owner.GetAsync($"{ContentFlow.Projects}/images/{seeded.ProjectId}");
         Assert.Equal(HttpStatusCode.Redirect, page.StatusCode);
         var path = $"{ContentFlow.Projects}/images/{seeded.ProjectId}";
+        var stamp = await ContentFlow.StampAsync(owner, $"{ContentFlow.Projects}/edit/{seeded.ProjectId}"); // the project's real, current stamp
         foreach (var (handler, fields) in new[]
                  {
-                     ("Upload", new Dictionary<string, string> { ["Caption"] = "x" }),
-                     ("Remove", new Dictionary<string, string> { ["url"] = seeded.ScreenshotUrl }),
-                     ("Move", new Dictionary<string, string> { ["url"] = seeded.ScreenshotUrl, ["direction"] = "down" }),
+                     ("Upload", new Dictionary<string, string> { ["stamp"] = stamp, ["Caption"] = "x" }),
+                     ("Remove", new Dictionary<string, string> { ["stamp"] = stamp, ["url"] = seeded.ScreenshotUrl }),
+                     ("Move", new Dictionary<string, string> { ["stamp"] = stamp, ["url"] = seeded.ScreenshotUrl, ["direction"] = "down" }),
                  })
+        {
             Assert.Equal(HttpStatusCode.Redirect, (await ContentFlow.PostAsync(owner, $"{path}?handler={handler}", fields, ContentFlow.Projects + "/edit")).StatusCode);
+            Assert.Contains("not used by your template", await owner.GetStringAsync(ContentFlow.Projects));
+        }
         Assert.Equal(before, await ContentFlow.SnapshotAsync(app));
     }
 
@@ -86,7 +90,6 @@ public class ContentReviewFixTests
         await ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields("B Co", "Second"));
         using var db = app.CreateDbContext();
         var ids = db.Experiences.OrderBy(x => x.SortOrder).Select(x => x.Id).ToList();
-        var editor = new Portfolio.Web.Services.ContentEditor(db, null!, null!);
         var scope = await db.Experiences.OrderBy(x => x.SortOrder).ToListAsync();
         // Another request edits the first row after this one loaded it.
         using (var other = app.CreateDbContext())
@@ -96,23 +99,10 @@ public class ContentReviewFixTests
             await other.SaveChangesAsync();
         }
 
-        var outcome = await new MoveProbe(db).MoveAsync(scope, ids[0], 1);
+        // The real editor; a conflict returns before it touches the caches, so no profile editor is needed here.
+        var outcome = await new Portfolio.Web.Services.ContentEditor(db, null!, null!).MoveAsync(scope, ids[0], 1, default);
 
         Assert.Equal(Portfolio.Web.Services.SaveOutcome.Conflict, outcome);
-    }
-
-    private sealed class MoveProbe(Portfolio.Data.PortfolioDbContext db)
-    {
-        // The real editor refreshes caches through ProfileEditor; only the write is under test here.
-        public async Task<Portfolio.Web.Services.SaveOutcome> MoveAsync(List<Experience> scope, int id, int delta)
-        {
-            var ordered = scope.OrderBy(r => r.SortOrder).ThenBy(r => r.Id).ToList();
-            var i = ordered.FindIndex(r => r.Id == id);
-            (ordered[i], ordered[i + delta]) = (ordered[i + delta], ordered[i]);
-            for (var n = 0; n < ordered.Count; n++) ordered[n].SortOrder = n + 1;
-            try { await db.SaveChangesAsync(); return Portfolio.Web.Services.SaveOutcome.Saved; }
-            catch (DbUpdateConcurrencyException) { return Portfolio.Web.Services.SaveOutcome.Conflict; }
-        }
     }
 
     [Fact]
@@ -231,5 +221,29 @@ public class ContentReviewFixTests
         Assert.Contains("admin-unsaved", plain);
         var refused = await ContentFlow.PostMultipartAsync(owner, images + "?handler=Upload", new Dictionary<string, string> { ["stamp"] = await ContentFlow.StampAsync(owner, images), ["Caption"] = "" }, null, images);
         Assert.Contains("data-has-errors=\"true\"", await refused.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task ARoleWithABarThatIsAlreadyStored_CanBeSavedUntouchedInThoseFields_ButNotChangedToAnother()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        using (var db = app.CreateDbContext())
+        {
+            db.Experiences.Add(new Experience { Company = "A|B", Title = "C|D", Start = "2019", End = "2020", Summary = "s", SortOrder = 1 });
+            await db.SaveChangesAsync();
+        }
+        int id; using (var db = app.CreateDbContext()) id = db.Experiences.Single().Id;
+        var path = $"{ContentFlow.Experience}/edit/{id}";
+
+        var same = ContentFlow.RoleFields("A|B", "C|D", "2019", "2020", "edited");
+        same["Form.Stamp"] = await ContentFlow.StampAsync(owner, path);
+        Assert.Equal(HttpStatusCode.Redirect, (await ContentFlow.PostAsync(owner, path, same)).StatusCode);
+
+        var other = ContentFlow.RoleFields("X|Y", "C|D", "2019", "2020", "edited");
+        other["Form.Stamp"] = await ContentFlow.StampAsync(owner, path);
+        Assert.Equal(HttpStatusCode.OK, (await ContentFlow.PostAsync(owner, path, other)).StatusCode);
+        using var check = app.CreateDbContext();
+        Assert.Equal("A|B", check.Experiences.Single().Company);
     }
 }

@@ -172,7 +172,7 @@ public class EditModel : ContentPageModel
                 return Page();
             }
 
-            if (replacedHero != row.HeroImage) await Writer.DeleteUploadsAsync([replacedHero], row.Id, ct);
+            if (replacedHero != row.HeroImage) await Writer.DeleteUploadsAsync([replacedHero], row.Id);
             Flash(id is null ? $"Added {title}. Add gallery images from its Images page." : $"Saved {title}.");
             return Redirect(ListUrl); // no fragment: a browser skips autofocus when the address has one, and the saved message should take focus
         }

@@ -297,7 +297,7 @@ Implementation notes for 4a (decisions worth reviewing):
   template carrying unique wording, in all four sections). Sensitive templates show `guidance` on the hub and every editor. A section the template does
   not use stays editable, with a note that the public site does not show it.
 - **Ordering.** The existing `SortOrder` columns, no new column. Move up / Move down are POST buttons (named after their row, disabled at the ends,
-  keyboard operable); a move renumbers the scope consecutively and writes only rows whose position changed, without restamping them (a form open for another row stays valid, while the update still checks the stamp it loaded, so a move over a concurrent edit is refused), so rows that shared a position are
+  keyboard operable); a move renumbers the scope consecutively and writes only rows whose position changed, without restamping them (a form open for another row stays valid, while the update still checks the stamp it loaded, so a move over a concurrent edit of the same rows is refused; the trade-off is that two overlapping moves, or a move racing a skill group change, can leave a duplicate `SortOrder`: the display breaks ties by `Id` and the next move renumbers), so rows that shared a position are
   separated. Skills order within their group, like the public page and the CV. New entries are appended (Skills: end of their group). **No drag and
   drop**: it needs script, the admin CSP allows none, and the buttons are the mandatory fallback; left out on purpose.
 - **Unsaved-change warning** is `wwwroot/js/admin-unsaved.js`, loaded only by the edit forms. The admin CSP gains `script-src 'self'` on
@@ -308,7 +308,7 @@ Implementation notes for 4a (decisions worth reviewing):
   (a site-relative value is accepted only when it is exactly the one already stored, because older seeded entries use `/img/...`), enums from
   allow-lists, free-text dates (`2021`, `Mar 2021`, `2021-03`) parsed for order and for the future (earned certifications cannot be future-dated; the
   clock is `TimeProvider`). Skill names, certification names and role (company, title) must be unique case-insensitively, because the authoritative
-  seeder keys on them, and a `|` is refused in a role's company or title because that key joins them with one. Two simultaneous identical creates can still both pass the pre-check (no unique index on these names): a known gap. No field of these four sections is Markdown (the public pages print project text as plain text), so `Md` is not involved.
+  seeder keys on them, and a `|` is refused in a role's company or title because that key joins them with one (a value the row already has is kept as stored). Two simultaneous identical creates can still both pass the pre-check (no unique index on these names): a known gap. No field of these four sections is Markdown (the public pages print project text as plain text), so `Md` is not involved.
 - **Project addresses.** Generated from the title (accents folded, everything else a hyphen), numbered on collision, reserved words suffixed; typed
   addresses must be lower-case letters, digits and single hyphens and not reserved or taken; an edit keeps the current address exactly as stored (an unchanged legacy address is never re-validated) unless the owner types a
   different one (an emptied box keeps it too). A renamed or removed address answers the ordinary 404 (no redirect is kept). A unique-index violation

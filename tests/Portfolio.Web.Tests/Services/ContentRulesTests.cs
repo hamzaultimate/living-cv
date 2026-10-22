@@ -136,6 +136,7 @@ public class ContentRulesTests
     [InlineData("a.b", false)]
     [InlineData("a%2fb", false)]
     [InlineData("a b", false)]
+    [InlineData("abc\n", false)]
     [InlineData("..", false)]
     [InlineData("", false)]
     public void TypedSlugs_AreCheckedStrictly(string slug, bool expected) => Assert.Equal(expected, Slugs.IsValid(slug));

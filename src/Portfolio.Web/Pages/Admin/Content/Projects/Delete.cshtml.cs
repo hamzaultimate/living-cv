@@ -29,5 +29,5 @@ public class DeleteModel : ContentDeleteModel<Project>
         return new DeleteInfo(p.Title, lines);
     }
 
-    protected override Task CleanUpAsync(Project removed, CancellationToken ct) => Writer.DeleteUploadsAsync(Urls(removed), removed.Id, ct);
+    protected override Task CleanUpAsync(Project removed, CancellationToken ct) => Writer.DeleteUploadsAsync(Urls(removed), removed.Id);
 }
