@@ -10,6 +10,8 @@
     var pageDesc = ViewData["Description"] as string ?? site.Summary;
     var absBase = await SeoHelpers.AbsoluteBaseAsync(Context);
     var absUrl = $"{absBase}{Context.Request.Path}";
+    // A page that tells search engines not to index it has no canonical address to declare.
+    var noIndex = tpl.IsPreview || (ViewData["Robots"] as string)?.Contains("noindex", StringComparison.OrdinalIgnoreCase) == true;
     // Blog posts and project case studies pass their own cover/hero image (relative path)
     // so a link shared on LinkedIn/X shows the actual post, not the generic name card.
     var ogImageOverride = ViewData["OgImage"] as string;
@@ -65,14 +67,20 @@
     }
     <meta name="theme-color" content="@tpl.ThemeColor" />
     <meta name="color-scheme" content="light dark" />
+    @if (!noIndex)
+    {
     <link rel="canonical" href="@absUrl" />
+    }
     <script type="application/ld+json">@Html.Raw(websiteLd)</script>
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="@site.OwnerName" />
     <meta property="og:title" content="@pageTitle" />
     <meta property="og:description" content="@pageDesc" />
+    @if (!noIndex)
+    {
     <meta property="og:url" content="@absUrl" />
+    }
     <meta property="og:image" content="@ogImage" />
     @if (ogImageOverride is null)
     {
