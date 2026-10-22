@@ -44,7 +44,7 @@
         <div class="adm-field">
             <label for="Form_Summary">Short summary</label>
             <textarea asp-for="Form.Summary" rows="5" maxlength="600" required aria-describedby="summary-hint Form_Summary-error" aria-invalid="@(Bad("Summary") ? "true" : null)"></textarea>
-            <span id="summary-hint" class="adm-hint">Up to 600 characters. It leads your home page and is used in search results. @(Model.Form.Summary == Model.Suggestions.Summary ? "This is the template's suggestion: make it yours." : "")</span>
+            <span id="summary-hint" class="adm-hint">Up to 600 characters. It leads your home page and is used in search results. @(Model.Form.Summary == Model.Suggestions.Summary ? "This is the template's suggestion: it is published as written, so make it yours." : "")</span>
             <span id="Form_Summary-error" asp-validation-for="Form.Summary"></span>
         </div>
     </fieldset>

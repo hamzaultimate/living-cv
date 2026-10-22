@@ -350,7 +350,12 @@ public class OnboardingService
             // The placeholder avatar goes; a photo the owner already uploaded (before finishing the wizard) stays.
             if (photoUrl is null && !IsUpload(p.PhotoUrl)) p.PhotoUrl = null;
         }
-        if (photoUrl is not null) p.PhotoUrl = photoUrl;
+        if (photoUrl is not null)
+        {
+            // The pages show PhotoUrlLight in the light theme and hide the dark photo there, so one photo has to be set for both.
+            p.PhotoUrl = photoUrl;
+            p.PhotoUrlLight = photoUrl;
+        }
     }
 
     private static bool IsUpload(string? url) => url is not null && url.StartsWith(UploadStore.RequestPath + "/", StringComparison.Ordinal);

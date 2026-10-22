@@ -15,7 +15,7 @@
   },
   "heroSuggestions": {
     "title": "Software Engineer",
-    "summary": "Software engineer who builds reliable, maintainable systems and enjoys turning unclear requirements into shipped products. Add the languages, platforms and kinds of problems you work on."
+    "summary": "Software engineer who builds reliable, maintainable systems and enjoys turning unclear requirements into shipped products."
   },
   "starter": { "source": "seed" },
   "sections": [
