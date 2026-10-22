@@ -1,16 +1,9 @@
-using Markdig;
 
 namespace Portfolio.Web.Services;
 
-/// <summary>Renders trusted (seed-authored) Markdown to HTML and estimates reading time.</summary>
+/// <summary>Estimates reading time. Rendering is <see cref="SafeMd"/>: there is deliberately no renderer here that allows raw HTML.</summary>
 public static class Md
 {
-    private static readonly MarkdownPipeline Pipeline =
-        new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
-
-    public static string ToHtml(string? markdown) =>
-        Markdig.Markdown.ToHtml(markdown ?? string.Empty, Pipeline);
-
     public static int ReadingMinutes(string? markdown)
     {
         var words = (markdown ?? string.Empty)

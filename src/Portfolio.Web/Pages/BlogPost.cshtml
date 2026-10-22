@@ -89,7 +89,7 @@ else
                  class="mt-8 aspect-video w-full max-w-2xl rounded-lg border border-border object-cover" />
         }
         <div class="article mt-10 max-w-2xl">
-            @Html.Raw(Md.ToHtml(post.BodyMarkdown))
+            @Html.Raw(SafeMd.ToHtml(post.BodyMarkdown))
         </div>
     </article>
 }
