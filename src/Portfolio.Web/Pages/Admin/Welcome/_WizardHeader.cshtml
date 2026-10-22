@@ -1,0 +1,24 @@
+@model WelcomePageModel
+@* The progress list, the polite live region and the step heading. Each step is a full page load, so the heading takes focus on load (autofocus) and
+   the live region carries the step and any message for screen readers. When the page has errors the error summary takes the focus instead. *@
+<nav aria-label="Setup progress">
+    <ol class="adm-steps">
+        @foreach (var (number, label, path) in WelcomePageModel.Steps)
+        {
+            var current = number == Model.CurrentStep;
+            var done = (Model.Draft?.Step ?? 0) >= number && !current;
+            <li aria-current="@(current ? "step" : null)">
+                @if (!current && number <= Model.Reachable)
+                {
+                    <a href="@path"><span class="adm-step-num">@number</span> @label@if (done) {<span class="adm-sr"> (saved)</span>}</a>
+                }
+                else
+                {
+                    <span class="adm-step-num">@number</span> @label
+                }
+            </li>
+        }
+    </ol>
+</nav>
+<div id="wizard-status" class="adm-sr" role="status" aria-live="polite" aria-atomic="true">Step @Model.CurrentStep of @OnboardingService.LastStep: @Model.StepLabel.</div>
+<h1 id="step-heading" tabindex="-1" autofocus="@(ViewData.ModelState.IsValid ? "autofocus" : null)"><span class="adm-step-count">Step @Model.CurrentStep of @OnboardingService.LastStep</span> @Model.StepLabel</h1>

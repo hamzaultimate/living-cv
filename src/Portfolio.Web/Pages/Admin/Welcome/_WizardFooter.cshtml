@@ -1,0 +1,16 @@
+@model WelcomePageModel
+<div class="adm-wizard-exit">
+    <form method="post" asp-page-handler="Skip">
+        <button type="submit" class="adm-btn adm-btn-quiet">@(Model.FirstRun ? "Skip setup" : "Leave without publishing")</button>
+    </form>
+    @if (Model.Draft is not null)
+    {
+        <form method="post" asp-page-handler="Discard">
+            <button type="submit" class="adm-btn adm-btn-quiet">Start over</button>
+        </form>
+    }
+</div>
+@if (Model.FirstRun)
+{
+    <p class="adm-hint">Skipping keeps the placeholder profile and demo content the site started with. You can run this wizard again from the dashboard.</p>
+}

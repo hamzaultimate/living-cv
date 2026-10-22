@@ -79,7 +79,8 @@ public partial class SetupModel : PageModel
             default:
                 _logger.LogInformation("Owner account created.");
                 TempData[Admin.AdminPageModel.FlashKey] = "Owner account created. Sign in to continue.";
-                return RedirectToPage("/Admin/Login");
+                // After signing in the owner lands in the setup wizard (a local path inside /admin, so the login page accepts it).
+                return RedirectToPage("/Admin/Login", new { ReturnUrl = AdminAuth.WelcomePath });
         }
     }
 
