@@ -140,7 +140,10 @@ public class TemplateSwitchTests
         var person = home.Single(b => b.GetProperty("@type").GetString() == "Person");
         var credentials = person.GetProperty("hasCredential").EnumerateArray().Select(c => c.GetProperty("name").GetString()).ToList();
         Assert.Contains("Registered Nurse registration (sample)", credentials);
-        Assert.Equal(5, credentials.Count);
+        // Only earned credentials are published as credentials; the in-progress and planned ones stay off the markup.
+        Assert.Equal(3, credentials.Count);
+        Assert.DoesNotContain("Critical Care Nursing Certificate (sample)", credentials);
+        Assert.DoesNotContain("Clinical Educator Programme (sample)", credentials);
         Assert.Equal("Example Nursing Council", person.GetProperty("hasCredential")[0].GetProperty("recognizedBy").GetProperty("name").GetString());
 
         // A breadcrumb exists only for pages that exist.
