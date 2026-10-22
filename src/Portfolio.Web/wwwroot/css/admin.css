@@ -166,6 +166,7 @@ a.adm-btn { text-decoration: none; display: inline-block; }
 .adm-gallery p { margin: .4rem 0; overflow-wrap: anywhere; }
 @media (max-width: 40rem) {
   .adm-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .adm-table caption { display: block; width: 100%; }
   .adm-table, .adm-table tbody, .adm-table tr, .adm-table th, .adm-table td { display: block; width: 100%; }
   .adm-table tr { border-top: 1px solid var(--adm-border); padding: .4rem 0; }
   .adm-table th, .adm-table td { border-top: 0; padding: .25rem .75rem; }
