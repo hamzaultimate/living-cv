@@ -87,21 +87,28 @@ public class ContentSeedingTests
     }
 
     [Fact]
-    public async Task ASiteThatExistedBeforeTheWizard_KeepsTheOldStartUpBehaviour_AnEmptiedTableIsSeededAgain()
+    public async Task ASiteThatExistedBeforeTheWizard_SeedsItsFirstPassAsBefore_ThenKeepsWhatTheOwnerDeletes()
     {
-        // Documented limit: a site the wizard never finished (outcome empty) seeds an empty table at start-up, as it always did.
+        // A site the wizard never finished (outcome empty, no seeding marker yet) seeds an empty table at its first start-up pass, as it always did;
+        // once that pass has finished it is pinned like a wizard site (LegacySeedPinTests replays every table).
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
         using (var db = app.CreateDbContext())
         {
-            (await db.SiteProfiles.SingleAsync()).OnboardingOutcome = null; // what the migration leaves on an existing site
+            var profile = await db.SiteProfiles.SingleAsync();
+            profile.OnboardingOutcome = null; // what the migration leaves on an existing site
+            profile.ContentSeededAt = null;
             await db.SaveChangesAsync();
         }
         Assert.Equal(0, await ContentFlow.CountAsync(app));
 
         Assert.True(await RestartAsync(app, keyConfigured: false));
-
         Assert.True(await ContentFlow.CountAsync(app) > 0);
+
+        await RemoveEverythingAsync(app, owner);
+        Assert.False(await RestartAsync(app, keyConfigured: false));
+        Assert.False(await RestartAsync(app));
+        Assert.Equal(0, await ContentFlow.CountAsync(app));
     }
 
     [Fact]

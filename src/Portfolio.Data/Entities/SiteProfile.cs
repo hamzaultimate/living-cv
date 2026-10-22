@@ -74,6 +74,14 @@ public class SiteProfile
     /// before the wizard (the migration leaves it empty). Start-up never seeds demo content into a site where this is set: the owner's blank stays blank.</summary>
     public string? OnboardingOutcome { get; set; }
 
+    /// <summary>
+    /// When the first start-up seeding pass finished on this site. Null means start-up has not completed one yet (every site that existed before this
+    /// column is null, because the migration does not backfill it). Once set, start-up never seeds an emptied table again unless Seed:Mode is
+    /// Authoritative, so rows the owner deletes stay deleted on a site that never went through the wizard too. Set once, after the pass, so a crash
+    /// part-way through seeding leaves it null and the next start finishes the job.
+    /// </summary>
+    public DateTimeOffset? ContentSeededAt { get; set; }
+
     /// <summary>The wizard's unpublished answers as JSON (see the web project's OnboardingDraft). Never read by the public site.</summary>
     public string? OnboardingDraft { get; set; }
 }

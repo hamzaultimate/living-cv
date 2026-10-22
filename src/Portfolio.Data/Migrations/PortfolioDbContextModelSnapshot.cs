@@ -299,6 +299,9 @@ namespace Portfolio.Data.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
 
+                    b.Property<DateTimeOffset?>("ContentSeededAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 

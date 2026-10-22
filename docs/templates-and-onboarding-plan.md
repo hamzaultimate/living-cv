@@ -235,7 +235,7 @@ Implementation notes (decisions worth reviewing):
   otherwise the first start would already have loaded the demo persona and "blank" could not be honest. It also **never runs again on a site the wizard
   finished**: a second additive migration column, `OnboardingOutcome` ("published" or "skipped"), is set by publish and skip and left empty by the backfill, so
   a restart cannot refill a blank site (review finding). Sites that existed before the wizard, unclaimable legacy installs and `Seed:Mode=Authoritative`
-  seed as before. Skipping the wizard on a first run loads the demo content into empty tables, which restores what a new install showed before the wizard.
+  seed as before on the first pass; legacy sites are pinned afterwards by the seeding marker (see "Seeding" in the Phase 4a notes). Skipping the wizard on a first run loads the demo content into empty tables, which restores what a new install showed before the wizard.
   The start-up step is `FirstRun.SeedAtStartupAsync`, tested by replaying it after blank, sample and skipped completions.
 - **First-run publish replaces the placeholder persona** from the `Site` config (hero, metrics, About, links, phone, light photo) with a plain hero built
   from the owner's answers (title as eyebrow, name as headline, summary as lede) and the summary as the first About paragraph. A re-run changes only
@@ -319,8 +319,19 @@ Implementation notes for 4a (decisions worth reviewing):
   points at it, and addresses that are not generated `/uploads/...` names (the bundled images) are never touched. Alt text is required for any image
   the owner uploads (the cover's is `HeroImageAlt`, a gallery image's is its caption). Project and certification **proofs** are kept but not editable yet.
 - **Seeding.** Nothing in the editors seeds. Because wizard-finished sites never seed at start-up, emptying every table stays empty across restarts
-  (`ContentSeedingTests` replays `FirstRun.SeedAtStartupAsync` for blank, sample and skipped sites). A site that existed before the wizard keeps
-  the old behaviour: an emptied table is refilled from the seed files at the next start. That is documented in the user guide and left as an owner decision.
+  (`ContentSeedingTests` replays `FirstRun.SeedAtStartupAsync` for blank, sample and skipped sites). A site that existed before the wizard is pinned by a
+  nullable `SiteProfile.ContentSeededAt` (migration `AddContentSeededMarker`, additive, no backfill). Start-up records it with one conditional UPDATE only
+  after the seeder has run over every table (`FirstRun.MarkContentSeededAsync`), and `ShouldDeferContentSeedAsync` defers once it is set (except
+  `Seed:Mode=Authoritative`, which still seeds as configured). Why this marker and not "first admin content write": the first start-up pass is the event
+  that defines "this site has been seeded", it needs no change in the editors (4b's new tables are covered automatically), and a legacy site whose owner
+  never writes content needs no marker to behave as before. Ordering: the first pass behaves exactly as before for partly empty tables (IfEmpty fills only
+  the empty ones); the marker is written after the pass, so a crash part-way leaves it null and the next start finishes the job; the migration does not
+  backfill, so a site that never completed a pass is not pinned. A new install with no profile row yet (a development checkout, no `Setup:Key`) is marked
+  by a second call in `Program` once the profile exists; a missing seed folder is not recorded as a pass. Unclaimable legacy installs go through the same
+  path. Limits: a legacy site that emptied a table on the old version is refilled once at the first start after this upgrade (it cannot be told from
+  one never seeded) and then stays empty; do not roll `AddContentSeededMarker` back on a live site (Down then Up clears the marker and the next start
+  would refill emptied tables once). `LegacySeedPinTests` replays the start-up step after delete-all for legacy, published, skipped and Authoritative
+  sites over every content table (add new tables to its list).
 - **Known gaps.** The CV PDF of a project that has impact lines cannot be rendered on a host without the fonts it names (the "▸" glyph; the same limit the
   earlier tests note), so the end-to-end test builds a project without impact lines for the PDF check. The editors have not been run against a real SQL
   Server (tests and the browser check use SQLite). Parallel requests from one client against the test host's single shared in-memory SQLite connection ended
