@@ -60,6 +60,7 @@ public class SectionGateFilter : IAsyncPageFilter
         var gate = context.ActionDescriptor.EndpointMetadata.OfType<SectionPageAttribute>().FirstOrDefault();
         if (gate is not null && !(await _template.GetAsync()).IsEnabled(gate.Section))
         {
+            context.HttpContext.Items[NotFoundPage.GatedItem] = true;
             context.Result = new NotFoundResult();
             return;
         }

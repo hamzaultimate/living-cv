@@ -5,21 +5,23 @@ namespace Portfolio.Web.Services;
 
 public static class NotFoundPage
 {
-    /// <summary>The page that renders the styled not-found response.</summary>
+    /// <summary>The page that renders the styled not-found response for a disabled section.</summary>
     public const string Path = "/not-found";
 
+    internal const string GatedItem = "lcv:section-gated";
+
     /// <summary>
-    /// Shows <see cref="Path"/> for an empty 404 on a page request: an unknown address, or a page of a section the template does
-    /// not have. Responses that already carry a body (a missing project) are left alone, as are other status codes, non-GET
-    /// requests and file-like addresses, so a 413 or a missing image is never turned into a page.
+    /// Shows <see cref="Path"/> for the empty 404 that <see cref="SectionGateFilter"/> gives a page of a section the template does
+    /// not have. Every other response is left exactly as it was: an unknown address, /setup and /admin keep their blank 404, and
+    /// other status codes, non-GET requests and responses that carry a body (a missing project) are never turned into a page.
     /// </summary>
     public static IApplicationBuilder UseNotFoundPage(this IApplicationBuilder app) =>
         app.UseStatusCodePages(async context =>
         {
             var http = context.HttpContext;
             if (http.Response.StatusCode != StatusCodes.Status404NotFound
-                || !(HttpMethods.IsGet(http.Request.Method) || HttpMethods.IsHead(http.Request.Method))
-                || System.IO.Path.HasExtension(http.Request.Path.Value))
+                || !http.Items.ContainsKey(GatedItem)
+                || !(HttpMethods.IsGet(http.Request.Method) || HttpMethods.IsHead(http.Request.Method)))
                 return;
 
             var original = (http.Request.Path, http.Request.QueryString, http.Request.PathBase);

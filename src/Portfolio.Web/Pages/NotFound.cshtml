@@ -1,7 +1,7 @@
 @page "/not-found"
 @{
-    // Served for any request that ends in an empty 404 (unknown address, or a page of a section the template does not have),
-    // by the status code middleware in Program.cs. It names nothing about why, so it cannot reveal which sections exist.
+    // Served for a request to a page of a section the template does not have (see NotFoundPage), so it looks like a missing
+    // page. It names nothing about why, so it cannot reveal which sections exist. Unknown addresses keep their plain 404.
     Response.StatusCode = 404;
     ViewData["Title"] = "Not found";
     ViewData["Robots"] = "noindex,nofollow";

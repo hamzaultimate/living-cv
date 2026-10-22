@@ -79,6 +79,7 @@ var app = builder.Build();
 
 // Load the shipped templates now: a broken default manifest should stop the start (and the deploy's health check), not
 // answer every page with a 500 on the first request. A broken optional template is skipped and logged by the catalog.
+// Intentionally before the operator commands below: a broken default manifest should stop those too.
 _ = app.Services.GetRequiredService<ITemplateCatalog>();
 
 // Operator command: runs against the database and exits before the web host starts serving.
@@ -101,8 +102,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// An empty 404 (unknown address, or a page of a section the template does not have) shows the styled not-found page.
-// Responses that already carry a body, like a missing project, are left alone.
+// A page of a section the template does not have shows the styled not-found page; every other 404 is left as it was.
 app.UseNotFoundPage();
 
 // SEO: force a single canonical host. www.<domain> and <domain> otherwise both serve

@@ -130,31 +130,52 @@ public class TemplateRenderingTests
         var (status, html) = await GetAsync(app.NewClient(), path);
 
         Assert.Equal(HttpStatusCode.NotFound, status);
-        // The same styled page as any unknown address, with nothing that says a section exists or is switched off.
-        var (unknownStatus, unknownHtml) = await GetAsync(app.NewClient(), "/no-such-page");
-        Assert.Equal(HttpStatusCode.NotFound, unknownStatus);
+        // A styled page that is the same for every disabled section, with nothing that says a section exists or is switched off.
+        var (otherStatus, otherHtml) = await GetAsync(app.NewClient(), path == "/talks" ? "/blog" : "/talks");
+        Assert.Equal(HttpStatusCode.NotFound, otherStatus);
         Assert.Contains("<html", html);
         Assert.Contains("Page not found", html);
-        Assert.Equal(DemoSite.Normalise(unknownHtml), DemoSite.Normalise(html));
+        Assert.Equal(DemoSite.Normalise(otherHtml), DemoSite.Normalise(html));
         var body = DemoSite.WithoutScripts(html);
         Assert.DoesNotMatch(@"(?i)blog|talk|article|presentation|disabled", body.Substring(body.IndexOf("<main", StringComparison.Ordinal)));
     }
 
     [Theory]
     [InlineData("/no-such-page")]
-    [InlineData("/not-found")]
-    public async Task AnUnknownAddress_AnswersTheStyledNotFoundPage_WithA404(string path)
+    [InlineData("/projects-typo/x")]
+    [InlineData("/setup")]
+    [InlineData("/admin/no-such-page")]
+    public async Task OtherNotFoundResponses_KeepTheirPlainEmpty404(string path)
+    {
+        using var app = new AdminApp();
+        await DemoSite.SeedAsync(app);
+        var owner = await app.SignedInClientAsync(); // an owner exists, so /setup is closed
+
+        // Signed out, /admin/* redirects to the login page as it always did; only the owner reaches the 404.
+        foreach (var client in path.StartsWith("/admin") ? new[] { owner } : new[] { app.NewClient(), owner })
+        {
+            var response = await client.GetAsync(path);
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Empty(await response.Content.ReadAsStringAsync());
+            Assert.Null(response.Content.Headers.ContentType);
+        }
+        Assert.Equal(HttpStatusCode.NotFound, (await app.NewClient().GetAsync("/img/missing.png")).StatusCode);
+    }
+
+    [Fact]
+    public async Task TheNotFoundPage_IsA404ThatSearchEnginesAreToldToIgnore()
     {
         using var app = new AdminApp();
         await DemoSite.SeedAsync(app);
 
-        var response = await app.NewClient().GetAsync(path);
+        var response = await app.NewClient().GetAsync("/not-found");
         var html = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Contains("Page not found", html);
         Assert.Contains("<meta name=\"robots\" content=\"noindex,nofollow\" />", html);
-        Assert.Equal(HttpStatusCode.NotFound, (await app.NewClient().GetAsync("/img/missing.png")).StatusCode);
+        Assert.DoesNotContain("rel=\"canonical\"", html);
+        Assert.DoesNotContain("og:url", html);
     }
 
     [Fact]
