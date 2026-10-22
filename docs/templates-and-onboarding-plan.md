@@ -272,8 +272,8 @@ Split so users are never left with content they cannot edit:
 - **4a (release gate for the wizard):** Experience, Skills, Projects/Work, Certifications.
   List with reorder, create/edit/delete, slug generation, image upload for hero and
   screenshots, validation, unsaved-change warning. **Status: done** (pending independent review); notes below.
-- **4b:** Blog (Markdown editor with preview, drafts), Talks, Testimonials, hero/metrics/about
-  editing, section on/off and ordering.
+- **4b (in progress, split in two PRs):** **4b-1** = Talks and Testimonials editors, then Blog (Markdown editor with safe preview, drafts);
+  **4b-2** (later PR) = hero / metrics / About editing and section on/off and ordering. Breakdown below.
 - **4c:** JSON export/import of all content. This replaces hand-editing seed files and gives
   backup and portability.
 Wizard and 4a ship together; 4b and 4c follow.
@@ -338,6 +338,36 @@ Implementation notes for 4a (decisions worth reviewing):
 - **For 4b / 4c.** 4b adds editors for blog posts, talks and testimonials, hero / metrics / About editing, and section on/off and ordering; the content
   pages, `ContentEditor`, `FormCheck`, the `editor` manifest block and the stamp pattern are reusable for those. 4c (JSON export and import) should
   export `ConcurrencyStamp`-free rows and decide how imported rows interact with the unique name and slug rules above.
+
+### Phase 4b breakdown (status: in progress)
+**Scope split.** 4b-1 (this PR): (a) Talks and Testimonials, then (b) Blog with drafts and a safe Markdown preview, after a review checkpoint. 4b-2 (later PR, only listed
+here): (c) hero / metrics / About editing on the profile, (d) section on/off and ordering (the `Sections` JSON on the profile, with the list-stamp pattern reused
+for the order). Everything follows the 4a pattern (`ContentPageModel` / `ContentListModel` / `ContentDeleteModel`, `FormCheck`, `ContentEditor`, row stamp, list
+stamp, manifest `editor` block, `admin-unsaved.js`).
+
+**Entity and field inventory (what exists today).**
+
+| Section | Entity | Fields | Public order | Notes |
+|---|---|---|---|---|
+| Talks | `Talk` | Title, Type (`Video`/`Talk`), YoutubeId, Event, Date (`DateOnly?`), Url, SortOrder | `Date` descending (not `SortOrder`) | No stamp column yet; no image. YoutubeId goes into an iframe address, so it must be an 11 character id. Seeder key: `Title`. |
+| Testimonials | `Testimonial` | Quote, Author, AuthorTitle, SourceUrl, Relation, Featured, SortOrder | `SortOrder` | No stamp column yet; no image. Quote is rendered as escaped plain text. `Relation` and `Featured` are stored but no public page shows them. Seeder key: `Author` plus the first 40 characters of the quote. |
+| Blog | `BlogPost` | Title, Slug, Description, Date, Tags, Draft, Cover, BodyMarkdown | `Date` descending, drafts hidden | No `SortOrder`, no stamp. Body goes through `Md.ToHtml` (Markdig advanced extensions, **raw HTML allowed**), written for trusted seed files; an editor needs a pipeline that disables HTML and unsafe links. Cover is a path rendered as the share image and the card image. Slug unique index; `Slugs` helper (reserved words). Seeder key: `Slug`. |
+| Hero / metrics / About | `SiteProfile` JSON columns | Hero (4 text), Metrics (value, unit, label), About (headline, paragraphs, value props, currently note, focus) | n/a | Edited through `ProfileEditor` (4b-2). |
+| Sections | `SiteProfile.Sections` JSON | Key, Label, Enabled, SortOrder | nav and home order | 4b-2; needs the template's allowed sections and the guards for required ones. |
+
+**Public surfaces each type feeds (all must follow a save through `ContentEditor.CommitAsync`).** Talks: `/talks` page only (no sitemap entry of their own, no JSON-LD).
+Testimonials: the home page block (`Blocks/_Testimonials`, both layouts that include it), nothing else. Blog: `/blog`, `/blog/{slug}`, `/sitemap.xml` (posts with their
+date), `BlogPosting` and breadcrumb JSON-LD, the share image of the post. The CV and `/cv.pdf` do not use talks, testimonials or posts.
+
+**Manifest `editor` extensions.** `editor.talks` and `editor.testimonials` (and later `editor.blog`) with `itemLabel` and per-field `label`, `hint`, `hidden`, validated
+against the closed field lists in `EditorFields` (required fields can be relabelled but not hidden), added to `template.schema.json`, `TemplateDefinition`,
+`TemplateValidator`, the schema-drift test and both shipped manifests, and described in `docs/template-authoring-guide.md`. Neutral fallbacks live in `EditorFields`.
+
+**Risks.** (1) Talks are ordered by date, so a manual Move would have no public effect: the Talks list has no Move buttons. (2) A YouTube id and every URL end up in
+attributes of public pages: strict allow-lists. (3) The Markdown renderer allows raw HTML today: the Blog editor must not reuse it unchanged (4b-1 part b). (4) The
+Authoritative seeder keys on title / slug / author+quote, so the editors refuse a second entry with the same key. (5) Healthcare keeps Talks and Blog off in its
+public template: the editors stay reachable with the "not shown by your current template" note. (6) New columns are nullable stamps only; the Blog gets no
+position column in 4b-1 because its public order is the date.
 
 ### Phase 5: Remaining templates and archetypes
 Build one archetype per step, then the presets that use it:
