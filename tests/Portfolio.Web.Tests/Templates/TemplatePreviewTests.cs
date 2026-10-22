@@ -206,4 +206,48 @@ public class TemplatePreviewTests
         Assert.Contains("jetbrains-mono-latin", software);
         Assert.DoesNotContain("woff2", healthcare);
     }
+
+    [Fact]
+    public async Task OnlyAGetForAPublicPage_CanPreview()
+    {
+        using var app = new AdminApp();
+        await DemoSite.SeedAsync(app);
+        var owner = await app.SignedInClientAsync();
+
+        // A real POST is not a preview, even with a valid key. The page may refuse it; either way nothing says "preview".
+        var post = await AdminApp.PostFormAsync(owner, "/about?preview=healthcare", null, new Dictionary<string, string>());
+        Assert.False(post.Headers.Contains("X-Robots-Tag"));
+        Assert.Equal("DENY", post.Headers.GetValues("X-Frame-Options").Single());
+        Assert.DoesNotContain("Previewing the ", await post.Content.ReadAsStringAsync());
+        Assert.DoesNotContain("no-store", post.Headers.CacheControl?.ToString() ?? "");
+
+        // HEAD is not a GET for this purpose: no preview headers either.
+        var head = await owner.SendAsync(new HttpRequestMessage(HttpMethod.Head, "/about?preview=healthcare"));
+        Assert.Equal(HttpStatusCode.OK, head.StatusCode);
+        Assert.False(head.Headers.Contains("X-Robots-Tag"));
+        Assert.Equal("DENY", head.Headers.GetValues("X-Frame-Options").Single());
+        Assert.DoesNotContain("no-store", head.Headers.CacheControl?.ToString() ?? "");
+
+        // The same GET does preview, so the checks above are not passing for some other reason.
+        var get = await owner.GetAsync("/about?preview=healthcare");
+        Assert.Contains("noindex", get.Headers.GetValues("X-Robots-Tag").Single());
+    }
+
+    [Theory]
+    [InlineData("/admin?preview=healthcare")]
+    [InlineData("/admin/template?preview=healthcare")]
+    public async Task TheAdminPages_IgnoreThePreviewParameter_AndStayUnframable(string path)
+    {
+        using var app = new AdminApp();
+        await DemoSite.SeedAsync(app);
+        var owner = await app.SignedInClientAsync();
+
+        var response = await owner.GetAsync(path);
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.DoesNotContain("Previewing the ", html);
+        Assert.DoesNotContain("data-template=\"healthcare\"", html);
+        Assert.Equal("DENY", response.Headers.GetValues("X-Frame-Options").Single());
+    }
 }
