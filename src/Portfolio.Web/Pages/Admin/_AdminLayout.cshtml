@@ -43,11 +43,11 @@
     <main id="main-content" class="adm-main">
         @if (!string.IsNullOrEmpty(flash))
         {
-            <div class="adm-flash adm-flash-ok" role="status" aria-live="polite" tabindex="-1" autofocus="@(focusFlash ? "autofocus" : null)">@flash</div>
+            <div class="adm-flash adm-flash-ok" role="status" aria-live="polite" tabindex="-1" autofocus="@(focusFlash && string.IsNullOrEmpty(flashError) ? "autofocus" : null)">@flash</div>
         }
         @if (!string.IsNullOrEmpty(flashError))
         {
-            <div class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus="@(focusFlash && string.IsNullOrEmpty(flash) ? "autofocus" : null)">@flashError</div>
+            <div class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus="@(focusFlash ? "autofocus" : null)">@flashError</div>
         }
         @RenderBody()
     </main>
