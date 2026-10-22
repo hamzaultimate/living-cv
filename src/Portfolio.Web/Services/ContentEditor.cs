@@ -95,8 +95,9 @@ public class ContentEditor
         for (var i = 0; i < ordered.Count; i++)
         {
             if (ordered[i].SortOrder == i + 1) continue;
+            // Only the position changes, so the stamp is left alone: a form open for this row stays valid. The stamp it was loaded with
+            // is still checked by the update, so a position change over a concurrent edit is refused.
             ordered[i].SortOrder = i + 1;
-            Stamp(ordered[i], ordered[i].ConcurrencyStamp);
         }
         return await CommitAsync(ct);
     }
@@ -114,8 +115,16 @@ public class ContentEditor
     /// everything else, such as the images that ship with the site), and a file another row still uses is kept.</summary>
     public async Task DeleteUploadsAsync(IEnumerable<string?> urls, int? exceptProjectId, CancellationToken ct)
     {
-        foreach (var url in urls.Where(u => !string.IsNullOrEmpty(u)).Distinct())
-            if (!await IsUploadReferencedAsync(url!, exceptProjectId, ct)) _uploads.TryDelete(url);
+        // The row change is committed, so this runs to completion whatever the request does, and a failure here must not fail the save.
+        try
+        {
+            foreach (var url in urls.Where(u => !string.IsNullOrEmpty(u)).Distinct())
+                if (!await IsUploadReferencedAsync(url!, exceptProjectId, CancellationToken.None)) _uploads.TryDelete(url);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // A file left behind is harmless; the entry is already saved.
+        }
     }
 
     /// <summary>Removes a file that was stored for a save that did not happen.</summary>

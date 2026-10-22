@@ -17,7 +17,7 @@ public class IndexModel : ContentListModel<Project>
     {
         var meta = new[] { p.Category, p.Featured ? "Shown on the home page" : null, string.IsNullOrWhiteSpace(p.HeroImage) ? null : "Has a cover image",
                            p.Screenshots.Count > 0 ? $"{p.Screenshots.Count} gallery image(s)" : null }.Where(x => !string.IsNullOrWhiteSpace(x));
-        return new ListRow(p.Id, p.Title, $"/projects/{p.Slug}", string.Join(" · ", meta), canUp, canDown, ("Images", $"{ListUrl}/images/{p.Id}"));
+        return new ListRow(p.Id, p.Title, $"/projects/{p.Slug}", string.Join(" · ", meta), canUp, canDown, View.Visible("screenshots") ? ("Images", $"{ListUrl}/images/{p.Id}") : null);
     }
 
     protected override string Describe(Project p) => p.Title;

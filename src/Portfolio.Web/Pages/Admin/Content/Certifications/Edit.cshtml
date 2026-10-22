@@ -8,7 +8,7 @@
 <p class="adm-lede">Appears on your @Model.View.SectionLabel.ToLowerInvariant() page. Changes apply as soon as you save.</p>
 <partial name="_Guidance" model="Model.View" />
 
-<form method="post" asp-page="/Admin/Content/Certifications/Edit" asp-route-id="@Model.Id" novalidate data-unsaved-warning>
+<form method="post" asp-page="/Admin/Content/Certifications/Edit" asp-route-id="@Model.Id" novalidate data-unsaved-warning data-has-errors="@(ViewData.ModelState.IsValid ? "false" : "true")">
     <partial name="_ErrorSummary" />
     <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
     <fieldset class="adm-fieldset">

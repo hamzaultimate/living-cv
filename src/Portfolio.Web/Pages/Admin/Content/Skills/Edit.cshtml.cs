@@ -46,7 +46,7 @@ public class EditModel : ContentPageModel
         }
 
         var s = await Db.Skills.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
-        if (s is null) return ListWithError("That skill no longer exists.");
+        if (s is null) return ListWithError($"That {View.ItemLabelLower} no longer exists.");
         Id = s.Id;
         Form = new SkillForm { Name = s.Name, Group = s.Group, Stamp = s.ConcurrencyStamp };
         return Page();
@@ -63,7 +63,7 @@ public class EditModel : ContentPageModel
         // The seeder identifies a skill by its name, so two skills with one name would break Seed:Mode=Authoritative.
         if (name is not null && c.IsValid(nameof(Form.Name))
             && await Db.Skills.AnyAsync(x => x.Id != id && x.Name.ToLower() == name.ToLower(), ct))
-            c.Error(nameof(Form.Name), $"You already have a skill called \"{name}\". Edit that one instead.");
+            c.Error(nameof(Form.Name), $"You already have a {View.ItemLabelLower} called \"{name}\". Edit that one instead.");
 
         if (!ModelState.IsValid)
         {
@@ -81,7 +81,7 @@ public class EditModel : ContentPageModel
         else
         {
             var found = await Db.Skills.FirstOrDefaultAsync(x => x.Id == id, ct);
-            if (found is null) return ListWithError("That skill was removed in another tab, so your changes were not saved.");
+            if (found is null) return ListWithError($"That {View.ItemLabelLower} was removed in another tab, so your changes were not saved.");
             row = found;
             Writer.Stamp(row, Form.Stamp);
             if (row.Group != group)

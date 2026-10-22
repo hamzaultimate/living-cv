@@ -42,7 +42,7 @@ public class EditModel : ContentPageModel
         if (id is null) return Page();
 
         var e = await Db.Experiences.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
-        if (e is null) return ListWithError("That role no longer exists.");
+        if (e is null) return ListWithError($"That {View.ItemLabelLower} no longer exists.");
         Id = e.Id;
         Form = new ExperienceForm
         {
@@ -60,6 +60,9 @@ public class EditModel : ContentPageModel
 
         var company = c.Text(nameof(Form.Company), "company", Form.Company, 200, required: true);
         var title = c.Text(nameof(Form.Title), "title", Form.Title, 200, required: true);
+        // The seeder identifies a role by "company|title", so a bar in either would let two different roles share a key.
+        if (company?.Contains('|') == true) c.Error(nameof(Form.Company), $"{View.Label("company")} cannot contain the | character.");
+        if (title?.Contains('|') == true) c.Error(nameof(Form.Title), $"{View.Label("title")} cannot contain the | character.");
         var start = c.Text(nameof(Form.Start), "start", Form.Start, 30, required: true);
         var summary = c.Paragraph(nameof(Form.Summary), "summary", Form.Summary, SummaryMax, required: true);
         PartialDate? startDate = null;
@@ -102,7 +105,7 @@ public class EditModel : ContentPageModel
         else
         {
             var found = await Db.Experiences.FirstOrDefaultAsync(x => x.Id == id, ct);
-            if (found is null) return ListWithError("That role was removed in another tab, so your changes were not saved.");
+            if (found is null) return ListWithError($"That {View.ItemLabelLower} was removed in another tab, so your changes were not saved.");
             row = found;
             Writer.Stamp(row, Form.Stamp);
         }
@@ -114,6 +117,8 @@ public class EditModel : ContentPageModel
         row.Summary = summary!;
         if (View.Visible("current")) row.Current = current;
         if (View.Visible("end")) row.End = row.Current && View.Visible("current") ? null : end;
+        // A template that hides the "current" box can still end a role: giving an end date clears a stored current flag; otherwise it is left as it was.
+        if (!View.Visible("current") && View.Visible("end") && end is not null) row.Current = false;
         if (View.Visible("highlights")) row.Highlights = highlights;
         if (View.Visible("tech")) row.Tech = tech;
 

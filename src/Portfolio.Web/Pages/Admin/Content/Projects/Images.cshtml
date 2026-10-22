@@ -73,7 +73,7 @@
 
 <section class="adm-card" aria-labelledby="add-heading">
     <h2 id="add-heading">Add an image</h2>
-    <form method="post" enctype="multipart/form-data" asp-page="/Admin/Content/Projects/Images" asp-page-handler="Upload" asp-route-id="@Model.Id" novalidate>
+    <form method="post" enctype="multipart/form-data" asp-page="/Admin/Content/Projects/Images" asp-page-handler="Upload" asp-route-id="@Model.Id" novalidate data-unsaved-warning data-has-errors="@(ViewData.ModelState.IsValid ? "false" : "true")">
         <input type="hidden" name="stamp" value="@Model.Stamp" />
         <div class="adm-field">
             <label for="Image">Image file</label>
@@ -89,3 +89,6 @@
         <button type="submit" class="adm-btn adm-btn-primary">Add image</button>
     </form>
 </section>
+@section Scripts {
+    <script src="~/js/admin-unsaved.js" defer asp-append-version="true"></script>
+}

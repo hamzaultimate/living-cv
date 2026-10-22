@@ -177,10 +177,10 @@ public static class AdminAuth
             await next();
         });
 
-    /// <summary>Only the content edit forms (<c>/admin/content/{section}/edit</c>) load a script: a first-party file that warns about unsaved changes.</summary>
+    /// <summary>Only the content edit forms and the project images page (<c>/admin/content/{section}/edit</c>, <c>/projects/images/{id}</c>) load a script: a first-party file that warns about unsaved changes.</summary>
     internal static bool AllowsScript(PathString path) =>
         path.StartsWithSegments(ContentPath, StringComparison.OrdinalIgnoreCase)
-        && path.Value!.Split('/', StringSplitOptions.RemoveEmptyEntries).Skip(3).FirstOrDefault()?.Equals("edit", StringComparison.OrdinalIgnoreCase) == true;
+        && path.Value!.Split('/', StringSplitOptions.RemoveEmptyEntries).Skip(3).FirstOrDefault() is { } page && (page.Equals("edit", StringComparison.OrdinalIgnoreCase) || page.Equals("images", StringComparison.OrdinalIgnoreCase));
 
     private static bool IsPrivateArea(PathString path) =>
         path.StartsWithSegments(AdminPath, StringComparison.OrdinalIgnoreCase)

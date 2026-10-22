@@ -44,12 +44,14 @@ public class ImagesModel : ContentPageModel
     public async Task<IActionResult> OnGetAsync(int id, CancellationToken ct)
     {
         await LoadViewAsync();
+        if (!View.Visible("screenshots")) return ListWithError("Gallery images are not used by your template.");
         return await LoadAsync(id, ct) ? Page() : ListWithError($"That {View.ItemLabelLower} no longer exists.");
     }
 
     public async Task<IActionResult> OnPostUploadAsync(int id, string? stamp, CancellationToken ct)
     {
         await LoadViewAsync();
+        if (!View.Visible("screenshots")) return ListWithError("Gallery images are not used by your template.");
         var project = await Db.Projects.FirstOrDefaultAsync(p => p.Id == id, ct);
         if (project is null) return ListWithError($"That {View.ItemLabelLower} no longer exists.");
 
@@ -105,6 +107,7 @@ public class ImagesModel : ContentPageModel
     public async Task<IActionResult> OnPostRemoveAsync(int id, string? stamp, string? url, CancellationToken ct)
     {
         await LoadViewAsync();
+        if (!View.Visible("screenshots")) return ListWithError("Gallery images are not used by your template.");
         var project = await Db.Projects.FirstOrDefaultAsync(p => p.Id == id, ct);
         var image = project?.Screenshots.FirstOrDefault(s => s.Url == url);
         if (project is null || image is null) return ListWithError("That image was already removed.");
@@ -121,6 +124,7 @@ public class ImagesModel : ContentPageModel
     public async Task<IActionResult> OnPostMoveAsync(int id, string? stamp, string? url, string? direction, CancellationToken ct)
     {
         await LoadViewAsync();
+        if (!View.Visible("screenshots")) return ListWithError("Gallery images are not used by your template.");
         var project = await Db.Projects.FirstOrDefaultAsync(p => p.Id == id, ct);
         var list = project?.Screenshots.ToList();
         var index = list?.FindIndex(s => s.Url == url) ?? -1;

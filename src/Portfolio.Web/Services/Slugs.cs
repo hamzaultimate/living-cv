@@ -19,7 +19,7 @@ public static partial class Slugs
         "feed", "rss", "sitemap", "robots", "cv", "login", "logout", "setup", "health", "uploads", "img", "css", "js",
     };
 
-    [GeneratedRegex("^[a-z0-9]+(-[a-z0-9]+)*$", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    [GeneratedRegex("^[a-z0-9]+(-[a-z0-9]+)*\\z", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
     private static partial Regex Pattern();
 
     /// <summary>True for lower-case letters and digits separated by single hyphens, within the column length.</summary>

@@ -3,7 +3,8 @@
 (function () {
   var form = document.querySelector('form[data-unsaved-warning]');
   if (!form) return;
-  var dirty = false;
+  // A form shown again after a refused save holds input that was never saved, so it starts out dirty.
+  var dirty = form.getAttribute('data-has-errors') === 'true';
   var mark = function () { dirty = true; };
   form.addEventListener('input', mark);
   form.addEventListener('change', mark);

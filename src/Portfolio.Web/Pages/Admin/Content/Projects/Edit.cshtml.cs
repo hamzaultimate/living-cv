@@ -191,6 +191,8 @@ public class EditModel : ContentPageModel
         var slugs = await Db.Projects.Where(p => p.Id != (stored == null ? 0 : stored.Id)).Select(p => p.Slug).ToListAsync(ct);
         var taken = new HashSet<string>(slugs, StringComparer.OrdinalIgnoreCase);
 
+        // An address the project already has is kept exactly as stored, however old: it is only checked when the owner changes it.
+        if (stored is not null && ContentRules.Trim(Form.Slug) == stored.Slug) return stored.Slug;
         var typed = ContentRules.Trim(Form.Slug)?.ToLowerInvariant();
         if (typed is null)
         {

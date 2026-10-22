@@ -11,7 +11,7 @@
 <p class="adm-lede">Appears on your @v.SectionLabel.ToLowerInvariant() page and, if shown on the home page, there too. Changes apply as soon as you save.</p>
 <partial name="_Guidance" model="v" />
 
-<form method="post" enctype="multipart/form-data" asp-page="/Admin/Content/Projects/Edit" asp-route-id="@Model.Id" novalidate data-unsaved-warning>
+<form method="post" enctype="multipart/form-data" asp-page="/Admin/Content/Projects/Edit" asp-route-id="@Model.Id" novalidate data-unsaved-warning data-has-errors="@(ViewData.ModelState.IsValid ? "false" : "true")">
     <partial name="_ErrorSummary" />
     <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
 
