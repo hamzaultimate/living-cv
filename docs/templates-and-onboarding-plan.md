@@ -196,6 +196,8 @@ Implementation notes (decisions worth reviewing):
   /cv.pdf and /og.png keep the software look (per-template CV output is Phase 6).
 
 ### Phase 3: 4-step onboarding wizard
+**Status: done** (pending independent review).
+
 Shown on first run (after setup key) and re-runnable from admin.
 1. **Template**: cards grouped by profession with thumbnail preview and "what's included".
 2. **Basics**: name, professional title, email, location, short summary (title and summary are
@@ -206,6 +208,52 @@ Shown on first run (after setup key) and re-runnable from admin.
 Progress is saved per step, so a refresh does not lose work. Keyboard and screen-reader
 friendly, works on mobile.
 - Exit criteria: fresh DB to a live, correct site in under two minutes, no config file edits.
+
+Implementation notes (decisions worth reviewing):
+- **Routes.** `/admin/welcome` (template), `/basics`, `/photo`, `/review`, plus owner-only `/admin/welcome/thumb/{key}` and
+  `/admin/welcome/draft-photo`. All sit under the deny-by-default admin folder; every POST is antiforgery-protected with a body limit; a GET
+  only reads. `/setup` now redirects to the sign-in page with `ReturnUrl=/admin/welcome`, so the first sign-in lands in the wizard (setup itself
+  still does not sign anyone in). The existing exact-redirect assertion in `SetupTests` and the page-to-file mapping in `AdminAccessTests`
+  were updated for this; the route enumeration now lists every wizard route.
+- **"Wizard completed"** is `SiteProfile.OnboardingCompletedAt`, a nullable timestamp (also the concurrency token for publishing). The migration
+  backfills it for any profile row that exists, so deployed sites are not sent into the wizard. A site whose profile row did not exist at migration
+  time (an upgrade straight from before Phase 0, or a brand new database) counts as unfinished: it only gets a dashboard prompt.
+- **The admin shell does not redirect an unfinished wizard.** Redirecting could trap an owner and would break every admin test; the dashboard shows
+  "Continue setup" / "Skip setup" instead, and no other page is blocked.
+- **Draft** is a JSON column (`OnboardingDraft`) on the existing profile row (D3 kept, additive migration with `Location`). `ToOptions` ignores it, so
+  the provider, public pages, sitemap, JSON-LD, `/cv.pdf` and `/og.png` cannot see it. Draft saves deliberately do not prime the provider or evict the
+  output cache (nothing public changed); publish does both through `ProfileEditor.AfterCommitAsync`.
+- **Publish** is one transaction: profile row first (so an overlapping publish blocks on it and fails the concurrency check), then sample rows, then
+  commit. The draft is cleared in the same save, so a double click or replay finds no draft and changes nothing. A failure part-way rolls back the
+  profile and rows, removes the promoted photo copy and keeps the draft.
+- **Starter content** is seed-if-empty per table and never updates or deletes (the seeder is called with `IfEmpty` regardless of `Seed:Mode`). Sample
+  content brings rows only, never a profile identity or profile text. Software has no `starter.json`: its manifest says `"starter": {"source": "seed"}`,
+  which loads the built-in demo persona through the existing seeder, so nothing is duplicated. On a non-empty site the tables that already have rows are
+  skipped and the review step says which. The software sample rows are the existing fictional persona; they are not marked "sample" inline (the
+  seed files are covered by the parity snapshots), the wizard labels them fictional.
+- **Start-up seeding is deferred on a claimable, unfinished install** (a `Setup:Key` is set or an owner exists, and the wizard is not finished):
+  otherwise the first start would already have loaded the demo persona and "blank" could not be honest. Everything else seeds as before. Skipping the
+  wizard on a first run loads the demo content into empty tables, which restores exactly what a new install showed before the wizard.
+- **First-run publish replaces the placeholder persona** from the `Site` config (hero, metrics, About, links, phone, light photo) with a plain hero built
+  from the owner's answers (title as eyebrow, name as headline, summary as lede) and the summary as the first About paragraph. A re-run changes only
+  template, name, short name, title (and the role line when the title changed), email, location, summary, address, accent and photo.
+- **Photo.** Uploads use `ImageProcessor` and `UploadStore`. A draft photo lives in a hidden draft area (no public URL) and is served to the owner only;
+  publish copies it to a public file, then deletes the draft and the replaced upload; stale drafts are purged on later uploads. `/uploads` now serves
+  flat files only (`UploadFileProvider`), because the physical provider's dot-prefix exclusion does not hide a file inside a dotted folder. Both theme
+  photo fields are set, since the pages hide the dark photo in the light theme when no light photo exists. There is no client-side crop: the admin policy
+  allows no script, so the step is a server-rendered preview and the site shows a centred circle.
+- **Draft preview** reuses `?preview=<key>` with `&draft=1`: same owner-session check, noindex, no-store, no analytics, no canonical. A wrapper around the
+  profile provider returns the draft identity only when the middleware set it for that request after the session check; sitemap, CV and share image never
+  go through the preview middleware. The preview shows identity, template, accent and photo; sample rows appear at publish.
+- **Accent.** `theme.accents` in the manifest is the allow-list; the stored `AccentColor` is the key, and a key the template does not list is ignored at
+  render. One `<style>` sets only `--c-accent` and `--c-accent-strong` (specificity raised above the theme blocks); nothing is emitted when unset, so
+  software output is byte-identical (the parity snapshots are untouched). Contrast of every tone is tested against the template's own backgrounds.
+- **Suggestions and thumbnails come from the manifest** (`heroSuggestions`, `preview.png` by fixed name through the catalog), validated strictly and
+  described in the schema and the authoring guide. Suggested text is published as written if the owner keeps it, so it is written to stand alone.
+- **Contact page.** Location is shown there and in Person markup only when set, and the "Online" card is hidden when there are no links (software output
+  is unchanged because the demo persona has links).
+- **Not done / limits.** No crop. No per-step "back" without a full page load. Sample rows are not previewed before publish. Two simultaneous publishes are
+  covered by the concurrency token and a unit-level test, not by a parallel HTTP test.
 
 ### Phase 4: Content management UI (replaces seed editing)
 Split so users are never left with content they cannot edit:
