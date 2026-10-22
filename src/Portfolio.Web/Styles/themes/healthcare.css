@@ -9,6 +9,8 @@
   --radius-md: 0.625rem;
 }
 
+/* Dark is the default look (the base tokens do the same on :root), so it also applies before the theme script has set data-theme or when it cannot run. */
+:root[data-template="healthcare"],
 :root[data-template="healthcare"][data-theme="dark"] {
   --c-bg: 10 20 24;
   --c-surface: 15 29 34;

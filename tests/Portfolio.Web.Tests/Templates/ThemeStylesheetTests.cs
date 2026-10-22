@@ -116,6 +116,20 @@ public class ThemeStylesheetTests
     }
 
     [Fact]
+    public void EveryThemeDarkBlock_AlsoAppliesWhenThePageHasNoDataTheme()
+    {
+        var css = Css;
+
+        foreach (var (key, theme) in Themes())
+        {
+            var source = File.ReadAllText(Path.Combine(Web, "Styles", "themes", theme + ".css"));
+            // The base look treats dark as the default, so a themed page without data-theme must not fall back to the base colours.
+            Assert.Matches($@":root\[data-template=""{Regex.Escape(theme)}""\],\s*:root\[data-template=""{Regex.Escape(theme)}""\]\[data-theme=""dark""\]\s*\{{", source);
+            Assert.Matches($@"\[data-template=[""']?{Regex.Escape(theme)}[""']?\],:root\[data-template=[""']?{Regex.Escape(theme)}[""']?\]\[data-theme=[""']?dark", css);
+        }
+    }
+
+    [Fact]
     public void TheBaseLookIsStillDefinedOnRoot_SoSoftwareNeedsNoThemeBlock()
     {
         var css = Css;
