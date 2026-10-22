@@ -108,6 +108,36 @@
           "hidden": true
         }
       }
+    },
+    "talks": {
+      "itemLabel": "Presentation",
+      "fields": {
+        "title": {
+          "label": "Presentation title",
+          "hint": "Plain text. No patient information."
+        },
+        "event": {
+          "label": "Meeting or conference"
+        },
+        "youtubeId": {
+          "hidden": true
+        }
+      }
+    },
+    "testimonials": {
+      "itemLabel": "Reference",
+      "fields": {
+        "quote": {
+          "label": "Reference text",
+          "hint": "Plain text. Only with the referee's permission, and never any patient information."
+        },
+        "author": {
+          "label": "Referee"
+        },
+        "authorTitle": {
+          "label": "Referee's role and workplace"
+        }
+      }
     }
   },
   "starter": { "file": "starter.json" },

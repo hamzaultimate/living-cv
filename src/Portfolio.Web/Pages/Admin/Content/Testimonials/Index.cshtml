@@ -1,0 +1,7 @@
+@page "/admin/content/testimonials"
+@model Portfolio.Web.Pages.Admin.Content.Testimonials.IndexModel
+@{
+    ViewData["Title"] = Model.View.SectionLabel;
+}
+<partial name="_List" model="Model" />
+<p class="adm-hint">They appear in a block on your home page, in this order.</p>

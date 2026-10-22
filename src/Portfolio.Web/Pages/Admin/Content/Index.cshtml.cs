@@ -30,6 +30,8 @@ public class IndexModel : AdminPageModel
             [SectionRegistry.Skills] = await _db.Skills.CountAsync(ct),
             [SectionRegistry.Projects] = await _db.Projects.CountAsync(ct),
             [SectionRegistry.Certifications] = await _db.Certifications.CountAsync(ct),
+            [SectionRegistry.Talks] = await _db.Talks.CountAsync(ct),
+            [SectionRegistry.Testimonials] = await _db.Testimonials.CountAsync(ct),
         };
         Cards = EditorFields.Sections.Select(s =>
         {

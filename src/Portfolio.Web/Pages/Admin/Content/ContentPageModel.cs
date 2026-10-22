@@ -52,6 +52,9 @@ public interface IContentList
     string ListUrl { get; }
     int Count { get; }
 
+    /// <summary>False for a section whose public order comes from the entries themselves (a date), so a manual order would change nothing: the list then has no Move buttons.</summary>
+    bool CanReorder { get; }
+
     /// <summary>The stamp of the list as loaded; every Move button posts it back.</summary>
     string ListStamp { get; }
     IReadOnlyList<ListGroup> Groups { get; }
@@ -142,6 +145,11 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
     protected virtual string? GroupOf(T row) => null;
     protected abstract string Describe(T row);
 
+    /// <summary>Override with false when the public page orders the entries itself (by date); there is then nothing for Move to do.</summary>
+    protected virtual bool Reorderable => true;
+
+    public bool CanReorder => Reorderable;
+
     public int Count { get; private set; }
     public string ListStamp { get; private set; } = ContentEditor.InitialListStamp;
     public IReadOnlyList<ListGroup> Groups { get; private set; } = [];
@@ -157,6 +165,7 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
     public async Task<IActionResult> OnPostMoveAsync(int id, string? direction, string? listStamp, CancellationToken ct)
     {
         await LoadViewAsync();
+        if (!Reorderable) return ListWithError($"The {View.SectionLabel.ToLowerInvariant()} list is ordered automatically, so it cannot be reordered by hand.");
         var delta = direction switch { "up" => -1, "down" => 1, _ => 0 };
         if (delta == 0) return ListWithError("Choose up or down.");
 

@@ -47,6 +47,31 @@ public static partial class ContentRules
         && !string.IsNullOrEmpty(uri.Host)
         && string.IsNullOrEmpty(uri.UserInfo);
 
+    /// <summary>
+    /// The 11 character video id from a YouTube address (watch, youtu.be, embed, shorts) or from a bare id; null for anything else. The id goes into the
+    /// address of an embedded frame, so only the ids that YouTube itself uses are accepted: letters, digits, <c>_</c> and <c>-</c>.
+    /// </summary>
+    public static string? YoutubeId(string? value)
+    {
+        var t = Trim(value);
+        if (t is null || t.Length > 200 || HasControlCharacters(t)) return null;
+        if (IsYoutubeId(t)) return t;
+        if (!Uri.TryCreate(t, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp || !string.IsNullOrEmpty(uri.UserInfo)) return null;
+        var host = uri.Host.ToLowerInvariant();
+        string? candidate = null;
+        if (host is "youtu.be") candidate = uri.AbsolutePath.Trim('/').Split('/')[0];
+        else if (host is "youtube.com" or "www.youtube.com" or "m.youtube.com" or "youtube-nocookie.com" or "www.youtube-nocookie.com")
+        {
+            var parts = uri.AbsolutePath.Trim('/').Split('/');
+            if (parts.Length == 2 && parts[0] is "embed" or "shorts" or "live") candidate = parts[1];
+            else if (parts.Length == 1 && parts[0] == "watch")
+                candidate = uri.Query.TrimStart('?').Split('&').Select(p => p.Split('=', 2)).Where(p => p.Length == 2 && p[0] == "v").Select(p => p[1]).FirstOrDefault();
+        }
+        return candidate is not null && IsYoutubeId(candidate) ? candidate : null;
+    }
+
+    private static bool IsYoutubeId(string value) => value.Length == 11 && value.All(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-');
+
     /// <summary>A site-relative address such as <c>/img/badge.svg</c>: one leading slash, no scheme, no backslash, no dot segments.</summary>
     public static bool IsLocalPath(string? value) =>
         !string.IsNullOrWhiteSpace(value)

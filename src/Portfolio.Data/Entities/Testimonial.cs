@@ -1,7 +1,7 @@
 namespace Portfolio.Data.Entities;
 
 /// <summary>A testimonial/recommendation — e.g. from LinkedIn, a colleague, or a client.</summary>
-public class Testimonial
+public class Testimonial : IOrderedContent
 {
     public int Id { get; set; }
     public required string Quote { get; set; }
@@ -18,4 +18,7 @@ public class Testimonial
 
     public bool Featured { get; set; }
     public int SortOrder { get; set; }
+
+    /// <summary>Changes on every admin write; the concurrency token (see <see cref="IOrderedContent"/>).</summary>
+    public string? ConcurrencyStamp { get; set; }
 }

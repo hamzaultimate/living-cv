@@ -815,6 +815,102 @@
               }
             }
           }
+        },
+        "talks": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The talks editor.",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one entry is called in the editor."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Required fields (name, title, summary and the like) can be relabelled but not hidden.",
+              "propertyNames": {
+                "enum": [
+                  "title",
+                  "type",
+                  "event",
+                  "date",
+                  "youtubeId",
+                  "url"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "testimonials": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The testimonials editor.",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one entry is called in the editor."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Required fields (name, title, summary and the like) can be relabelled but not hidden.",
+              "propertyNames": {
+                "enum": [
+                  "quote",
+                  "author",
+                  "authorTitle",
+                  "sourceUrl"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },

@@ -165,7 +165,7 @@ public class ContentAccessibilityTests
         Assert.Contains("<a href=\"/admin/content\" aria-current=\"page\">Content</a>", list);
         Assert.Contains("<a href=\"/admin/content\">Content</a>", dashboard);
         Assert.Contains("href=\"/admin/content\"", dashboard);
-        Assert.Contains("Add, edit, reorder and remove your experience, skills, work and certifications.", dashboard);
+        Assert.Contains("Add, edit, reorder and remove your experience, skills, work, certifications, talks and testimonials.", dashboard);
     }
 
     [Fact]

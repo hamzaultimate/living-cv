@@ -47,6 +47,19 @@
     },
     "certifications": {
       "itemLabel": "Certification"
+    },
+    "talks": {
+      "itemLabel": "Talk",
+      "fields": {
+        "event": { "label": "Conference or meetup" },
+        "youtubeId": { "label": "YouTube video" }
+      }
+    },
+    "testimonials": {
+      "itemLabel": "Testimonial",
+      "fields": {
+        "authorTitle": { "label": "Role and company" }
+      }
     }
   },
   "starter": { "source": "seed" },

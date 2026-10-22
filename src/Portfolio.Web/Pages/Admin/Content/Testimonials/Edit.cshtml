@@ -1,0 +1,28 @@
+@page "/admin/content/testimonials/edit/{id:int?}"
+@model Portfolio.Web.Pages.Admin.Content.Testimonials.EditModel
+@{
+    ViewData["Title"] = (Model.IsNew ? "Add " : "Edit ") + Model.View.ItemLabelLower;
+    var f = Model.Form;
+}
+<h1 id="page-heading">@(Model.IsNew ? "Add" : "Edit") @Model.View.ItemLabelLower</h1>
+<p class="adm-lede">Appears in the @Model.View.SectionLabel.ToLowerInvariant() block on your home page. Changes apply as soon as you save.</p>
+<partial name="_Guidance" model="Model.View" />
+
+<form method="post" asp-page="/Admin/Content/Testimonials/Edit" asp-route-id="@Model.Id" novalidate data-unsaved-warning data-has-errors="@(ViewData.ModelState.IsValid ? "false" : "true")">
+    <partial name="_ErrorSummary" />
+    <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
+    <fieldset class="adm-fieldset">
+        <legend>@Model.View.ItemLabel</legend>
+        <partial name="_Field" model="@(Model.Field("quote", nameof(f.Quote), f.Quote, FieldKind.Textarea, EditModel.QuoteMax, rows: 5))" />
+        <partial name="_Field" model="@(Model.Field("author", nameof(f.Author), f.Author, maxLength: EditModel.AuthorMax, autocomplete: "off"))" />
+        <partial name="_Field" model="@(Model.Field("authorTitle", nameof(f.AuthorTitle), f.AuthorTitle, maxLength: EditModel.AuthorTitleMax, autocomplete: "off"))" />
+        <partial name="_Field" model="@(Model.Field("sourceUrl", nameof(f.SourceUrl), f.SourceUrl, FieldKind.Url, EditModel.UrlMax))" />
+    </fieldset>
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @Model.View.ItemLabelLower</button>
+        <a class="adm-btn" href="@Model.ListUrl">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+    <script src="~/js/admin-unsaved.js" defer asp-append-version="true"></script>
+}

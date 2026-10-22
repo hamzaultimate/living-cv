@@ -174,7 +174,7 @@ public class ExperienceEditorTests
         Assert.True(rows[0].SortOrder < 1);
         // Every row that was there is byte-for-byte unchanged (position and stamp included): only one row was added.
         var after = (await ContentFlow.SnapshotAsync(app)).Split('\n').ToList();
-        Assert.Equal(before, after.Where(l => !l.Contains("|Newest|")).ToList());
+        Assert.Equal(before, after.Where(l => !l.Contains("|Newest|") && !l.StartsWith("L")).ToList()); // the list stamp row (L...) is the one other thing a write may add
 
         var list = await owner.GetStringAsync(ContentFlow.Experience);
         Assert.True(At(list, "Newest") < At(list, "Oldest"));

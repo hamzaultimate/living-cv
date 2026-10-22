@@ -114,12 +114,14 @@ public class PortfolioDbContext : DbContext
 
         b.Entity<Talk>(e =>
         {
+            e.Property(x => x.ConcurrencyStamp).HasMaxLength(IOrderedContent.StampLength).IsConcurrencyToken();
             e.Property(x => x.Title).HasMaxLength(200);
             e.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
         });
 
         b.Entity<Testimonial>(e =>
         {
+            e.Property(x => x.ConcurrencyStamp).HasMaxLength(IOrderedContent.StampLength).IsConcurrencyToken();
             e.Property(x => x.Author).HasMaxLength(120);
             e.Property(x => x.AuthorTitle).HasMaxLength(200);
             e.Property(x => x.Quote).HasMaxLength(2000);

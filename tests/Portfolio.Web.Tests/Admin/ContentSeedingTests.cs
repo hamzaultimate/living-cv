@@ -17,7 +17,7 @@ public class ContentSeedingTests
         return await FirstRun.SeedAtStartupAsync(db, SeedDir, SeedMode.IfEmpty, keyConfigured);
     }
 
-    /// <summary>Removes every row of the four content tables through the confirmation pages, the way an owner would.</summary>
+    /// <summary>Removes every row of the content tables through the confirmation pages, the way an owner would.</summary>
     private static async Task RemoveEverythingAsync(AdminApp app, HttpClient owner)
     {
         using var db = app.CreateDbContext();
@@ -25,6 +25,8 @@ public class ContentSeedingTests
             .Concat((await db.Skills.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Skills}/delete/{i}"))
             .Concat((await db.Projects.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Projects}/delete/{i}"))
             .Concat((await db.Certifications.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Certifications}/delete/{i}"))
+            .Concat((await db.Talks.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Talks}/delete/{i}"))
+            .Concat((await db.Testimonials.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Testimonials}/delete/{i}"))
             .ToList();
         foreach (var path in targets)
         {
