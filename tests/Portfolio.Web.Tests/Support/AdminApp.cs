@@ -41,7 +41,7 @@ internal sealed class OrderedSaveHook : Microsoft.EntityFrameworkCore.Diagnostic
         if (_app.BeforeOrderedSave is not null && eventData.Context is { } ctx)
         {
             ctx.ChangeTracker.DetectChanges();
-            var writesOrder = ctx.ChangeTracker.Entries().Any(e => e.Entity is Portfolio.Data.Entities.IOrderedContent && e.State is EntityState.Added or EntityState.Modified);
+            var writesOrder = ctx.ChangeTracker.Entries().Any(e => e.Entity is Portfolio.Data.Entities.IStampedContent && e.State is EntityState.Added or EntityState.Modified);
             var hook = writesOrder ? Interlocked.Exchange(ref _app.BeforeOrderedSaveField, null) : null;
             if (hook is not null) await hook();
         }

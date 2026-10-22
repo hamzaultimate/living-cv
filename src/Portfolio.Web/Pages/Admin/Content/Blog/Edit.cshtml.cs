@@ -36,7 +36,7 @@ public partial class EditModel : ContentPageModel
     private static readonly DateOnly EarliestDate = new(1990, 1, 1);
     private static readonly DateOnly LatestDate = new(2100, 12, 31);
 
-    [GeneratedRegex(@"^[\p{L}\p{N}][\p{L}\p{N} .+#&_-]*\z", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    [GeneratedRegex(@"^[\p{L}\p{N}.+#][\p{L}\p{N} .+#&_-]*\z", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
     private static partial Regex TagPattern();
 
     private readonly ImageProcessor _processor;
