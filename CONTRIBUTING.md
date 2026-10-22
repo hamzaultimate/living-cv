@@ -47,6 +47,11 @@ describe what you changed and why.
   that must be public inside that folder needs an explicit `[AllowAnonymous]`; `AdminAccessTests` fails on
   any other unauthenticated admin route. Admin and setup pages are styled by `wwwroot/css/admin.css`, not
   Tailwind (they are excluded from the Tailwind scan so they never change the public stylesheet).
+- The onboarding wizard (`Pages/Admin/Welcome`) keeps its answers as a draft on the profile row (`OnboardingDraft`), which
+  nothing public reads, and applies them only in `OnboardingService.PublishAsync` (one transaction, then `ProfileEditor.AfterCommitAsync`).
+  Sample content is seed-if-empty per table and must never update or delete a row. Unpublished photos live in the draft area of
+  `UploadStore` (no public URL; `/uploads` serves flat files only). Wizard suggestions, accents and thumbnails come from the template
+  manifest, never from Razor.
 - Never trust an upload: go through `ImageProcessor` and `UploadStore`, which sniff the bytes, re-encode,
   and generate the file name. The owner account is created only by `/setup` and reset only by
   `dotnet run --project src/Portfolio.Web -- reset-owner`; do not add other account paths.

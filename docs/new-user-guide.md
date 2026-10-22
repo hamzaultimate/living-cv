@@ -24,7 +24,9 @@ dotnet run --project src/Portfolio.Web
 The first run will:
 
 - apply EF Core migrations
-- seed the demo content into any empty table (existing rows are never changed)
+- seed the demo content into any empty table (existing rows are never changed). The one exception is a new
+  install that can still be claimed (a `Setup:Key` is set and the setup wizard is not finished): there the demo
+  content waits for the wizard, so "start blank" really is blank (see "First run" below)
 - launch over HTTPS by default at a local URL such as `https://localhost:7239`
 
 Open the printed URL in your browser. The app also exposes health endpoints at:
@@ -51,10 +53,48 @@ A fresh deployment has no owner. The first person with the **setup key** claims 
    characters) and submit. Wrong keys are throttled: after 5 wrong guesses `/setup` refuses everything,
    even the right key, for 15 minutes. That count is kept in the app's memory, shared by all visitors, so
    restarting the app clears it; it is a brake on guessing, not a permanent lock.
-3. Sign in at `/admin/login`. From `/admin` you can edit the profile (`/admin/profile`) and the
+3. You are sent to the sign-in page and, once signed in, straight into the **setup wizard** (see below).
+   Afterwards, from `/admin` you can edit the profile (`/admin/profile`) and the
    photo (`/admin/photo`). Saving a profile takes effect immediately, including the CV PDF, the
    share image and the sitemap.
 4. Remove `Setup__Key` from the server when you are done; it has no further use.
+
+### The setup wizard
+
+The wizard at `/admin/welcome` takes about two minutes and needs no config file edits. Every step is saved as you
+go, so a refresh, a sign-out or a new browser picks up where you left off. **Nothing is public until you press
+Publish**: the draft is stored apart from the live profile, and the public pages, sitemap, CV PDF and share image keep
+showing the placeholder site meanwhile.
+
+1. **Template.** Cards grouped by profession show a thumbnail, the pages the template has, what a piece of work is
+   called, whether sample content is available and any guidance (Healthcare reminds you never to publish patient data).
+2. **Basics.** Name, professional title, email, location (optional) and a short summary. Title and summary start
+   from the template's suggestion; they are published as written, so edit them.
+3. **Photo.** Optional. The photo goes through the same checks as the Photo page (JPEG, PNG or WebP, re-encoded,
+   metadata removed) and is kept in a private area until you publish. There is no cropping step: the site shows
+   the photo as a circle centred on the picture. Without a photo your initials are shown.
+4. **Review and launch.** A live preview of your draft (owner-only, never indexed or cached, no analytics), the
+   address your site will use, an accent colour from the template's list, and starting content: **blank**, or **sample
+   content** (fictional entries so you can see a full site). Press **Publish my site**.
+
+Publishing applies everything in one transaction and refreshes the sitemap, CV and share image at once. Pressing it
+twice, or replaying the request, changes nothing the second time.
+
+On the first run, publishing replaces the placeholder profile that came from the `Site` section of
+`appsettings.json` (hero text, metrics, About text, links, phone) with your answers: those parts stay empty until you
+fill them in `/admin/profile`. If you edited the `Site` section before the first run and want to keep those values,
+choose **Skip setup** instead. Skipping keeps the placeholder profile exactly as it is and loads the demo content into
+any empty table, which is what a new install did before the wizard existed.
+
+**Sample content never overwrites or deletes anything.** It is added only to tables that have no rows at all; a table
+that already has content is left exactly as it is, and the review step says which ones. For Software & IT the sample
+is the built-in demo persona (the seed files); for Healthcare it is the template's fictional `starter.json`. Sample
+rows come without the sample persona's profile text: your name, title and summary are always your own.
+
+Run the wizard again any time from the dashboard (**Setup wizard**). A re-run starts from what the site says now,
+changes only the template, your basics, address, accent colour and photo, and never touches your hero, About text,
+metrics or content rows. A site that existed before the wizard was added counts as already set up and is not sent
+into it; an unfinished wizard only shows a prompt on the dashboard and never blocks any other admin page.
 
 Sign-in locks for 15 minutes after 5 consecutive failures (any user name counts, because there is
 only one account). Sessions last 30 minutes of inactivity and 12 hours at most; signing out also ends
@@ -163,7 +203,7 @@ These values are the defaults for the site profile. With a database, they are co
 
 ### Template
 
-At `/admin/template` you pick the template that suits your profession: **Software & IT** or **Healthcare**.
+The wizard's first step picks the template; to change it later without running the wizard, go to `/admin/template`, where you pick the template that suits your profession: **Software & IT** or **Healthcare**.
 Choose a card, press Preview, and the public site is shown inside the page in that template's layout, wording and
 colours, with tabs for each page and a mobile width. Nothing is saved until you press "Use ...". Switching never
 deletes content: sections the new template does not use (for example Blog posts under Healthcare) are hidden from the

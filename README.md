@@ -43,6 +43,11 @@ testable the moment you run it. Swap in your own details to make it yours.
   layout, calm theme, guidance against publishing patient data, fictional starter content). A template
   sets the wording, section list and theme; switching hides sections the template does not use and
   never deletes content. See [docs/template-authoring-guide.md](docs/template-authoring-guide.md)
+- **Setup wizard** at `/admin/welcome`, opened right after `/setup` and re-runnable from the dashboard: pick a
+  template (cards with thumbnail and what is included), enter your basics (title and summary are suggested by the
+  template), optionally add a photo, then review a live draft preview, choose an accent colour and starter content
+  (blank, or fictional sample entries) and publish. Progress is saved per step, nothing is public until you publish,
+  and a fresh database goes to a live site without editing any config file.
 - Health checks at `/health` (liveness) and `/health/db` (DB readiness)
 - Zero front-end build dependencies to *run* it (Tailwind is compiled during build)
 
@@ -68,7 +73,9 @@ dotnet restore
 dotnet run --project src/Portfolio.Web
 ```
 
-On first run the app **applies EF Core migrations and seeds the demo content automatically**.
+On first run the app **applies EF Core migrations and seeds the demo content automatically**
+(except on a new install with a `Setup:Key`, where the setup wizard decides: see the
+[new user guide](docs/new-user-guide.md#3-claim-the-site-and-use-the-admin)).
 It launches over HTTPS by default, so open the printed `https://localhost:7239` URL (or the generated local HTTPS port). Health check: `/health`.
 
 > No database configured? The site still runs — DB-backed pages show empty states and
@@ -123,8 +130,8 @@ side only) and open `/setup` once. Keep `Uploads:Path` on a persistent folder. D
 ```
 src/Portfolio.Web/                ASP.NET Core Razor Pages app
   Configuration/SiteOptions.cs    Bound identity/content config ("Site" section)
-  Pages/                          Razor Pages (Pages/Admin is the owner area, Pages/Setup.cshtml the one-time setup)
-  Templates/<key>/template.json   Profession templates (manifest, optional starter.json); template.schema.json documents the shape
+  Pages/                          Razor Pages (Pages/Admin is the owner area, Pages/Admin/Welcome the setup wizard, Pages/Setup.cshtml the one-time setup)
+  Templates/<key>/template.json   Profession templates (manifest, optional starter.json, preview.png thumbnail); template.schema.json documents the shape
   Styles/themes/<key>.css         Per-template theme variables, compiled into app.css
   Security/                       Owner account, cookie sign-in, setup key gate, reset-owner command
   Uploads/                        Image processing (SkiaSharp re-encode) and upload storage
