@@ -90,13 +90,13 @@ found" from it).
 `copy` has no defaults on purpose: a template that forgets a string fails validation instead of showing another
 profession's words. Copy is plain text (no `<` or `>`); pages escape it with `TemplateView.Text`. Description strings
 accept `{name}`, `{title}`, `{summary}` and are held to 160 characters; a page also cuts an expanded description that a long
-name or title pushes past 160, at a word boundary with an ellipsis. Word patterns so they read correctly for any title
+name or title pushes past 160, at a word boundary with an ellipsis (at the length limit if there is no space to cut at, never inside a
+character pair). Word patterns so they read correctly for any title
 ("{name}, {title}." rather than "{name} is a {title}.").
 
 `copy.projects` includes the image wording so a template never shows another profession's word for a picture:
 `screenshotsHeading` (gallery heading), `galleryLabel` (accessible name of the gallery), `openImageLabel` (accessible name of
-the button that opens an image; a caption is appended) and `imageAlt` (alt text for an image without a caption; `{title}` is
-the project title). Software says "screenshot", Healthcare says "image".
+the button that opens an image; a caption is appended) and `imageAlt` (alt text for an image without a caption; must contain `{title}`, the project title). Software says "screenshot", Healthcare says "image".
 
 `starter.json` holds `"fictional": true`, a `profile` (same shape as the `Site` config section) and arrays in the seed
 file shape (`experiences`, `skills`, `projects`, `certifications`, `testimonials`). Mark every person, employer and

@@ -171,8 +171,9 @@ Implementation notes (decisions worth reviewing):
   to action are shared blocks. Only the home page differs by archetype for now; other pages share one implementation driven by copy.
   Credentials is the second archetype; gallery and results are rejected by the validator until they have layouts.
 - **Sections.** The template's list decides navigation, sitemap, CV and routes. A page marked `[SectionPage]` answers 404 when its
-  section is disabled (also under preview). The empty 404 is turned into the site's styled `/not-found` page by `UseNotFoundPage`
-  (GET/HEAD, 404 only, not for file-like paths), the same page as for any unknown address and with no mention of the section. The owner's per-section settings on the profile (existing JSON column, no migration)
+  section is disabled (also under preview). The filter marks the request and `UseNotFoundPage` turns that empty 404 into the site's styled `/not-found`
+  page (GET/HEAD only), without mentioning the section. Every other 404 (unknown address, closed /setup, /admin/*) stays the plain empty
+  response it always was, so the software template's public output is unchanged. The page is `noindex` and has no canonical or og:url. The owner's per-section settings on the profile (existing JSON column, no migration)
   can relabel or hide a section but never enable one the template lacks. Hidden means not shown; no row is ever removed.
 - **Switching** only writes `SiteProfile.TemplateKey`, through `ProfileEditor` so the profile cache is primed (version bump) and the
   `Generated` output cache evicted, like a profile save. The method takes a catalog entry, not a string. `ThemeKey` is unused.
@@ -188,7 +189,8 @@ Implementation notes (decisions worth reviewing):
 - **Review fixes.** The preview page has no analytics script; the Space Grotesk and JetBrains Mono preloads are emitted only for the base
   look (no theme); project image wording (`imageAlt`, `galleryLabel`, `openImageLabel`) is manifest copy; Healthcare's dark colours also
   apply when the page has no `data-theme`; the catalog is resolved at startup so a broken default manifest fails the start; expanded
-  meta descriptions are cut to 160 characters at render time.
+  manifest-driven meta descriptions (including projects, blog and talks) are cut to 160 characters at render time; the layout
+  fallback (the profile summary on pages without their own description) is left as it was to keep software output identical.
 - **Known gaps.** The CV ATS badge still shows the committed demo-persona report on every template (Phase 6). The CV page prints
   certification status with the enum names as before. Issuer logos on the certifications page are matched by name, as before.
   /cv.pdf and /og.png keep the software look (per-template CV output is Phase 6).
