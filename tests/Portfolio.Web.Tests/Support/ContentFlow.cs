@@ -30,7 +30,23 @@ public static class ContentFlow
     public static Task<HttpResponseMessage> PostAsync(HttpClient client, string path, IEnumerable<KeyValuePair<string, string>> fields, string? tokenFrom = null) =>
         WizardFlow.PostAsync(client, path, fields, tokenFrom);
 
-    private static readonly Regex StampPattern = new("name=\"(?:Form\\.)?Stamp\"(?:[^>]*value=\"([^\"]*)\")?", RegexOptions.Compiled);
+    /// <summary>A multipart post (a form with a file), with the antiforgery token a browser would send.</summary>
+    public static async Task<HttpResponseMessage> PostMultipartAsync(HttpClient client, string path, IEnumerable<KeyValuePair<string, string>> fields,
+        (string Name, byte[] Bytes, string FileName, string ContentType)? file = null, string? tokenFrom = null)
+    {
+        var token = await AdminApp.GetTokenAsync(client, tokenFrom ?? path.Split('?')[0]);
+        var content = new MultipartFormDataContent { { new StringContent(token), "__RequestVerificationToken" } };
+        foreach (var (name, value) in fields) content.Add(new StringContent(value), name);
+        if (file is { } f)
+        {
+            var part = new ByteArrayContent(f.Bytes);
+            part.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse(f.ContentType);
+            content.Add(part, f.Name, f.FileName);
+        }
+        return await client.PostAsync(path, content);
+    }
+
+    private static readonly Regex StampPattern = new("name=\"(?:Form\\.)?Stamp\"(?:[^>]*value=\"([^\"]*)\")?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     /// <summary>The concurrency stamp a form carries, as a browser would send it back.</summary>
     public static async Task<string> StampAsync(HttpClient client, string path)

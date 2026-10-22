@@ -130,7 +130,8 @@ public class ImagesModel : ContentPageModel
 
         (list[index], list[target]) = (list[target], list[index]);
         Writer.Stamp(project, stamp);
-        project.Screenshots = list;
+        // New instances: EF tracks the owned JSON items by identity, so the same items in another order would not be written.
+        project.Screenshots = list.Select(i => new ProjectImage { Url = i.Url, Caption = i.Caption }).ToList();
         if (await Writer.CommitAsync(ct) != SaveOutcome.Saved) return ListWithError(ConflictMessage);
 
         Flash("Image moved.");
