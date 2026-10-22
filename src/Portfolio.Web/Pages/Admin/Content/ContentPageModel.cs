@@ -112,6 +112,9 @@ public abstract class ContentPageModel : AdminPageModel
         };
     }
 
+    /// <summary>Shown when a new entry was refused because another write changed the order of the list at the same moment (nothing was saved; the input is kept).</summary>
+    public const string OrderRaceMessage = "The list changed while saving, so nothing was saved. Press Save again.";
+
     protected IActionResult ListWithError(string message)
     {
         FlashError(message);
@@ -119,9 +122,10 @@ public abstract class ContentPageModel : AdminPageModel
     }
 
     /// <summary>The page the owner sees again after a refused save: the same form with their input and a message that says nothing was written.</summary>
-    protected void AddConflict()
+    protected void AddConflict(bool newEntry = false)
     {
-        ModelState.AddModelError(string.Empty, ConflictMessage);
+        // A new entry has no earlier copy to be stale against: it is refused only because the order of the list changed under it.
+        ModelState.AddModelError(string.Empty, newEntry ? OrderRaceMessage : ConflictMessage);
         ViewData["Conflict"] = true;
     }
 }

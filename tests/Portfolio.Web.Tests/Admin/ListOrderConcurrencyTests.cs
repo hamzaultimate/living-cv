@@ -117,6 +117,30 @@ public class ListOrderConcurrencyTests
         Assert.Equal(before, await ContentFlow.SnapshotAsync(app));
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task AMoveThatCarriesNoListStamp_IsRefused_EvenWhenTheListHasNoStampRowYet(string stamp)
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        using (var db = app.CreateDbContext())
+        {
+            db.Experiences.AddRange(
+                new Experience { Company = "A", Title = "One", Start = "2020", Summary = "s", SortOrder = 1 },
+                new Experience { Company = "B", Title = "Two", Start = "2020", Summary = "s", SortOrder = 2 });
+            await db.SaveChangesAsync();
+        }
+        using (var db = app.CreateDbContext()) Assert.Empty(await db.ListStamps.ToListAsync());
+        var rows = await RolesAsync(app);
+        var before = await ContentFlow.SnapshotAsync(app);
+
+        AssertRefusedMove(await ContentFlow.MoveWithStampAsync(owner, ContentFlow.Experience, rows[0].Id, "down", stamp));
+
+        Assert.Equal(before, await ContentFlow.SnapshotAsync(app));
+        using (var db = app.CreateDbContext()) Assert.Empty(await db.ListStamps.ToListAsync()); // a refused move creates nothing
+    }
+
     [Fact]
     public async Task TheFirstMoveOfAList_ThatHasNeverBeenReordered_Works_AndTheStampMovesOn()
     {
@@ -170,7 +194,7 @@ public class ListOrderConcurrencyTests
 
         // The form is shown again with the owner's input and a message that nothing was saved.
         var page = await ContentFlow.TextOfAsync(outer);
-        Assert.Contains(ContentPageModelMessage, page);
+        Assert.Contains(OrderRace, page);
         Assert.Contains("Fresh", page);
         var after = await RolesAsync(app);
         Assert.Equal(["First", "Third", "Second"], after.Select(r => r.Title));
@@ -178,6 +202,7 @@ public class ListOrderConcurrencyTests
     }
 
     private const string ContentPageModelMessage = "changed or removed somewhere else";
+    private const string OrderRace = "The list changed while saving, so nothing was saved. Press Save again.";
 
     [Fact]
     public async Task TwoOverlappingInserts_AtTheTop_OnlyTheFirstIsSaved_AndNoTwoRowsShareAPosition()
@@ -189,7 +214,11 @@ public class ListOrderConcurrencyTests
             () => ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("Late Co", "Late")),
             () => ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("Early Co", "Early")));
 
-        Assert.Contains(ContentPageModelMessage, await ContentFlow.TextOfAsync(outer));
+        var refusedPage = await ContentFlow.TextOfAsync(outer);
+        Assert.Contains(OrderRace, refusedPage);
+        Assert.DoesNotContain(ContentPageModelMessage, refusedPage);
+        Assert.Contains("value=\"Late\"", refusedPage); // what the owner typed is shown again
+        Assert.Contains("value=\"Late Co\"", refusedPage);
         var after = await RolesAsync(app);
         Assert.Equal(["Early", "First", "Second", "Third"], after.Select(r => r.Title));
         NoSharedPositions(after, _ => null, r => r.SortOrder, "after two inserts overlapped");
@@ -208,7 +237,7 @@ public class ListOrderConcurrencyTests
             () => ContentFlow.PostAsync(owner, ContentFlow.Certifications + "/edit", ContentFlow.Fields(("Name", "Late"), ("Issuer", "Board"), ("Status", "Earned"))),
             () => ContentFlow.PostAsync(owner, ContentFlow.Certifications + "/edit", ContentFlow.Fields(("Name", "Early"), ("Issuer", "Board"), ("Status", "Earned"))));
 
-        Assert.Contains(ContentPageModelMessage, await ContentFlow.TextOfAsync(outer));
+        Assert.Contains(OrderRace, await ContentFlow.TextOfAsync(outer));
         using var db = app.CreateDbContext();
         var rows = await db.Certifications.AsNoTracking().ToListAsync();
         Assert.Equal(["Early"], rows.Select(r => r.Name));
@@ -230,7 +259,7 @@ public class ListOrderConcurrencyTests
             () => ContentFlow.PostAsync(owner, ContentFlow.Projects + "/edit", ContentFlow.Fields(("Title", "Late"), ("Summary", "Second to save."))),
             () => ContentFlow.PostAsync(owner, ContentFlow.Projects + "/edit", ContentFlow.Fields(("Title", "Early"), ("Summary", "First to save."))));
 
-        Assert.Contains(ContentPageModelMessage, await ContentFlow.TextOfAsync(outer));
+        Assert.Contains(OrderRace, await ContentFlow.TextOfAsync(outer));
         using var db = app.CreateDbContext();
         Assert.Equal(["Early"], (await db.Projects.AsNoTracking().ToListAsync()).Select(r => r.Title));
         await ContentFlow.PostAsync(owner, ContentFlow.Projects + "/edit", ContentFlow.Fields(("Title", "Late"), ("Summary", "Second to save.")));
@@ -330,7 +359,7 @@ public class ListOrderConcurrencyTests
             () => ContentFlow.PostAsync(owner, ContentFlow.Skills + "/edit", ContentFlow.Fields(("Name", "Late"), ("Group", "Hall"))),
             () => ContentFlow.PostAsync(owner, ContentFlow.Skills + "/edit", ContentFlow.Fields(("Name", "Early"), ("Group", "Hall"))));
 
-        Assert.Contains(ContentPageModelMessage, await ContentFlow.TextOfAsync(outer));
+        Assert.Contains(OrderRace, await ContentFlow.TextOfAsync(outer));
         var after = await SkillsAsync(app);
         Assert.Equal(["H1", "H2", "Early"], after.Where(s => s.Group == "Hall").Select(s => s.Name));
         NoSharedPositions(after, s => s.Group, s => s.SortOrder, "after two new skills overlapped");

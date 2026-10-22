@@ -122,7 +122,7 @@ public class EditModel : ContentPageModel
         var outcome = await Writer.CommitAsync(ct);
         if (outcome != SaveOutcome.Saved)
         {
-            AddConflict();
+            AddConflict(id is null);
             return Page();
         }
 

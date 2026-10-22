@@ -169,7 +169,7 @@ public class EditModel : ContentPageModel
             {
                 Writer.DiscardUpload(newHeroUrl);
                 if (outcome == SaveOutcome.Duplicate) c.Error(nameof(Form.Slug), SlugTakenMessage(slug!));
-                else AddConflict();
+                else AddConflict(id is null);
                 return Page();
             }
 

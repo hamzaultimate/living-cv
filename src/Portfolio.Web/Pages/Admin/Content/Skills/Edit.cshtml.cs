@@ -101,7 +101,7 @@ public class EditModel : ContentPageModel
         if (outcome != SaveOutcome.Saved)
         {
             await LoadGroupsAsync(ct);
-            AddConflict();
+            AddConflict(id is null);
             return Page();
         }
 
