@@ -146,9 +146,9 @@ applies to all visitors together.
 ### Managing your content
 
 Once the wizard has run (or you skipped it), everything the site shows besides your profile is edited in the
-browser under **Content** (`/admin/content`). There are six editors, named in your template's words (Software & IT says
-experience, skills, work, certifications, talks and testimonials; Healthcare says clinical experience, clinical skills, research & initiatives,
-licences & registrations, presentations and references):
+browser under **Content** (`/admin/content`). There are seven editors, named in your template's words (Software & IT says
+experience, skills, work, certifications, talks, testimonials and blog; Healthcare says clinical experience, clinical skills, research & initiatives,
+licences & registrations, presentations, references and articles):
 
 | Editor | Address | What an entry has |
 |---|---|---|
@@ -158,6 +158,7 @@ licences & registrations, presentations and references):
 | Certifications | `/admin/content/certifications` | name, issuer, status, date, links to the credential, certificate and badge |
 | Talks | `/admin/content/talks` | title, type, event, date, a YouTube video (a link or the video id) and a link. The public page lists talks newest first by date, so this list has no Move buttons |
 | Testimonials | `/admin/content/testimonials` | the quote (plain text), the person, their role and organisation, and a source link. They appear in a block on the home page in the order shown |
+| Blog | `/admin/content/blog` | title, web address name, description, date, tags, a cover image (with alt text), the text in Markdown, and a **draft** box. Posts are listed newest first by date, so there are no Move buttons; each row says Draft or Published |
 
 Each editor lists its entries in the order the public page shows them (talks: newest first by date). You can **add**, **edit**, **remove** and
 **reorder** them, and a blank site can be built from here alone:
@@ -297,9 +298,16 @@ address is `/?preview=<template key>` and is marked noindex.
 
 ### Content and pages
 
-Add, edit and reorder experience, skills, work, certifications, talks and testimonials in the browser at `/admin/content` (see "Managing your
-content" above). Blog posts are not editable in the browser yet; they come from the seed file below
-until their editor arrives.
+Add, edit and reorder experience, skills, work, certifications, talks, testimonials and blog posts in the browser at `/admin/content` (see "Managing your
+content" above).
+
+**Blog posts and drafts.** A new post starts as a draft and is dated today. A draft is saved but appears nowhere on your site: not in the list, not at its
+address (which answers "not found"), not in the sitemap, and nowhere else. Untick **Keep as a draft** to publish; tick it again to take the post
+down at once (it is kept). **Preview** shows the text exactly as it will be published and saves nothing. The text is Markdown: headings, bold,
+italics, lists, quotes, tables, code and links work. **Raw HTML is shown as text, never run**, links must start with http, https or mailto (or be addresses
+on your own site), and pictures must be http, https or on your own site; anything else is shown as plain text. External links get `rel="nofollow ugc"`.
+A cover image is re-encoded on upload and needs alt text. The pictures a post uses stay in storage as long as any post still points at them. If your
+template does not show the blog (Healthcare keeps it off), the editor stays available with a note and nothing is published.
 
 The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed). Each table is seeded only when it is empty, so editing a seed file does not change a database that already has rows. To apply edited seed files to an existing database, set `Seed:Mode` to `Authoritative` (for example `Seed__Mode=Authoritative` as an environment variable): then rows are added, updated, and removed to match the files on every start. Update those JSON files to change:
 
@@ -307,7 +315,7 @@ The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed
 - experience entries
 - skills
 - certifications
-- blog posts
+- blog posts (the shipped ones; yours are edited in the browser)
 - talks
 - testimonials
 

@@ -272,8 +272,8 @@ Split so users are never left with content they cannot edit:
 - **4a (release gate for the wizard):** Experience, Skills, Projects/Work, Certifications.
   List with reorder, create/edit/delete, slug generation, image upload for hero and
   screenshots, validation, unsaved-change warning. **Status: done** (pending independent review); notes below.
-- **4b (in progress, split in two PRs):** **4b-1** = Talks and Testimonials editors, then Blog (Markdown editor with safe preview, drafts);
-  **4b-2** (later PR) = hero / metrics / About editing and section on/off and ordering. Breakdown below.
+- **4b (split in two PRs):** **4b-1 done, pending review** = Talks, Testimonials and Blog (Markdown with safe server-side preview, drafts); **4b-2 not started** = hero / metrics / About editing and
+  section on/off and ordering. Status, notes and the 4b-2 brief are in "Phase 4b: status and hand-over" below.
 - **4c:** JSON export/import of all content. This replaces hand-editing seed files and gives
   backup and portability.
 Wizard and 4a ship together; 4b and 4c follow.
@@ -339,56 +339,83 @@ Implementation notes for 4a (decisions worth reviewing):
   pages, `ContentEditor`, `FormCheck`, the `editor` manifest block and the stamp pattern are reusable for those. 4c (JSON export and import) should
   export `ConcurrencyStamp`-free rows and decide how imported rows interact with the unique name and slug rules above.
 
-### Phase 4b breakdown (status: in progress)
-**4b-1 part (a), Talks and Testimonials: implemented, pending review.** Decisions:
-- **Same pattern as 4a**: `/admin/content/talks` and `/admin/content/testimonials` (list, `edit/{id?}`, `delete/{id}`), row `ConcurrencyStamp` (additive nullable column on both
-  tables, migration `AddTalkTestimonialStamps`: two `ALTER TABLE ... ADD ... NULL`, read in the generated script), `IOrderedContent` on both entities, manifest `editor.talks` /
-  `editor.testimonials` (schema, `TemplateEditor`, `EditorFields`, validator, both shipped manifests, authoring guide), hub cards with counts, dashboard label list.
-- **Ordering.** Public Talks order is `Date` descending (not `SortOrder`), so a manual Move would change nothing: the Talks list shows the public order (undated last, ties by position
-  then id, now also the tie-break of the public query) and has **no Move buttons** (`CanReorder`; a posted Move is refused with a message and writes nothing). New talks append a
-  position that only breaks ties and need no list stamp. Testimonials are public-ordered by `SortOrder`: new entries append, Move uses the list stamp (section key `testimonials`),
-  creates take it with `BeginOrderChangeAsync`.
-- **Validation.** Quote is rendered as escaped plain text, so tags are refused (`FormCheck.Paragraph`, 2000 = column length); author 120 (column), role 200, URLs http(s) only with
-  the stored-value exception; talk title 200, event 200, date as a date or month/year/`yyyy-MM-dd` (`PartialDate`, stored as the first day), type from the enum allow-list.
-  `YoutubeId` goes into an iframe address, so only an 11 character id (or a YouTube watch / youtu.be / embed / shorts link it is extracted from) is accepted.
-- **Unique keys.** Authoritative seeding keys Talks by `Title` and Testimonials by `Author|first 40 characters of Quote`: both editors refuse a second entry with the same key
-  (case-insensitive) with the 4a "already have a ... called" style message (nouns from the manifest).
-- **Not editable on purpose.** `Testimonial.Relation` and `Featured` are stored but no public page shows them, so the form has no field for them (stored values are untouched); `Talk`
-  has no image and `Testimonial` no avatar, so no upload code was added.
-- **Messages** take every noun from the manifest (`View.ItemLabelLower`, `View.Label(key)`); a new entry that loses an order race gets "The list changed while saving, so nothing was
-  saved. Press Save again." Healthcare keeps Talks off in the public template; the editor stays reachable with the "not shown" note and the guidance.
-- **Tests**: `TalkEditorTests`, `TestimonialEditorTests`, `TalkTestimonialTemplateTests`, the manifest validator cases, and the new routes added to `AdminAccessTests` (route list),
-  `ContentSecurityTests` (anonymous, no token, stale session, GET-never-mutates, CSP, body caps, two rows per table), `ContentAccessibilityTests`, `ContentSeedingTests` (delete through the pages).
+### Phase 4b: status and hand-over (4b-1 done, pending review; 4b-2 not started)
+**Split.** 4b-1 = Talks, Testimonials and the Blog editors (this PR). 4b-2 = hero / metrics / About editing and section on/off + ordering (a later PR, **not started**). 4c (JSON
+export / import) is untouched. Everything follows the 4a pattern: `ContentPageModel` / `ContentListModel` / `ContentDeleteModel`, `FormCheck`, `ContentEditor` (row stamp, list stamp,
+`CommitAsync` -> `ProfileEditor.AfterContentCommitAsync`), the manifest `editor` block, `admin-unsaved.js`.
 
-
-**Scope split.** 4b-1 (this PR): (a) Talks and Testimonials, then (b) Blog with drafts and a safe Markdown preview, after a review checkpoint. 4b-2 (later PR, only listed
-here): (c) hero / metrics / About editing on the profile, (d) section on/off and ordering (the `Sections` JSON on the profile, with the list-stamp pattern reused
-for the order). Everything follows the 4a pattern (`ContentPageModel` / `ContentListModel` / `ContentDeleteModel`, `FormCheck`, `ContentEditor`, row stamp, list
-stamp, manifest `editor` block, `admin-unsaved.js`).
-
-**Entity and field inventory (what exists today).**
+**Entity and field inventory (as it was before 4b).**
 
 | Section | Entity | Fields | Public order | Notes |
 |---|---|---|---|---|
-| Talks | `Talk` | Title, Type (`Video`/`Talk`), YoutubeId, Event, Date (`DateOnly?`), Url, SortOrder | `Date` descending (not `SortOrder`) | No stamp column yet; no image. YoutubeId goes into an iframe address, so it must be an 11 character id. Seeder key: `Title`. |
-| Testimonials | `Testimonial` | Quote, Author, AuthorTitle, SourceUrl, Relation, Featured, SortOrder | `SortOrder` | No stamp column yet; no image. Quote is rendered as escaped plain text. `Relation` and `Featured` are stored but no public page shows them. Seeder key: `Author` plus the first 40 characters of the quote. |
-| Blog | `BlogPost` | Title, Slug, Description, Date, Tags, Draft, Cover, BodyMarkdown | `Date` descending, drafts hidden | No `SortOrder`, no stamp. Body goes through `Md.ToHtml` (Markdig advanced extensions, **raw HTML allowed**), written for trusted seed files; an editor needs a pipeline that disables HTML and unsafe links. Cover is a path rendered as the share image and the card image. Slug unique index; `Slugs` helper (reserved words). Seeder key: `Slug`. |
-| Hero / metrics / About | `SiteProfile` JSON columns | Hero (4 text), Metrics (value, unit, label), About (headline, paragraphs, value props, currently note, focus) | n/a | Edited through `ProfileEditor` (4b-2). |
-| Sections | `SiteProfile.Sections` JSON | Key, Label, Enabled, SortOrder | nav and home order | 4b-2; needs the template's allowed sections and the guards for required ones. |
+| Talks | `Talk` | Title, Type (`Video`/`Talk`), YoutubeId, Event, Date (`DateOnly?`), Url, SortOrder | `Date` descending, then `SortOrder`, then `Id` | No image. YoutubeId goes into an iframe address. Seeder key: `Title`. |
+| Testimonials | `Testimonial` | Quote, Author, AuthorTitle, SourceUrl, Relation, Featured, SortOrder | `SortOrder`, then `Id` | No image. Quote is escaped plain text. `Relation` and `Featured` are stored but shown nowhere. Seeder key: `Author` + first 40 characters of `Quote`. |
+| Blog | `BlogPost` | Title, Slug, Description, Date, Tags, Draft, Cover, BodyMarkdown | `Date` descending, then `Id`; drafts hidden | Unique `Slug` index; no position column. Seeder key: `Slug`. |
+| Hero / metrics / About | `SiteProfile` JSON columns | Hero (4 text), Metrics (value, unit, label), About (headline, paragraphs, value props, currently note, focus) | n/a | 4b-2 |
+| Sections | `SiteProfile.Sections` JSON | Key, Label, Enabled, SortOrder | nav and home order | 4b-2 |
 
-**Public surfaces each type feeds (all must follow a save through `ContentEditor.CommitAsync`).** Talks: `/talks` page only (no sitemap entry of their own, no JSON-LD).
-Testimonials: the home page block (`Blocks/_Testimonials`, both layouts that include it), nothing else. Blog: `/blog`, `/blog/{slug}`, `/sitemap.xml` (posts with their
-date), `BlogPosting` and breadcrumb JSON-LD, the share image of the post. The CV and `/cv.pdf` do not use talks, testimonials or posts.
+**Public surfaces each type feeds.** Talks: `/talks` only. Testimonials: the home page block (`Blocks/_Testimonials`). Blog: `/blog`, `/blog/{slug}`, `/sitemap.xml` (posts, with the date as
+`lastmod`), `BlogPosting` + breadcrumb JSON-LD on the post page, the post's cover as its share image. Nothing else reads posts (no feed, no search, no tag pages, no related posts, no
+home-page block, no per-post share image, not the CV); the repository filters drafts (`GetBlogPostsAsync`, `GetBlogPostAsync`), so every surface above is covered by two queries.
 
-**Manifest `editor` extensions.** `editor.talks` and `editor.testimonials` (and later `editor.blog`) with `itemLabel` and per-field `label`, `hint`, `hidden`, validated
-against the closed field lists in `EditorFields` (required fields can be relabelled but not hidden), added to `template.schema.json`, `TemplateDefinition`,
-`TemplateValidator`, the schema-drift test and both shipped manifests, and described in `docs/template-authoring-guide.md`. Neutral fallbacks live in `EditorFields`.
+**Implementation notes for 4b-1.**
+- **Routes.** `/admin/content/{talks|testimonials|blog}` (list), `/edit/{id?}`, `/delete/{id}`. Blog preview is `POST /admin/content/blog/edit/{id?}?handler=Preview` on the edit page (no new route, no script,
+  nothing read from the database but the current cover, nothing written; the response is the edit page, so it carries the usual `no-store` / `noindex` headers and the form keeps what was typed).
+- **Migrations (all additive, nullable, read in the generated SQL):** `AddTalkTestimonialStamps` (`ConcurrencyStamp` on `Talks` and `Testimonials`) and `AddBlogEditing` (`ConcurrencyStamp`
+  and `CoverAlt nvarchar(300)` on `BlogPosts`). `IStampedContent` (Id + stamp) was split out of `IOrderedContent` so the blog, which has no position, can use the shared list / delete models.
+- **Ordering.** Talks and Blog are ordered by date on the public pages, so their lists show that order and have **no Move buttons** (`CanReorder` false; a posted Move is refused and writes nothing; new
+  talks append a tie-break position and take no list stamp). Testimonials append and move with the list stamp (section key `testimonials`). `Id` tie-breaks were added to the three public queries (ties were
+  undefined before); the Testimonials one cannot be proven by a test on SQLite, which returns insertion order anyway.
+- **Talks.** Title required (200); type from the enum allow-list with manifest wording (`typeVideo`, `typeTalk`); event 200; date as `yyyy-MM-dd`, month or year; YouTube field takes an 11 character id or a
+  watch / youtu.be / embed / shorts link and stores the bare id (the public page only embeds a stored id of that shape); link http(s) only. Unique title, compared in memory with `OrdinalIgnoreCase` like the seeder.
+- **Testimonials.** Quote required, plain text, 2000 (the column length); author 120; role 200; source link http(s). Unique author + first 40 characters of the quote (the seeder key).
+- **Blog.** Title (200), slug (built from the title with `Slugs.From(title, "post")`, unique case-insensitively, reserved words and path tricks refused, an unchanged legacy slug never re-validated, an emptied
+  box keeps it, a unique-index race shows the friendly message), description (plain, 300), date (`yyyy-MM-dd`, 1990 to 2100; a future date is allowed because the public page already shows it),
+  tags (comma or line separated, up to 8, 30 characters, letters / digits / space and `. + # & _ -`), cover (image pipeline only, alt text required for an upload, replaced / removed / deleted files are removed
+  only when no project, profile photo, post cover or post text still points at them), text (Markdown, 60 000 characters, no control characters), **Draft** (a new post starts as a draft; a post saved without
+  the field stays a draft). Publishing is the Draft checkbox on the edit form; there is no list button (kept out on purpose: one path to publish).
+- **Safe Markdown (`SafeMd`).** `Md.ToHtml` (raw HTML allowed) is gone; `SafeMd.ToHtml` is the only renderer and is used by the public post page **and** the preview. Markdig with `DisableHtml`, pipe tables, auto
+  identifiers, auto links, emphasis extras, list extras, smarty pants and referral links (`rel="noopener nofollow ugc"`); no generic attributes, media links, math, diagrams, custom containers or footnotes. After parsing, every
+  link, image and `<scheme:...>` autolink address is decided on the decoded value (control characters and whitespace removed, scheme lower-cased): relative, `http`, `https` (and `mailto` for links) pass; anything else is
+  rendered as its text. **It changed no byte of the Software parity snapshots**: `SafeMdTests` renders every shipped post body with the old trusted pipeline and the safe one and requires identical HTML, and the parity
+  snapshots pass untouched. Known cost: a post cannot contain raw HTML, footnotes, definition lists or task lists any more (the shipped posts use none); say so to owners who ask.
+- **Template wording.** `editor.talks`, `editor.testimonials`, `editor.blog` in the schema, `TemplateEditor`, `EditorFields`, the validator (required fields cannot be hidden: `title`; `quote`, `author`; `title`, `slug`, `date`,
+  `body`, `draft`), both shipped manifests and the authoring guide. Healthcare keeps Talks and Blog off in the public template: the editors stay reachable with the "not shown" note and the guidance.
+- **Tests.** `TalkEditorTests`, `TestimonialEditorTests`, `BlogEditorTests` (drafts on every surface, transitions with the cached sitemap, slug rules, covers and orphan cleanup, preview, XSS corpus on preview
+  and public page, JSON-LD encoding, stamps), `TalkTestimonialTemplateTests`, `BlogTemplateTests`, `ContentSuiteEndToEndTests` (both templates, create -> public -> unpublish / delete), `SafeMdTests`,
+  `BodyLimitCoverageTests` (reflection: every admin page model with a POST handler has `[BodyLimit]`), and the new routes in `AdminAccessTests`, `ContentSecurityTests`, `ContentAccessibilityTests`, `ContentSeedingTests`.
+  The test host's save hook (`AdminApp.BeforeOrderedSave`) replays real overlapping requests for any stamped row.
 
-**Risks.** (1) Talks are ordered by date, so a manual Move would have no public effect: the Talks list has no Move buttons. (2) A YouTube id and every URL end up in
-attributes of public pages: strict allow-lists. (3) The Markdown renderer allows raw HTML today: the Blog editor must not reuse it unchanged (4b-1 part b). (4) The
-Authoritative seeder keys on title / slug / author+quote, so the editors refuse a second entry with the same key. (5) Healthcare keeps Talks and Blog off in its
-public template: the editors stay reachable with the "not shown by your current template" note. (6) New columns are nullable stamps only; the Blog gets no
-position column in 4b-1 because its public order is the date.
+**Known gaps / owner decisions.** `Testimonial.Relation` / `Featured` have no field (shown nowhere). No list-level publish button. Preview does not load external pictures (the admin CSP is `img-src 'self'`). The
+preview and the public page are rendered by the same function but the preview sits in admin styles, not the site's Tailwind article styles. Raw HTML in posts is deliberately unsupported. Nothing has been run against a
+real SQL Server (tests use SQLite; the SQL scripts were read). No browser check of the new pages was done.
+
+#### 4b-2 brief (not started; self-contained)
+**Goal.** Let the owner edit the hero, metrics and About text, and switch sections on / off and reorder them, from the admin, in the template's words.
+**Start from.** `Pages/Admin/Profile.cshtml(.cs)`, `Services/ProfileEditor.cs` and `ProfileForm.cs` (identity editing, `AfterCommitAsync` refreshes caches), `Data/Entities/SiteProfile.cs` (`Hero`, `Metrics`,
+`About`, `Sections` are JSON-mapped owned types), `Services/SiteProfileMapper.cs`, `Services/SectionRegistry.cs`, `Services/TemplateDefinition.cs` + `TemplateView.cs` (how a template's sections, labels and `enabled` combine
+with the profile's `Sections` overrides), `Services/TemplateCatalog.cs`/`TemplateValidator.cs`, the wizard (`OnboardingService`, `Pages/Admin/Welcome/*`, which already writes hero suggestions), and the 4a / 4b-1 editors as the
+pattern (`Pages/Admin/Content/*`, `ContentEditor`, `FormCheck`, `EditorFields`, `admin-unsaved.js`, `AdminAuth.AllowsScript`).
+**Requirements carried from the owner.**
+- Public pages for the default Software template stay **byte-identical** (parity snapshots untouched); if a change would alter them, stop and report.
+- **No migration unless proven necessary**: hero / metrics / about / sections already live in `SiteProfile` JSON columns. If a stamp is needed, an additive nullable column only (D3: no renames); prefer the existing
+  `OnboardingCompletedAt`-style token or a new nullable stamp on the profile row, and say why.
+- **Hiding a section never deletes rows.** Turning a section off only hides its page, nav entry and home block; the entries stay and show again when it is turned on.
+- Nav, `/sitemap.xml`, JSON-LD, the CV, routes (`[SectionPage]` 404s) and the home page blocks must all follow a save immediately (`ProfileEditor.AfterCommitAsync` already invalidates the provider version and the
+  "Generated" output cache). Sections a template lists as `enabled: false` (Healthcare: Blog and Talks) default off; the owner may turn them on.
+- Labels, hints and visibility come from the manifest (extend `editor` with `hero`, `metrics`, `about`, and the section settings page wording); never `if (templateKey == ...)`; no hardcoded nouns in messages.
+- Everything admin: under `Pages/Admin`, `AdminPageModel`, POST + antiforgery + `[BodyLimit]` (the reflection test will fail otherwise), GET never mutates, concurrency (a stamp on the profile row; section order uses
+  the list-stamp pattern with a section key such as `sections`, or the profile token), friendly conflict, plain-text validation (`FormCheck`), URL allow-lists, no inline script, first-party script only on edit routes via
+  `AllowsScript`.
+- Section rules to decide and test: required sections that cannot be turned off (e.g. About / Contact: check what the home page and nav need), at least one section on, order only among enabled / known keys
+  (`SectionRegistry.IsKnown`), unknown keys in stored JSON tolerated.
+**Tests to write.** Persist and public follow (nav, home, sitemap, JSON-LD, CV) for each edit; validation / injection corpus on every text field; row / profile stamp conflicts with real overlapping requests (the
+`AdminApp.BeforeOrderedSave` hook); every new route in `AdminAccessTests` + `ContentSecurityTests` (anonymous, no token, stale session, GET-never-mutates, body caps); template-driven labels via a test manifest with
+unique words including messages; hiding keeps rows; Healthcare defaults; Software snapshots unchanged; accessibility; CSP scoping.
+**Mutations to prove (scratch copy only).** owner check, antiforgery, section disable not filtering a surface (nav, sitemap, home, route), reorder ignored, stamp check, hidden-field data loss, URL scheme allow-list,
+cache invalidation.
+**4c pointer.** JSON export / import of all content (backup, portability): export `ConcurrencyStamp`-free rows (and the profile, sections and uploads manifest), decide how imported rows interact with the unique keys
+(talk title, testimonial author + quote start, blog slug, project slug, certification / skill name, role company + title) and with `Seed:Mode`; reuse `ContentEditor` for writes and `SafeMd` rules for imported posts.
 
 ### Phase 5: Remaining templates and archetypes
 Build one archetype per step, then the presets that use it:
