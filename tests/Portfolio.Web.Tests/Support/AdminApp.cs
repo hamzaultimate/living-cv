@@ -180,6 +180,15 @@ public sealed class AdminApp : WebApplicationFactory<Program>
         return client;
     }
 
+    /// <summary>A fresh client signed in as the owner, for an app whose owner already exists (a second browser, or after the first one signed out).</summary>
+    public async Task<HttpClient> NewClientSignedInAsync()
+    {
+        var client = NewClient();
+        var login = await SignInAsync(client);
+        Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
+        return client;
+    }
+
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
