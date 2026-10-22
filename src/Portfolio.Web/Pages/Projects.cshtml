@@ -7,7 +7,7 @@
     var copy = tpl.Copy.Projects;
     var item = tpl.Section(SectionRegistry.Projects).ItemLabel ?? "";
     ViewData["Title"] = copy.Title;
-    ViewData["Description"] = copy.Description;
+    ViewData["Description"] = TemplateSeo.ApplyDescription(copy.Description, tpl.Site);
     var projects = await Repo.GetProjectsAsync();
     var categories = projects
         .Select(p => p.Category)

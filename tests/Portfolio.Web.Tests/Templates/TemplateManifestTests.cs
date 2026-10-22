@@ -186,6 +186,7 @@ public class TemplateManifestTests
         { "missing copy string", n => n["copy"]!["home"]!.AsObject().Remove("workHeading") },
         { "sensitive without guidance", n => { n["sensitive"] = true; n.Remove("guidance"); } },
         { "starter file missing", n => n["starter"] = new JsonObject { ["file"] = "nope.json" } },
+        { "image alt without {title}", n => n["copy"]!["projects"]!["imageAlt"] = "screenshot" },
         { "key not kebab case", n => n["key"] = "Broken Key" },
     };
 

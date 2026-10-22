@@ -3,9 +3,10 @@
 @inject PortfolioContentService Repo
 @inject RequestTemplate Template
 @{
-    var copy = (await Template.GetAsync()).Copy.Blog;
+    var tpl = await Template.GetAsync();
+    var copy = tpl.Copy.Blog;
     ViewData["Title"] = copy.Title;
-    ViewData["Description"] = copy.Description;
+    ViewData["Description"] = TemplateSeo.ApplyDescription(copy.Description, tpl.Site);
     var posts = await Repo.GetBlogPostsAsync();
     var absBase = await SeoHelpers.AbsoluteBaseAsync(HttpContext);
     var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), (copy.Title, "/blog"));

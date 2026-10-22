@@ -75,6 +75,19 @@ public class TemplateCatalogTests
     }
 
     [Fact]
+    public void ApplyDescription_NeverSplitsASurrogatePair_WhenThereIsNoSpaceToCutAt()
+    {
+        // 158 characters then an emoji (two UTF-16 units) puts the cut inside the pair.
+        var site = new SiteOptions { OwnerName = "N", JobTitle = "T", Summary = new string('a', 158) + "\U0001F600" + new string('b', 20) };
+
+        var text = TemplateSeo.ApplyDescription("{summary}", site);
+
+        Assert.True(text.Length <= 160);
+        Assert.EndsWith("…", text);
+        Assert.DoesNotContain(text, c => char.IsSurrogate(c));
+    }
+
+    [Fact]
     public void SoftwarePreset_KeepsTheCvSkillGroupOrder()
     {
         var preset = new TemplateCatalog(TemplatesDir).Get("software");

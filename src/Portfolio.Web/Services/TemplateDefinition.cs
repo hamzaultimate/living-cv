@@ -107,7 +107,7 @@ public class TemplateSeo
     public const int MaxDescriptionLength = 160;
 
     /// <summary><see cref="Apply"/> for a meta description: a long name or title can push the expanded pattern past
-    /// <see cref="MaxDescriptionLength"/>, so it is cut at a word boundary and ends with an ellipsis instead of mid-word.</summary>
+    /// <see cref="MaxDescriptionLength"/>, so it is cut at a word boundary (when there is a space in its second half, else at the length limit) and ends with an ellipsis.</summary>
     public static string ApplyDescription(string pattern, SiteOptions site)
     {
         var text = Apply(pattern, site).Trim();
@@ -115,6 +115,7 @@ public class TemplateSeo
         var cut = text[..(MaxDescriptionLength - 1)];
         var space = cut.LastIndexOf(' ');
         if (space > MaxDescriptionLength / 2) cut = cut[..space];
+        else if (char.IsHighSurrogate(cut[^1])) cut = cut[..^1]; // never split a surrogate pair (an emoji)
         return cut.TrimEnd(' ', ',', ';', ':', '-', '—', '.') + "…";
     }
 }

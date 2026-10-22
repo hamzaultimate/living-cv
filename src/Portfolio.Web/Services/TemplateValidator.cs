@@ -139,6 +139,8 @@ public static partial class TemplateValidator
                 if (HasMarkup(value)) errors.Add($"{path} must be plain text (no < or >).");
                 if (prop.Name == "Description")
                     CheckPattern(errors, path, value, site, MaxDescriptionLength);
+                if (path == "copy.projects.imageAlt" && !value.Contains("{title}", StringComparison.Ordinal))
+                    errors.Add($"{path} must contain {{title}}, or every image would share one alt text.");
             }
         }
     }
