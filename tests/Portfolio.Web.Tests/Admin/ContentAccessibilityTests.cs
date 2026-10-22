@@ -135,8 +135,9 @@ public class ContentAccessibilityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        await ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields("A Co", "First"));
+        // New entries go to the top, so the list reads First, Second when they are created in the reverse order.
         await ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields("B Co", "Second"));
+        await ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields("A Co", "First"));
 
         var html = await owner.GetStringAsync(ContentFlow.Experience);
 

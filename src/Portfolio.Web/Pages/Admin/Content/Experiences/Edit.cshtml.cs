@@ -100,7 +100,9 @@ public class EditModel : ContentPageModel
         Experience row;
         if (id is null)
         {
-            row = new Experience { Company = company!, Title = title!, Start = start!, Summary = summary!, SortOrder = ContentEditor.NextOrder(await Db.Experiences.Select(x => x.SortOrder).ToListAsync(ct)) };
+            // A new entry goes to the top of the list: in the admin, on the public page and on the CV.
+            var top = ContentEditor.FirstOrder(await Db.Experiences.Select(x => x.SortOrder).ToListAsync(ct));
+            row = new Experience { Company = company!, Title = title!, Start = start!, Summary = summary!, SortOrder = top };
             row.ConcurrencyStamp = ContentEditor.NewStamp();
             Db.Experiences.Add(row);
         }

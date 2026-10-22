@@ -50,6 +50,13 @@ public class ContentEditor
     /// <summary>The position after the last row of <paramref name="rows"/>.</summary>
     public static int NextOrder(IEnumerable<int> orders) => orders.DefaultIfEmpty(0).Max() + 1;
 
+    /// <summary>
+    /// The position before the first row of <paramref name="rows"/>, so a new row sorts first in the admin list and on the public pages (both order by
+    /// <see cref="IOrderedContent.SortOrder"/> ascending). Nothing else is written: the existing rows keep their positions, so their order cannot change.
+    /// The first row of an empty list gets 1. Positions below 1 are tidied the next time the list is reordered.
+    /// </summary>
+    public static int FirstOrder(IEnumerable<int> orders) => orders.DefaultIfEmpty(2).Min() - 1;
+
     /// <summary>Saves the pending changes and, if they were written, refreshes the caches.</summary>
     public async Task<SaveOutcome> CommitAsync(CancellationToken ct)
     {
