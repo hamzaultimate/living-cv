@@ -258,6 +258,10 @@ Implementation notes (decisions worth reviewing):
   is unchanged because the demo persona has links).
 - **Re-run** keeps an edited short name and role line unless the name or title changes; a renamed owner gets a new short name but the first-run hero headline stays
   until edited in `/admin/profile`. The review step's site address is prefilled from the request address, which behind a proxy may be an internal host (documented).
+- **Owner decision: residual blank edge.** An install first started with no `Setup:Key` and no owner seeds the demo persona at that start; if the key is
+  added later and the owner publishes "Start blank", those rows remain (blank only avoids adding rows). Documented in the new-user guide.
+- **Rollback.** Do not roll `AddOnboardingOutcome` back on a live site: Down then Up drops the outcome, and the next restart would refill wizard-finished blank
+  sites with demo content. The outcome is recorded on a first run only, so a re-run on a pre-wizard site leaves it empty.
 - **Upgrade note.** `heroSuggestions` is a required manifest field: a custom manifest without it is skipped and the site falls back to the default template.
 - **Not done / limits.** No crop. No per-step "back" without a full page load. Sample rows are not previewed before publish. Two simultaneous publishes are
   covered by the concurrency token and a unit-level test, not by a parallel HTTP test; the `Conflict` outcome path of `PublishAsync` itself is not exercised

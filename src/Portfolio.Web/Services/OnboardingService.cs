@@ -216,7 +216,8 @@ public class OnboardingService
                 Apply(profile, draft, template, firstRun, promoted);
                 profile.OnboardingDraft = null;
                 profile.OnboardingCompletedAt = _time.GetUtcNow();
-                profile.OnboardingOutcome = "published";
+                // Only a first run records an outcome: a re-run on a site that existed before the wizard must not change how that site seeds at start-up.
+                if (firstRun) profile.OnboardingOutcome = "published";
                 SiteProfileMapper.FitToColumns(profile);
                 await _db.SaveChangesAsync(ct);
 

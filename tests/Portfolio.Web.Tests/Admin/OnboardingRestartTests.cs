@@ -111,6 +111,28 @@ public class OnboardingRestartTests
     }
 
     [Fact]
+    public async Task ReRunningTheWizardOnALegacySite_KeepsTheOutcomeEmpty_AndStartupStillSeedsAsBefore()
+    {
+        using var app = new AdminApp();
+        _ = app.Services;
+        using (var db = app.CreateDbContext())
+        {
+            db.SiteProfiles.Add(new SiteProfile { OnboardingCompletedAt = DateTimeOffset.UtcNow }); // existed before the wizard
+            await db.SaveChangesAsync();
+        }
+        var owner = await app.SignedInClientAsync();
+        await WizardFlow.PickTemplateAsync(owner, "healthcare");
+        await WizardFlow.SaveBasicsAsync(owner);
+        Assert.Equal("/admin", WizardFlow.Where(await WizardFlow.PublishAsync(owner)));
+
+        var profile = await WizardFlow.ProfileAsync(app);
+        Assert.Equal("healthcare", profile.TemplateKey); // the re-run really published
+        Assert.Null(profile.OnboardingOutcome);
+        Assert.True(await RestartAsync(app));
+        Assert.True((await DemoSite.RowCountsAsync(app))["experiences"] > 0);
+    }
+
+    [Fact]
     public async Task AnUnclaimableLegacyInstall_AndAuthoritativeMode_SeedAsBefore()
     {
         using var app = new AdminApp();

@@ -91,6 +91,12 @@ that already has content is left exactly as it is, and the review step says whic
 is the built-in demo persona (the seed files); for Healthcare it is the template's fictional `starter.json`. Sample
 rows come without the sample persona's profile text: your name, title and summary are always your own.
 
+**Start blank only avoids adding rows.** It never removes any. An install that was first started with no `Setup:Key` and no
+owner already seeded the demo persona at that start; if you add the key later and publish "Start blank", those demo rows
+stay. Delete them yourself, or start the install with the key set from the beginning. Also: do not roll the
+`AddOnboardingOutcome` migration back on a live site; running it Down then Up drops the recorded outcome, and the next
+restart would refill a blank site with the demo content.
+
 **Restarts.** Once the wizard has been published or skipped, the app never again seeds demo content at start-up, so a
 blank site stays blank (only the choices above load demo content). Sites that existed before the wizard, installs with
 no `Setup:Key` and no owner, and `Seed:Mode=Authoritative` seed exactly as before.
