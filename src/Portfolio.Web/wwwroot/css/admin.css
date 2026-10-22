@@ -147,6 +147,9 @@
 .adm-order .adm-btn { padding: .3rem .7rem; font-size: .9rem; text-decoration: none; display: inline-block; }
 .adm-btn[disabled] { opacity: .5; cursor: not-allowed; }
 a.adm-btn { text-decoration: none; display: inline-block; }
+/* A link styled as a button keeps the button colours: `.adm a` would otherwise turn its text the accent colour, invisible on the accent background. */
+.adm a.adm-btn-primary { color: var(--adm-accent-text); }
+.adm a.adm-btn-danger { color: var(--adm-error-text); }
 .adm-check { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .1rem .6rem; }
 .adm-check input[type="checkbox"] { width: 1.25rem; height: 1.25rem; accent-color: var(--adm-accent); }
 .adm-check label { margin: 0; }
