@@ -71,9 +71,9 @@ load, the site renders the software template. See `Templates/healthcare/template
   "skillGroups": ["Clinical", "Procedures", "Documentation", "Languages"],
   "seo": {
     "title": "{name} — {title}",                      // at most 65 characters once expanded
-    "description": "{name} is a {title}. ...",        // at most 160
+    "description": "{name}, {title}. ...",           // at most 160; cut at a word boundary at render time if a long name pushes it over
     "aboutDescription": "About {name}, {title}: ...", // at most 160
-    "credentialsJsonLd": true                         // list enabled certifications in the home page Person markup
+    "credentialsJsonLd": true                         // list earned certifications in the home page Person markup
   },
   "copy": { "layout": {}, "home": {}, "projects": {}, "experience": {}, "skills": {},
             "certifications": {}, "blog": {}, "talks": {}, "contact": {}, "cv": {} },  // every string is required
@@ -89,7 +89,14 @@ found" from it).
 
 `copy` has no defaults on purpose: a template that forgets a string fails validation instead of showing another
 profession's words. Copy is plain text (no `<` or `>`); pages escape it with `TemplateView.Text`. Description strings
-accept `{name}`, `{title}`, `{summary}` and are held to 160 characters.
+accept `{name}`, `{title}`, `{summary}` and are held to 160 characters; a page also cuts an expanded description that a long
+name or title pushes past 160, at a word boundary with an ellipsis. Word patterns so they read correctly for any title
+("{name}, {title}." rather than "{name} is a {title}.").
+
+`copy.projects` includes the image wording so a template never shows another profession's word for a picture:
+`screenshotsHeading` (gallery heading), `galleryLabel` (accessible name of the gallery), `openImageLabel` (accessible name of
+the button that opens an image; a caption is appended) and `imageAlt` (alt text for an image without a caption; `{title}` is
+the project title). Software says "screenshot", Healthcare says "image".
 
 `starter.json` holds `"fictional": true`, a `profile` (same shape as the `Site` config section) and arrays in the seed
 file shape (`experiences`, `skills`, `projects`, `certifications`, `testimonials`). Mark every person, employer and
@@ -100,7 +107,8 @@ credential as sample content. Starter content is only applied on request (the Ph
 `theme.default` is written to `<html data-template="...">`; the base look (software) leaves it empty and adds no
 attribute. A theme file sets variables only: the colour tokens as RGB channels per mode, `--font-sans`, `--font-display`,
 `--font-mono`, `--radius-lg`, `--radius-md`, under `:root[data-template="<key>"]` and
-`:root[data-template="<key>"][data-theme="dark|light"]`. It is imported from `Styles/app.css` and compiled into the one
+`:root[data-template="<key>"]` and `:root[data-template="<key>"][data-theme="dark|light"]`. The dark block's selector also lists
+`:root[data-template="<key>"]` itself, because dark is the default before the theme script sets `data-theme` (as the base tokens do on `:root`). It is imported from `Styles/app.css` and compiled into the one
 stylesheet, so switching needs no rebuild. Tailwind scans `Pages/**/*.cshtml` and its fonts and radii read those
 variables with the base look as the fallback. Tests check both modes for 4.5:1 contrast and that every class used by the
 layout partials exists in the generated `wwwroot/css/app.css`.
@@ -109,7 +117,7 @@ layout partials exists in the generated `wwwroot/css/app.css`.
 
 The admin switcher frames the real public pages as `/?preview=<key>`. It works only for a signed-in owner with a valid
 session, only for keys in the catalog, and only on GET requests for public pages. The response is `noindex`
-(header and meta), `no-store`, never output-cached and not in the sitemap; nothing is saved until the owner presses
+(header and meta), `no-store`, never output-cached, carries no analytics script and is not in the sitemap; nothing is saved until the owner presses
 "Use ...". Anyone else gets the normal page, indistinguishable from one without the parameter.
 
 ## 4. Adding a template: checklist

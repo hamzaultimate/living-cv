@@ -171,7 +171,8 @@ Implementation notes (decisions worth reviewing):
   to action are shared blocks. Only the home page differs by archetype for now; other pages share one implementation driven by copy.
   Credentials is the second archetype; gallery and results are rejected by the validator until they have layouts.
 - **Sections.** The template's list decides navigation, sitemap, CV and routes. A page marked `[SectionPage]` answers 404 when its
-  section is disabled (also under preview). The owner's per-section settings on the profile (existing JSON column, no migration)
+  section is disabled (also under preview). The empty 404 is turned into the site's styled `/not-found` page by `UseNotFoundPage`
+  (GET/HEAD, 404 only, not for file-like paths), the same page as for any unknown address and with no mention of the section. The owner's per-section settings on the profile (existing JSON column, no migration)
   can relabel or hide a section but never enable one the template lacks. Hidden means not shown; no row is ever removed.
 - **Switching** only writes `SiteProfile.TemplateKey`, through `ProfileEditor` so the profile cache is primed (version bump) and the
   `Generated` output cache evicted, like a profile save. The method takes a catalog entry, not a string. `ThemeKey` is unused.
@@ -183,7 +184,11 @@ Implementation notes (decisions worth reviewing):
 - **Theme** is variables only, imported into `app.css` and compiled by Tailwind; fonts and radii in the Tailwind config read variables
   with the previous values as fallbacks. Healthcare uses system fonts, so no font files were added.
 - **JSON-LD** follows sections: no page, no breadcrumb for a disabled section; `seo.credentialsJsonLd` adds `hasCredential` from the
-  enabled certifications (Healthcare on, software off to keep its output unchanged).
+  earned certifications only, never in-progress or planned ones (Healthcare on, software off to keep its output unchanged).
+- **Review fixes.** The preview page has no analytics script; the Space Grotesk and JetBrains Mono preloads are emitted only for the base
+  look (no theme); project image wording (`imageAlt`, `galleryLabel`, `openImageLabel`) is manifest copy; Healthcare's dark colours also
+  apply when the page has no `data-theme`; the catalog is resolved at startup so a broken default manifest fails the start; expanded
+  meta descriptions are cut to 160 characters at render time.
 - **Known gaps.** The CV ATS badge still shows the committed demo-persona report on every template (Phase 6). The CV page prints
   certification status with the enum names as before. Issuer logos on the certifications page are matched by name, as before.
   /cv.pdf and /og.png keep the software look (per-template CV output is Phase 6).
