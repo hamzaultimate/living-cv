@@ -30,6 +30,33 @@ public class TemplateCatalogTests
     }
 
     [Fact]
+    public void EveryShippedTemplateFolder_LoadsWithoutBeingSkipped_AndTheDefaultIsListedFirst()
+    {
+        var catalog = new TemplateCatalog(TemplatesDir);
+        var folders = Directory.EnumerateDirectories(TemplatesDir).Select(Path.GetFileName).Where(n => !n!.StartsWith('_')).OrderBy(n => n).ToList();
+
+        Assert.Equal(folders, catalog.All.Select(t => t.Key).OrderBy(k => k).ToList());
+        Assert.Contains("healthcare", folders);
+        Assert.Equal("software", catalog.All.First().Key);
+        Assert.NotNull(catalog.GetStarter("healthcare"));
+    }
+
+    [Fact]
+    public void ABrokenDefaultManifest_StopsTheCatalogFromLoading()
+    {
+        var dir = Directory.CreateTempSubdirectory("lcv-templates-").FullName;
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(dir, "software"));
+            File.WriteAllText(Path.Combine(dir, "software", "template.json"), "{ \"key\": \"software\", \"typo\": true }");
+
+            var ex = Assert.Throws<InvalidOperationException>(() => new TemplateCatalog(dir));
+            Assert.Contains("software", ex.Message);
+        }
+        finally { Directory.Delete(dir, true); }
+    }
+
+    [Fact]
     public void SoftwarePreset_KeepsTheCvSkillGroupOrder()
     {
         var preset = new TemplateCatalog(TemplatesDir).Get("software");

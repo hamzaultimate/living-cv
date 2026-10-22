@@ -77,6 +77,10 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
+// Load the shipped templates now: a broken default manifest should stop the start (and the deploy's health check), not
+// answer every page with a 500 on the first request. A broken optional template is skipped and logged by the catalog.
+_ = app.Services.GetRequiredService<ITemplateCatalog>();
+
 // Operator command: runs against the database and exits before the web host starts serving.
 if (OwnerCli.IsCommand(args))
 {
