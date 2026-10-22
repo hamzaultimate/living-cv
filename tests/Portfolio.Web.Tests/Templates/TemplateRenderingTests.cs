@@ -174,7 +174,7 @@ public class TemplateRenderingTests
         }
         var home = await GetAsync(client, "/");
         Assert.Contains("Initiatives coming soon", home.Html);
-        Assert.False(DemoSite.SoftwareWording.IsMatch(DemoSite.WithoutScripts(home.Html)));
+        Assert.DoesNotMatch(DemoSite.SoftwareWording, DemoSite.WithoutScripts(home.Html));
     }
 
     // ---- The same data in both templates ----
