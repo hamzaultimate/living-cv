@@ -1,0 +1,44 @@
+@model FieldVm
+@using Portfolio.Web.Pages.Admin.Content
+@{
+    var invalid = Model.Errors.Count > 0;
+}
+@if (!Model.Visible)
+{
+}
+else if (Model.Kind == FieldKind.Checkbox)
+{
+    <div class="adm-field adm-check">
+        <input type="hidden" name="@Model.Name" value="false" />
+        <input type="checkbox" id="@Model.Id" name="@Model.Name" value="true" checked="@Model.IsChecked" aria-describedby="@(Model.DescribedBy.Length > 0 ? Model.DescribedBy : null)" />
+        <label for="@Model.Id">@Model.Label</label>
+        @if (Model.Hint is not null) { <span id="@(Model.Id)-hint" class="adm-hint">@Model.Hint</span> }
+    </div>
+}
+else
+{
+    <div class="adm-field">
+        <label for="@Model.Id">@Model.Label@if (!Model.Required) { <span class="adm-optional"> (optional)</span> }</label>
+        @switch (Model.Kind)
+        {
+            case FieldKind.Textarea:
+                <textarea id="@Model.Id" name="@Model.Name" rows="@Model.Rows" maxlength="@Model.MaxLength" required="@Model.Required" aria-invalid="@(invalid ? "true" : null)" aria-describedby="@(Model.DescribedBy.Length > 0 ? Model.DescribedBy : null)">@Model.Value</textarea>
+                break;
+            case FieldKind.Select:
+                <select id="@Model.Id" name="@Model.Name" required="@Model.Required" aria-invalid="@(invalid ? "true" : null)" aria-describedby="@(Model.DescribedBy.Length > 0 ? Model.DescribedBy : null)">
+                    @foreach (var (value, text) in Model.Options)
+                    {
+                        <option value="@value" selected="@(value == Model.Value)">@text</option>
+                    }
+                </select>
+                break;
+            default:
+                <input type="@(Model.Kind == FieldKind.Url ? "url" : "text")" id="@Model.Id" name="@Model.Name" value="@Model.Value" maxlength="@Model.MaxLength" required="@Model.Required"
+                       list="@Model.ListId" autocomplete="@(Model.Autocomplete ?? "off")" inputmode="@(Model.Kind == FieldKind.Url ? "url" : null)"
+                       aria-invalid="@(invalid ? "true" : null)" aria-describedby="@(Model.DescribedBy.Length > 0 ? Model.DescribedBy : null)" />
+                break;
+        }
+        @if (Model.Hint is not null) { <span id="@(Model.Id)-hint" class="adm-hint">@Model.Hint</span> }
+        @for (var i = 0; i < Model.Errors.Count; i++) { <span id="@(i == 0 ? Model.Id + "-error" : null)" class="field-validation-error">@Model.Errors[i]</span> }
+    </div>
+}

@@ -9,7 +9,7 @@
 {
     <section class="adm-card adm-callout" aria-labelledby="setup-heading">
         <h2 id="setup-heading">Finish setting up your site</h2>
-        <p>Your site still shows its placeholder profile. The setup wizard takes about two minutes: pick a template, enter your details, add a photo and publish. Nothing is public until you do.</p>
+        <p>Your site still shows its placeholder profile. The setup wizard takes about two minutes: pick a template, enter your details, add a photo and publish. Nothing is public until you do. Afterwards, add your experience, skills, work and credentials from <a href="/admin/content">Content</a>.</p>
         <div class="adm-actions">
             <a class="adm-btn adm-btn-primary" href="@Model.ResumePath">Continue setup</a>
             <form method="post" asp-page="/Admin/Welcome/Template" asp-page-handler="Skip">
@@ -22,6 +22,10 @@
     <a class="adm-card adm-tile" href="/admin/profile">
         <h2>Profile</h2>
         <p>Name, headline, summary, contact links, metrics and the About page.</p>
+    </a>
+    <a class="adm-card adm-tile" href="/admin/content">
+        <h2>Content</h2>
+        <p>Add, edit, reorder and remove your @Model.ContentLabels.</p>
     </a>
     <a class="adm-card adm-tile" href="/admin/photo">
         <h2>Photo</h2>

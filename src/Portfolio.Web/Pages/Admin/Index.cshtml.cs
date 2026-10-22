@@ -6,12 +6,17 @@ public class IndexModel : AdminPageModel
 {
     private readonly OnboardingService _onboarding;
     private readonly ILogger<IndexModel> _logger;
+    private readonly RequestTemplate _template;
 
-    public IndexModel(OnboardingService onboarding, ILogger<IndexModel> logger)
+    public IndexModel(OnboardingService onboarding, ILogger<IndexModel> logger, RequestTemplate template)
     {
         _onboarding = onboarding;
         _logger = logger;
+        _template = template;
     }
+
+    /// <summary>The names of the editable sections in the template's words ("experience, skills, work and credentials"), for the Content tile.</summary>
+    public string ContentLabels { get; private set; } = "content";
 
     /// <summary>True until the onboarding wizard has been published or skipped. Only a prompt: nothing is forced and no admin page is blocked.</summary>
     public bool SetupPending { get; private set; }
@@ -23,6 +28,9 @@ public class IndexModel : AdminPageModel
     {
         try
         {
+            var template = await _template.GetAsync();
+            var labels = EditorFields.Sections.Select(s => template.Section(s).Label.ToLowerInvariant()).ToList();
+            ContentLabels = labels.Count > 1 ? string.Join(", ", labels.Take(labels.Count - 1)) + " and " + labels[^1] : labels.FirstOrDefault() ?? "content";
             var state = await _onboarding.GetStateAsync(ct);
             SetupPending = state.FirstRun;
             if (state.Draft is { } draft)

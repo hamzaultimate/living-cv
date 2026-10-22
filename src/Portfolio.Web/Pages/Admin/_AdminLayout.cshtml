@@ -4,6 +4,8 @@
     var flash = TempData[AdminPageModel.FlashKey] as string;
     var flashError = TempData[AdminPageModel.FlashErrorKey] as string;
     var current = ViewContext.RouteData.Values["page"] as string ?? "";
+    // After a redirect the message takes focus so a screen reader reads it; only pages that ask for it (the content editors) do this.
+    var focusFlash = ViewData["FocusFlash"] is true;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -27,6 +29,7 @@
                     <a href="/admin" aria-current="@(current == "/Admin/Index" ? "page" : null)">Dashboard</a>
                     <a href="/admin/profile" aria-current="@(current == "/Admin/Profile" ? "page" : null)">Profile</a>
                     <a href="/admin/photo" aria-current="@(current == "/Admin/Photo" ? "page" : null)">Photo</a>
+                    <a href="/admin/content" aria-current="@(current.StartsWith("/Admin/Content/") ? "page" : null)">Content</a>
                     <a href="/admin/template" aria-current="@(current == "/Admin/Template" ? "page" : null)">Template</a>
                     <a href="/admin/welcome" aria-current="@(current.StartsWith("/Admin/Welcome/") ? "page" : null)">Setup</a>
                     <a href="/" target="_blank" rel="noopener">View site</a>
@@ -40,13 +43,14 @@
     <main id="main-content" class="adm-main">
         @if (!string.IsNullOrEmpty(flash))
         {
-            <div class="adm-flash adm-flash-ok" role="status">@flash</div>
+            <div class="adm-flash adm-flash-ok" role="status" aria-live="polite" tabindex="-1" autofocus="@(focusFlash ? "autofocus" : null)">@flash</div>
         }
         @if (!string.IsNullOrEmpty(flashError))
         {
-            <div class="adm-flash adm-flash-error" role="alert">@flashError</div>
+            <div class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus="@(focusFlash && string.IsNullOrEmpty(flash) ? "autofocus" : null)">@flashError</div>
         }
         @RenderBody()
     </main>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

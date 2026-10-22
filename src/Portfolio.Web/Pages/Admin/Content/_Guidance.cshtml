@@ -1,0 +1,8 @@
+@model EditorView
+@if (Model.Guidance is not null)
+{
+    <aside class="adm-card adm-callout" aria-labelledby="guidance-heading">
+        <h2 id="guidance-heading">Before you publish</h2>
+        <p>@Model.Guidance</p>
+    </aside>
+}

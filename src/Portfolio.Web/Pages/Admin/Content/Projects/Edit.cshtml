@@ -1,0 +1,120 @@
+@page "/admin/content/projects/edit/{id:int?}"
+@model Portfolio.Web.Pages.Admin.Content.Projects.EditModel
+@{
+    ViewData["Title"] = (Model.IsNew ? "Add " : "Edit ") + Model.View.ItemLabelLower;
+    var f = Model.Form;
+    var v = Model.View;
+    string Id(string name) => "Form_" + name;
+    string? Err(string key) => ViewData.ModelState.TryGetValue("Form." + key, out var e) && e.Errors.Count > 0 ? e.Errors[0].ErrorMessage : null;
+}
+<h1>@(Model.IsNew ? "Add" : "Edit") @v.ItemLabelLower</h1>
+<p class="adm-lede">Appears on your @v.SectionLabel.ToLowerInvariant() page and, if shown on the home page, there too. Changes apply as soon as you save.</p>
+<partial name="_Guidance" model="v" />
+
+<form method="post" enctype="multipart/form-data" asp-page="/Admin/Content/Projects/Edit" asp-route-id="@Model.Id" novalidate data-unsaved-warning>
+    <partial name="_ErrorSummary" />
+    <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
+
+    <fieldset class="adm-fieldset">
+        <legend>@v.ItemLabel</legend>
+        <partial name="_Field" model="@(Model.Field("title", nameof(f.Title), f.Title, maxLength: Project.MaxLength.Title))" />
+        <partial name="_Field" model="@(Model.Field("slug", nameof(f.Slug), f.Slug, maxLength: Slugs.MaxLength, required: false))" />
+        <partial name="_Field" model="@(Model.Field("summary", nameof(f.Summary), f.Summary, FieldKind.Textarea, 600, rows: 3))" />
+        <partial name="_Field" model="@(Model.Field("category", nameof(f.Category), f.Category, maxLength: Project.MaxLength.Category))" />
+        <partial name="_Field" model="@(Model.Field("featured", nameof(f.Featured), null, FieldKind.Checkbox, isChecked: f.Featured))" />
+    </fieldset>
+
+    @if (v.Visible("role") || v.Visible("org") || v.Visible("period"))
+    {
+        <fieldset class="adm-fieldset">
+            <legend>Context</legend>
+            <partial name="_Field" model="@(Model.Field("role", nameof(f.Role), f.Role, maxLength: 200))" />
+            <partial name="_Field" model="@(Model.Field("org", nameof(f.Org), f.Org, maxLength: 200))" />
+            <partial name="_Field" model="@(Model.Field("period", nameof(f.Period), f.Period, maxLength: 60))" />
+        </fieldset>
+    }
+
+    @if (v.Visible("problem") || v.Visible("approach") || v.Visible("impact") || v.Visible("tech"))
+    {
+        <fieldset class="adm-fieldset">
+            <legend>Write-up</legend>
+            <partial name="_Field" model="@(Model.Field("problem", nameof(f.Problem), f.Problem, FieldKind.Textarea, 3000, rows: 5))" />
+            <partial name="_Field" model="@(Model.Field("approach", nameof(f.Approach), f.Approach, FieldKind.Textarea, 3000, rows: 5))" />
+            <partial name="_Field" model="@(Model.Field("impact", nameof(f.ImpactText), f.ImpactText, FieldKind.Textarea, 1800, rows: 4))" />
+            <partial name="_Field" model="@(Model.Field("tech", nameof(f.TechText), f.TechText, FieldKind.Textarea, 1500, rows: 4))" />
+        </fieldset>
+    }
+
+    @if (v.Visible("links"))
+    {
+        <fieldset class="adm-fieldset">
+            <legend>@v.Label("links")</legend>
+            <p class="adm-hint">@v.Hint("links") Leave a row empty to skip it.</p>
+            @for (var i = 0; i < f.Links.Count; i++)
+            {
+                var labelError = Err($"Links[{i}].Label");
+                var urlError = Err($"Links[{i}].Url");
+                <div class="adm-row adm-row-2">
+                    <div>
+                        <label class="adm-legend" for="@Id($"Links_{i}__Label")">Link @(i + 1) label</label>
+                        <input type="text" id="@Id($"Links_{i}__Label")" name="Form.Links[@i].Label" value="@f.Links[i].Label" maxlength="80" aria-invalid="@(labelError is null ? null : "true")" />
+                        @if (labelError is not null) { <span class="field-validation-error">@labelError</span> }
+                    </div>
+                    <div>
+                        <label class="adm-legend" for="@Id($"Links_{i}__Url")">Link @(i + 1) web address</label>
+                        <input type="url" id="@Id($"Links_{i}__Url")" name="Form.Links[@i].Url" value="@f.Links[i].Url" maxlength="300" inputmode="url" aria-invalid="@(urlError is null ? null : "true")" />
+                        @if (urlError is not null) { <span class="field-validation-error">@urlError</span> }
+                    </div>
+                </div>
+            }
+        </fieldset>
+    }
+
+    @if (v.Visible("heroImage"))
+    {
+        var heroError = Err("HeroFile");
+        var altError = Err("HeroAlt");
+        <fieldset class="adm-fieldset">
+            <legend>@v.Label("heroImage")</legend>
+            @if (!string.IsNullOrWhiteSpace(Model.CurrentHero))
+            {
+                @if (Media.IsVideo(Model.CurrentHero))
+                {
+                    <p>The current cover is a video file that comes with the site.</p>
+                }
+                else
+                {
+                    <img class="adm-cover" src="@Model.CurrentHero" alt="Current cover image" width="320" height="180" />
+                }
+            }
+            <div class="adm-field">
+                <label for="@Id("HeroFile")">@(string.IsNullOrWhiteSpace(Model.CurrentHero) ? "Choose an image" : "Replace the image") <span class="adm-optional">(optional)</span></label>
+                <input type="file" id="@Id("HeroFile")" name="Form.HeroFile" accept="image/jpeg,image/png,image/webp" aria-describedby="@Id("HeroFile")-hint" aria-invalid="@(heroError is null ? null : "true")" />
+                <span id="@Id("HeroFile")-hint" class="adm-hint">@v.Hint("heroImage") Up to @Model.MaxSize. It is re-encoded on upload: location and camera details are removed and large images are scaled down. If the form shows an error, choose the file again.</span>
+                @if (heroError is not null) { <span class="field-validation-error">@heroError</span> }
+            </div>
+            <div class="adm-field">
+                <label for="@Id("HeroAlt")">Describe the image (alt text)</label>
+                <input type="text" id="@Id("HeroAlt")" name="Form.HeroAlt" value="@f.HeroAlt" maxlength="@Project.MaxLength.HeroImageAlt" aria-describedby="@Id("HeroAlt")-hint" aria-invalid="@(altError is null ? null : "true")" />
+                <span id="@Id("HeroAlt")-hint" class="adm-hint">Required for an image you upload. A short description for people who cannot see it.</span>
+                @if (altError is not null) { <span class="field-validation-error">@altError</span> }
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.CurrentHero))
+            {
+                <div class="adm-field adm-check">
+                    <input type="hidden" name="Form.RemoveHero" value="false" />
+                    <input type="checkbox" id="@Id("RemoveHero")" name="Form.RemoveHero" value="true" checked="@f.RemoveHero" />
+                    <label for="@Id("RemoveHero")">Remove the current cover image</label>
+                </div>
+            }
+        </fieldset>
+    }
+
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @v.ItemLabelLower</button>
+        <a class="adm-btn" href="@Model.ListUrl">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+    <script src="~/js/admin-unsaved.js" defer asp-append-version="true"></script>
+}

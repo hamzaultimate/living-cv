@@ -1,0 +1,7 @@
+@page "/admin/content/certifications"
+@model Portfolio.Web.Pages.Admin.Content.Certifications.IndexModel
+@{
+    ViewData["Title"] = Model.View.SectionLabel;
+}
+<partial name="_List" model="Model" />
+<p class="adm-hint">The public page groups entries by @Model.View.Label("issuer").ToLowerInvariant(), and puts the group with the first entry in this order first.</p>

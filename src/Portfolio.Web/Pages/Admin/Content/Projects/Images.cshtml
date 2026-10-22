@@ -1,0 +1,91 @@
+@page "/admin/content/projects/images/{id:int}"
+@model Portfolio.Web.Pages.Admin.Content.Projects.ImagesModel
+@{
+    ViewData["Title"] = Model.Heading + ": " + Model.ProjectTitle;
+    var captionError = ViewData.ModelState.TryGetValue("Caption", out var ce) && ce.Errors.Count > 0 ? ce.Errors[0].ErrorMessage : null;
+    var imageError = ViewData.ModelState.TryGetValue("Image", out var ie) && ie.Errors.Count > 0 ? ie.Errors[0].ErrorMessage : null;
+}
+<h1>@Model.Heading</h1>
+<p class="adm-lede">For <strong>@Model.ProjectTitle</strong>. JPEG, PNG or WebP, up to @Model.MaxSize each, @ImagesModel.MaxImages at most. Images are re-encoded on upload: location and camera details are removed and large images are scaled down. <a href="@Model.ListUrl/edit/@Model.Id">Back to the details</a></p>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div id="error-summary" class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus>
+        <strong>The image was not added.</strong>
+        <ul>
+            @foreach (var entry in ViewData.ModelState.Where(e => e.Value?.Errors.Count > 0))
+            {
+                foreach (var error in entry.Value!.Errors)
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            }
+        </ul>
+    </div>
+}
+
+<section class="adm-card" aria-labelledby="current-heading">
+    <h2 id="current-heading">Current images (@Model.Images.Count)</h2>
+    @if (Model.Images.Count == 0)
+    {
+        <p>There are no gallery images yet.</p>
+    }
+    else
+    {
+        <ol class="adm-gallery">
+            @for (var i = 0; i < Model.Images.Count; i++)
+            {
+                var image = Model.Images[i];
+                <li>
+                    @if (Media.IsVideo(image.Url))
+                    {
+                        <p>Video file that comes with the site</p>
+                    }
+                    else
+                    {
+                        <img src="@image.Url" alt="@image.Caption" width="160" height="90" />
+                    }
+                    <p>@image.Caption</p>
+                    <div class="adm-order">
+                        <form method="post" asp-page="/Admin/Content/Projects/Images" asp-page-handler="Move" asp-route-id="@Model.Id">
+                            <input type="hidden" name="stamp" value="@Model.Stamp" />
+                            <input type="hidden" name="url" value="@image.Url" />
+                            <input type="hidden" name="direction" value="up" />
+                            <button type="submit" class="adm-btn" disabled="@(i == 0)" aria-label="Move up: @image.Caption">Move up</button>
+                        </form>
+                        <form method="post" asp-page="/Admin/Content/Projects/Images" asp-page-handler="Move" asp-route-id="@Model.Id">
+                            <input type="hidden" name="stamp" value="@Model.Stamp" />
+                            <input type="hidden" name="url" value="@image.Url" />
+                            <input type="hidden" name="direction" value="down" />
+                            <button type="submit" class="adm-btn" disabled="@(i == Model.Images.Count - 1)" aria-label="Move down: @image.Caption">Move down</button>
+                        </form>
+                        <form method="post" asp-page="/Admin/Content/Projects/Images" asp-page-handler="Remove" asp-route-id="@Model.Id">
+                            <input type="hidden" name="stamp" value="@Model.Stamp" />
+                            <input type="hidden" name="url" value="@image.Url" />
+                            <button type="submit" class="adm-btn adm-btn-danger" aria-label="Remove: @image.Caption">Remove</button>
+                        </form>
+                    </div>
+                </li>
+            }
+        </ol>
+    }
+</section>
+
+<section class="adm-card" aria-labelledby="add-heading">
+    <h2 id="add-heading">Add an image</h2>
+    <form method="post" enctype="multipart/form-data" asp-page="/Admin/Content/Projects/Images" asp-page-handler="Upload" asp-route-id="@Model.Id" novalidate>
+        <input type="hidden" name="stamp" value="@Model.Stamp" />
+        <div class="adm-field">
+            <label for="Image">Image file</label>
+            <input type="file" id="Image" name="Image" accept="image/jpeg,image/png,image/webp" required aria-invalid="@(imageError is null ? null : "true")" />
+            @if (imageError is not null) { <span class="field-validation-error">@imageError</span> }
+        </div>
+        <div class="adm-field">
+            <label for="Caption">Description (alt text)</label>
+            <input type="text" id="Caption" name="Caption" value="@Model.Caption" maxlength="@ImagesModel.CaptionMax" required aria-describedby="caption-hint" aria-invalid="@(captionError is null ? null : "true")" />
+            <span id="caption-hint" class="adm-hint">Required. Read to people who cannot see the image, and shown as its caption.</span>
+            @if (captionError is not null) { <span class="field-validation-error">@captionError</span> }
+        </div>
+        <button type="submit" class="adm-btn adm-btn-primary">Add image</button>
+    </form>
+</section>

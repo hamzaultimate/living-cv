@@ -1,0 +1,72 @@
+@model IContentList
+@using Portfolio.Web.Pages.Admin.Content
+@{
+    var v = Model.View;
+    var pageName = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+}
+<h1>@v.SectionLabel</h1>
+<p class="adm-lede">@Model.Count @(Model.Count == 1 ? "entry" : "entries") in @v.SectionLabel.ToLowerInvariant(). They appear on the public site in the order shown here.</p>
+@if (!v.SectionEnabled)
+{
+    <p class="adm-callout" role="note">The template you use does not show this section on the public site. Your entries are kept and will show again if you switch to a template that uses it.</p>
+}
+<partial name="_Guidance" model="v" />
+<div class="adm-actions adm-actions-spaced">
+    <a class="adm-btn adm-btn-primary" href="@Model.ListUrl/edit">Add @v.ItemLabelLower</a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <section class="adm-card" aria-labelledby="empty-heading">
+        <h2 id="empty-heading">No entries yet</h2>
+        <p>You have not added any @v.SectionLabel.ToLowerInvariant() yet, so the page on your site shows its empty state. Use "Add @v.ItemLabelLower" to create the first one.</p>
+    </section>
+}
+else
+{
+    @foreach (var group in Model.Groups)
+    {
+        <table class="adm-table">
+            <caption>@(group.Heading ?? v.SectionLabel)</caption>
+            <thead>
+                <tr>
+                    <th scope="col">@v.ItemLabel</th>
+                    <th scope="col">Details</th>
+                    <th scope="col">Order</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in group.Rows)
+                {
+                    <tr id="row-@r.Id">
+                        <th scope="row">@r.Title</th>
+                        <td>@r.Detail @if (!string.IsNullOrEmpty(r.Meta)) { <span class="adm-hint">@r.Meta</span> }</td>
+                        <td>
+                            <div class="adm-order">
+                                <form method="post" asp-page="@pageName" asp-page-handler="Move" asp-route-id="@r.Id">
+                                    <input type="hidden" name="direction" value="up" />
+                                    <button type="submit" class="adm-btn" disabled="@(!r.CanMoveUp)" aria-label="Move up: @r.Title">Move up</button>
+                                </form>
+                                <form method="post" asp-page="@pageName" asp-page-handler="Move" asp-route-id="@r.Id">
+                                    <input type="hidden" name="direction" value="down" />
+                                    <button type="submit" class="adm-btn" disabled="@(!r.CanMoveDown)" aria-label="Move down: @r.Title">Move down</button>
+                                </form>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="adm-order">
+                                <a class="adm-btn" href="@Model.ListUrl/edit/@r.Id" aria-label="Edit: @r.Title">Edit</a>
+                                @if (r.Extra is { } extra)
+                                {
+                                    <a class="adm-btn" href="@extra.Url" aria-label="@extra.Text: @r.Title">@extra.Text</a>
+                                }
+                                <a class="adm-btn adm-btn-danger" href="@Model.ListUrl/delete/@r.Id" aria-label="Remove: @r.Title">Remove</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
