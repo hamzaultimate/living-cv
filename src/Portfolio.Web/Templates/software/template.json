@@ -54,7 +54,10 @@
       "stackHeading": "Stack",
       "linksHeading": "Links",
       "proofHeading": "Proof",
-      "screenshotsHeading": "Screenshots"
+      "screenshotsHeading": "Screenshots",
+      "imageAlt": "{title} screenshot",
+      "galleryLabel": "Screenshots",
+      "openImageLabel": "Open screenshot"
     },
     "experience": {
       "title": "Experience",

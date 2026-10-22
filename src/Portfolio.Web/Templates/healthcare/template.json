@@ -59,7 +59,10 @@
       "stackHeading": "Tools & methods",
       "linksHeading": "Links",
       "proofHeading": "Evidence",
-      "screenshotsHeading": "Images"
+      "screenshotsHeading": "Images",
+      "imageAlt": "{title} image",
+      "galleryLabel": "Images",
+      "openImageLabel": "Open image"
     },
     "experience": {
       "title": "Experience",

@@ -172,6 +172,18 @@ public class ProjectsCopy
     public string LinksHeading { get; set; } = "";
     public string ProofHeading { get; set; } = "";
     public string ScreenshotsHeading { get; set; } = "";
+
+    /// <summary>Alt text of a project image that has no caption of its own; <c>{title}</c> is the project title.</summary>
+    public string ImageAlt { get; set; } = "";
+
+    /// <summary>Accessible name of the image gallery on a project page.</summary>
+    public string GalleryLabel { get; set; } = "";
+
+    /// <summary>Accessible name of the button that opens an image full size; a caption is appended after a colon.</summary>
+    public string OpenImageLabel { get; set; } = "";
+
+    /// <summary><see cref="ImageAlt"/> for one project.</summary>
+    public string AltFor(string title) => ImageAlt.Replace("{title}", title);
 }
 
 public class ExperienceCopy

@@ -1,5 +1,9 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Portfolio.Data.Entities;
+using Portfolio.Web.Services;
 using Portfolio.Web.Tests.Support;
 using Xunit;
 
@@ -151,6 +155,39 @@ public class TemplateRenderingTests
         Assert.Contains("Page not found", html);
         Assert.Contains("<meta name=\"robots\" content=\"noindex,nofollow\" />", html);
         Assert.Equal(HttpStatusCode.NotFound, (await app.NewClient().GetAsync("/img/missing.png")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Healthcare_ProjectImages_UseNeutralWording()
+    {
+        using var app = new AdminApp();
+        await DemoSite.ApplyStarterAsync(app, "healthcare");
+        using (var db = app.CreateDbContext())
+        {
+            // The starter initiatives have no images, so give one a cover and a gallery with and without captions.
+            var project = await db.Projects.SingleAsync(p => p.Slug == "early-mobility-programme");
+            project.HeroImage = "/img/projects/_placeholder.svg";
+            project.Screenshots = [new ProjectImage { Url = "/img/projects/_placeholder.svg", Caption = "Run chart" }, new ProjectImage { Url = "/img/projects/_placeholder.svg" }];
+            await db.SaveChangesAsync();
+        }
+        app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
+        var client = app.NewClient();
+
+        foreach (var path in new[] { "/", "/projects", "/projects/early-mobility-programme" })
+        {
+            var (status, html) = await GetAsync(client, path);
+            Assert.Equal(HttpStatusCode.OK, status);
+            Assert.DoesNotContain("screenshot", html, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("<img", html);
+        }
+        var detail = (await GetAsync(client, "/projects/early-mobility-programme")).Html;
+        Assert.Contains("aria-label=\"Images\"", detail);
+        Assert.Contains("aria-label=\"Open image: Run chart\"", detail);
+        Assert.Contains("aria-label=\"Open image\"", detail);
+        Assert.Contains("alt=\"Run chart\"", detail);
+        Assert.Contains("alt=\"Early mobility programme (sample) image\"", detail);
+        Assert.Contains("alt=\"Early mobility programme (sample) image\"", (await GetAsync(client, "/projects")).Html);
+        Assert.Contains("alt=\"Early mobility programme (sample) image\"", (await GetAsync(client, "/")).Html);
     }
 
     [Fact]

@@ -159,7 +159,7 @@ else
 
         @if (p.Screenshots.Count > 0)
         {
-            <section class="mt-14" data-lightbox-gallery aria-label="Screenshots">
+            <section class="mt-14" data-lightbox-gallery aria-label="@copy.GalleryLabel">
                 <p class="eyebrow">@Text(copy.ScreenshotsHeading)</p>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @for (var i = 0; i < p.Screenshots.Count; i++)
@@ -169,7 +169,7 @@ else
                         <button type="button"
                                 class="group relative block overflow-hidden rounded-lg border border-border transition hover:border-accent/50"
                                 data-lightbox-item data-src="@shot.Url" data-caption="@shot.Caption" data-video="@(shotIsVideo ? "true" : "false")" data-index="@i"
-                                aria-label="Open @(shotIsVideo ? "video" : "screenshot")@(string.IsNullOrWhiteSpace(shot.Caption) ? "" : ": " + shot.Caption)">
+                                aria-label="@(shotIsVideo ? "Open video" : copy.OpenImageLabel)@(string.IsNullOrWhiteSpace(shot.Caption) ? "" : ": " + shot.Caption)">
                             @if (shotIsVideo)
                             {
                                 <video class="aspect-video w-full object-cover" muted playsinline preload="metadata">
@@ -178,7 +178,7 @@ else
                             }
                             else
                             {
-                                <img src="@shot.Url" alt="@(shot.Caption ?? p.Title + " screenshot")" loading="lazy"
+                                <img src="@shot.Url" alt="@(shot.Caption ?? copy.AltFor(p.Title))" loading="lazy"
                                      class="aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
                             }
                             <span class="pointer-events-none absolute inset-0 flex items-center justify-center bg-bg/40 opacity-0 transition group-hover:opacity-100">

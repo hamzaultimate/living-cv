@@ -249,7 +249,10 @@
             "stackHeading",
             "linksHeading",
             "proofHeading",
-            "screenshotsHeading"
+            "screenshotsHeading",
+            "imageAlt",
+            "galleryLabel",
+            "openImageLabel"
           ],
           "properties": {
             "title": {
@@ -298,6 +301,15 @@
               "type": "string"
             },
             "screenshotsHeading": {
+              "type": "string"
+            },
+            "imageAlt": {
+              "type": "string"
+            },
+            "galleryLabel": {
+              "type": "string"
+            },
+            "openImageLabel": {
               "type": "string"
             }
           }
