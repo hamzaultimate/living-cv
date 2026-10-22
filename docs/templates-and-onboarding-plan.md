@@ -143,6 +143,8 @@ Implementation notes (decisions worth reviewing):
   discarding `/admin` edits, and resets the photo URL, orphaning the uploaded file.
 
 ### Phase 2: Template engine v1
+**Status: done** (pending independent review).
+
 - `TemplateDefinition` manifest (JSON, in repo): key, name, profession, archetype, section list,
   labels, skill groups, starter content, default theme.
 - Razor pieces resolve layout partials by archetype; theme is a `data-template` attribute plus
@@ -153,6 +155,38 @@ Implementation notes (decisions worth reviewing):
   new template does not use are hidden, not dropped.
 - Exit criteria: same data renders correctly in both templates; sitemap and JSON-LD follow the
   enabled sections.
+
+Implementation notes (decisions worth reviewing):
+- **Extended, not replaced.** `TemplatePreset` became `TemplateDefinition`; the catalog still loads `Templates/<key>/template.json`.
+  Manifests are deserialized strictly (unknown properties rejected), validated by `TemplateValidator` and skipped with a logged
+  error when invalid. `Templates/template.schema.json` documents the shape and a test keeps it in step with the model. An unknown
+  key on the profile falls back to software.
+- **Copy has no defaults.** Every profession-specific string (headings, empty states, status words, meta descriptions) is a required
+  manifest field, so a template cannot silently inherit another profession's wording. Pages escape it with a minimal escaper so
+  apostrophes and dashes render exactly as the old literals did.
+- **Software parity is enforced byte for byte.** Golden HTML for 15 routes of the demo persona was captured before any change and
+  is compared after normalising only tokens, nonces, asset fingerprints and the copyright year. Software adds no `data-template`
+  attribute (its look is the base `:root`), so no markup changed.
+- **Archetype layouts.** `Layouts/<archetype>/_Home.cshtml` composes the home page; featured work, testimonials and the contact call
+  to action are shared blocks. Only the home page differs by archetype for now; other pages share one implementation driven by copy.
+  Credentials is the second archetype; gallery and results are rejected by the validator until they have layouts.
+- **Sections.** The template's list decides navigation, sitemap, CV and routes. A page marked `[SectionPage]` answers 404 when its
+  section is disabled (also under preview). The owner's per-section settings on the profile (existing JSON column, no migration)
+  can relabel or hide a section but never enable one the template lacks. Hidden means not shown; no row is ever removed.
+- **Switching** only writes `SiteProfile.TemplateKey`, through `ProfileEditor` so the profile cache is primed (version bump) and the
+  `Generated` output cache evicted, like a profile save. The method takes a catalog entry, not a string. `ThemeKey` is unused.
+- **Preview** is `?preview=<key>` on public GET pages. Because public requests do not validate the session cookie, it calls the same
+  session check as /admin (stamp and age) rather than trusting `User.IsAuthenticated`. It is ignored for anyone else, for keys outside
+  the catalog, and for the generated endpoints (sitemap, CV PDF, share image), which always use the saved template. Responses are
+  noindex, no-store and framable only by the same origin; the admin CSP gains `frame-src 'self'` on the template page only. Links
+  inside a preview keep the parameter through a small preview-only script.
+- **Theme** is variables only, imported into `app.css` and compiled by Tailwind; fonts and radii in the Tailwind config read variables
+  with the previous values as fallbacks. Healthcare uses system fonts, so no font files were added.
+- **JSON-LD** follows sections: no page, no breadcrumb for a disabled section; `seo.credentialsJsonLd` adds `hasCredential` from the
+  enabled certifications (Healthcare on, software off to keep its output unchanged).
+- **Known gaps.** The CV ATS badge still shows the committed demo-persona report on every template (Phase 6). The CV page prints
+  certification status with the enum names as before. Issuer logos on the certifications page are matched by name, as before.
+  /cv.pdf and /og.png keep the software look (per-template CV output is Phase 6).
 
 ### Phase 3: 4-step onboarding wizard
 Shown on first run (after setup key) and re-runnable from admin.

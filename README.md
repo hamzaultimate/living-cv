@@ -38,6 +38,11 @@ testable the moment you run it. Swap in your own details to make it yours.
 - **Owner admin** at `/admin`: one-time `/setup` (gated by a `Setup:Key`) creates the single owner account;
   cookie sign-in with lockout, a profile editor, and photo upload (re-encoded, metadata stripped,
   stored outside `wwwroot`). See [docs/new-user-guide.md](docs/new-user-guide.md#3-claim-the-site-and-use-the-admin)
+- **Profession templates** with a live preview switcher at `/admin/template`. Two ship today:
+  **Software & IT** (case-study showcase, the original look) and **Healthcare** (credentials-first
+  layout, calm theme, guidance against publishing patient data, fictional starter content). A template
+  sets the wording, section list and theme; switching hides sections the template does not use and
+  never deletes content. See [docs/template-authoring-guide.md](docs/template-authoring-guide.md)
 - Health checks at `/health` (liveness) and `/health/db` (DB readiness)
 - Zero front-end build dependencies to *run* it (Tailwind is compiled during build)
 
@@ -119,6 +124,8 @@ side only) and open `/setup` once. Keep `Uploads:Path` on a persistent folder. D
 src/Portfolio.Web/                ASP.NET Core Razor Pages app
   Configuration/SiteOptions.cs    Bound identity/content config ("Site" section)
   Pages/                          Razor Pages (Pages/Admin is the owner area, Pages/Setup.cshtml the one-time setup)
+  Templates/<key>/template.json   Profession templates (manifest, optional starter.json); template.schema.json documents the shape
+  Styles/themes/<key>.css         Per-template theme variables, compiled into app.css
   Security/                       Owner account, cookie sign-in, setup key gate, reset-owner command
   Uploads/                        Image processing (SkiaSharp re-encode) and upload storage
   appsettings.json                Default site identity and public content

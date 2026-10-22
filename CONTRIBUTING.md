@@ -35,7 +35,10 @@ describe what you changed and why.
 - **Content is data, never hardcoded markup.** Site identity/copy belongs in the `"Site"`
   config section (`SiteOptions`); page content belongs in the JSON seed files under
   `src/Portfolio.Data/Seed/`. Profession-specific copy (SEO patterns, skill-group order) belongs in
-  `src/Portfolio.Web/Templates/<key>/template.json`. Please don't hardcode names, copy, or data
+  `src/Portfolio.Web/Templates/<key>/template.json` (labels, section list, empty-state text, theme name), validated by
+  `TemplateValidator`. Read it in pages through `RequestTemplate`, and mark a page that belongs to a section with
+  `@attribute [SectionPage(SectionRegistry.X)]` so it 404s when the template disables it. Themes are CSS variables under
+  `[data-template="<key>"]` in `Styles/themes/`. Please don't hardcode names, copy, or data
   into Razor pages. Read site identity through `ISiteProfileProvider`, not `IOptions<SiteOptions>`.
 - Admin pages live under `src/Portfolio.Web/Pages/Admin`, which is protected as a whole (`AuthorizeFolder`
   plus a deny-by-default check). Add new admin pages there, inherit `AdminPageModel`, keep every

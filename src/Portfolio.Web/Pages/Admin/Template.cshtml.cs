@@ -58,7 +58,7 @@ public class TemplateModel : AdminPageModel
         Selected = _catalog.TryGet(Show, out var chosen) ? chosen : _catalog.Get(CurrentKey);
 
         var view = _resolver.Resolve(SiteProfileMapper.ToOptions(profile), Selected.Key);
-        PreviewPages = [("/", "Home"), .. view.NavLinks(mobile: true).Select(l => (l.Path, Cap(l.Label)))];
+        PreviewPages = [("/", "Home"), .. view.NavLinks(mobile: true).Select(l => (l.Path, l.Path == "/cv" ? "CV" : Cap(l.Label)))];
         PreviewPath = PreviewPages.Select(p => p.Path).FirstOrDefault(p => p == Tab) ?? "/";
         HiddenContent = await HiddenContentAsync(view, ct);
     }

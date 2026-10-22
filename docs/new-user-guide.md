@@ -161,6 +161,20 @@ Edit the `Site` section in [src/Portfolio.Web/appsettings.json](../src/Portfolio
 
 These values are the defaults for the site profile. With a database, they are copied into a profile row on first run and that row is used afterwards; edit the `Site` section before the first run, or set `Seed:Mode=Authoritative` to re-apply it on every start. Be careful with that second option once you use `/admin`: Authoritative overwrites the stored profile from the config on the first read after each start, which discards edits made in `/admin/profile`, and it replaces the photo URL, leaving an uploaded photo file in the uploads folder with nothing pointing at it. Once you have an owner account you can change all of these in the browser at `/admin/profile` instead.
 
+### Template
+
+At `/admin/template` you pick the template that suits your profession: **Software & IT** or **Healthcare**.
+Choose a card, press Preview, and the public site is shown inside the page in that template's layout, wording and
+colours, with tabs for each page and a mobile width. Nothing is saved until you press "Use ...". Switching never
+deletes content: sections the new template does not use (for example Blog posts under Healthcare) are hidden from the
+navigation, sitemap and CV, their pages answer 404, and everything returns if you switch back. The page shows what
+stays hidden but kept. Healthcare shows a reminder never to publish patient-identifiable information.
+
+Previews only work while you are signed in as the owner; visitors and search engines never see them. The preview
+address is `/?preview=<template key>` and is marked noindex.
+
+![Template switcher](images/template-switcher.png)
+
 ### Content and pages
 
 The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed). Each table is seeded only when it is empty, so editing a seed file does not change a database that already has rows. To apply edited seed files to an existing database, set `Seed:Mode` to `Authoritative` (for example `Seed__Mode=Authoritative` as an environment variable): then rows are added, updated, and removed to match the files on every start. Update those JSON files to change:
