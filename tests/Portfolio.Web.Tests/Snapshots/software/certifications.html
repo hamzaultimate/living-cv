@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('theme');
+                if (t !== 'light' && t !== 'dark') {
+                    t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                }
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+        })();
+    </script>
+    <title>Certifications &#xB7; Alex Rivera</title>
+    <meta name="description" content="Certifications earned, in progress, and planned &#x2014; grouped by issuer." />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://owner.example/certifications" />
+    <script type="application/ld&#x2B;json">{"@context":"https://schema.org","@type":"WebSite","name":"Alex Rivera","url":"https://owner.example"}</script>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Alex Rivera" />
+    <meta property="og:title" content="Certifications &#xB7; Alex Rivera" />
+    <meta property="og:description" content="Certifications earned, in progress, and planned &#x2014; grouped by issuer." />
+    <meta property="og:url" content="https://owner.example/certifications" />
+    <meta property="og:image" content="https://owner.example/og.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Certifications &#xB7; Alex Rivera" />
+    <meta name="twitter:description" content="Certifications earned, in progress, and planned &#x2014; grouped by issuer." />
+    <meta name="twitter:image" content="https://owner.example/og.png" />
+
+    <link rel="icon" href="/favicon.b9s39hdsmi.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.uvb1mr534j.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.ufsnxtuijq.png" />
+    <link rel="preload" href="/fonts/space-grotesk-latin.agvvb5vkd1.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/jetbrains-mono-latin.runbf9g1yj.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/css/app.h1v6hl896s.css" />
+</head>
+<body class="flex min-h-screen flex-col">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-accent focus:px-4 focus:py-2 focus:text-bg">Skip to content</a>
+    <header class="sticky top-0 z-40 border-b border-border/70 bg-bg/80 backdrop-blur">
+        <div class="container-page flex h-16 items-center justify-between">
+            <a href="/" class="font-display text-lg font-semibold tracking-tight text-text transition-colors hover:text-accent">
+                Alex<span class="text-accent">.</span>
+            </a>
+            <nav class="hidden items-center gap-6 md:flex">
+                <a class="nav-link" href="/about">about</a>
+                <a class="nav-link" href="/experience">experience</a>
+                <a class="nav-link" href="/projects">work</a>
+                <a class="nav-link" href="/skills">skills</a>
+                <a class="nav-link" href="/certifications">certs</a>
+                <a class="nav-link" href="/blog">blog</a>
+                <a class="nav-link" href="/talks">talks</a>
+                <a class="nav-link" href="/cv">cv</a>
+            </nav>
+            <div class="flex items-center gap-3">
+                <button id="theme-btn" class="text-muted hover:text-accent" aria-label="Toggle light/dark theme">
+                    <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                    </svg>
+                    <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+                    </svg>
+                </button>
+                <a href="/contact" class="btn btn-primary hidden text-xs sm:inline-flex">Get in touch</a>
+                <button id="menu-btn" class="md:hidden text-muted hover:text-text" aria-label="Toggle menu" aria-expanded="false">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <line x1="4" y1="7" x2="20" y2="7" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="17" x2="20" y2="17" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <nav id="mobile-nav" class="hidden border-t border-border/70 md:hidden">
+            <div class="container-page flex flex-col py-3">
+                <a class="nav-link py-2" href="/about">about</a>
+                <a class="nav-link py-2" href="/experience">experience</a>
+                <a class="nav-link py-2" href="/projects">work</a>
+                <a class="nav-link py-2" href="/skills">skills</a>
+                <a class="nav-link py-2" href="/certifications">certifications</a>
+                <a class="nav-link py-2" href="/blog">blog</a>
+                <a class="nav-link py-2" href="/talks">talks</a>
+                <a class="nav-link py-2" href="/cv">cv</a>
+                <a class="nav-link py-2" href="/contact">contact</a>
+            </div>
+        </nav>
+    </header>
+
+    <main id="main-content" class="flex-1">
+        <script type="application/ld&#x2B;json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://owner.example"},{"@type":"ListItem","position":2,"name":"Certifications","item":"https://owner.example/certifications"}]}</script>
+
+<section class="container-page py-16 md:py-20">
+    <p class="eyebrow">Certifications</p>
+    <h1 class="mt-3 text-3xl md:text-4xl">Credentials &amp; learning</h1>
+    <p class="lead">What's earned, what's in flight, and where I'm headed next.</p>
+
+        <div class="mt-10 flex flex-wrap gap-2" data-cert-filter role="group" aria-label="Filter certifications by issuer">
+            <button type="button" class="filter-chip is-active" data-filter="all" aria-pressed="true">All</button>
+                <button type="button" class="filter-chip" data-filter="microsoft" aria-pressed="false">
+                    Microsoft <span class="opacity-60">2</span>
+                </button>
+                <button type="button" class="filter-chip" data-filter="scrum.org" aria-pressed="false">
+                    Scrum.org <span class="opacity-60">1</span>
+                </button>
+                <button type="button" class="filter-chip" data-filter="linkedin learning" aria-pressed="false">
+                    LinkedIn Learning <span class="opacity-60">1</span>
+                </button>
+                <button type="button" class="filter-chip" data-filter="cloud native computing foundation" aria-pressed="false">
+                    Cloud Native Computing Foundation <span class="opacity-60">1</span>
+                </button>
+        </div>
+        <div class="mt-10 space-y-12" data-cert-groups>
+                <div data-issuer="microsoft">
+                    <h2 class="flex items-center gap-2.5 border-b border-border pb-3 font-mono text-sm uppercase tracking-wider text-muted">
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2"><svg viewBox='0 0 23 23' class='h-6 w-6' aria-hidden='true'><path fill='#F25022' d='M0 0h11v11H0z'/><path fill='#7FBA00' d='M12 0h11v11H12z'/><path fill='#00A4EF' d='M0 12h11v11H0z'/><path fill='#FFB900' d='M12 12h11v11H12z'/></svg></span>
+                        Microsoft
+                        <span class="ml-1 rounded-full border border-border px-2 py-0.5 text-[11px] normal-case tracking-normal text-muted">2</span>
+                    </h2>
+                    <div class="mt-5 grid gap-6 sm:grid-cols-2">
+                            <article class="card group flex flex-col overflow-hidden !p-0">
+                                <div class="flex items-center gap-3 border-b border-border px-6 py-4"
+                                     style="background: linear-gradient(135deg, #00A4EF26, transparent 70%);">
+                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2">
+                                        <svg viewBox='0 0 23 23' class='h-6 w-6' aria-hidden='true'><path fill='#F25022' d='M0 0h11v11H0z'/><path fill='#7FBA00' d='M12 0h11v11H12z'/><path fill='#00A4EF' d='M0 12h11v11H0z'/><path fill='#FFB900' d='M12 12h11v11H12z'/></svg>
+                                    </span>
+                                    <p class="font-mono text-xs text-muted">Microsoft</p>
+                                    <span class="badge badge-earned ml-auto shrink-0">Earned</span>
+                                </div>
+                                <div class="flex flex-1 flex-col gap-2 px-6 pb-6 pt-4">
+                                        <img src="/img/badges/badge.svg" alt="Microsoft Certified: Azure Developer Associate (AZ-204) badge" class="h-16 w-16 object-contain" width="64" height="64" loading="lazy" />
+                                    <h3 class="text-lg text-text">Microsoft Certified: Azure Developer Associate (AZ-204)</h3>
+                                        <p class="font-mono text-xs text-muted">
+                                            Azure &#xB7; 2024
+                                        </p>
+                                        <div class="mt-auto flex flex-wrap gap-3 pt-4">
+                                                <a href="/img/certs/certificate.svg" target="_blank" rel="noopener" class="btn btn-primary !px-3 !py-1.5 text-xs">
+                                                    <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                    View certificate
+                                                </a>
+                                                <a href="https://learn.microsoft.com/credentials/example" target="_blank" rel="noopener" class="btn btn-ghost !px-3 !py-1.5 text-xs">View credential →</a>
+                                        </div>
+                                </div>
+                            </article>
+                            <article class="card group flex flex-col overflow-hidden !p-0">
+                                <div class="flex items-center gap-3 border-b border-border px-6 py-4"
+                                     style="background: linear-gradient(135deg, #00A4EF26, transparent 70%);">
+                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2">
+                                        <svg viewBox='0 0 23 23' class='h-6 w-6' aria-hidden='true'><path fill='#F25022' d='M0 0h11v11H0z'/><path fill='#7FBA00' d='M12 0h11v11H12z'/><path fill='#00A4EF' d='M0 12h11v11H0z'/><path fill='#FFB900' d='M12 12h11v11H12z'/></svg>
+                                    </span>
+                                    <p class="font-mono text-xs text-muted">Microsoft</p>
+                                    <span class="badge badge-progress ml-auto shrink-0">In progress</span>
+                                </div>
+                                <div class="flex flex-1 flex-col gap-2 px-6 pb-6 pt-4">
+                                        <img src="/img/badges/badge.svg" alt="Microsoft Certified: Azure AI Fundamentals (AI-900) badge" class="h-16 w-16 object-contain" width="64" height="64" loading="lazy" />
+                                    <h3 class="text-lg text-text">Microsoft Certified: Azure AI Fundamentals (AI-900)</h3>
+                                        <p class="font-mono text-xs text-muted">
+                                            Azure AI
+                                        </p>
+                                </div>
+                            </article>
+                    </div>
+                </div>
+                <div data-issuer="scrum.org">
+                    <h2 class="flex items-center gap-2.5 border-b border-border pb-3 font-mono text-sm uppercase tracking-wider text-muted">
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2"><svg viewBox='0 0 24 24' class='h-6 w-6 text-accent' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><circle cx='12' cy='9' r='6'/><path d='M8.5 13.5 7 22l5-3 5 3-1.5-8.5'/></svg></span>
+                        Scrum.org
+                        <span class="ml-1 rounded-full border border-border px-2 py-0.5 text-[11px] normal-case tracking-normal text-muted">1</span>
+                    </h2>
+                    <div class="mt-5 grid gap-6 sm:grid-cols-2">
+                            <article class="card group flex flex-col overflow-hidden !p-0">
+                                <div class="flex items-center gap-3 border-b border-border px-6 py-4"
+                                     style="background: linear-gradient(135deg, rgb(96 165 250)26, transparent 70%);">
+                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2">
+                                        <svg viewBox='0 0 24 24' class='h-6 w-6 text-accent' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><circle cx='12' cy='9' r='6'/><path d='M8.5 13.5 7 22l5-3 5 3-1.5-8.5'/></svg>
+                                    </span>
+                                    <p class="font-mono text-xs text-muted">Scrum.org</p>
+                                    <span class="badge badge-earned ml-auto shrink-0">Earned</span>
+                                </div>
+                                <div class="flex flex-1 flex-col gap-2 px-6 pb-6 pt-4">
+                                    <h3 class="text-lg text-text">Professional Scrum Master I (PSM I)</h3>
+                                        <p class="font-mono text-xs text-muted">
+                                            Agile &#xB7; 2023
+                                        </p>
+                                        <div class="mt-auto flex flex-wrap gap-3 pt-4">
+                                                <a href="/img/certs/certificate.svg" target="_blank" rel="noopener" class="btn btn-primary !px-3 !py-1.5 text-xs">
+                                                    <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                    View certificate
+                                                </a>
+                                                <a href="https://www.scrum.org/certificates/example" target="_blank" rel="noopener" class="btn btn-ghost !px-3 !py-1.5 text-xs">View credential →</a>
+                                        </div>
+                                </div>
+                            </article>
+                    </div>
+                </div>
+                <div data-issuer="linkedin learning">
+                    <h2 class="flex items-center gap-2.5 border-b border-border pb-3 font-mono text-sm uppercase tracking-wider text-muted">
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2"><svg viewBox='0 0 24 24' class='h-6 w-6' fill='#0A66C2' aria-hidden='true'><path d='M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z'/></svg></span>
+                        LinkedIn Learning
+                        <span class="ml-1 rounded-full border border-border px-2 py-0.5 text-[11px] normal-case tracking-normal text-muted">1</span>
+                    </h2>
+                    <div class="mt-5 grid gap-6 sm:grid-cols-2">
+                            <article class="card group flex flex-col overflow-hidden !p-0">
+                                <div class="flex items-center gap-3 border-b border-border px-6 py-4"
+                                     style="background: linear-gradient(135deg, #0A66C226, transparent 70%);">
+                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2">
+                                        <svg viewBox='0 0 24 24' class='h-6 w-6' fill='#0A66C2' aria-hidden='true'><path d='M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z'/></svg>
+                                    </span>
+                                    <p class="font-mono text-xs text-muted">LinkedIn Learning</p>
+                                    <span class="badge badge-earned ml-auto shrink-0">Earned</span>
+                                </div>
+                                <div class="flex flex-1 flex-col gap-2 px-6 pb-6 pt-4">
+                                    <h3 class="text-lg text-text">Decision-Making Strategies</h3>
+                                        <p class="font-mono text-xs text-muted">
+                                            Leadership &#xB7; 2023
+                                        </p>
+                                        <div class="mt-auto flex flex-wrap gap-3 pt-4">
+                                                <a href="https://www.linkedin.com/learning/certificates/example" target="_blank" rel="noopener" class="btn btn-ghost !px-3 !py-1.5 text-xs">View credential →</a>
+                                        </div>
+                                </div>
+                            </article>
+                    </div>
+                </div>
+                <div data-issuer="cloud native computing foundation">
+                    <h2 class="flex items-center gap-2.5 border-b border-border pb-3 font-mono text-sm uppercase tracking-wider text-muted">
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2"><svg viewBox='0 0 24 24' class='h-6 w-6 text-accent' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><circle cx='12' cy='9' r='6'/><path d='M8.5 13.5 7 22l5-3 5 3-1.5-8.5'/></svg></span>
+                        Cloud Native Computing Foundation
+                        <span class="ml-1 rounded-full border border-border px-2 py-0.5 text-[11px] normal-case tracking-normal text-muted">1</span>
+                    </h2>
+                    <div class="mt-5 grid gap-6 sm:grid-cols-2">
+                            <article class="card group flex flex-col overflow-hidden !p-0">
+                                <div class="flex items-center gap-3 border-b border-border px-6 py-4"
+                                     style="background: linear-gradient(135deg, rgb(96 165 250)26, transparent 70%);">
+                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2">
+                                        <svg viewBox='0 0 24 24' class='h-6 w-6 text-accent' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><circle cx='12' cy='9' r='6'/><path d='M8.5 13.5 7 22l5-3 5 3-1.5-8.5'/></svg>
+                                    </span>
+                                    <p class="font-mono text-xs text-muted">Cloud Native Computing Foundation</p>
+                                    <span class="badge badge-planned ml-auto shrink-0">Planned</span>
+                                </div>
+                                <div class="flex flex-1 flex-col gap-2 px-6 pb-6 pt-4">
+                                    <h3 class="text-lg text-text">Certified Kubernetes Administrator (CKA)</h3>
+                                        <p class="font-mono text-xs text-muted">
+                                            Cloud/DevOps
+                                        </p>
+                                </div>
+                            </article>
+                    </div>
+                </div>
+        </div>
+</section>
+
+    </main>
+
+    <footer class="border-t border-border/70">
+        <div class="container-page flex flex-col gap-4 py-8 md:flex-row md:items-center md:justify-between">
+            <p class="font-mono text-xs text-muted">© YEAR Alex Rivera</p>
+            <div class="flex flex-wrap gap-4 font-mono text-xs">
+                    <a class="text-muted hover:text-accent" href="https://www.linkedin.com/in/example-alex-rivera/" rel="me noopener" target="_blank">LinkedIn</a>
+                    <a class="text-muted hover:text-accent" href="https://github.com/example-alex-rivera" rel="me noopener" target="_blank">GitHub</a>
+                    <a class="text-muted hover:text-accent" href="mailto:alex.rivera@example.dev">Email</a>
+            </div>
+            <p class="font-mono text-xs text-muted">ASP.NET Core · SQL Server · Plesk</p>
+        </div>
+    </footer>
+
+    <script src="/js/site.ptab7q2bjh.js"></script>
+    
+</body>
+</html>

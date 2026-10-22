@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('theme');
+                if (t !== 'light' && t !== 'dark') {
+                    t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                }
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+        })();
+    </script>
+    <title>Telemetry Pipeline &#x2014; real-time ingestion at scale &#xB7; Alex Rivera</title>
+    <meta name="description" content="An event-driven pipeline ingesting millions of device events per hour with sub-second dashboards." />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://owner.example/projects/telemetry-pipeline" />
+    <script type="application/ld&#x2B;json">{"@context":"https://schema.org","@type":"WebSite","name":"Alex Rivera","url":"https://owner.example"}</script>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Alex Rivera" />
+    <meta property="og:title" content="Telemetry Pipeline &#x2014; real-time ingestion at scale &#xB7; Alex Rivera" />
+    <meta property="og:description" content="An event-driven pipeline ingesting millions of device events per hour with sub-second dashboards." />
+    <meta property="og:url" content="https://owner.example/projects/telemetry-pipeline" />
+    <meta property="og:image" content="https://owner.example/img/projects/telemetry.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Telemetry Pipeline &#x2014; real-time ingestion at scale &#xB7; Alex Rivera" />
+    <meta name="twitter:description" content="An event-driven pipeline ingesting millions of device events per hour with sub-second dashboards." />
+    <meta name="twitter:image" content="https://owner.example/img/projects/telemetry.svg" />
+
+    <link rel="icon" href="/favicon.b9s39hdsmi.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.uvb1mr534j.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.ufsnxtuijq.png" />
+    <link rel="preload" href="/fonts/space-grotesk-latin.agvvb5vkd1.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/jetbrains-mono-latin.runbf9g1yj.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/css/app.h1v6hl896s.css" />
+</head>
+<body class="flex min-h-screen flex-col">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-accent focus:px-4 focus:py-2 focus:text-bg">Skip to content</a>
+    <header class="sticky top-0 z-40 border-b border-border/70 bg-bg/80 backdrop-blur">
+        <div class="container-page flex h-16 items-center justify-between">
+            <a href="/" class="font-display text-lg font-semibold tracking-tight text-text transition-colors hover:text-accent">
+                Alex<span class="text-accent">.</span>
+            </a>
+            <nav class="hidden items-center gap-6 md:flex">
+                <a class="nav-link" href="/about">about</a>
+                <a class="nav-link" href="/experience">experience</a>
+                <a class="nav-link" href="/projects">work</a>
+                <a class="nav-link" href="/skills">skills</a>
+                <a class="nav-link" href="/certifications">certs</a>
+                <a class="nav-link" href="/blog">blog</a>
+                <a class="nav-link" href="/talks">talks</a>
+                <a class="nav-link" href="/cv">cv</a>
+            </nav>
+            <div class="flex items-center gap-3">
+                <button id="theme-btn" class="text-muted hover:text-accent" aria-label="Toggle light/dark theme">
+                    <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                    </svg>
+                    <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+                    </svg>
+                </button>
+                <a href="/contact" class="btn btn-primary hidden text-xs sm:inline-flex">Get in touch</a>
+                <button id="menu-btn" class="md:hidden text-muted hover:text-text" aria-label="Toggle menu" aria-expanded="false">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <line x1="4" y1="7" x2="20" y2="7" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="17" x2="20" y2="17" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <nav id="mobile-nav" class="hidden border-t border-border/70 md:hidden">
+            <div class="container-page flex flex-col py-3">
+                <a class="nav-link py-2" href="/about">about</a>
+                <a class="nav-link py-2" href="/experience">experience</a>
+                <a class="nav-link py-2" href="/projects">work</a>
+                <a class="nav-link py-2" href="/skills">skills</a>
+                <a class="nav-link py-2" href="/certifications">certifications</a>
+                <a class="nav-link py-2" href="/blog">blog</a>
+                <a class="nav-link py-2" href="/talks">talks</a>
+                <a class="nav-link py-2" href="/cv">cv</a>
+                <a class="nav-link py-2" href="/contact">contact</a>
+            </div>
+        </nav>
+    </header>
+
+    <main id="main-content" class="flex-1">
+            <script type="application/ld&#x2B;json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://owner.example"},{"@type":"ListItem","position":2,"name":"Work","item":"https://owner.example/projects"},{"@type":"ListItem","position":3,"name":"Telemetry Pipeline \u2014 real-time ingestion at scale","item":"https://owner.example/projects/telemetry-pipeline"}]}</script>
+    <script type="application/ld&#x2B;json">{"@context":"https://schema.org","@type":"CreativeWork","name":"Telemetry Pipeline \u2014 real-time ingestion at scale","description":"An event-driven pipeline ingesting millions of device events per hour with sub-second dashboards.","url":"https://owner.example/projects/telemetry-pipeline","author":{"@type":"Person","name":"Alex Rivera","url":"https://owner.example"},"keywords":".NET Core, C#, Azure Service Bus, MS SQL Server, Redis"}</script>
+
+    <article class="container-page py-16 md:py-20">
+        <a href="/projects" class="font-mono text-xs text-muted hover:text-accent">← work</a>
+
+        <header class="mt-6 max-w-3xl">
+            <p class="eyebrow">Case study</p>
+            <h1 class="mt-3 text-3xl leading-tight md:text-5xl">Telemetry Pipeline &#x2014; real-time ingestion at scale</h1>
+            <p class="mt-3 font-mono text-xs text-muted">
+                Lead backend engineer &#xB7; Contoso Cloud &#xB7; 2023&#x2013;2024
+            </p>
+            <p class="mt-5 text-lg text-muted">An event-driven pipeline ingesting millions of device events per hour with sub-second dashboards.</p>
+        </header>
+
+            <figure class="mt-10 overflow-hidden rounded-lg border border-border">
+                    <img src="/img/projects/telemetry.svg" alt="Telemetry Pipeline &#x2014; real-time ingestion at scale" class="aspect-video w-full object-cover" width="1200" height="675" fetchpriority="high" />
+            </figure>
+
+            <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="card">
+                        <p class="font-mono text-sm text-accent">▸ Sustains ~20k events/second at peak with zero dropped events</p>
+                    </div>
+                    <div class="card">
+                        <p class="font-mono text-sm text-accent">▸ Dashboard latency dropped from minutes to under 1 second</p>
+                    </div>
+                    <div class="card">
+                        <p class="font-mono text-sm text-accent">▸ Cut infrastructure cost ~35% versus the previous design</p>
+                    </div>
+            </div>
+
+        <div class="mt-12 grid gap-10 md:grid-cols-[1.6fr_1fr]">
+            <div class="article max-w-2xl">
+                    <h2>Problem</h2>
+                    <p>Device telemetry was arriving faster than the legacy monolith could store it, causing dropped events and dashboards that lagged minutes behind reality.</p>
+                    <h2>Approach</h2>
+                    <p>Rebuilt ingestion as a set of stateless .NET microservices behind a message broker, with batched writes, back-pressure, and a read model tuned for the dashboard&#x27;s exact query shape.</p>
+            </div>
+
+            <aside class="space-y-6">
+                    <div>
+                        <p class="eyebrow">Stack</p>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                                <span class="tag">.NET Core</span>
+                                <span class="tag">C#</span>
+                                <span class="tag">Azure Service Bus</span>
+                                <span class="tag">MS SQL Server</span>
+                                <span class="tag">Redis</span>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="eyebrow">Links</p>
+                        <ul class="mt-3 space-y-2">
+                                <li><a href="https://github.com/example-alex-rivera/telemetry-pipeline" target="_blank" rel="noopener" class="font-mono text-xs text-accent hover:text-accent-strong">GitHub repo →</a></li>
+                                <li><a href="https://demo.example.dev/telemetry" target="_blank" rel="noopener" class="font-mono text-xs text-accent hover:text-accent-strong">Live demo →</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="eyebrow">Proof</p>
+                        <ul class="mt-3 space-y-2">
+                                <li><a href="/proofs/sample-report.svg" target="_blank" rel="noopener" class="font-mono text-xs text-accent hover:text-accent-strong">Load-test report →</a></li>
+                        </ul>
+                    </div>
+            </aside>
+        </div>
+
+            <section class="mt-14" data-lightbox-gallery aria-label="Screenshots">
+                <p class="eyebrow">Screenshots</p>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <button type="button"
+                                class="group relative block overflow-hidden rounded-lg border border-border transition hover:border-accent/50"
+                                data-lightbox-item data-src="/img/projects/telemetry-1.svg" data-caption="Live ingestion dashboard" data-video="false" data-index="0"
+                                aria-label="Open screenshot: Live ingestion dashboard">
+                                <img src="/img/projects/telemetry-1.svg" alt="Live ingestion dashboard" loading="lazy"
+                                     class="aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                            <span class="pointer-events-none absolute inset-0 flex items-center justify-center bg-bg/40 opacity-0 transition group-hover:opacity-100">
+                                <span class="font-mono text-xs text-text">&#x2922; view</span>
+                            </span>
+                        </button>
+                        <button type="button"
+                                class="group relative block overflow-hidden rounded-lg border border-border transition hover:border-accent/50"
+                                data-lightbox-item data-src="/img/projects/telemetry-2.svg" data-caption="Per-device drill-down" data-video="false" data-index="1"
+                                aria-label="Open screenshot: Per-device drill-down">
+                                <img src="/img/projects/telemetry-2.svg" alt="Per-device drill-down" loading="lazy"
+                                     class="aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                            <span class="pointer-events-none absolute inset-0 flex items-center justify-center bg-bg/40 opacity-0 transition group-hover:opacity-100">
+                                <span class="font-mono text-xs text-text">&#x2922; view</span>
+                            </span>
+                        </button>
+                </div>
+            </section>
+    </article>
+
+    </main>
+
+    <footer class="border-t border-border/70">
+        <div class="container-page flex flex-col gap-4 py-8 md:flex-row md:items-center md:justify-between">
+            <p class="font-mono text-xs text-muted">© YEAR Alex Rivera</p>
+            <div class="flex flex-wrap gap-4 font-mono text-xs">
+                    <a class="text-muted hover:text-accent" href="https://www.linkedin.com/in/example-alex-rivera/" rel="me noopener" target="_blank">LinkedIn</a>
+                    <a class="text-muted hover:text-accent" href="https://github.com/example-alex-rivera" rel="me noopener" target="_blank">GitHub</a>
+                    <a class="text-muted hover:text-accent" href="mailto:alex.rivera@example.dev">Email</a>
+            </div>
+            <p class="font-mono text-xs text-muted">ASP.NET Core · SQL Server · Plesk</p>
+        </div>
+    </footer>
+
+    <script src="/js/site.ptab7q2bjh.js"></script>
+    
+</body>
+</html>

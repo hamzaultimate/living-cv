@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://owner.example/</loc></url>
+  <url><loc>https://owner.example/about</loc></url>
+  <url><loc>https://owner.example/experience</loc></url>
+  <url><loc>https://owner.example/projects</loc></url>
+  <url><loc>https://owner.example/skills</loc></url>
+  <url><loc>https://owner.example/certifications</loc></url>
+  <url><loc>https://owner.example/blog</loc></url>
+  <url><loc>https://owner.example/talks</loc></url>
+  <url><loc>https://owner.example/cv</loc></url>
+  <url><loc>https://owner.example/contact</loc></url>
+  <url><loc>https://owner.example/projects/telemetry-pipeline</loc></url>
+  <url><loc>https://owner.example/projects/ledger-api</loc></url>
+  <url><loc>https://owner.example/projects/edge-sensor-hub</loc></url>
+  <url><loc>https://owner.example/projects/insight-dashboard</loc></url>
+  <url><loc>https://owner.example/projects/documind</loc></url>
+  <url><loc>https://owner.example/blog/serving-millions-under-a-minute</loc><lastmod>2025-11-02</lastmod></url>
+  <url><loc>https://owner.example/blog/memory-leaks-multitenant-dotnet</loc><lastmod>2025-09-15</lastmod></url>
+</urlset>
