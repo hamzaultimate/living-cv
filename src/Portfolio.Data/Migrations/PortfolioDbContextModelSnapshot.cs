@@ -302,6 +302,17 @@ namespace Portfolio.Data.Migrations
                     b.Property<string>("LinkedIn")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Location")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<DateTimeOffset?>("OnboardingCompletedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("OnboardingDraft")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("OwnerName")
                         .IsRequired()
                         .HasMaxLength(200)

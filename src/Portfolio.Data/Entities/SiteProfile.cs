@@ -20,6 +20,7 @@ public class SiteProfile
         public const int TemplateKey = 60;
         public const int ThemeKey = 60;
         public const int AccentColor = 40;
+        public const int Location = 120;
     }
 
     public const int SingletonId = 1;
@@ -33,6 +34,9 @@ public class SiteProfile
     public string Url { get; set; } = "";
     public string? GoogleAnalyticsId { get; set; }
     public string Summary { get; set; } = "";
+
+    /// <summary>Where the owner is based, as free text (for example a city). Null when not given.</summary>
+    public string? Location { get; set; }
     public List<string> KnowsAbout { get; set; } = new();
 
     public string? PhotoUrl { get; set; }
@@ -52,10 +56,21 @@ public class SiteProfile
 
     public string TemplateKey { get; set; } = "software";
     public string? ThemeKey { get; set; }
+    /// <summary>Key of one of the template's accent colours (<c>theme.accents</c> in its manifest), not a CSS value. Null keeps the template's own colour.</summary>
     public string? AccentColor { get; set; }
 
     /// <summary>Per-section settings (label, visibility, order). Stored as JSON.</summary>
     public List<SectionSetting> Sections { get; set; } = new();
+
+    /// <summary>
+    /// When the onboarding wizard was published or skipped. Null means the owner has not finished (or skipped) it yet. Rows that
+    /// existed before the wizard was added are given a value by the migration, so deployed sites are never sent into it.
+    /// Also the concurrency token for publishing, so two overlapping publishes cannot both apply.
+    /// </summary>
+    public DateTimeOffset? OnboardingCompletedAt { get; set; }
+
+    /// <summary>The wizard's unpublished answers as JSON (see the web project's OnboardingDraft). Never read by the public site.</summary>
+    public string? OnboardingDraft { get; set; }
 }
 
 public class ProfileHero

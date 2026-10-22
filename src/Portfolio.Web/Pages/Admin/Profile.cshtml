@@ -39,6 +39,12 @@
             <span asp-validation-for="Form.JobTitle"></span>
         </div>
         <div class="adm-field">
+            <label asp-for="Form.Location">Location</label>
+            <input asp-for="Form.Location" type="text" maxlength="120" />
+            <span class="adm-hint">A city or region, shown on the Contact page and in search markup. Leave empty to hide it.</span>
+            <span asp-validation-for="Form.Location"></span>
+        </div>
+        <div class="adm-field">
             <label asp-for="Form.Url">Site address</label>
             <input asp-for="Form.Url" type="url" maxlength="300" required inputmode="url" />
             <span class="adm-hint">The public address, for example https://example.com. Used for canonical links, the sitemap and sharing.</span>

@@ -29,6 +29,10 @@ public class SiteOptions
     public string? GoogleAnalyticsId { get; set; }
     public bool HasGoogleAnalytics => !string.IsNullOrWhiteSpace(GoogleAnalyticsId);
 
+    /// <summary>Where the owner is based (free text such as a city). Empty = not shown.</summary>
+    public string? Location { get; set; }
+    public bool HasLocation => !string.IsNullOrWhiteSpace(Location);
+
     /// <summary>One-paragraph professional summary — used on the CV and as the default meta description.</summary>
     public string Summary { get; set; } = "";
 

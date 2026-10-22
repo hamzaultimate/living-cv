@@ -50,6 +50,7 @@ public class ProfileForm : IValidatableObject
     [Required, StringLength(SiteProfile.MaxLength.BrandName)] public string BrandName { get; set; } = "";
     [StringLength(SiteProfile.MaxLength.Role)] public string? Role { get; set; }
     [StringLength(SiteProfile.MaxLength.JobTitle)] public string? JobTitle { get; set; }
+    [StringLength(SiteProfile.MaxLength.Location)] public string? Location { get; set; }
 
     [Required, StringLength(SiteProfile.MaxLength.Url), HttpUrl] public string Url { get; set; } = "";
 
@@ -138,7 +139,7 @@ public class ProfileForm : IValidatableObject
     {
         var form = new ProfileForm
         {
-            OwnerName = p.OwnerName, BrandName = p.BrandName, Role = p.Role, JobTitle = p.JobTitle, Url = p.Url,
+            OwnerName = p.OwnerName, BrandName = p.BrandName, Role = p.Role, JobTitle = p.JobTitle, Location = p.Location, Url = p.Url,
             GoogleAnalyticsId = p.GoogleAnalyticsId, Summary = p.Summary,
             KnowsAboutText = string.Join("\n", p.KnowsAbout),
             HeroEyebrow = p.Hero.Eyebrow, HeroHeadline = p.Hero.Headline, HeroHeadlineAccent = p.Hero.HeadlineAccent, HeroLede = p.Hero.Lede,
@@ -163,6 +164,7 @@ public class ProfileForm : IValidatableObject
         p.BrandName = Line(BrandName)!;
         p.Role = Line(Role) ?? "";
         p.JobTitle = Line(JobTitle) ?? "";
+        p.Location = Line(Location);
         p.Url = Line(Url)!;
         p.GoogleAnalyticsId = Line(GoogleAnalyticsId)?.ToUpperInvariant();
         p.Summary = Line(Summary) ?? "";
@@ -188,14 +190,14 @@ public class ProfileForm : IValidatableObject
     }
 
     /// <summary>A single-line value: trimmed, with line breaks and other control characters turned into spaces. Empty becomes null.</summary>
-    private static string? Line(string? value)
+    internal static string? Line(string? value)
     {
         if (value is null) return null;
         var cleaned = new string(value.Select(c => char.IsControl(c) ? ' ' : c).ToArray()).Trim();
         return cleaned.Length == 0 ? null : cleaned;
     }
 
-    private static List<string> Lines(string? text) =>
+    internal static List<string> Lines(string? text) =>
         (text ?? "").Split('\n').Select(Line).Where(l => l is not null).Select(l => l!).ToList();
 
     private static List<string> Paragraphs(string? text) =>
