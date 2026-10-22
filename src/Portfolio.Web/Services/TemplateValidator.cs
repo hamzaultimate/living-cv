@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Portfolio.Data.Entities;
 using Portfolio.Web.Configuration;
 
 namespace Portfolio.Web.Services;
@@ -73,9 +74,17 @@ public static partial class TemplateValidator
         if (t.Starter is not null)
         {
             var file = t.Starter.File;
-            if (string.IsNullOrWhiteSpace(file) || file != Path.GetFileName(file) || !file.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            if (t.Starter.Source is not null)
+            {
+                if (file is not null) errors.Add("starter must name either a file or a source, not both.");
+                if (!t.Starter.IsSeed()) errors.Add($"starter.source must be \"{TemplateStarterRef.SeedSource}\".");
+            }
+            else if (string.IsNullOrWhiteSpace(file) || file != Path.GetFileName(file) || !file.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
                 errors.Add("starter.file must be a .json file name inside the template folder.");
         }
+
+        ValidateHeroSuggestions(t, errors);
+        ValidateAccents(t, errors);
 
         return errors;
     }
@@ -88,6 +97,37 @@ public static partial class TemplateValidator
         if (string.IsNullOrWhiteSpace(starter.Profile.OwnerName)) errors.Add("starter profile needs an ownerName.");
         if (string.IsNullOrWhiteSpace(starter.Profile.JobTitle)) errors.Add("starter profile needs a jobTitle.");
         return errors;
+    }
+
+    public const int MaxAccents = 8;
+    public const int MaxSuggestedTitle = 120;
+    public const int MaxSuggestedSummary = 400;
+
+    private static void ValidateHeroSuggestions(TemplateDefinition t, List<string> errors)
+    {
+        var s = t.HeroSuggestions;
+        Require(errors, "heroSuggestions.title", s.Title, MaxSuggestedTitle);
+        Require(errors, "heroSuggestions.summary", s.Summary, MaxSuggestedSummary);
+        if (HasMarkup(s.Title)) errors.Add("heroSuggestions.title must be plain text (no < or >).");
+        if (HasMarkup(s.Summary)) errors.Add("heroSuggestions.summary must be plain text (no < or >).");
+    }
+
+    /// <summary>The accents are the allow-list for a value that ends up in a stylesheet, so everything about them is checked strictly.</summary>
+    private static void ValidateAccents(TemplateDefinition t, List<string> errors)
+    {
+        var accents = t.Theme.Accents;
+        if (accents.Count > MaxAccents) errors.Add($"theme.accents lists {accents.Count} accents; the limit is {MaxAccents}.");
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var a in accents)
+        {
+            if (string.IsNullOrWhiteSpace(a.Key) || !KebabCase().IsMatch(a.Key) || a.Key.Length > SiteProfile.MaxLength.AccentColor)
+                errors.Add($"theme.accents key '{a.Key}' must be lowercase kebab-case and at most {SiteProfile.MaxLength.AccentColor} characters.");
+            else if (!seen.Add(a.Key)) errors.Add($"theme.accents lists '{a.Key}' twice.");
+            Require(errors, $"theme.accents['{a.Key}'].label", a.Label, 30);
+            if (HasMarkup(a.Label)) errors.Add($"theme.accents['{a.Key}'].label must be plain text.");
+            foreach (var (name, colour) in new[] { ("dark.accent", a.Dark.Accent), ("dark.strong", a.Dark.Strong), ("light.accent", a.Light.Accent), ("light.strong", a.Light.Strong) })
+                if (!HexColour().IsMatch(colour ?? "")) errors.Add($"theme.accents['{a.Key}'].{name} '{colour}' must look like #0f172a.");
+        }
     }
 
     private static void ValidateSections(TemplateDefinition t, List<string> errors)

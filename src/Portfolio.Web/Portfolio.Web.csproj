@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <Content Update="Templates\**\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Template thumbnails (preview.png) are read from disk by the wizard, never served as static files. -->
+    <Content Include="Templates\**\preview.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

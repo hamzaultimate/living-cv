@@ -14,8 +14,12 @@ public interface ITemplateCatalog
     /// <summary>The allow-list check for untrusted keys: true only for a template that loaded.</summary>
     bool TryGet(string? key, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out TemplateDefinition? template);
 
-    /// <summary>The template's sample content, or null when it has none.</summary>
+    /// <summary>The template's own sample content file, or null when it has none (the built-in demo persona is not a file; see <see cref="TemplateStarterRef.IsSeed()"/>).</summary>
     TemplateStarter? GetStarter(string key);
+
+    /// <summary>Full path of the template's thumbnail, or null when it has none. Only a key that loaded resolves, and the file name is fixed
+    /// (<see cref="TemplateCatalog.PreviewFileName"/>), so no part of the path comes from the caller.</summary>
+    string? GetPreviewImagePath(string key);
 }
 
 /// <summary>Loads templates from <c>Templates/&lt;key&gt;/template.json</c> under a base directory.
@@ -26,6 +30,9 @@ public class TemplateCatalog : ITemplateCatalog
 {
     public const string DefaultKey = "software";
 
+    /// <summary>The thumbnail every template may ship next to its manifest (1200 x 800 PNG).</summary>
+    public const string PreviewFileName = "preview.png";
+
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
         ReadCommentHandling = JsonCommentHandling.Skip,
@@ -35,6 +42,7 @@ public class TemplateCatalog : ITemplateCatalog
 
     private readonly Dictionary<string, TemplateDefinition> _byKey = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, TemplateStarter> _starters = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> _folders = new(StringComparer.OrdinalIgnoreCase);
 
     public TemplateCatalog(string templatesDir, ILogger<TemplateCatalog>? log = null)
     {
@@ -54,7 +62,7 @@ public class TemplateCatalog : ITemplateCatalog
                     var errors = TemplateValidator.Validate(template, name);
 
                     TemplateStarter? starter = null;
-                    if (errors.Count == 0 && template.Starter is not null)
+                    if (errors.Count == 0 && template.Starter?.File is not null)
                     {
                         var starterFile = Path.Combine(folder, template.Starter.File);
                         if (!File.Exists(starterFile)) errors.Add($"starter file '{template.Starter.File}' not found.");
@@ -69,6 +77,7 @@ public class TemplateCatalog : ITemplateCatalog
                     if (!_byKey.TryAdd(template.Key, template))
                         throw new InvalidDataException($"Duplicate template key '{template.Key}'.");
                     if (starter is not null) _starters[template.Key] = starter;
+                    _folders[template.Key] = folder;
                 }
                 catch (Exception ex)
                 {
@@ -93,4 +102,11 @@ public class TemplateCatalog : ITemplateCatalog
     }
 
     public TemplateStarter? GetStarter(string key) => _starters.GetValueOrDefault(key);
+
+    public string? GetPreviewImagePath(string key)
+    {
+        if (!_folders.TryGetValue(key ?? "", out var folder)) return null;
+        var path = Path.Combine(folder, PreviewFileName);
+        return File.Exists(path) ? path : null;
+    }
 }

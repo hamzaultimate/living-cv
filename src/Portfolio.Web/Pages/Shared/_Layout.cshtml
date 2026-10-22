@@ -101,7 +101,7 @@
     <link rel="preload" href="~/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="~/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin />
     }
-    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />@(tpl.AccentStyle is { } accentCss ? Html.Raw($"<style>{accentCss}</style>") : null)
 </head>
 <body class="flex min-h-screen flex-col">
     @if (tpl.IsPreview)
