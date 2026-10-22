@@ -17,6 +17,7 @@ public static class AdminAuth
     public static readonly TimeSpan MaxSessionAge = TimeSpan.FromHours(12);
     public const string LoginPath = "/admin/login";
     public const string AdminPath = "/admin";
+    public const string TemplatePath = "/admin/template";
 
     public static IServiceCollection AddOwnerAuth(this IServiceCollection services, IWebHostEnvironment env)
     {
@@ -143,8 +144,10 @@ public static class AdminAuth
                     ctx.Response.Headers.Pragma = "no-cache";
                     ctx.Response.Headers["X-Robots-Tag"] = "noindex, nofollow, noarchive";
                     // These pages load only their own stylesheet and photos and run no script of their own.
+                    // The template page also frames the public site (same origin) to preview a template.
+                    var frames = ctx.Request.Path.StartsWithSegments(TemplatePath, StringComparison.OrdinalIgnoreCase) ? " frame-src 'self';" : "";
                     ctx.Response.Headers.ContentSecurityPolicy =
-                        "default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'";
+                        $"default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self';{frames} frame-ancestors 'none'; base-uri 'none'";
                     return Task.CompletedTask;
                 });
             }
