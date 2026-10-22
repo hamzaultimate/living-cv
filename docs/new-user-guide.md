@@ -104,7 +104,7 @@ no `Setup:Key` and no owner seed exactly as before on their first start-up pass,
 pinned the same way (an emptied table stays empty). `Seed:Mode=Authoritative` is the explicit opt-in that keeps seeding as
 configured at every start. One caveat for a site upgraded to this version: it cannot be told apart from one that has never
 been seeded, so if you had already emptied a section on the old version, the first start after the upgrade fills it once
-more; delete it again and it stays empty.
+more; delete it again and it stays empty. A start that could not read every seed file does not count as finished; fix the file and the next start completes it.
 
 The site address on the review step is prefilled from the address the request arrived at. Behind a reverse proxy that
 can be an internal host name: check it before publishing (or configure forwarded headers as described above).
@@ -162,7 +162,7 @@ Each editor lists its entries in the order the public page shows them. You can *
 
 - **Reordering** uses **Move up** and **Move down** buttons beside each entry, so it works with a keyboard and a screen
   reader. The order is saved as soon as you press one. If the list was changed somewhere else (another tab, or a
-  save that happened at the same moment), the move is not applied and the list is shown again as it is now. A new experience entry goes to the top of the list (so the newest role comes first on the
+  save that happened at the same moment), the move is not applied and the list is shown again as it is now. If you add an entry at the very moment the order of the list changes elsewhere, the form stays filled in and asks you to press Save again. Loading sample content in the wizard, or seeding with `Seed:Mode=Authoritative`, does not interfere with this check and cannot leave two entries in one position. A new experience entry goes to the top of the list (so the newest role comes first on the
   site and the CV); the other sections add new entries at the end of the list (Skills: the end of their group). There is no drag and drop.
 - **Removing** always goes through a confirmation page that says what goes with the entry: the page address of a project
   stops working (it answers "not found"), and the images you uploaded for it are deleted from storage. Removing an entry
