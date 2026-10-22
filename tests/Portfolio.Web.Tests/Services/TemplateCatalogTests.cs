@@ -33,7 +33,7 @@ public class TemplateCatalogTests
     public void EveryShippedTemplateFolder_LoadsWithoutBeingSkipped_AndTheDefaultIsListedFirst()
     {
         var catalog = new TemplateCatalog(TemplatesDir);
-        var folders = Directory.EnumerateDirectories(TemplatesDir).Select(Path.GetFileName).Where(n => !n!.StartsWith('_')).OrderBy(n => n).ToList();
+        var folders = Directory.EnumerateDirectories(TemplatesDir).Select(d => Path.GetFileName(d)).Where(n => !n.StartsWith('_')).OrderBy(n => n).ToList();
 
         Assert.Equal(folders, catalog.All.Select(t => t.Key).OrderBy(k => k).ToList());
         Assert.Contains("healthcare", folders);
