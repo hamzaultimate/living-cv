@@ -79,10 +79,11 @@ public class PortfolioContentService
     public Task<List<Testimonial>> GetTestimonialsAsync() =>
         QueryAsync(db => db.Testimonials.OrderBy(t => t.SortOrder).ToListAsync(), new List<Testimonial>());
 
-    /// <summary>The CV for <paramref name="site"/>: only the sections its template has enabled, in the template's wording.</summary>
-    public async Task<CvData> BuildCvDataAsync(SiteOptions site)
+    /// <summary>The CV for <paramref name="site"/>: only the sections its template has enabled, in the template's wording.
+    /// Pass <paramref name="view"/> to use a template other than the saved one (an owner preview).</summary>
+    public async Task<CvData> BuildCvDataAsync(SiteOptions site, TemplateView? view = null)
     {
-        var template = _templates.Resolve(site);
+        var template = view ?? _templates.Resolve(site);
         var roles = template.IsEnabled(SectionRegistry.Experience) ? await GetExperiencesAsync() : new List<Experience>();
         var skills = template.IsEnabled(SectionRegistry.Skills) ? await GetSkillsAsync() : new List<Skill>();
         var certs = template.IsEnabled(SectionRegistry.Certifications) ? await GetCertificationsAsync() : new List<Certification>();

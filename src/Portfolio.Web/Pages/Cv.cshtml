@@ -2,11 +2,14 @@
 @inject PortfolioContentService Repo
 @inject ISiteProfileProvider SiteProfile
 @inject CvAtsReportProvider AtsReportProvider
+@inject RequestTemplate Template
 @{
     ViewData["Title"] = "CV";
     var site = await SiteProfile.GetAsync();
-    ViewData["Description"] = $"Curriculum vitae — {site.OwnerName}, {site.JobTitle}.";
-    var data = await Repo.BuildCvDataAsync(site);
+    var tpl = await Template.GetAsync();
+    var copy = tpl.Copy;
+    ViewData["Description"] = TemplateSeo.Apply(copy.Cv.Description, site);
+    var data = await Repo.BuildCvDataAsync(site, tpl);
     var roles = data.Experience;
     var groups = data.SkillGroups;
     var projects = data.Projects;
@@ -79,7 +82,7 @@
 
     @if (roles.Count > 0)
     {
-        <h2 class="mt-12 text-xl">Experience</h2>
+        <h2 class="mt-12 text-xl">@Text(copy.Cv.ExperienceHeading)</h2>
         <div class="mt-4 space-y-6">
             @foreach (var r in roles)
             {
@@ -105,7 +108,7 @@
 
     @if (groups.Count > 0)
     {
-        <h2 class="mt-12 text-xl">Skills</h2>
+        <h2 class="mt-12 text-xl">@Text(copy.Cv.SkillsHeading)</h2>
         <div class="mt-4 space-y-2">
             @foreach (var g in groups)
             {
@@ -117,7 +120,7 @@
 
     @if (projects.Count > 0)
     {
-        <h2 class="mt-12 text-xl">Selected projects</h2>
+        <h2 class="mt-12 text-xl">@Text(copy.Cv.ProjectsHeading)</h2>
         <div class="mt-4 space-y-4">
             @foreach (var p in projects)
             {
@@ -135,7 +138,7 @@
 
     @if (certs.Count > 0)
     {
-        <h2 class="mt-12 text-xl">Certifications</h2>
+        <h2 class="mt-12 text-xl">@Text(copy.Cv.CertificationsHeading)</h2>
         <ul class="mt-4 space-y-1">
             @foreach (var c in certs)
             {

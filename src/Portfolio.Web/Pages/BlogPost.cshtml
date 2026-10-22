@@ -1,7 +1,11 @@
 @page "/blog/{slug}"
+@attribute [SectionPage(SectionRegistry.Blog)]
 @inject PortfolioContentService Repo
 @inject ISiteProfileProvider SiteProfile
+@inject RequestTemplate Template
 @{
+    var tpl = await Template.GetAsync();
+    var section = tpl.Section(SectionRegistry.Blog);
     var site = await SiteProfile.GetAsync();
     var slug = RouteData.Values["slug"]?.ToString() ?? "";
     var post = await Repo.GetBlogPostAsync(slug);
@@ -33,7 +37,7 @@
         jsonLd = System.Text.Json.JsonSerializer.Serialize(article);
 
         // Lets Google render "Home > Blog > Post Title" in place of the raw URL in results.
-        breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Blog", "/blog"), (post.Title, $"/blog/{post.Slug}"));
+        breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), (tpl.Copy.Blog.Title, "/blog"), (post.Title, $"/blog/{post.Slug}"));
     }
 }
 @if (jsonLd is not null)
@@ -46,14 +50,14 @@
 {
     <section class="container-page py-24 text-center">
         <p class="eyebrow">404</p>
-        <h1 class="mt-3 text-3xl">Post not found</h1>
-        <a href="/blog" class="btn btn-ghost mt-6">← Back to blog</a>
+        <h1 class="mt-3 text-3xl">@Text($"{section.ItemLabel} not found")</h1>
+        <a href="/blog" class="btn btn-ghost mt-6">@Text($"← Back to {section.Label}")</a>
     </section>
 }
 else
 {
     <article class="container-page py-16 md:py-20">
-        <a href="/blog" class="font-mono text-xs text-muted hover:text-accent">← blog</a>
+        <a href="/blog" class="font-mono text-xs text-muted hover:text-accent">@Text($"← {section.Label}")</a>
         <header class="mt-6 max-w-2xl">
             <p class="font-mono text-xs text-muted">
                 @post.Date.ToString("MMM d, yyyy") · @Md.ReadingMinutes(post.BodyMarkdown) min read
