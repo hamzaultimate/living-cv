@@ -73,7 +73,7 @@ public class ContentReviewFixTests
         var path = $"{ContentFlow.Experience}/edit/{rows[1].Id}";
         var openForm = await ContentFlow.StampAsync(owner, path);
 
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={rows[0].Id}", new Dictionary<string, string> { ["direction"] = "down" }, ContentFlow.Experience);
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, rows[0].Id, "down");
 
         Assert.Equal(rows.OrderBy(r => r.Id).Select(r => r.ConcurrencyStamp), Rows().OrderBy(r => r.Id).Select(r => r.ConcurrencyStamp)); // positions changed, stamps did not
         var fields = ContentFlow.RoleFields("B Co", "Second, edited");
@@ -101,7 +101,8 @@ public class ContentReviewFixTests
         }
 
         // The real editor; a conflict returns before it touches the caches, so no profile editor is needed here.
-        var outcome = await new Portfolio.Web.Services.ContentEditor(db, null!, null!).MoveAsync(scope, ids[0], 1, default);
+        var editor = new Portfolio.Web.Services.ContentEditor(db, null!, null!);
+        var outcome = await editor.MoveAsync("experience", scope, ids[0], 1, await editor.ListStampAsync("experience", default), default);
 
         Assert.Equal(Portfolio.Web.Services.SaveOutcome.Conflict, outcome);
     }

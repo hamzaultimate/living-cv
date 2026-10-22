@@ -23,6 +23,30 @@ public sealed class FakeClock : TimeProvider
     public void Advance(TimeSpan by) => _now += by;
 }
 
+/// <summary>
+/// Runs a test's action once, just before the next save that writes ordered content (a row's position or a list stamp), then lets that save go on.
+/// The action is another complete request, so a test can make two requests overlap: both have read the list before either has written.
+/// </summary>
+internal sealed class OrderedSaveHook : Microsoft.EntityFrameworkCore.Diagnostics.SaveChangesInterceptor
+{
+    private readonly AdminApp _app;
+
+    public OrderedSaveHook(AdminApp app) => _app = app;
+
+    public override async ValueTask<Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult<int>> SavingChangesAsync(
+        Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData eventData, Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult<int> result, CancellationToken ct = default)
+    {
+        if (_app.BeforeOrderedSave is not null && eventData.Context is { } ctx)
+        {
+            ctx.ChangeTracker.DetectChanges();
+            var writesOrder = ctx.ChangeTracker.Entries().Any(e => e.Entity is Portfolio.Data.Entities.IOrderedContent && e.State is EntityState.Added or EntityState.Modified);
+            var hook = writesOrder ? Interlocked.Exchange(ref _app.BeforeOrderedSaveField, null) : null;
+            if (hook is not null) await hook();
+        }
+        return result;
+    }
+}
+
 /// <summary>The test server has no network peer; a request can name its client address in this header instead.</summary>
 internal sealed class TestClientAddressFilter : IStartupFilter
 {
@@ -54,6 +78,11 @@ public sealed class AdminApp : WebApplicationFactory<Program>
     private readonly string? _setupKey;
 
     public FakeClock Clock { get; } = new();
+
+    internal Func<Task>? BeforeOrderedSaveField;
+
+    /// <summary>Runs once, in the middle of the next request that saves ordered content, right before its save (see <see cref="OrderedSaveHook"/>).</summary>
+    public Func<Task>? BeforeOrderedSave { get => BeforeOrderedSaveField; set => BeforeOrderedSaveField = value; }
     public string UploadsPath { get; } = Directory.CreateTempSubdirectory("lcv-uploads-").FullName;
 
     public AdminApp() : this(SetupKey, null)
@@ -101,7 +130,7 @@ public sealed class AdminApp : WebApplicationFactory<Program>
             foreach (var d in services.Where(d => d.ServiceType.IsGenericType
                          && d.ServiceType.GetGenericArguments().Contains(typeof(PortfolioDbContext))).ToList())
                 services.Remove(d);
-            services.AddDbContext<PortfolioDbContext>(o => o.UseSqlite(_connection));
+            services.AddDbContext<PortfolioDbContext>(o => o.UseSqlite(_connection).AddInterceptors(new OrderedSaveHook(this)));
             if (_templatesDir is not null)
             {
                 services.RemoveAll<Portfolio.Web.Services.ITemplateCatalog>();

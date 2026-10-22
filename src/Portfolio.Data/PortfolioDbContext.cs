@@ -16,6 +16,7 @@ public class PortfolioDbContext : DbContext
     public DbSet<Testimonial> Testimonials => Set<Testimonial>();
     public DbSet<SiteProfile> SiteProfiles => Set<SiteProfile>();
     public DbSet<OwnerAccount> OwnerAccounts => Set<OwnerAccount>();
+    public DbSet<ListStamp> ListStamps => Set<ListStamp>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -46,6 +47,13 @@ public class PortfolioDbContext : DbContext
                 o.OwnsMany(a => a.ValueProps);
             });
             e.OwnsMany(x => x.Sections, o => o.ToJson());
+        });
+
+        b.Entity<ListStamp>(e =>
+        {
+            e.HasKey(x => x.Section);
+            e.Property(x => x.Section).HasMaxLength(ListStamp.SectionLength).ValueGeneratedNever();
+            e.Property(x => x.Stamp).HasMaxLength(IOrderedContent.StampLength).IsConcurrencyToken();
         });
 
         b.Entity<OwnerAccount>(e =>

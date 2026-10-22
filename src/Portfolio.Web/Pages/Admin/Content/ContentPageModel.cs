@@ -51,6 +51,9 @@ public interface IContentList
     EditorView View { get; }
     string ListUrl { get; }
     int Count { get; }
+
+    /// <summary>The stamp of the list as loaded; every Move button posts it back.</summary>
+    string ListStamp { get; }
     IReadOnlyList<ListGroup> Groups { get; }
 }
 
@@ -136,15 +139,18 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
     protected abstract string Describe(T row);
 
     public int Count { get; private set; }
+    public string ListStamp { get; private set; } = ContentEditor.InitialListStamp;
     public IReadOnlyList<ListGroup> Groups { get; private set; } = [];
 
     public async Task OnGetAsync(CancellationToken ct)
     {
         await LoadViewAsync();
+        // Read before the rows: if the order changes in between, the stamp is the older one and a move from this page is refused rather than applied to a list it did not show.
+        ListStamp = await Writer.ListStampAsync(Section, ct);
         await BuildAsync(ct);
     }
 
-    public async Task<IActionResult> OnPostMoveAsync(int id, string? direction, CancellationToken ct)
+    public async Task<IActionResult> OnPostMoveAsync(int id, string? direction, string? listStamp, CancellationToken ct)
     {
         await LoadViewAsync();
         var delta = direction switch { "up" => -1, "down" => 1, _ => 0 };
@@ -155,7 +161,7 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
         if (row is null) return ListWithError($"That {View.ItemLabelLower} no longer exists.");
 
         var scope = rows.Where(r => GroupOf(r) == GroupOf(row)).ToList();
-        var outcome = await Writer.MoveAsync(scope, id, delta, ct);
+        var outcome = await Writer.MoveAsync(Section, scope, id, delta, listStamp, ct);
         if (outcome != SaveOutcome.Saved) return ListWithError("The list was changed somewhere else, so it was not reordered. It is shown again as it is now.");
 
         // The fragment keeps a keyboard user at the row they just moved (the browser starts tabbing from it) instead of at the top of the page.

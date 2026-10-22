@@ -35,4 +35,20 @@ public class MigrationTests
         Assert.Contains("CK_OwnerAccounts_Singleton", script);
         Assert.Contains("CHECK ([Id] = 1)", script);
     }
+
+    [Fact]
+    public void TheListStampMigration_OnlyAddsATable_AndTheMarkerMigrationOnlyAddsAColumn()
+    {
+        using var db = SqlServerContext();
+
+        var script = db.GetService<IMigrator>().GenerateScript("20261022091031_AddContentEditing");
+
+        Assert.Contains("CREATE TABLE [ListStamps]", script);
+        Assert.Contains("[Section] nvarchar(40) NOT NULL", script);
+        Assert.Contains("CONSTRAINT [PK_ListStamps] PRIMARY KEY ([Section])", script);
+        Assert.Contains("ADD [ContentSeededAt] datetimeoffset NULL", script);
+        Assert.DoesNotContain("DROP ", script);
+        Assert.DoesNotContain("UPDATE ", script);
+        Assert.DoesNotContain("DELETE ", script);
+    }
 }

@@ -70,7 +70,7 @@ public class ExperienceEditorTests
         await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("A Co", "First"));
         var first = (await RowsAsync(app)).First().Id;
 
-        var move = await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={first}", new Dictionary<string, string> { ["direction"] = "down" }, ContentFlow.Experience);
+        var move = await ContentFlow.MoveAsync(owner, ContentFlow.Experience, first, "down");
 
         Assert.Equal($"/admin/content/experience#row-{first}", move.Headers.Location!.OriginalString);
         Assert.Contains("Moved First at A Co down.", await owner.GetStringAsync(ContentFlow.Experience));
@@ -123,12 +123,12 @@ public class ExperienceEditorTests
             await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields(name + " Co", name));
         var ids = (await RowsAsync(app)).Select(r => r.Id).ToList();
 
-        var down = await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={ids[0]}", new Dictionary<string, string> { ["direction"] = "down" }, ContentFlow.Experience);
+        var down = await ContentFlow.MoveAsync(owner, ContentFlow.Experience, ids[0], "down");
         Assert.Equal(HttpStatusCode.Redirect, down.StatusCode);
         Assert.Equal(["Second", "First", "Third"], (await RowsAsync(app)).Select(r => r.Title));
         Assert.Equal([1, 2, 3], (await RowsAsync(app)).Select(r => r.SortOrder));
 
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={ids[2]}", new Dictionary<string, string> { ["direction"] = "up" }, ContentFlow.Experience);
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, ids[2], "up");
         Assert.Equal(["Second", "Third", "First"], (await RowsAsync(app)).Select(r => r.Title));
 
         var page = await app.NewClient().GetStringAsync("/experience");
@@ -218,11 +218,11 @@ public class ExperienceEditorTests
         var ids = (await RowsAsync(app)).Select(r => r.Id).ToList();
         Assert.Equal(["First", "Second", "Third"], (await RowsAsync(app)).Select(r => r.Title));
 
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={ids[0]}", new Dictionary<string, string> { ["direction"] = "down" }, ContentFlow.Experience);
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, ids[0], "down");
         Assert.Equal(["Second", "First", "Third"], (await RowsAsync(app)).Select(r => r.Title));
         Assert.Equal([1, 2, 3], (await RowsAsync(app)).Select(r => r.SortOrder));
 
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={ids[0]}", new Dictionary<string, string> { ["direction"] = "up" }, ContentFlow.Experience);
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, ids[0], "up");
         Assert.Equal(["First", "Second", "Third"], (await RowsAsync(app)).Select(r => r.Title));
     }
 
@@ -237,9 +237,9 @@ public class ExperienceEditorTests
         var rows = await RowsAsync(app);
         var before = await ContentFlow.SnapshotAsync(app);
 
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={rows[0].Id}", new Dictionary<string, string> { ["direction"] = "up" }, ContentFlow.Experience);
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={rows[1].Id}", new Dictionary<string, string> { ["direction"] = "down" }, ContentFlow.Experience);
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={rows[1].Id}", new Dictionary<string, string> { ["direction"] = "sideways" }, ContentFlow.Experience);
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, rows[0].Id, "up");
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, rows[1].Id, "down");
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, rows[1].Id, "sideways");
         await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id=99999", new Dictionary<string, string> { ["direction"] = "up" }, ContentFlow.Experience);
 
         Assert.Equal(before, await ContentFlow.SnapshotAsync(app));
@@ -260,7 +260,7 @@ public class ExperienceEditorTests
         }
         var ids = (await RowsAsync(app)).Select(r => r.Id).ToList();
 
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={ids[2]}", new Dictionary<string, string> { ["direction"] = "up" }, ContentFlow.Experience);
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, ids[2], "up");
 
         Assert.Equal(["One", "Three", "Two"], (await RowsAsync(app)).Select(r => r.Title));
         Assert.Equal([1, 2, 3], (await RowsAsync(app)).Select(r => r.SortOrder));

@@ -74,6 +74,7 @@ public class EditModel : ContentPageModel
         Skill row;
         if (id is null)
         {
+            await Writer.BeginOrderChangeAsync(Section, ct); // see Experiences/Edit: serialises with other order changes
             var next = ContentEditor.NextOrder(await Db.Skills.Where(x => x.Group == group).Select(x => x.SortOrder).ToListAsync(ct));
             row = new Skill { Name = name!, Group = group!, SortOrder = next, ConcurrencyStamp = ContentEditor.NewStamp() };
             Db.Skills.Add(row);
@@ -83,8 +84,11 @@ public class EditModel : ContentPageModel
             var found = await Db.Skills.FirstOrDefaultAsync(x => x.Id == id, ct);
             if (found is null) return ListWithError($"That {View.ItemLabelLower} was removed in another tab, so your changes were not saved.");
             row = found;
+            // Changing the group changes the positions in a list, so it takes the list stamp (before anything is staged); an ordinary edit does not.
+            var regroup = row.Group != group;
+            if (regroup) await Writer.BeginOrderChangeAsync(Section, ct);
             Writer.Stamp(row, Form.Stamp);
-            if (row.Group != group)
+            if (regroup)
             {
                 // Moving to another group puts it at the end of that group.
                 row.SortOrder = ContentEditor.NextOrder(await Db.Skills.Where(x => x.Group == group).Select(x => x.SortOrder).ToListAsync(ct));

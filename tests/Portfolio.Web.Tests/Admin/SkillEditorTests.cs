@@ -19,7 +19,7 @@ public class SkillEditorTests
     }
 
     private static Task MoveAsync(HttpClient owner, int id, string direction) =>
-        ContentFlow.PostAsync(owner, $"{ContentFlow.Skills}?handler=Move&id={id}", new Dictionary<string, string> { ["direction"] = direction }, ContentFlow.Skills);
+        ContentFlow.MoveAsync(owner, ContentFlow.Skills, id, direction);
 
     [Fact]
     public async Task CreatingASkill_Persists_AndShowsOnThePublicPageInItsGroup()

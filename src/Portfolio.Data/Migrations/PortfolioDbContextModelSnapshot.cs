@@ -172,6 +172,23 @@ namespace Portfolio.Data.Migrations
                     b.ToTable("Experiences");
                 });
 
+            modelBuilder.Entity("Portfolio.Data.Entities.ListStamp", b =>
+                {
+                    b.Property<string>("Section")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("Stamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.HasKey("Section");
+
+                    b.ToTable("ListStamps");
+                });
+
             modelBuilder.Entity("Portfolio.Data.Entities.OwnerAccount", b =>
                 {
                     b.Property<int>("Id")

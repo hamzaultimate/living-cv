@@ -100,7 +100,9 @@ public class EditModel : ContentPageModel
         Experience row;
         if (id is null)
         {
-            // A new entry goes to the top of the list: in the admin, on the public page and on the CV.
+            // A new entry goes to the top of the list: in the admin, on the public page and on the CV. The list stamp is taken first, so a move or
+            // another new entry committed while this one is being saved makes this save a conflict instead of leaving two rows in one position.
+            await Writer.BeginOrderChangeAsync(Section, ct);
             var top = ContentEditor.FirstOrder(await Db.Experiences.Select(x => x.SortOrder).ToListAsync(ct));
             row = new Experience { Company = company!, Title = title!, Start = start!, Summary = summary!, SortOrder = top };
             row.ConcurrencyStamp = ContentEditor.NewStamp();

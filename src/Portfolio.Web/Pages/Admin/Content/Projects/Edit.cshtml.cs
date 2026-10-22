@@ -123,6 +123,7 @@ public class EditModel : ContentPageModel
             Project row;
             if (id is null)
             {
+                await Writer.BeginOrderChangeAsync(Section, ct); // see Experiences/Edit: serialises with other order changes
                 row = new Project
                 {
                     Title = title!, Slug = slug!, Summary = summary!, ConcurrencyStamp = ContentEditor.NewStamp(),

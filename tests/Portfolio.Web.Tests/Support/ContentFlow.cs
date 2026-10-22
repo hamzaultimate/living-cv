@@ -57,6 +57,25 @@ public static class ContentFlow
         return WebUtility.HtmlDecode(match.Groups[1].Value); // a row written before stamps existed has no value attribute: the browser posts it empty
     }
 
+    private static readonly Regex ListStampPattern = new("name=\"listStamp\"[^>]*value=\"([^\"]*)\"", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>The list stamp the Move buttons of a list page carry, as a browser would post it back.</summary>
+    public static async Task<string> ListStampAsync(HttpClient client, string section)
+    {
+        var html = await client.GetStringAsync(section);
+        var match = ListStampPattern.Match(html);
+        Assert.True(match.Success, $"No list stamp on {section}: the page has no Move button");
+        return WebUtility.HtmlDecode(match.Groups[1].Value);
+    }
+
+    /// <summary>Presses a Move button: loads the list page for its stamp, then posts the move with it.</summary>
+    public static async Task<HttpResponseMessage> MoveAsync(HttpClient client, string section, int id, string direction) =>
+        await MoveWithStampAsync(client, section, id, direction, await ListStampAsync(client, section));
+
+    /// <summary>Posts a move with a stamp the caller already holds (a page that was opened earlier).</summary>
+    public static Task<HttpResponseMessage> MoveWithStampAsync(HttpClient client, string section, int id, string direction, string listStamp) =>
+        PostAsync(client, $"{section}?handler=Move&id={id}", new Dictionary<string, string> { ["direction"] = direction, ["listStamp"] = listStamp }, section);
+
     public static Dictionary<string, string> Fields(params (string Name, string Value)[] pairs) =>
         pairs.ToDictionary(p => p.Name.Contains('.') || p.Name == "Stamp" ? p.Name : "Form." + p.Name, p => p.Value);
 

@@ -46,10 +46,12 @@ else
                             <div class="adm-order">
                                 <form method="post" asp-page="@pageName" asp-page-handler="Move" asp-route-id="@r.Id">
                                     <input type="hidden" name="direction" value="up" />
+                                    <input type="hidden" name="listStamp" value="@Model.ListStamp" />
                                     <button type="submit" class="adm-btn" disabled="@(!r.CanMoveUp)" aria-label="Move up: @r.Title">Move up</button>
                                 </form>
                                 <form method="post" asp-page="@pageName" asp-page-handler="Move" asp-route-id="@r.Id">
                                     <input type="hidden" name="direction" value="down" />
+                                    <input type="hidden" name="listStamp" value="@Model.ListStamp" />
                                     <button type="submit" class="adm-btn" disabled="@(!r.CanMoveDown)" aria-label="Move down: @r.Title">Move down</button>
                                 </form>
                             </div>

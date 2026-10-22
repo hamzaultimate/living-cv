@@ -291,8 +291,8 @@ public class ProjectEditorTests
         foreach (var t in new[] { "Alpha Project", "Beta Project", "Gamma Project" }) await ContentFlow.PostAsync(owner, Edit, Project(t));
         var ids = (await RowsAsync(app)).Select(r => r.Id).ToList();
 
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Projects}?handler=Move&id={ids[2]}", new Dictionary<string, string> { ["direction"] = "up" }, ContentFlow.Projects);
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Projects}?handler=Move&id={ids[2]}", new Dictionary<string, string> { ["direction"] = "up" }, ContentFlow.Projects);
+        await ContentFlow.MoveAsync(owner, ContentFlow.Projects, ids[2], "up");
+        await ContentFlow.MoveAsync(owner, ContentFlow.Projects, ids[2], "up");
 
         Assert.Equal(["Gamma Project", "Alpha Project", "Beta Project"], (await RowsAsync(app)).Select(r => r.Title));
         var listing = await app.NewClient().GetStringAsync("/projects");
