@@ -1,0 +1,201 @@
+@page "/admin/profile"
+@model ProfileModel
+@{
+    ViewData["Title"] = "Profile";
+}
+<h1>Profile</h1>
+<p class="adm-lede">Shown on the public pages, the CV and the share image. Changes apply as soon as you save.</p>
+
+<form method="post" asp-page="/Admin/Profile" novalidate>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="adm-flash adm-flash-error" role="alert">
+            <strong>Some fields need attention.</strong>
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
+
+    <fieldset class="adm-fieldset">
+        <legend>Identity</legend>
+        <div class="adm-field">
+            <label asp-for="Form.OwnerName">Full name</label>
+            <input asp-for="Form.OwnerName" type="text" maxlength="200" required />
+            <span asp-validation-for="Form.OwnerName"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.BrandName">Short name (wordmark)</label>
+            <input asp-for="Form.BrandName" type="text" maxlength="80" required />
+            <span asp-validation-for="Form.BrandName"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.Role">Role line</label>
+            <input asp-for="Form.Role" type="text" maxlength="300" />
+            <span asp-validation-for="Form.Role"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.JobTitle">Job title</label>
+            <input asp-for="Form.JobTitle" type="text" maxlength="200" />
+            <span class="adm-hint">Used for search engines and the CV.</span>
+            <span asp-validation-for="Form.JobTitle"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.Url">Site address</label>
+            <input asp-for="Form.Url" type="url" maxlength="300" required inputmode="url" />
+            <span class="adm-hint">The public address, for example https://example.com. Used for canonical links, the sitemap and sharing.</span>
+            <span asp-validation-for="Form.Url"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.GoogleAnalyticsId">Google Analytics ID</label>
+            <input asp-for="Form.GoogleAnalyticsId" type="text" maxlength="40" placeholder="G-XXXXXXXXXX" />
+            <span class="adm-hint">Leave empty to omit the analytics script.</span>
+            <span asp-validation-for="Form.GoogleAnalyticsId"></span>
+        </div>
+        <p class="adm-hint">The photo has its own page: <a href="/admin/photo">Photo</a>.</p>
+    </fieldset>
+
+    <fieldset class="adm-fieldset">
+        <legend>Home page</legend>
+        <div class="adm-field">
+            <label asp-for="Form.HeroEyebrow">Eyebrow</label>
+            <input asp-for="Form.HeroEyebrow" type="text" maxlength="300" />
+            <span asp-validation-for="Form.HeroEyebrow"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.HeroHeadline">Headline</label>
+            <input asp-for="Form.HeroHeadline" type="text" maxlength="300" />
+            <span asp-validation-for="Form.HeroHeadline"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.HeroHeadlineAccent">Headline (accent part)</label>
+            <input asp-for="Form.HeroHeadlineAccent" type="text" maxlength="300" />
+            <span asp-validation-for="Form.HeroHeadlineAccent"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.HeroLede">Lede</label>
+            <textarea asp-for="Form.HeroLede" maxlength="800"></textarea>
+            <span asp-validation-for="Form.HeroLede"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.Summary">Summary</label>
+            <textarea asp-for="Form.Summary" maxlength="2000"></textarea>
+            <span class="adm-hint">Used on the CV and as the default page description.</span>
+            <span asp-validation-for="Form.Summary"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.KnowsAboutText">Topics you know about</label>
+            <textarea asp-for="Form.KnowsAboutText"></textarea>
+            <span class="adm-hint">One per line. Used for search engine markup.</span>
+            <span asp-validation-for="Form.KnowsAboutText"></span>
+        </div>
+    </fieldset>
+
+    <fieldset class="adm-fieldset">
+        <legend>Headline metrics</legend>
+        <p class="adm-hint">Up to @ProfileForm.MetricRows. Leave a row empty to skip it. Example: value 20k, unit rps, label peak throughput.</p>
+        @for (var i = 0; i < Model.Form.Metrics.Count; i++)
+        {
+            <div class="adm-row">
+                <div>
+                    <label class="adm-legend" for="Form_Metrics_@(i)__Value">Value</label>
+                    <input asp-for="Form.Metrics[i].Value" type="text" maxlength="20" />
+                </div>
+                <div>
+                    <label class="adm-legend" for="Form_Metrics_@(i)__Unit">Unit</label>
+                    <input asp-for="Form.Metrics[i].Unit" type="text" maxlength="20" />
+                </div>
+                <div>
+                    <label class="adm-legend" for="Form_Metrics_@(i)__Label">Label</label>
+                    <input asp-for="Form.Metrics[i].Label" type="text" maxlength="80" />
+                </div>
+                <span asp-validation-for="Form.Metrics[i].Value"></span>
+            </div>
+        }
+    </fieldset>
+
+    <fieldset class="adm-fieldset">
+        <legend>About page</legend>
+        <div class="adm-field">
+            <label asp-for="Form.AboutHeadline">Headline</label>
+            <input asp-for="Form.AboutHeadline" type="text" maxlength="300" />
+            <span asp-validation-for="Form.AboutHeadline"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.AboutParagraphsText">Paragraphs</label>
+            <textarea asp-for="Form.AboutParagraphsText" class="adm-tall"></textarea>
+            <span class="adm-hint">Separate paragraphs with a blank line.</span>
+            <span asp-validation-for="Form.AboutParagraphsText"></span>
+        </div>
+        <p class="adm-hint">Value cards (up to @ProfileForm.ValuePropRows). Leave a card empty to skip it.</p>
+        @for (var i = 0; i < Model.Form.ValueProps.Count; i++)
+        {
+            <div class="adm-row adm-row-2">
+                <div>
+                    <label class="adm-legend" for="Form_ValueProps_@(i)__Title">Card @(i + 1) title</label>
+                    <input asp-for="Form.ValueProps[i].Title" type="text" maxlength="120" />
+                </div>
+                <div>
+                    <label class="adm-legend" for="Form_ValueProps_@(i)__Body">Card @(i + 1) text</label>
+                    <input asp-for="Form.ValueProps[i].Body" type="text" maxlength="500" />
+                </div>
+                <span asp-validation-for="Form.ValueProps[i].Title"></span>
+            </div>
+        }
+        <div class="adm-field">
+            <label asp-for="Form.AboutCurrentlyNote">"Currently" note</label>
+            <input asp-for="Form.AboutCurrentlyNote" type="text" maxlength="300" />
+            <span asp-validation-for="Form.AboutCurrentlyNote"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.AboutFocusText">Focus areas</label>
+            <textarea asp-for="Form.AboutFocusText"></textarea>
+            <span class="adm-hint">One per line.</span>
+            <span asp-validation-for="Form.AboutFocusText"></span>
+        </div>
+    </fieldset>
+
+    <fieldset class="adm-fieldset">
+        <legend>Contact</legend>
+        <div class="adm-field">
+            <label asp-for="Form.Email">Email</label>
+            <input asp-for="Form.Email" type="email" maxlength="300" autocomplete="off" />
+            <span asp-validation-for="Form.Email"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.SecondaryEmailsText">Other email addresses</label>
+            <textarea asp-for="Form.SecondaryEmailsText"></textarea>
+            <span class="adm-hint">One per line, up to 5.</span>
+            <span asp-validation-for="Form.SecondaryEmailsText"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.Phone">Phone</label>
+            <input asp-for="Form.Phone" type="text" maxlength="40" inputmode="tel" />
+            <span asp-validation-for="Form.Phone"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.WhatsApp">WhatsApp number</label>
+            <input asp-for="Form.WhatsApp" type="text" maxlength="20" inputmode="numeric" />
+            <span class="adm-hint">Digits only, country code first.</span>
+            <span asp-validation-for="Form.WhatsApp"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.LinkedIn">LinkedIn address</label>
+            <input asp-for="Form.LinkedIn" type="url" maxlength="300" />
+            <span asp-validation-for="Form.LinkedIn"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.GitHub">GitHub address</label>
+            <input asp-for="Form.GitHub" type="url" maxlength="300" />
+            <span asp-validation-for="Form.GitHub"></span>
+        </div>
+        <div class="adm-field">
+            <label asp-for="Form.YouTube">YouTube address</label>
+            <input asp-for="Form.YouTube" type="url" maxlength="300" />
+            <span asp-validation-for="Form.YouTube"></span>
+        </div>
+    </fieldset>
+
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save profile</button>
+        <a class="adm-btn" href="/admin">Cancel</a>
+    </div>
+</form>

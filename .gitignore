@@ -50,3 +50,6 @@ Thumbs.db
 ## Playwright MCP scratch output
 .playwright-mcp/
 /*.png
+
+## Owner uploads (default Uploads:Path); data, not source
+App_Data/

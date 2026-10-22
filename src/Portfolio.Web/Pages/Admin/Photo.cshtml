@@ -1,0 +1,34 @@
+@page "/admin/photo"
+@model PhotoModel
+@{
+    ViewData["Title"] = "Photo";
+}
+<h1>Photo</h1>
+<p class="adm-lede">Shown on the home and About pages. JPEG, PNG or WebP, up to @Model.MaxSize. It is re-encoded on upload: location and camera details are removed and large images are scaled down.</p>
+
+<section class="adm-card">
+    <h2>Current photo</h2>
+    @if (!string.IsNullOrWhiteSpace(Model.PhotoUrl))
+    {
+        <img class="adm-photo" src="@Model.PhotoUrl" alt="Current profile photo" width="160" height="160" />
+        <form method="post" asp-page="/Admin/Photo" asp-page-handler="Remove">
+            <button type="submit" class="adm-btn adm-btn-danger">Remove photo</button>
+        </form>
+    }
+    else
+    {
+        <p>No photo set. The public site shows a monogram instead.</p>
+    }
+</section>
+
+<section class="adm-card">
+    <h2>Upload a new photo</h2>
+    <form method="post" asp-page="/Admin/Photo" asp-page-handler="Upload" enctype="multipart/form-data" novalidate>
+        <div class="adm-field">
+            <label asp-for="Photo">Image file</label>
+            <input asp-for="Photo" type="file" accept="image/jpeg,image/png,image/webp" required />
+            <span asp-validation-for="Photo"></span>
+        </div>
+        <button type="submit" class="adm-btn adm-btn-primary">Upload</button>
+    </form>
+</section>

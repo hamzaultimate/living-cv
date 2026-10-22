@@ -64,6 +64,20 @@ public class SiteOptions
     public string? AccentColor { get; set; }
     public List<SectionOption> Sections { get; set; } = new();
 
+    /// <summary>Up to two initials from <see cref="OwnerName"/> (first and last word), for the monogram shown when there is no photo.</summary>
+    public string Initials
+    {
+        get
+        {
+            var words = OwnerName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (words.Length == 0) return "?";
+            // A text element, not a char: a name starting with an emoji or a supplementary-plane letter must not be split in half.
+            static string Initial(string word) => System.Globalization.StringInfo.GetNextTextElement(word).ToUpperInvariant();
+            var first = Initial(words[0]);
+            return words.Length == 1 ? first : first + Initial(words[^1]);
+        }
+    }
+
     public bool HasPhone => !string.IsNullOrWhiteSpace(Phone);
     public bool HasWhatsApp => !string.IsNullOrWhiteSpace(WhatsApp);
     public bool HasEmail => !string.IsNullOrWhiteSpace(Email);

@@ -1,0 +1,76 @@
+/* Admin and setup pages. Plain CSS, kept out of the Tailwind build so admin markup never changes the public stylesheet. */
+:root {
+  --adm-bg: #f6f7f9;
+  --adm-surface: #ffffff;
+  --adm-text: #14181f;
+  --adm-muted: #566170;
+  --adm-border: #d5dae1;
+  --adm-accent: #1d4ed8;
+  --adm-accent-text: #ffffff;
+  --adm-ok-bg: #e7f6ec;
+  --adm-ok-text: #14532d;
+  --adm-error-bg: #fdecec;
+  --adm-error-text: #7f1d1d;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --adm-bg: #0b0f14;
+    --adm-surface: #141a22;
+    --adm-text: #e6edf3;
+    --adm-muted: #9aa7b5;
+    --adm-border: #2a3441;
+    --adm-accent: #60a5fa;
+    --adm-accent-text: #0b0f14;
+    --adm-ok-bg: #12301f;
+    --adm-ok-text: #bbf7d0;
+    --adm-error-bg: #3a1616;
+    --adm-error-text: #fecaca;
+  }
+}
+.adm { margin: 0; background: var(--adm-bg); color: var(--adm-text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+.adm *, .adm *::before, .adm *::after { box-sizing: border-box; }
+.adm a { color: var(--adm-accent); }
+.adm h1 { font-size: 1.6rem; margin: 0 0 1rem; }
+.adm h2 { font-size: 1.1rem; margin: 0 0 .5rem; }
+.adm-skip { position: absolute; left: -999px; top: 0; background: var(--adm-accent); color: var(--adm-accent-text); padding: .5rem 1rem; }
+.adm-skip:focus { left: 1rem; top: 1rem; z-index: 10; }
+.adm-header { background: var(--adm-surface); border-bottom: 1px solid var(--adm-border); }
+.adm-bar { max-width: 60rem; margin: 0 auto; padding: .75rem 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.5rem; }
+.adm-brand { font-weight: 700; text-decoration: none; color: var(--adm-text) !important; }
+.adm-nav { display: flex; flex-wrap: wrap; gap: .25rem 1rem; flex: 1; }
+.adm-nav a { text-decoration: none; padding: .25rem 0; border-bottom: 2px solid transparent; }
+.adm-nav a[aria-current="page"] { border-bottom-color: var(--adm-accent); }
+.adm-signout { margin: 0; }
+.adm-main { max-width: 60rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+.adm-lede { color: var(--adm-muted); margin-top: 0; }
+.adm-card { background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: .5rem; padding: 1.25rem; margin-bottom: 1.25rem; }
+.adm-narrow { max-width: 26rem; margin-left: auto; margin-right: auto; }
+.adm-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+.adm-tile { text-decoration: none; color: inherit !important; display: block; }
+.adm-tile:hover { border-color: var(--adm-accent); }
+.adm-tile p { margin: 0; color: var(--adm-muted); }
+.adm-field { margin-bottom: 1rem; }
+.adm-field label, .adm-legend { display: block; font-weight: 600; margin-bottom: .25rem; }
+.adm-hint { display: block; color: var(--adm-muted); font-size: .85rem; margin-top: .25rem; }
+.adm-field input[type="text"], .adm-field input[type="password"], .adm-field input[type="email"], .adm-field input[type="url"], .adm-field input[type="file"], .adm-field textarea {
+  width: 100%; padding: .5rem .6rem; font: inherit; color: inherit; background: var(--adm-bg); border: 1px solid var(--adm-border); border-radius: .35rem;
+}
+.adm-field textarea { min-height: 6rem; resize: vertical; }
+.adm-field input:focus, .adm-field textarea:focus, .adm-btn:focus-visible, .adm a:focus-visible { outline: 3px solid var(--adm-accent); outline-offset: 2px; }
+.adm-row { display: grid; gap: .5rem; grid-template-columns: 1fr 1fr 2fr; margin-bottom: .5rem; }
+.adm-row-2 { grid-template-columns: 1fr 2fr; }
+.adm-fieldset { border: 1px solid var(--adm-border); border-radius: .5rem; padding: 1rem 1.25rem .5rem; margin: 0 0 1.25rem; background: var(--adm-surface); }
+.adm-fieldset legend { font-weight: 700; padding: 0 .4rem; }
+.adm-btn { font: inherit; cursor: pointer; padding: .5rem 1rem; border-radius: .35rem; border: 1px solid var(--adm-border); background: var(--adm-surface); color: var(--adm-text); }
+.adm-btn-primary { background: var(--adm-accent); color: var(--adm-accent-text); border-color: var(--adm-accent); font-weight: 600; }
+.adm-btn-danger { border-color: var(--adm-error-text); color: var(--adm-error-text); }
+.adm-btn-quiet { border-color: transparent; background: transparent; }
+.adm-flash { padding: .75rem 1rem; border-radius: .35rem; margin-bottom: 1rem; }
+.adm-flash-ok { background: var(--adm-ok-bg); color: var(--adm-ok-text); }
+.adm-flash-error { background: var(--adm-error-bg); color: var(--adm-error-text); }
+.adm .field-validation-error, .adm .validation-summary-errors { color: var(--adm-error-text); font-size: .9rem; display: block; }
+.adm .validation-summary-errors ul { margin: 0; padding-left: 1.1rem; }
+.adm-photo { width: 10rem; height: 10rem; border-radius: 50%; object-fit: cover; border: 1px solid var(--adm-border); display: block; margin-bottom: 1rem; }
+.adm-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+@media (max-width: 40rem) { .adm-row, .adm-row-2 { grid-template-columns: 1fr; } }
+.adm-field textarea.adm-tall { min-height: 12rem; }

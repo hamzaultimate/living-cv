@@ -162,6 +162,43 @@ namespace Portfolio.Data.Migrations
                     b.ToTable("Experiences");
                 });
 
+            modelBuilder.Entity("Portfolio.Data.Entities.OwnerAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FailedAccessCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LockoutEndUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("SecurityStamp")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OwnerAccounts", t =>
+                        {
+                            t.HasCheckConstraint("CK_OwnerAccounts_Singleton", "[Id] = 1");
+                        });
+                });
+
             modelBuilder.Entity("Portfolio.Data.Entities.Project", b =>
                 {
                     b.Property<int>("Id")

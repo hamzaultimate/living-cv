@@ -1,0 +1,50 @@
+@{
+    var title = ViewData["Title"] as string ?? "Admin";
+    var signedIn = User.Identity?.IsAuthenticated == true;
+    var flash = TempData[AdminPageModel.FlashKey] as string;
+    var flashError = TempData[AdminPageModel.FlashErrorKey] as string;
+    var current = ViewContext.RouteData.Values["page"] as string ?? "";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="color-scheme" content="light dark" />
+    <title>@title · Admin</title>
+    <link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+</head>
+<body class="adm">
+    <a href="#main-content" class="adm-skip">Skip to content</a>
+    <header class="adm-header">
+        <div class="adm-bar">
+            <a class="adm-brand" href="/admin">Admin</a>
+            @if (signedIn)
+            {
+                <nav class="adm-nav" aria-label="Admin">
+                    <a href="/admin" aria-current="@(current == "/Admin/Index" ? "page" : null)">Dashboard</a>
+                    <a href="/admin/profile" aria-current="@(current == "/Admin/Profile" ? "page" : null)">Profile</a>
+                    <a href="/admin/photo" aria-current="@(current == "/Admin/Photo" ? "page" : null)">Photo</a>
+                    <a href="/" target="_blank" rel="noopener">View site</a>
+                </nav>
+                <form method="post" asp-page="/Admin/Logout" class="adm-signout">
+                    <button type="submit" class="adm-btn adm-btn-quiet">Sign out</button>
+                </form>
+            }
+        </div>
+    </header>
+    <main id="main-content" class="adm-main">
+        @if (!string.IsNullOrEmpty(flash))
+        {
+            <div class="adm-flash adm-flash-ok" role="status">@flash</div>
+        }
+        @if (!string.IsNullOrEmpty(flashError))
+        {
+            <div class="adm-flash adm-flash-error" role="alert">@flashError</div>
+        }
+        @RenderBody()
+    </main>
+</body>
+</html>

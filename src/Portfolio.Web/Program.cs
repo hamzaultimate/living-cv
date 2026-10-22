@@ -8,13 +8,24 @@ using Portfolio.Data;
 using Portfolio.Data.Seeding;
 using Portfolio.Web.Configuration;
 using Portfolio.Web.Health;
+using Portfolio.Web.Security;
 using Portfolio.Web.Services;
+using Portfolio.Web.Uploads;
 using QuestPDF.Fluent;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Register the app services, configuration, and content pipeline.
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages(o =>
+{
+    // Everything under /Admin needs the signed-in owner; only the login page opts out (see Login.cshtml.cs).
+    o.Conventions.AuthorizeFolder("/Admin");
+});
+builder.Services.AddOwnerAuth(builder.Environment);
+builder.Services.AddScoped<ProfileEditor>();
+builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection("Uploads"));
+builder.Services.AddSingleton<UploadStore>();
+builder.Services.AddSingleton<ImageProcessor>();
 builder.Services.AddScoped<PortfolioContentService>();
 builder.Services.AddSingleton(new CvAtsReportProvider(Path.Combine(AppContext.BaseDirectory, "Seed")));
 builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
@@ -32,7 +43,11 @@ builder.Services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
 builder.Services.AddOutputCache(o =>
     o.AddPolicy("Generated", p =>
     {
-        p.Expire(TimeSpan.FromHours(1)).SetVaryByQuery(Array.Empty<string>());
+        // Tagged so a profile save can evict every generated asset at once (see ProfileEditor). Also keyed on the
+        // profile version: a render that started before a save read the old profile and is stored under the old key,
+        // so the eviction cannot be undone by a request that was already in flight.
+        p.Expire(TimeSpan.FromHours(1)).SetVaryByQuery(Array.Empty<string>()).Tag(OutputCacheTags.Generated)
+            .VaryByValue(ctx => new KeyValuePair<string, string>("profile", ctx.RequestServices.GetRequiredService<ISiteProfileProvider>().Version.ToString()));
         if (builder.Environment.IsDevelopment()) p.NoCache();
     }));
 
@@ -57,6 +72,13 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
+// Operator command: runs against the database and exits before the web host starts serving.
+if (OwnerCli.IsCommand(args))
+{
+    Environment.ExitCode = await OwnerCli.RunAsync(app.Services, args, Console.In, Console.Out, Console.Error);
+    return;
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.Logger.LogInformation("Starting Living CV in Development mode. Visit /health and /health/db to verify setup.");
@@ -73,21 +95,23 @@ if (!app.Environment.IsDevelopment())
 // SEO: force a single canonical host. www.<domain> and <domain> otherwise both serve
 // 200 with their own self-referencing canonical tag, splitting ranking/link signals
 // between two hostnames Google sees as duplicates. Redirect www -> apex to match the
-// canonical/OG/sitemap URLs, which are already apex-based (Site:Url).
-var canonicalHost = Uri.TryCreate(app.Configuration["Site:Url"], UriKind.Absolute, out var siteUri) ? siteUri.Host : null;
-if (!string.IsNullOrEmpty(canonicalHost))
+// canonical/OG/sitemap URLs, which are already apex-based (the profile Url). The canonical
+// host follows the profile, so editing the Url in /admin takes effect without a restart.
+app.Use(async (ctx, next) =>
 {
-    app.Use(async (ctx, next) =>
+    var host = ctx.Request.Host.Host;
+    if (host.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
     {
-        if (ctx.Request.Host.Host.Equals($"www.{canonicalHost}", StringComparison.OrdinalIgnoreCase))
+        var siteUrl = (await ctx.RequestServices.GetRequiredService<ISiteProfileProvider>().GetAsync(ctx.RequestAborted)).Url;
+        if (Uri.TryCreate(siteUrl, UriKind.Absolute, out var siteUri) && host.Equals($"www.{siteUri.Host}", StringComparison.OrdinalIgnoreCase))
         {
-            var target = $"{ctx.Request.Scheme}://{canonicalHost}{ctx.Request.PathBase}{ctx.Request.Path}{ctx.Request.QueryString}";
+            var target = $"{ctx.Request.Scheme}://{siteUri.Host}{ctx.Request.PathBase}{ctx.Request.Path}{ctx.Request.QueryString}";
             ctx.Response.Redirect(target, permanent: true);
             return;
         }
-        await next();
-    });
-}
+    }
+    await next();
+});
 
 app.UseHttpsRedirection();
 
@@ -101,10 +125,40 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
+// Uploaded photos live outside wwwroot and are served from /uploads. File names are random and never reused, so
+// they can be cached for a year; only the three raster types we write are served, and never sniffed as anything else.
+var uploads = app.Services.GetRequiredService<UploadStore>();
+if (uploads.EnsureRoot())
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        RequestPath = UploadStore.RequestPath,
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploads.Root),
+        ServeUnknownFileTypes = false,
+        ContentTypeProvider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider(new Dictionary<string, string>
+        {
+            [".jpg"] = "image/jpeg",
+            [".png"] = "image/png",
+            [".webp"] = "image/webp",
+        }),
+        OnPrepareResponse = ctx =>
+        {
+            ctx.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+            ctx.Context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+            ctx.Context.Response.Headers["Content-Security-Policy"] = "default-src 'none'; sandbox";
+        },
+    });
+}
+
+// Admin and setup responses are marked private and non-indexable before anything can cache them.
+app.UsePrivateAreaHeaders();
+
 app.UseRouting();
 
 app.UseOutputCache();
 
+app.UseAuthentication();
+app.UseAdminDenyByDefault();
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -181,7 +235,7 @@ app.MapGet("/robots.txt", async (HttpContext ctx) =>
     var isDev = ctx.Request.Host.Host.StartsWith("dev.", StringComparison.OrdinalIgnoreCase);
     var body = isDev
         ? "User-agent: *\nDisallow: /\n"
-        : $"User-agent: *\nAllow: /\n\nSitemap: {baseUrl}/sitemap.xml\n";
+        : $"User-agent: *\nAllow: /\nDisallow: /admin\n\nSitemap: {baseUrl}/sitemap.xml\n";
     return Results.Text(body, "text/plain");
 });
 
