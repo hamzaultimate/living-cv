@@ -175,7 +175,7 @@ public sealed class AdminApp : WebApplicationFactory<Program>
                 history.CreateIfNotExists();
                 var applied = history.GetAppliedMigrations().Select(m => m.MigrationId).ToHashSet();
                 foreach (var m in db.Database.GetMigrations().Where(m => !applied.Contains(m)))
-                    db.Database.ExecuteSqlRaw("INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") VALUES ({0}, {1})", m, "10.0.13");
+                    db.Database.ExecuteSqlRaw("INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") VALUES ({0}, {1})", m, typeof(Microsoft.EntityFrameworkCore.DbContext).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false).OfType<System.Reflection.AssemblyInformationalVersionAttribute>().Select(a => a.InformationalVersion.Split('+')[0]).FirstOrDefault() ?? "unknown");
             }
         });
     }

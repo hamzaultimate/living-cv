@@ -158,18 +158,16 @@ public class LegacySeedPinTests
     }
 
     [Theory]
-    [InlineData("missing", "talks.json")]
     [InlineData("unreadable", "talks.json")]
-    [InlineData("missing", "skills.json")]
+    [InlineData("unreadable", "skills.json")]
     [InlineData("unreadable", "blog.json")]
-    public async Task AMissingOrUnreadableSeedFile_DoesNotPinTheSite_TheNextStartWithIntactFilesCompletesIt(string problem, string file)
+    public async Task AnUnreadableSeedFile_DoesNotPinTheSite_TheNextStartWithIntactFilesCompletesIt(string problem, string file)
     {
         using var t = new TestDatabase();
         await AddProfileAsync(t, Site.Legacy);
         var damaged = SeedCopy(dir =>
         {
-            if (problem == "missing") File.Delete(Path.Combine(dir, file));
-            else File.WriteAllText(Path.Combine(dir, file), "{ this is not json");
+            File.WriteAllText(Path.Combine(dir, file), "{ this is not json");
         });
 
         Assert.True(await RestartAsync(t, seedDir: damaged)); // the other tables are seeded as before ...
@@ -184,16 +182,56 @@ public class LegacySeedPinTests
     }
 
     [Fact]
-    public async Task TheSeederReportsWhetherEveryFileWasRead()
+    public async Task TheSeederReportsWhetherEveryFilePresentWasRead()
     {
         using var t = new TestDatabase();
         using var db = t.CreateContext();
-        var damaged = SeedCopy(dir => File.Delete(Path.Combine(dir, "talks.json")));
+        var unreadable = SeedCopy(dir => File.WriteAllText(Path.Combine(dir, "talks.json"), "{ not json"));
+        var removed = SeedCopy(dir => File.Delete(Path.Combine(dir, "talks.json")));
+        var empty = SeedCopy(dir => File.WriteAllText(Path.Combine(dir, "talks.json"), "[]"));
 
-        Assert.False(await PortfolioSeeder.SeedAsync(db, damaged));
+        Assert.False(await PortfolioSeeder.SeedAsync(db, unreadable));
         Assert.False(await PortfolioSeeder.SeedAsync(db, Path.Combine(Path.GetTempPath(), "lcv-no-such-seed-folder")));
+        Assert.True(await PortfolioSeeder.SeedAsync(db, removed));  // a deleted file is an intentionally empty table
+        Assert.True(await PortfolioSeeder.SeedAsync(db, empty));    // so is an empty list
         Assert.True(await PortfolioSeeder.SeedAsync(db, SeedDir));
-        Assert.True(await PortfolioSeeder.SeedAsync(db, damaged)); // every other table has rows now, and the missing file's table has them too
+    }
+
+    [Fact]
+    public async Task TheAuthoritativePath_ReportsCompleteness_Too()
+    {
+        using var t = new TestDatabase();
+        using var db = t.CreateContext();
+        var unreadable = SeedCopy(dir => File.WriteAllText(Path.Combine(dir, "talks.json"), "{ not json"));
+        var removed = SeedCopy(dir => File.Delete(Path.Combine(dir, "talks.json")));
+
+        Assert.True(await PortfolioSeeder.SeedAsync(db, SeedDir, SeedMode.Authoritative));
+        Assert.False(await PortfolioSeeder.SeedAsync(db, unreadable, SeedMode.Authoritative));
+        Assert.True(await PortfolioSeeder.SeedAsync(db, removed, SeedMode.Authoritative));
+    }
+
+    [Theory]
+    [InlineData("remove")]
+    [InlineData("empty")]
+    public async Task OperatorRemovedTalksJson_OrEmptiedIt_TheSiteIsStillPinned_AndAnEmptiedTableStaysEmpty(string how)
+    {
+        using var t = new TestDatabase();
+        await AddProfileAsync(t, Site.Legacy);
+        var dir = SeedCopy(d =>
+        {
+            if (how == "remove") File.Delete(Path.Combine(d, "talks.json"));
+            else File.WriteAllText(Path.Combine(d, "talks.json"), "[]");
+        });
+
+        Assert.True(await RestartAsync(t, seedDir: dir));
+        var first = await CountsAsync(t);
+        Assert.Equal(0, first["talks"]);
+        Assert.NotNull(await MarkerAsync(t)); // the site is pinned although one table has no seed file
+
+        using (var db = t.CreateContext()) await db.Experiences.ExecuteDeleteAsync();
+        Assert.False(await RestartAsync(t, seedDir: dir));
+        Assert.False(await RestartAsync(t));
+        Assert.Equal(0, (await CountsAsync(t))["experiences"]);
     }
 
     /// <summary>The restart goes through Program: migrate, seed, create the profile row, record the pass.</summary>

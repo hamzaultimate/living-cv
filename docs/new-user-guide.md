@@ -104,7 +104,7 @@ no `Setup:Key` and no owner seed exactly as before on their first start-up pass,
 pinned the same way (an emptied table stays empty). `Seed:Mode=Authoritative` is the explicit opt-in that keeps seeding as
 configured at every start. One caveat for a site upgraded to this version: it cannot be told apart from one that has never
 been seeded, so if you had already emptied a section on the old version, the first start after the upgrade fills it once
-more; delete it again and it stays empty. A start that could not read every seed file does not count as finished; fix the file and the next start completes it.
+more; delete it again and it stays empty. A seed file you deleted on purpose is treated as an intentionally empty table and does not hold anything back. A seed file that is present but broken, or a missing seed folder, means the start does not count as finished (the site stays unpinned); fix it and the next start completes the job.
 
 The site address on the review step is prefilled from the address the request arrived at. Behind a reverse proxy that
 can be an internal host name: check it before publishing (or configure forwarded headers as described above).

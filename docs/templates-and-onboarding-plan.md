@@ -324,7 +324,7 @@ Implementation notes for 4a (decisions worth reviewing):
   `Seed:Mode=Authoritative`, which still seeds as configured). Why this marker and not "first admin content write": the first start-up pass is the event
   that defines "this site has been seeded", it needs no change in the editors (4b's new tables are covered automatically), and a legacy site whose owner
   never writes content needs no marker to behave as before. Ordering: the first pass behaves exactly as before for partly empty tables (IfEmpty fills only
-  the empty ones); the marker is written after the pass, so a crash part-way, or a seed file that is missing or cannot be read (the seeder reports whether every file was read), leaves it null and the next start finishes the job; the migration does not
+  the empty ones); the marker is written after the pass, so a crash part-way, or a seed folder that is missing or a seed file that is present but cannot be read (the seeder reports whether every present file was read; a deleted individual file is an intentionally empty table and does not block the pin), leaves it null and the next start finishes the job; the migration does not
   backfill, so a site that never completed a pass is not pinned. A new install with no profile row yet (a development checkout, no `Setup:Key`) is marked
   by a second call in `Program` once the profile exists; a missing seed folder is not recorded as a pass. Unclaimable legacy installs go through the same
   path. Limits: a legacy site that emptied a table on the old version is refilled once at the first start after this upgrade (it cannot be told from

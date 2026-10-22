@@ -34,8 +34,9 @@ public static class PortfolioSeeder
     };
 
     /// <summary>
-    /// Seeds every table. Returns true when the pass is complete: the seed folder exists and every seed file was found and read (or its table
-    /// already had rows). A missing folder, a missing file or a file that cannot be parsed returns false, so the caller does not treat the site as seeded.
+    /// Seeds every table. Returns true when the pass is complete: the seed folder exists and every seed file that is present was read (or its table
+    /// already had rows). An absent file counts as an intentionally empty table; a missing folder or a file that cannot be parsed returns false, so the
+    /// caller does not treat the site as seeded.
     /// </summary>
     public static async Task<bool> SeedAsync(PortfolioDbContext db, string seedDir, SeedMode mode = SeedMode.IfEmpty, ILogger? log = null, CancellationToken ct = default)
     {
@@ -80,7 +81,8 @@ public static class PortfolioSeeder
     }
 
     // Only an explicit Authoritative takes the destructive path; any other value behaves as IfEmpty.
-    // True when the table was dealt with: skipped because it has rows, or its seed file was read (even an empty one). False when the file is missing or unreadable.
+    // True when the table was dealt with: skipped because it has rows, its seed file was read (even an empty one), or the file is absent (an operator
+    // who deleted a seed file has chosen an empty table). False only when the file exists but cannot be read.
     private static async Task<bool> UpsertAsync<T>(
         PortfolioDbContext db, string dir, string file, DbSet<T> set,
         Func<T, string> key, SeedMode mode, ILogger? log, CancellationToken ct, Action<T, T> copy) where T : class
@@ -92,7 +94,7 @@ public static class PortfolioSeeder
         }
 
         var path = Path.Combine(dir, file);
-        if (!File.Exists(path)) { log?.LogInformation("Seed file absent, skipping: {file}", file); return false; }
+        if (!File.Exists(path)) { log?.LogInformation("Seed file absent, skipping: {file}", file); return true; }
 
         List<T>? items;
         try
