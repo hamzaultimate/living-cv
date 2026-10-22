@@ -30,7 +30,7 @@ public static class ContentFlow
     public static Task<HttpResponseMessage> PostAsync(HttpClient client, string path, IEnumerable<KeyValuePair<string, string>> fields, string? tokenFrom = null) =>
         WizardFlow.PostAsync(client, path, fields, tokenFrom);
 
-    private static readonly Regex StampPattern = new("name=\"(?:Form\\.)?Stamp\"[^>]*value=\"([^\"]*)\"", RegexOptions.Compiled);
+    private static readonly Regex StampPattern = new("name=\"(?:Form\\.)?Stamp\"(?:[^>]*value=\"([^\"]*)\")?", RegexOptions.Compiled);
 
     /// <summary>The concurrency stamp a form carries, as a browser would send it back.</summary>
     public static async Task<string> StampAsync(HttpClient client, string path)
@@ -38,7 +38,7 @@ public static class ContentFlow
         var html = await client.GetStringAsync(path);
         var match = StampPattern.Match(html);
         Assert.True(match.Success, $"No stamp on {path}");
-        return WebUtility.HtmlDecode(match.Groups[1].Value);
+        return WebUtility.HtmlDecode(match.Groups[1].Value); // a row written before stamps existed has no value attribute: the browser posts it empty
     }
 
     public static Dictionary<string, string> Fields(params (string Name, string Value)[] pairs) =>
