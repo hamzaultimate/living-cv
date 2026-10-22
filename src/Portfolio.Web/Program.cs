@@ -28,6 +28,8 @@ builder.Services.AddScoped<RequestTemplate>();
 builder.Services.AddSingleton<TemplateResolver>();
 builder.Services.AddOwnerAuth(builder.Environment);
 builder.Services.AddScoped<ProfileEditor>();
+builder.Services.AddScoped<StarterContent>(sp => new StarterContent(sp.GetRequiredService<ITemplateCatalog>(), sp.GetRequiredService<ILogger<StarterContent>>()));
+builder.Services.AddScoped<OnboardingService>();
 builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection("Uploads"));
 builder.Services.AddSingleton<UploadStore>();
 builder.Services.AddSingleton<ImageProcessor>();
@@ -35,7 +37,10 @@ builder.Services.AddScoped<PortfolioContentService>();
 builder.Services.AddSingleton(new CvAtsReportProvider(Path.Combine(AppContext.BaseDirectory, "Seed")));
 builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
 builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<ISiteProfileProvider, SiteProfileProvider>();
+builder.Services.AddSingleton<SiteProfileProvider>();
+// Pages read the profile through this wrapper, which only differs from the real provider for the owner's draft preview (see TemplatePreview).
+builder.Services.AddSingleton<ISiteProfileProvider>(sp =>
+    new DraftPreviewProfileProvider(sp.GetRequiredService<SiteProfileProvider>(), sp.GetRequiredService<IHttpContextAccessor>()));
 builder.Services.AddSingleton<ITemplateCatalog>(sp =>
     new TemplateCatalog(Path.Combine(AppContext.BaseDirectory, "Templates"), sp.GetRequiredService<ILogger<TemplateCatalog>>()));
 builder.Services.Configure<RouteOptions>(o => o.LowercaseUrls = true);
@@ -146,7 +151,7 @@ if (uploads.EnsureRoot())
     app.UseStaticFiles(new StaticFileOptions
     {
         RequestPath = UploadStore.RequestPath,
-        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploads.Root),
+        FileProvider = new UploadFileProvider(uploads.Root),
         ServeUnknownFileTypes = false,
         ContentTypeProvider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider(new Dictionary<string, string>
         {
@@ -307,7 +312,11 @@ static async Task MigrateAndSeedAsync(WebApplication app)
         var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
         await db.Database.MigrateAsync(cts.Token);
         var seedDir = Path.Combine(AppContext.BaseDirectory, "Seed");
-        await PortfolioSeeder.SeedAsync(db, seedDir, seedMode, app.Logger, cts.Token);
+        // A new install that can still be claimed is not filled with the demo persona: the onboarding wizard loads sample content when asked to.
+        if (await FirstRun.ShouldDeferContentSeedAsync(db, scope.ServiceProvider.GetRequiredService<SetupKeyGate>().IsConfigured, seedMode, cts.Token))
+            app.Logger.LogInformation("Onboarding is pending: the demo content is not seeded. The wizard loads sample content if the owner asks for it (or skips).");
+        else
+            await PortfolioSeeder.SeedAsync(db, seedDir, seedMode, app.Logger, cts.Token);
         await scope.ServiceProvider.GetRequiredService<ISiteProfileProvider>().GetAsync(cts.Token);
         app.Logger.LogInformation("Database migrated and seeded.");
     }

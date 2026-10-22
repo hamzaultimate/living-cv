@@ -12,6 +12,9 @@ public class RequestTemplate
     /// <summary>Query parameter that previews a template; honoured only for the signed-in owner (see <see cref="TemplatePreview"/>).</summary>
     public const string PreviewParameter = "preview";
 
+    /// <summary>With <c>?preview=</c>, shows the onboarding wizard's unpublished draft (identity, template, accent, photo) instead of the saved site.</summary>
+    public const string DraftParameter = "draft";
+
     internal const string PreviewItem = "lcv:template-preview";
 
     private readonly ISiteProfileProvider _profile;
@@ -87,6 +90,13 @@ public static class TemplatePreview
                 && await AdminAuth.IsOwnerSessionAsync(ctx))
             {
                 ctx.Items[RequestTemplate.PreviewItem] = template.Key;
+                // The owner's draft: same session check as above, and only ever for this request. Without a draft it is an ordinary template preview.
+                if (ctx.Request.Query.TryGetValue(RequestTemplate.DraftParameter, out var draftValues) && draftValues.Count == 1 && draftValues[0] == "1"
+                    && await ctx.RequestServices.GetRequiredService<OnboardingService>().DraftPreviewAsync(ctx.RequestAborted) is { } draft)
+                {
+                    ctx.Items[DraftPreviewProfileProvider.DraftItem] = draft;
+                    ctx.Items[RequestTemplate.PreviewItem] = draft.TemplateKey;
+                }
                 if (ctx.Features.Get<IOutputCacheFeature>() is { } cache) cache.Context.AllowCacheStorage = false;
                 ctx.Response.OnStarting(() =>
                 {

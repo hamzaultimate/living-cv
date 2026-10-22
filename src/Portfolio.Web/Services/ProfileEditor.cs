@@ -66,6 +66,13 @@ public class ProfileEditor
     private async Task CommitAsync(SiteProfile profile, CancellationToken ct)
     {
         await _db.SaveChangesAsync(ct);
+        await AfterCommitAsync(profile);
+    }
+
+    /// <summary>Makes a profile that has just been committed (by this editor or by the onboarding wizard's transaction) take effect everywhere:
+    /// the provider is handed the saved values and the "Generated" output cache is evicted.</summary>
+    public async Task AfterCommitAsync(SiteProfile profile)
+    {
         // The row is committed, so the cleanup below must run to completion even if the request is cancelled now:
         // stopping halfway would leave the old profile or old generated files being served.
         // Order matters: hand the provider the saved profile first (this also changes its version, which the
