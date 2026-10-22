@@ -45,7 +45,8 @@ public sealed class SectionPageAttribute : Attribute
     public string Section { get; }
 }
 
-/// <summary>Turns a request for a disabled section's page into a 404. Pages opt in with <c>@attribute [SectionPage("...")]</c>.</summary>
+/// <summary>Turns a request for a disabled section's page into an empty 404, which the status code pages then render as the site's
+/// ordinary not-found page, so it looks the same as any unknown address. Pages opt in with <c>@attribute [SectionPage("...")]</c>.</summary>
 public class SectionGateFilter : IAsyncPageFilter
 {
     private readonly RequestTemplate _template;

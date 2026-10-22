@@ -126,7 +126,31 @@ public class TemplateRenderingTests
         var (status, html) = await GetAsync(app.NewClient(), path);
 
         Assert.Equal(HttpStatusCode.NotFound, status);
-        Assert.DoesNotContain("<html", html);
+        // The same styled page as any unknown address, with nothing that says a section exists or is switched off.
+        var (unknownStatus, unknownHtml) = await GetAsync(app.NewClient(), "/no-such-page");
+        Assert.Equal(HttpStatusCode.NotFound, unknownStatus);
+        Assert.Contains("<html", html);
+        Assert.Contains("Page not found", html);
+        Assert.Equal(DemoSite.Normalise(unknownHtml), DemoSite.Normalise(html));
+        var body = DemoSite.WithoutScripts(html);
+        Assert.DoesNotMatch(@"(?i)blog|talk|article|presentation|disabled", body.Substring(body.IndexOf("<main", StringComparison.Ordinal)));
+    }
+
+    [Theory]
+    [InlineData("/no-such-page")]
+    [InlineData("/not-found")]
+    public async Task AnUnknownAddress_AnswersTheStyledNotFoundPage_WithA404(string path)
+    {
+        using var app = new AdminApp();
+        await DemoSite.SeedAsync(app);
+
+        var response = await app.NewClient().GetAsync(path);
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Contains("Page not found", html);
+        Assert.Contains("<meta name=\"robots\" content=\"noindex,nofollow\" />", html);
+        Assert.Equal(HttpStatusCode.NotFound, (await app.NewClient().GetAsync("/img/missing.png")).StatusCode);
     }
 
     [Fact]

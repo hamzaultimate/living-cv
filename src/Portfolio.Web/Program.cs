@@ -97,6 +97,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// An empty 404 (unknown address, or a page of a section the template does not have) shows the styled not-found page.
+// Responses that already carry a body, like a missing project, are left alone.
+app.UseNotFoundPage();
+
 // SEO: force a single canonical host. www.<domain> and <domain> otherwise both serve
 // 200 with their own self-referencing canonical tag, splitting ranking/link signals
 // between two hostnames Google sees as duplicates. Redirect www -> apex to match the

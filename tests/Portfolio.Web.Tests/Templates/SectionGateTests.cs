@@ -13,7 +13,7 @@ public class SectionGateTests : IClassFixture<AdminApp>
 {
     // Pages that are not the face of a section. Adding a public page means either marking it [SectionPage] or listing it here on purpose.
     private static readonly string[] NotSectionPages =
-        ["/Pages/Index.cshtml", "/Pages/Cv.cshtml", "/Pages/Error.cshtml", "/Pages/Privacy.cshtml", "/Pages/Setup.cshtml"];
+        ["/Pages/Index.cshtml", "/Pages/Cv.cshtml", "/Pages/Error.cshtml", "/Pages/NotFound.cshtml", "/Pages/Privacy.cshtml", "/Pages/Setup.cshtml"];
 
     private readonly AdminApp _app;
 
