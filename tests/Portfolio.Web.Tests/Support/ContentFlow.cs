@@ -58,4 +58,38 @@ public static class ContentFlow
         using var db = app.CreateDbContext();
         return await ids(db).OrderBy(x => x).ToListAsync();
     }
+
+    public sealed record Seeded(int ExperienceId, int SkillId, int ProjectId, int CertificationId);
+
+    /// <summary>One row in each table, written straight to the database (stamped, like rows the editors write).</summary>
+    public static async Task<Seeded> SeedRowsAsync(AdminApp app)
+    {
+        using var db = app.CreateDbContext();
+        var e = new Experience { Company = "Seed Co", Title = "Seed Role", Start = "2020", End = "2021", Summary = "Did seed things.", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
+        var k = new Skill { Name = "Seeding", Group = "Garden", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
+        var p = new Project { Title = "Seed Project", Slug = "seed-project", Summary = "A seeded project.", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
+        var c = new Certification { Name = "Seed Certificate", Issuer = "Seed Board", Status = CertificationStatus.Earned, Date = "2020", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
+        db.AddRange(e, k, p, c);
+        await db.SaveChangesAsync();
+        return new Seeded(e.Id, k.Id, p.Id, c.Id);
+    }
+
+    /// <summary>Every column the editors can change, as one string, to prove a request left the content alone.</summary>
+    public static async Task<string> SnapshotAsync(AdminApp app)
+    {
+        using var db = app.CreateDbContext();
+        var parts = new List<string>();
+        parts.AddRange((await db.Experiences.AsNoTracking().OrderBy(x => x.Id).ToListAsync()).Select(x => $"E{x.Id}|{x.Company}|{x.Title}|{x.Start}|{x.End}|{x.Current}|{x.Summary}|{string.Join(",", x.Highlights)}|{string.Join(",", x.Tech)}|{x.SortOrder}|{x.ConcurrencyStamp}"));
+        parts.AddRange((await db.Skills.AsNoTracking().OrderBy(x => x.Id).ToListAsync()).Select(x => $"S{x.Id}|{x.Name}|{x.Group}|{x.SortOrder}|{x.ConcurrencyStamp}"));
+        parts.AddRange((await db.Projects.AsNoTracking().OrderBy(x => x.Id).ToListAsync()).Select(x =>
+            $"P{x.Id}|{x.Title}|{x.Slug}|{x.Role}|{x.Org}|{x.Period}|{x.Summary}|{x.Category}|{x.Problem}|{x.Approach}|{x.HeroImage}|{x.HeroImageAlt}|{string.Join(",", x.Screenshots.Select(i => i.Url + "=" + i.Caption))}|{string.Join(",", x.Impact)}|{string.Join(",", x.Tech)}|{string.Join(",", x.Links.Select(l => l.Label + "=" + l.Url))}|{x.Featured}|{x.SortOrder}|{x.ConcurrencyStamp}"));
+        parts.AddRange((await db.Certifications.AsNoTracking().OrderBy(x => x.Id).ToListAsync()).Select(x => $"C{x.Id}|{x.Name}|{x.Issuer}|{x.Status}|{x.Date}|{x.Category}|{x.CredentialUrl}|{x.CertificateUrl}|{x.BadgeImageUrl}|{x.SortOrder}|{x.ConcurrencyStamp}"));
+        return string.Join("\n", parts);
+    }
+
+    public static async Task<int> CountAsync(AdminApp app)
+    {
+        using var db = app.CreateDbContext();
+        return await db.Experiences.CountAsync() + await db.Skills.CountAsync() + await db.Projects.CountAsync() + await db.Certifications.CountAsync();
+    }
 }
