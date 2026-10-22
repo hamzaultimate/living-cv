@@ -299,6 +299,22 @@ public class BlogEditorTests
     }
 
     [Fact]
+    public async Task ATakenAddress_IsReportedTogetherWithTheOtherProblems_BeforeAnythingIsWritten()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        await ContentFlow.PostAsync(owner, Edit, PostFields("First", slug: "taken-name"));
+
+        // Two things are wrong at once: the form is checked as a whole, so both are named (the database's unique index is only the backstop).
+        var response = await ContentFlow.PostAsync(owner, Edit, PostFields("Second", slug: "taken-name", body: ""));
+
+        var html = WebUtility.HtmlDecode(await TextAsync(response));
+        Assert.Contains("is already used by another post", html);
+        Assert.Contains("is required.", html);
+        Assert.Single(await RowsAsync(app));
+    }
+
+    [Fact]
     public async Task ALegacyStoredAddress_IsNeverRevalidated_AnEmptiedBoxKeepsIt_AndOnlyAChangeIsChecked()
     {
         using var app = new AdminApp();
