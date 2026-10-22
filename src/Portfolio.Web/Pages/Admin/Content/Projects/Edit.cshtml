@@ -102,8 +102,8 @@
             @if (!string.IsNullOrWhiteSpace(Model.CurrentHero))
             {
                 <div class="adm-field adm-check">
-                    <input type="hidden" name="Form.RemoveHero" value="false" />
                     <input type="checkbox" id="@Id("RemoveHero")" name="Form.RemoveHero" value="true" checked="@f.RemoveHero" />
+                    <input type="hidden" name="Form.RemoveHero" value="false" />
                     <label for="@Id("RemoveHero")">Remove the current cover image</label>
                 </div>
             }

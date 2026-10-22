@@ -166,4 +166,35 @@ public class ContentAccessibilityTests
         Assert.Contains("href=\"/admin/content\"", dashboard);
         Assert.Contains("Add, edit, reorder and remove your experience, skills, work and certifications.", dashboard);
     }
+
+    [Fact]
+    public async Task EveryCheckbox_PostsTrueFirst_WhenTicked_SoTheBinderReadsTheTick()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        var seeded = await ContentFlow.SeedRowsAsync(app);
+
+        foreach (var path in new[] { ContentFlow.Experience + "/edit", $"{ContentFlow.Projects}/edit/{seeded.ProjectId}" })
+        {
+            var html = await owner.GetStringAsync(path);
+            var boxes = Regex.Matches(html, @"<input type=""checkbox""[^>]*\sname=""([^""]+)""").Select(m => m.Groups[1].Value).ToList();
+            Assert.NotEmpty(boxes);
+            foreach (var name in boxes)
+                // A browser posts the fields in document order: a ticked box then the "false" fallback, so the first value is "true".
+                Assert.Matches(new Regex($@"<input type=""checkbox""[^>]*\sname=""{Regex.Escape(name)}""[^>]*>\s*<input type=""hidden"" name=""{Regex.Escape(name)}"" value=""false"" />"), html);
+        }
+
+        // What the browser sends for a ticked box: the tick first, then the fallback.
+        var role = new List<KeyValuePair<string, string>>
+        {
+            new("Form.Company", "Tick Co"), new("Form.Title", "Ticker"), new("Form.Start", "2022"), new("Form.Summary", "s"),
+            new("Form.Current", "true"), new("Form.Current", "false"),
+        };
+        var token = await AdminApp.GetTokenAsync(owner, ContentFlow.Experience + "/edit");
+        role.Add(new("__RequestVerificationToken", token));
+        var response = await owner.PostAsync(ContentFlow.Experience + "/edit", new FormUrlEncodedContent(role));
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        using var db = app.CreateDbContext();
+        Assert.True(db.Experiences.Single(e => e.Company == "Tick Co").Current);
+    }
 }

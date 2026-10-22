@@ -9,8 +9,9 @@
 else if (Model.Kind == FieldKind.Checkbox)
 {
     <div class="adm-field adm-check">
-        <input type="hidden" name="@Model.Name" value="false" />
+        @* The checkbox comes first: a ticked box posts "true,false" and the binder reads the first value; an unticked one posts only "false". *@
         <input type="checkbox" id="@Model.Id" name="@Model.Name" value="true" checked="@Model.IsChecked" aria-describedby="@(Model.DescribedBy.Length > 0 ? Model.DescribedBy : null)" />
+        <input type="hidden" name="@Model.Name" value="false" />
         <label for="@Model.Id">@Model.Label</label>
         @if (Model.Hint is not null) { <span id="@(Model.Id)-hint" class="adm-hint">@Model.Hint</span> }
     </div>
