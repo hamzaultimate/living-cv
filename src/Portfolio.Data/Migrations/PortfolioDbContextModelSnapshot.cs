@@ -85,6 +85,11 @@ namespace Portfolio.Data.Migrations
                     b.Property<string>("CertificateUrl")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<string>("CredentialUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -126,6 +131,11 @@ namespace Portfolio.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<bool>("Current")
                         .HasColumnType("bit");
@@ -214,12 +224,21 @@ namespace Portfolio.Data.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
 
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<bool>("Featured")
                         .HasColumnType("bit");
 
                     b.Property<string>("HeroImage")
                         .HasMaxLength(400)
                         .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("HeroImageAlt")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.PrimitiveCollection<string>("Impact")
                         .IsRequired()
@@ -381,6 +400,11 @@ namespace Portfolio.Data.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("Group")
                         .IsRequired()

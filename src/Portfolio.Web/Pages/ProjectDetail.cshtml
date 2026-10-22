@@ -82,7 +82,7 @@ else
                 }
                 else
                 {
-                    <img src="@p.HeroImage" alt="@p.Title" class="aspect-video w-full object-cover" width="1200" height="675" fetchpriority="high" />
+                    <img src="@p.HeroImage" alt="@(string.IsNullOrWhiteSpace(p.HeroImageAlt) ? p.Title : p.HeroImageAlt)" class="aspect-video w-full object-cover" width="1200" height="675" fetchpriority="high" />
                 }
             </figure>
         }

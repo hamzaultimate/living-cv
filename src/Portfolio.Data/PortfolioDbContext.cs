@@ -65,6 +65,8 @@ public class PortfolioDbContext : DbContext
             e.Property(x => x.Title).HasMaxLength(200);
             e.Property(x => x.Slug).HasMaxLength(120);
             e.Property(x => x.HeroImage).HasMaxLength(400);
+            e.Property(x => x.HeroImageAlt).HasMaxLength(Project.MaxLength.HeroImageAlt);
+            e.Property(x => x.ConcurrencyStamp).HasMaxLength(IOrderedContent.StampLength).IsConcurrencyToken();
             e.Property(x => x.Category).HasMaxLength(80);
             // List<string> Impact/Tech map to JSON automatically (EF Core primitive collections).
             e.OwnsMany(x => x.Links, o => o.ToJson());
@@ -74,18 +76,21 @@ public class PortfolioDbContext : DbContext
 
         b.Entity<Experience>(e =>
         {
+            e.Property(x => x.ConcurrencyStamp).HasMaxLength(IOrderedContent.StampLength).IsConcurrencyToken();
             e.Property(x => x.Company).HasMaxLength(200);
             e.Property(x => x.Title).HasMaxLength(200);
         });
 
         b.Entity<Skill>(e =>
         {
+            e.Property(x => x.ConcurrencyStamp).HasMaxLength(IOrderedContent.StampLength).IsConcurrencyToken();
             e.Property(x => x.Name).HasMaxLength(100);
             e.Property(x => x.Group).HasMaxLength(60);
         });
 
         b.Entity<Certification>(e =>
         {
+            e.Property(x => x.ConcurrencyStamp).HasMaxLength(IOrderedContent.StampLength).IsConcurrencyToken();
             e.Property(x => x.Name).HasMaxLength(200);
             e.Property(x => x.Issuer).HasMaxLength(160);
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
