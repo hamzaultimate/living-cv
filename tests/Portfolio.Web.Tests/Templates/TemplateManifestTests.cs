@@ -25,7 +25,7 @@ public class TemplateManifestTests
         public bool IsEnabled(LogLevel logLevel) => true;
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
-            if (logLevel >= LogLevel.Error) Errors.Add(formatter(state, exception));
+            if (logLevel >= LogLevel.Error) Errors.Add(formatter(state, exception) + " " + exception?.Message);
         }
     }
 
@@ -295,6 +295,17 @@ public class TemplateManifestTests
         Assert.Equal(Names(typeof(TemplateSeo)), props["seo"]!["properties"]!.AsObject().Select(p => p.Key).OrderBy(x => x).ToArray());
         Assert.Equal(Names(typeof(TemplateStarterRef)), props["starter"]!["properties"]!.AsObject().Select(p => p.Key).OrderBy(x => x).ToArray());
 
+        var editor = props["editor"]!["properties"]!.AsObject();
+        Assert.Equal(Names(typeof(TemplateEditor)), editor.Select(p => p.Key).OrderBy(x => x).ToArray());
+        foreach (var section in EditorFields.Sections)
+        {
+            var node = editor[section]!;
+            Assert.Equal(Names(typeof(TemplateEditorSection)), node["properties"]!.AsObject().Select(p => p.Key).OrderBy(x => x).ToArray());
+            Assert.Equal(Names(typeof(TemplateEditorField)), node["properties"]!["fields"]!["additionalProperties"]!["properties"]!.AsObject().Select(p => p.Key).OrderBy(x => x).ToArray());
+            Assert.Equal(EditorFields.For(section).Select(f => f.Key).OrderBy(x => x),
+                node["properties"]!["fields"]!["propertyNames"]!["enum"]!.AsArray().Select(n => n!.GetValue<string>()).OrderBy(x => x));
+        }
+
         var copy = props["copy"]!["properties"]!.AsObject();
         Assert.Equal(Names(typeof(TemplateCopy)), copy.Select(p => p.Key).OrderBy(x => x).ToArray());
         foreach (var group in typeof(TemplateCopy).GetProperties())
@@ -323,5 +334,59 @@ public class TemplateManifestTests
             var schema = JsonNode.Parse(File.ReadAllText(Path.Combine(TemplatesDir, "template.schema.json")))!["required"]!.AsArray().Select(n => n!.GetValue<string>());
             foreach (var required in schema) Assert.True(node.ContainsKey(required), $"{folder} lacks required '{required}'");
         }
+    }
+
+    // ---- Editor wording and field visibility ----
+
+    [Fact]
+    public void TheEditorBlock_IsOptional_AndAnEmptyOneIsValid()
+    {
+        var (_, log, catalog) = CatalogWith("plain", "healthcare", n => { n["key"] = "plain"; n.Remove("editor"); n.Remove("starter"); });
+
+        Assert.Empty(log.Errors);
+        Assert.True(catalog.TryGet("plain", out var plain));
+        Assert.Empty(plain!.Editor.Experience.Fields);
+    }
+
+    [Theory]
+    [InlineData("""{ "experience": { "fields": { "salary": { "label": "Pay" } } } }""", "not a field of the experience editor")]
+    [InlineData("""{ "experience": { "fields": { "company": { "hidden": true } } } }""", "cannot be hidden")]
+    [InlineData("""{ "skills": { "fields": { "name": { "hidden": true } } } }""", "cannot be hidden")]
+    [InlineData("""{ "projects": { "fields": { "summary": { "hidden": true } } } }""", "cannot be hidden")]
+    [InlineData("""{ "certifications": { "fields": { "status": { "hidden": true } } } }""", "cannot be hidden")]
+    [InlineData("""{ "projects": { "fields": { "tech": { "label": "<b>Stack</b>" } } } }""", "plain text")]
+    [InlineData("""{ "projects": { "fields": { "tech": { "hint": "see <a>" } } } }""", "plain text")]
+    [InlineData("""{ "skills": { "itemLabel": "<i>Skill</i>" } }""", "plain text")]
+    [InlineData("""{ "skills": { "itemLabel": "" } }""", "itemLabel")]
+    [InlineData("""{ "projects": { "fields": { "tech": { "label": "" } } } }""", "label")]
+    public void AnInvalidEditorBlock_IsRejectedByTheValidator(string editor, string expected)
+    {
+        var template = Load("healthcare");
+        template.Editor = JsonSerializer.Deserialize<TemplateEditor>(editor, Json)!;
+
+        var errors = TemplateValidator.Validate(template, "healthcare");
+
+        Assert.Contains(errors, e => e.Contains(expected, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void AnUnknownEditorProperty_IsRejected_SoATypoCannotSilentlyDoNothing()
+    {
+        var (_, log, catalog) = CatalogWith("typo", "healthcare", n => { n["key"] = "typo"; n.Remove("starter"); n["editor"]!["experience"]!["fields"]!["title"]!.AsObject().Add("hiden", true); });
+
+        Assert.False(catalog.TryGet("typo", out _));
+        Assert.Contains(log.Errors, e => e.Contains("hiden", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void BothShippedTemplates_DeclareTheirEditorWording()
+    {
+        var software = Load("software").Editor;
+        var healthcare = Load("healthcare").Editor;
+
+        Assert.Equal("Tech stack", software.Experience.Fields["tech"].Label);
+        Assert.Equal("Employer or placement", healthcare.Experience.Fields["company"].Label);
+        Assert.True(healthcare.Certifications.Fields["badgeImageUrl"].Hidden);
+        Assert.All(new[] { software, healthcare }, e => Assert.False(e.Projects.Fields.ContainsKey("title") && e.Projects.Fields["title"].Hidden));
     }
 }

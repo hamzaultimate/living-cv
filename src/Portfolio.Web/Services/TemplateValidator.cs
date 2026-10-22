@@ -85,6 +85,7 @@ public static partial class TemplateValidator
 
         ValidateHeroSuggestions(t, errors);
         ValidateAccents(t, errors);
+        ValidateEditor(t, errors);
 
         return errors;
     }
@@ -127,6 +128,44 @@ public static partial class TemplateValidator
             if (HasMarkup(a.Label)) errors.Add($"theme.accents['{a.Key}'].label must be plain text.");
             foreach (var (name, colour) in new[] { ("dark.accent", a.Dark.Accent), ("dark.strong", a.Dark.Strong), ("light.accent", a.Light.Accent), ("light.strong", a.Light.Strong) })
                 if (!HexColour().IsMatch(colour ?? "")) errors.Add($"theme.accents['{a.Key}'].{name} '{colour}' must look like #0f172a.");
+        }
+    }
+
+    public const int MaxEditorLabel = 60;
+    public const int MaxEditorHint = 200;
+    public const int MaxEditorItemLabel = 40;
+
+    /// <summary>The editor block only reshapes wording and visibility, so it is checked against the closed field lists: an unknown field, markup in
+    /// a label, or an attempt to hide a field the entry cannot exist without would otherwise be silently ignored or break the form.</summary>
+    private static void ValidateEditor(TemplateDefinition t, List<string> errors)
+    {
+        foreach (var section in EditorFields.Sections)
+        {
+            var settings = t.Editor.For(section)!;
+            var known = EditorFields.For(section);
+            if (settings.ItemLabel is not null)
+            {
+                if (string.IsNullOrWhiteSpace(settings.ItemLabel) || settings.ItemLabel.Length > MaxEditorItemLabel)
+                    errors.Add($"editor.{section}.itemLabel must be 1 to {MaxEditorItemLabel} characters.");
+                if (HasMarkup(settings.ItemLabel)) errors.Add($"editor.{section}.itemLabel must be plain text (no < or >).");
+            }
+            foreach (var (key, field) in settings.Fields)
+            {
+                var info = known.FirstOrDefault(f => f.Key == key);
+                var path = $"editor.{section}.fields.{key}";
+                if (info is null)
+                {
+                    errors.Add($"{path} is not a field of the {section} editor (expected one of {string.Join(", ", known.Select(f => f.Key))}).");
+                    continue;
+                }
+                if (field is null) { errors.Add($"{path} must be an object."); continue; }
+                if (field.Label is not null && (string.IsNullOrWhiteSpace(field.Label) || field.Label.Length > MaxEditorLabel))
+                    errors.Add($"{path}.label must be 1 to {MaxEditorLabel} characters.");
+                if (field.Hint is not null && (string.IsNullOrWhiteSpace(field.Hint) || field.Hint.Length > MaxEditorHint))
+                    errors.Add($"{path}.hint must be 1 to {MaxEditorHint} characters.");
+                if (HasMarkup(field.Label) || HasMarkup(field.Hint)) errors.Add($"{path} label and hint must be plain text (no < or >).");
+                if (field.Hidden && info.Required) errors.Add($"{path} cannot be hidden: an entry cannot exist without it.");
+            }
         }
     }
 

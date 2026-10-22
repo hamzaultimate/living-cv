@@ -17,6 +17,38 @@
     "title": "Software Engineer",
     "summary": "Software engineer who builds reliable, maintainable systems and enjoys turning unclear requirements into shipped products."
   },
+  "editor": {
+    "experience": {
+      "itemLabel": "Role",
+      "fields": {
+        "company": {
+          "label": "Company"
+        },
+        "title": {
+          "label": "Job title"
+        },
+        "tech": {
+          "label": "Tech stack"
+        }
+      }
+    },
+    "skills": {
+      "itemLabel": "Skill"
+    },
+    "projects": {
+      "fields": {
+        "category": {
+          "hint": "A domain or industry such as Distributed Systems. Used by the filter on the Work page."
+        },
+        "tech": {
+          "label": "Tech stack"
+        }
+      }
+    },
+    "certifications": {
+      "itemLabel": "Certification"
+    }
+  },
   "starter": { "source": "seed" },
   "sections": [
     { "key": "about", "label": "about" },

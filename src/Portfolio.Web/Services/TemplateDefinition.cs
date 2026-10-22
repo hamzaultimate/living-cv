@@ -44,6 +44,10 @@ public class TemplateDefinition
 
     public TemplateCopy Copy { get; set; } = new();
 
+    /// <summary>Wording and field visibility for the admin content editors (experience, skills, projects, certifications). Optional: whatever it
+    /// leaves out uses the neutral wording in <see cref="EditorFields"/>.</summary>
+    public TemplateEditor Editor { get; set; } = new();
+
     /// <summary>Optional sample content, a path relative to the template folder.</summary>
     public TemplateStarterRef? Starter { get; set; }
 }
@@ -156,6 +160,47 @@ public class TemplateSeo
         else if (char.IsHighSurrogate(cut[^1])) cut = cut[..^1]; // never split a surrogate pair (an emoji)
         return cut.TrimEnd(' ', ',', ';', ':', '-', '—', '.') + "…";
     }
+}
+
+/// <summary>How the admin editors talk about the template's content: what one entry is called, each field's label and hint, and which optional
+/// fields the template does not use. A hidden field is only left off the form: a value already stored in it is never changed or removed.</summary>
+public class TemplateEditor
+{
+    public TemplateEditorSection Experience { get; set; } = new();
+    public TemplateEditorSection Skills { get; set; } = new();
+    public TemplateEditorSection Projects { get; set; } = new();
+    public TemplateEditorSection Certifications { get; set; } = new();
+
+    /// <summary>The editor settings for a section key (<see cref="SectionRegistry"/>), or null for a section that has no editor.</summary>
+    public TemplateEditorSection? For(string section) => section switch
+    {
+        SectionRegistry.Experience => Experience,
+        SectionRegistry.Skills => Skills,
+        SectionRegistry.Projects => Projects,
+        SectionRegistry.Certifications => Certifications,
+        _ => null,
+    };
+}
+
+public class TemplateEditorSection
+{
+    /// <summary>What one entry is called in the editor ("Role", "Clinical skill"). Projects use the section's own itemLabel when this is empty.</summary>
+    public string? ItemLabel { get; set; }
+
+    /// <summary>Overrides by field key (see <see cref="EditorFields"/> for the keys of each section).</summary>
+    public Dictionary<string, TemplateEditorField> Fields { get; set; } = new();
+}
+
+public class TemplateEditorField
+{
+    /// <summary>Replaces the field's label.</summary>
+    public string? Label { get; set; }
+
+    /// <summary>Replaces the short help text under the field.</summary>
+    public string? Hint { get; set; }
+
+    /// <summary>True to leave the field off the form. Not allowed for the fields an entry cannot exist without.</summary>
+    public bool Hidden { get; set; }
 }
 
 /// <summary>Where a template's sample content comes from: its own <see cref="File"/> in the template folder, or

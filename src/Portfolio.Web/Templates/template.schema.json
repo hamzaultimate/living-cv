@@ -606,6 +606,218 @@
         }
       }
     },
+    "editor": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional wording and field visibility for the admin content editors. Anything left out uses neutral default wording.",
+      "properties": {
+        "experience": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The experience editor.",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one entry is called in the editor. Projects fall back to the section's own itemLabel."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Required fields (name, title, summary and the like) can be relabelled but not hidden.",
+              "propertyNames": {
+                "enum": [
+                  "company",
+                  "title",
+                  "start",
+                  "end",
+                  "current",
+                  "summary",
+                  "highlights",
+                  "tech"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "skills": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The skills editor.",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one entry is called in the editor. Projects fall back to the section's own itemLabel."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Required fields (name, title, summary and the like) can be relabelled but not hidden.",
+              "propertyNames": {
+                "enum": [
+                  "name",
+                  "group"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "projects": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The projects editor.",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one entry is called in the editor. Projects fall back to the section's own itemLabel."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Required fields (name, title, summary and the like) can be relabelled but not hidden.",
+              "propertyNames": {
+                "enum": [
+                  "title",
+                  "slug",
+                  "role",
+                  "org",
+                  "period",
+                  "summary",
+                  "category",
+                  "problem",
+                  "approach",
+                  "impact",
+                  "tech",
+                  "links",
+                  "featured",
+                  "heroImage",
+                  "screenshots"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "certifications": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The certifications editor.",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one entry is called in the editor. Projects fall back to the section's own itemLabel."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Required fields (name, title, summary and the like) can be relabelled but not hidden.",
+              "propertyNames": {
+                "enum": [
+                  "name",
+                  "issuer",
+                  "status",
+                  "date",
+                  "category",
+                  "credentialUrl",
+                  "certificateUrl",
+                  "badgeImageUrl"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "starter": {
       "type": "object",
       "description": "Optional sample content the wizard can load into empty tables. Give either a file or the built-in source.",
