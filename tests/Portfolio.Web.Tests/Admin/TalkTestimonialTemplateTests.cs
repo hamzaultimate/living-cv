@@ -18,6 +18,7 @@ public class TalkTestimonialTemplateTests
         {
           "talks": { "itemLabel": "Gabfest", "fields": {
             "title": { "label": "Gabfest name", "hint": "Gabfest name hint." },
+            "typeVideo": { "label": "Gizmo clip" }, "typeTalk": { "label": "Gizmo speech" },
             "event": { "hidden": true }, "url": { "hidden": true }, "youtubeId": { "label": "Clip" }, "date": { "label": "Gabbed on" } } },
           "testimonials": { "itemLabel": "Kudo", "fields": {
             "quote": { "label": "Kudo text" }, "author": { "label": "Kudo giver" }, "authorTitle": { "hidden": true }, "sourceUrl": { "hidden": true } } }
@@ -49,6 +50,11 @@ public class TalkTestimonialTemplateTests
         Assert.Contains("Clip", talkForm);
         Assert.Contains("Gabbed on", talkForm);
         Assert.Contains("Add gabfest", talkForm);
+        Assert.Contains(">Gizmo clip</option>", talkForm);
+        Assert.Contains(">Gizmo speech</option>", talkForm);
+        Assert.DoesNotContain(">Video</option>", talkForm);
+        Assert.DoesNotContain(">Talk</option>", talkForm);
+        Assert.DoesNotContain("Video and link", talkForm);
         var kudoForm = await owner.GetStringAsync(ContentFlow.Testimonials + "/edit");
         Assert.Contains("Kudo text", kudoForm);
         Assert.Contains("Kudo giver", kudoForm);
@@ -126,6 +132,24 @@ public class TalkTestimonialTemplateTests
         Assert.Equal(("Kept, renamed", "Kept Conf", "https://example.org/kept", "aqz-KE-bpKQ", new DateOnly(2024, 2, 3)), (t.Title, t.Event, t.Url, t.YoutubeId, t.Date));
         var m = await check.Testimonials.AsNoTracking().SingleAsync();
         Assert.Equal(("Kept quote, edited and long enough.", "Kept Role", "https://example.org/src"), (m.Quote, m.AuthorTitle, m.SourceUrl));
+    }
+
+    [Fact]
+    public async Task TheConfirmationPage_ListsOnlyFieldsTheTemplateShows()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app, "healthcare"); // hides the video field
+        using (var db = app.CreateDbContext())
+        {
+            db.Talks.Add(new Talk { Title = "Grand rounds", Event = "Ward meeting", YoutubeId = "aqz-KE-bpKQ", Date = new DateOnly(2024, 2, 3), ConcurrencyStamp = "s" });
+            await db.SaveChangesAsync();
+        }
+        var id = (await ContentFlow.IdsAsync(app, db => db.Talks.Select(t => t.Id))).Single();
+
+        var confirm = await owner.GetStringAsync($"{ContentFlow.Talks}/delete/{id}");
+
+        Assert.Contains("Ward meeting", confirm);
+        Assert.DoesNotContain("aqz-KE-bpKQ", confirm);
     }
 
     [Fact]

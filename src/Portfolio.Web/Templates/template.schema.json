@@ -834,6 +834,8 @@
                 "enum": [
                   "title",
                   "type",
+                  "typeVideo",
+                  "typeTalk",
                   "event",
                   "date",
                   "youtubeId",

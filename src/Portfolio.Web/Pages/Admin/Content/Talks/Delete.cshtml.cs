@@ -15,8 +15,8 @@ public class DeleteModel : ContentDeleteModel<Talk>
     protected override DeleteInfo Describe(Talk t) =>
         new(t.Title, new[]
         {
-            string.IsNullOrWhiteSpace(t.Event) ? null : $"{View.Label("event")}: {t.Event}",
-            t.Date is { } d ? $"{View.Label("date")}: {d:yyyy-MM-dd}" : null,
-            string.IsNullOrWhiteSpace(t.YoutubeId) ? null : $"{View.Label("youtubeId")}: {t.YoutubeId}",
+            View.Visible("event") && !string.IsNullOrWhiteSpace(t.Event) ? $"{View.Label("event")}: {t.Event}" : null,
+            View.Visible("date") && t.Date is { } d ? $"{View.Label("date")}: {d:yyyy-MM-dd}" : null,
+            View.Visible("youtubeId") && !string.IsNullOrWhiteSpace(t.YoutubeId) ? $"{View.Label("youtubeId")}: {t.YoutubeId}" : null,
         }.Where(x => x is not null).Select(x => x!).ToList());
 }

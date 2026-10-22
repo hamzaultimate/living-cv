@@ -21,7 +21,7 @@
     @if (Model.View.Visible("youtubeId") || Model.View.Visible("url"))
     {
         <fieldset class="adm-fieldset">
-            <legend>Video and link</legend>
+            <legend>Links</legend>
             <partial name="_Field" model="@(Model.Field("youtubeId", nameof(f.YoutubeId), f.YoutubeId, maxLength: 200))" />
             <partial name="_Field" model="@(Model.Field("url", nameof(f.Url), f.Url, FieldKind.Url, EditModel.UrlMax))" />
         </fieldset>

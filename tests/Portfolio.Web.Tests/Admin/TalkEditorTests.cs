@@ -207,7 +207,7 @@ public class TalkEditorTests
     }
 
     [Fact]
-    public async Task ARoleSavedFromAStaleForm_IsRefused_AndTheNewerVersionIsKept()
+    public async Task ATalkSavedFromAStaleForm_IsRefused_AndTheNewerVersionIsKept()
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
@@ -243,6 +243,72 @@ public class TalkEditorTests
         Assert.Equal(before, await ContentFlow.SnapshotAsync(app));
     }
 
+    [Theory]
+    [InlineData("Über uns", "ÜBER UNS")]
+    [InlineData("Ångström talk", "ångström TALK")]
+    [InlineData("Same title", "SAME TITLE")]
+    public async Task TheTitleRule_IsOrdinalIgnoreCase_LikeTheSeederKey_ForNonAsciiLettersToo(string first, string second)
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        await ContentFlow.PostAsync(owner, Edit, TalkFields(first));
+
+        var again = await ContentFlow.PostAsync(owner, Edit, TalkFields(second));
+
+        Assert.Contains("already have a talk called", await again.Content.ReadAsStringAsync());
+        Assert.Single(await RowsAsync(app));
+    }
+
+    [Fact]
+    public async Task TalksWithTheSameDate_AreListedByPosition_ThenId_OnThePublicPageAndInTheAdminList()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        using (var db = app.CreateDbContext())
+        {
+            var day = new DateOnly(2024, 1, 1);
+            db.Talks.AddRange(
+                new Talk { Title = "Added first, last position", Date = day, SortOrder = 3 },
+                new Talk { Title = "Added second, first position", Date = day, SortOrder = 1 },
+                new Talk { Title = "Added third, same position as the next", Date = day, SortOrder = 2 },
+                new Talk { Title = "Added fourth, same position as the previous", Date = day, SortOrder = 2 });
+            await db.SaveChangesAsync();
+        }
+
+        var pub = await app.NewClient().GetStringAsync("/talks");
+        var list = await owner.GetStringAsync(ContentFlow.Talks);
+
+        foreach (var page in new[] { pub, list })
+        {
+            var order = new[] { "Added second, first position", "Added third, same position as the next", "Added fourth, same position as the previous", "Added first, last position" }
+                .Select(t => At(page, ">" + t + "<")).ToList();
+            Assert.Equal(order.OrderBy(x => x), order);
+        }
+    }
+
+    [Fact]
+    public async Task ThePublicPage_EmbedsOnlyAWellFormedStoredVideoId_AndLeavesTheStoredValueAlone()
+    {
+        using var app = new AdminApp();
+        _ = app.Server; // starts the host, which creates the schema
+        using (var db = app.CreateDbContext())
+        {
+            db.Talks.AddRange(
+                new Talk { Title = "Good id", YoutubeId = "aqz-KE-bpKQ", Date = new DateOnly(2024, 3, 1) },
+                new Talk { Title = "Bad id", YoutubeId = "x\"onload=\"alert(1)", Date = new DateOnly(2024, 2, 1) },
+                new Talk { Title = "Short id", YoutubeId = "abc", Date = new DateOnly(2024, 1, 1) });
+            await db.SaveChangesAsync();
+        }
+
+        var page = await app.NewClient().GetStringAsync("/talks");
+
+        Assert.Contains("youtube-nocookie.com/embed/aqz-KE-bpKQ", page);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(page, "<iframe"));
+        Assert.DoesNotContain("onload", page);
+        Assert.Contains(">Bad id<", page); // the talk itself is still listed
+        Assert.Equal(["aqz-KE-bpKQ", "x\"onload=\"alert(1)", "abc"], (await RowsAsync(app)).Select(r => r.YoutubeId));
+    }
+
     [Fact]
     public async Task TwoTalksCannotShareATitle_AndAnEditMayKeepItsOwn()
     {
@@ -275,8 +341,9 @@ public class TalkEditorTests
         Assert.Equal(2, (await RowsAsync(app)).Count);
 
         var stamp = await ContentFlow.StampAsync(owner, path);
-        // A stale stamp does not remove it.
-        Assert.Contains("changed or removed", await (await owner.GetAsync(ContentFlow.Talks)).Content.ReadAsStringAsync() + await FlashAfter(owner, path, "stale-stamp"));
+        // A stale stamp does not remove it: the list shows the conflict message and both talks are still there.
+        await ContentFlow.PostAsync(owner, path, new Dictionary<string, string> { ["Stamp"] = "stale-stamp" });
+        Assert.Contains("changed or removed", await owner.GetStringAsync(ContentFlow.Talks));
         Assert.Equal(2, (await RowsAsync(app)).Count);
 
         var remove = await ContentFlow.PostAsync(owner, path, new Dictionary<string, string> { ["Stamp"] = stamp });
@@ -285,12 +352,6 @@ public class TalkEditorTests
         Assert.DoesNotContain(await RowsAsync(app), r => r.Id == seeded.TalkId);
         Assert.Equal(others, (await ContentFlow.SnapshotAsync(app)).Split('\n').ToList());
         Assert.Contains("Removed Seed Talk.", await owner.GetStringAsync(ContentFlow.Talks));
-    }
-
-    private static async Task<string> FlashAfter(HttpClient owner, string path, string stamp)
-    {
-        await ContentFlow.PostAsync(owner, path, new Dictionary<string, string> { ["Stamp"] = stamp });
-        return await owner.GetStringAsync(ContentFlow.Talks);
     }
 
     [Fact]

@@ -36,7 +36,9 @@ public class EditModel : ContentPageModel
     [BindProperty]
     public TalkForm Form { get; set; } = new();
 
-    public IReadOnlyList<(string Value, string Text)> TypeOptions => Enum.GetNames<TalkType>().Select(n => (n, n)).ToList();
+    /// <summary>The stored value is the enum name, whatever the wording; the words come from the manifest (<c>typeVideo</c>, <c>typeTalk</c>).</summary>
+    public IReadOnlyList<(string Value, string Text)> TypeOptions =>
+        [(nameof(TalkType.Video), View.Label("typeVideo")), (nameof(TalkType.Talk), View.Label("typeTalk"))];
 
     public async Task<IActionResult> OnGetAsync(int? id, CancellationToken ct)
     {
@@ -97,8 +99,9 @@ public class EditModel : ContentPageModel
         var url = View.Visible("url") ? c.Url(nameof(Form.Url), "url", Form.Url, UrlMax, stored?.Url) : null;
 
         // The seeder identifies an entry by its title, so two with one title would break Seed:Mode=Authoritative.
+        // Compared in memory with the same OrdinalIgnoreCase rule as the seeder's dictionary, so the database collation cannot decide differently.
         if (title is not null && c.IsValid(nameof(Form.Title))
-            && await Db.Talks.AnyAsync(x => x.Id != id && x.Title.ToLower() == title.ToLower(), ct))
+            && (await Db.Talks.AsNoTracking().Where(x => x.Id != id).Select(x => x.Title).ToListAsync(ct)).Any(t => string.Equals(t, title, StringComparison.OrdinalIgnoreCase)))
             c.Error(nameof(Form.Title), $"You already have a {View.ItemLabelLower} called \"{title}\". Edit that one instead.");
 
         if (!ModelState.IsValid) return Page();

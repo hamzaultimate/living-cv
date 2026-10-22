@@ -119,6 +119,12 @@
         "event": {
           "label": "Meeting or conference"
         },
+        "typeVideo": {
+          "label": "Recording"
+        },
+        "typeTalk": {
+          "label": "Live presentation"
+        },
         "youtubeId": {
           "hidden": true
         }

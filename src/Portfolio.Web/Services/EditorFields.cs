@@ -63,6 +63,8 @@ public static class EditorFields
     [
         new("title", "Title", null, true),
         new("type", "Type", null, false),
+        new("typeVideo", "Video", "The word for the first choice of the type field. Wording only: the field itself is hidden or shown by type.", false),
+        new("typeTalk", "Talk", "The word for the second choice of the type field. Wording only.", false),
         new("event", "Event", "Where it was given or published.", false),
         new("date", "Date", "A date, or a month and year: 2025-05-14, 2025-05 or 2025. Entries are listed newest first by this date.", false),
         new("youtubeId", "Video", "A YouTube link or the 11 character video id. Shown as an embedded video.", false),

@@ -77,7 +77,7 @@ public class PortfolioContentService
         QueryAsync(db => db.Talks.OrderByDescending(t => t.Date).ThenBy(t => t.SortOrder).ThenBy(t => t.Id).ToListAsync(), new List<Talk>());
 
     public Task<List<Testimonial>> GetTestimonialsAsync() =>
-        QueryAsync(db => db.Testimonials.OrderBy(t => t.SortOrder).ToListAsync(), new List<Testimonial>());
+        QueryAsync(db => db.Testimonials.OrderBy(t => t.SortOrder).ThenBy(t => t.Id).ToListAsync(), new List<Testimonial>());
 
     /// <summary>The CV for <paramref name="site"/>: only the sections its template has enabled, in the template's wording.
     /// Pass <paramref name="view"/> to use a template other than the saved one (an owner preview).</summary>

@@ -124,6 +124,26 @@ public class TestimonialEditorTests
     }
 
     [Fact]
+    public async Task TestimonialsWithTheSamePosition_AreShownByIdOnTheHomePage()
+    {
+        using var app = new AdminApp();
+        _ = app.Server; // starts the host, which creates the schema
+        using (var db = app.CreateDbContext())
+        {
+            db.Testimonials.AddRange(
+                new Testimonial { Quote = "Quote added first.", Author = "Person One", SortOrder = 1 },
+                new Testimonial { Quote = "Quote added second.", Author = "Person Two", SortOrder = 1 },
+                new Testimonial { Quote = "Quote added third.", Author = "Person Three", SortOrder = 1 });
+            await db.SaveChangesAsync();
+        }
+
+        var home = await app.NewClient().GetStringAsync("/");
+
+        Assert.True(At(home, "Quote added first.") < At(home, "Quote added second."));
+        Assert.True(At(home, "Quote added second.") < At(home, "Quote added third."));
+    }
+
+    [Fact]
     public async Task Reordering_PersistsAndGoesPublic_AndUsesTheListStamp()
     {
         using var app = new AdminApp();

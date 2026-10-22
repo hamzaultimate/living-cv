@@ -70,7 +70,8 @@ public static partial class ContentRules
         return candidate is not null && IsYoutubeId(candidate) ? candidate : null;
     }
 
-    private static bool IsYoutubeId(string value) => value.Length == 11 && value.All(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-');
+    /// <summary>True for a stored or typed bare video id: 11 letters, digits, <c>_</c> or <c>-</c>. The public page embeds nothing else.</summary>
+    public static bool IsYoutubeId(string? value) => value is not null && value.Length == 11 && value.All(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-');
 
     /// <summary>A site-relative address such as <c>/img/badge.svg</c>: one leading slash, no scheme, no backslash, no dot segments.</summary>
     public static bool IsLocalPath(string? value) =>
