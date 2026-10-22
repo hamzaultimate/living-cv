@@ -16,10 +16,15 @@ module.exports = {
           strong: 'rgb(var(--c-accent-strong) / <alpha-value>)',
         },
       },
+      // Fonts and radii read a CSS variable that a template theme may set (see Styles/themes); the fallback is the base look.
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
-        display: ['"Space Grotesk"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
+        sans: ['var(--font-sans, Inter)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+        display: ['var(--font-display, "Space Grotesk")', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono, "JetBrains Mono")', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
+      },
+      borderRadius: {
+        lg: 'var(--radius-lg, 0.5rem)',
+        md: 'var(--radius-md, 0.375rem)',
       },
       maxWidth: {
         content: '72rem',

@@ -1,3 +1,6 @@
+/* One file per template theme: variables only, scoped to [data-template="<key>"]. */
+@import "./themes/healthcare.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

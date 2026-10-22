@@ -1,0 +1,156 @@
+// Fictional sample content for the Healthcare template. Every person, employer, registration body and
+// credential below is invented. Nothing here describes a real person or a real patient.
+{
+  "fictional": true,
+  "profile": {
+    "ownerName": "Jordan Sample",
+    "brandName": "Jordan",
+    "role": "Registered Nurse · Critical care (sample profile)",
+    "jobTitle": "Registered Nurse",
+    "summary": "Sample profile (fictional). Registered nurse with eight years in adult critical care, experienced in ventilated and post-operative care, escalation of the deteriorating patient and mentoring new staff.",
+    "knowsAbout": ["Critical care nursing", "Ventilator management", "Sepsis recognition", "Clinical audit", "Preceptorship"],
+    "hero": {
+      "eyebrow": "Registered Nurse · Critical care",
+      "headline": "Calm, evidence-based care",
+      "headlineAccent": "when it matters most.",
+      "lede": "Sample profile (fictional). Eight years in adult critical care: safe, compassionate practice, clear handover and a steady hand with new colleagues."
+    },
+    "metrics": [
+      { "value": "8", "unit": "years", "label": "in critical care" },
+      { "value": "1:1", "unit": "", "label": "ventilated-bed nursing ratio" },
+      { "value": "120+", "unit": "hours", "label": "preceptorship delivered" },
+      { "value": "2", "unit": "", "label": "quality initiatives led" }
+    ],
+    "about": {
+      "headline": "Safe, compassionate critical care, built on good handover.",
+      "paragraphs": [
+        "Sample profile (fictional). I am a registered nurse working in adult intensive care. My practice is built on early recognition of deterioration, careful medication safety and calm communication with patients' families.",
+        "I enjoy teaching. I have supported new graduates through their first months on the unit and led two small quality initiatives, one on early mobilisation and one on sepsis screening.",
+        "This page is sample content for the Healthcare template. Replace it with your own details, and never add anything that could identify a patient."
+      ],
+      "valueProps": [
+        { "title": "Patient safety first", "body": "Medication checks, escalation criteria and clear documentation at every step." },
+        { "title": "Teaching and mentoring", "body": "Structured support for new graduates and students on placement." },
+        { "title": "Evidence in practice", "body": "Audit and small improvement projects that change what happens at the bedside." },
+        { "title": "Clear communication", "body": "Concise handover, honest conversations and respect for families." }
+      ],
+      "currentlyNote": "Working towards a critical care nursing certificate while mentoring two new graduates.",
+      "focus": ["Critical care nursing", "Sepsis recognition", "Early mobilisation", "Preceptorship"]
+    },
+    "email": "jordan.sample@example.org",
+    "linkedIn": "https://www.linkedin.com/in/example-jordan-sample/",
+    "templateKey": "healthcare"
+  },
+  "experiences": [
+    {
+      "company": "Example General Hospital (fictional)",
+      "title": "Registered Nurse, Intensive Care Unit",
+      "start": "2022",
+      "end": null,
+      "current": true,
+      "summary": "Adult general intensive care: ventilated, post-operative and renal support patients.",
+      "highlights": [
+        "Preceptor for six new graduates",
+        "Unit link nurse for infection prevention",
+        "Contributed to the early mobility programme"
+      ],
+      "tech": [],
+      "sortOrder": 1
+    },
+    {
+      "company": "Sample Regional Medical Centre (fictional)",
+      "title": "Staff Nurse, High Dependency Unit",
+      "start": "2019",
+      "end": "2022",
+      "current": false,
+      "summary": "Step-down care for patients recovering from critical illness or major surgery.",
+      "highlights": [
+        "Led the unit's sepsis screening audit",
+        "Delivered monthly bedside teaching sessions"
+      ],
+      "tech": [],
+      "sortOrder": 2
+    },
+    {
+      "company": "Demo Community Health Trust (fictional)",
+      "title": "Graduate Nurse",
+      "start": "2017",
+      "end": "2019",
+      "current": false,
+      "summary": "Rotational graduate programme across medical, surgical and community placements.",
+      "highlights": ["Completed all programme competencies ahead of schedule"],
+      "tech": [],
+      "sortOrder": 3
+    }
+  ],
+  "skills": [
+    { "name": "Haemodynamic monitoring", "group": "Clinical", "sortOrder": 1 },
+    { "name": "Sepsis recognition", "group": "Clinical", "sortOrder": 2 },
+    { "name": "Medication safety", "group": "Clinical", "sortOrder": 3 },
+    { "name": "Delirium screening", "group": "Clinical", "sortOrder": 4 },
+    { "name": "Arterial line care", "group": "Procedures", "sortOrder": 1 },
+    { "name": "Central line care", "group": "Procedures", "sortOrder": 2 },
+    { "name": "Tracheostomy care", "group": "Procedures", "sortOrder": 3 },
+    { "name": "Enteral feeding", "group": "Procedures", "sortOrder": 4 },
+    { "name": "Electronic care records", "group": "Documentation", "sortOrder": 1 },
+    { "name": "Structured handover", "group": "Documentation", "sortOrder": 2 },
+    { "name": "Incident reporting", "group": "Documentation", "sortOrder": 3 },
+    { "name": "English (native)", "group": "Languages", "sortOrder": 1 },
+    { "name": "Spanish (conversational)", "group": "Languages", "sortOrder": 2 }
+  ],
+  "projects": [
+    {
+      "title": "Early mobility programme (sample)",
+      "slug": "early-mobility-programme",
+      "role": "Contributor",
+      "org": "Example General Hospital (fictional)",
+      "period": "2023",
+      "summary": "A unit-wide programme to start safe mobilisation earlier for ventilated patients. Sample initiative (fictional).",
+      "category": "Quality improvement",
+      "problem": "Mobilisation started late and inconsistently, which can lengthen recovery.",
+      "approach": "Agreed safety criteria, trained the team, added a daily prompt to the ward round and tracked starts on a run chart.",
+      "impact": ["Mobilisation started a median of two days earlier", "Daily prompt adopted on every shift"],
+      "tech": ["Run charts", "Safety checklist", "Staff teaching"],
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "title": "Sepsis screening audit (sample)",
+      "slug": "sepsis-screening-audit",
+      "role": "Lead",
+      "org": "Sample Regional Medical Centre (fictional)",
+      "period": "2021",
+      "summary": "A re-audit of how reliably the unit screened for sepsis and escalated. Sample initiative (fictional).",
+      "category": "Clinical audit",
+      "problem": "Screening was recorded inconsistently between shifts.",
+      "approach": "Sampled records against the local standard, fed results back to the team and re-audited after two months.",
+      "impact": ["Documented screening rose from 71% to 93%"],
+      "tech": ["Audit tool", "Feedback sessions"],
+      "featured": true,
+      "sortOrder": 2
+    }
+  ],
+  "certifications": [
+    { "name": "Registered Nurse registration (sample)", "issuer": "Example Nursing Council", "status": "Earned", "date": "2017", "category": "Registration", "sortOrder": 1 },
+    { "name": "Advanced Life Support provider (sample)", "issuer": "Example Resuscitation Society", "status": "Earned", "date": "2024", "category": "Life support", "sortOrder": 2 },
+    { "name": "Infection prevention and manual handling", "issuer": "Example General Hospital", "status": "Earned", "date": "2025", "category": "Mandatory training", "sortOrder": 3 },
+    { "name": "Critical Care Nursing Certificate (sample)", "issuer": "Example College of Nursing", "status": "InProgress", "date": "2026", "category": "Postgraduate", "sortOrder": 4 },
+    { "name": "Clinical Educator Programme (sample)", "issuer": "Example College of Nursing", "status": "Planned", "category": "Education", "sortOrder": 5 }
+  ],
+  "testimonials": [
+    {
+      "quote": "Sample reference (fictional). Jordan is a steady presence on the unit and a patient teacher; new graduates ask to be paired with them.",
+      "author": "Sample Colleague",
+      "authorTitle": "Nurse Manager, Example General Hospital",
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "quote": "Sample reference (fictional). Their handover is clear and their audit work changed how we screen for sepsis.",
+      "author": "Demo Clinician",
+      "authorTitle": "Consultant, Sample Regional Medical Centre",
+      "featured": true,
+      "sortOrder": 2
+    }
+  ]
+}
