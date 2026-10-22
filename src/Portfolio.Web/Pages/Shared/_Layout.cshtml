@@ -1,6 +1,8 @@
 @inject ISiteProfileProvider SiteProfile
+@inject RequestTemplate Template
 @{
     var site = await SiteProfile.GetAsync();
+    var tpl = await Template.GetAsync();
     // Most pages get "Section · Name". The homepage leads with the name + role instead —
     // that's what people actually search ("<name> <job title>"), and it's the page most
     // likely to rank for a name search, so it gets the full literal title via FullTitle.
@@ -29,7 +31,7 @@
     });
 }
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"@(tpl.ThemeName is { } theme ? Html.Raw($" data-template=\"{theme}\"") : null)>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -56,11 +58,11 @@
     </script>
     <title>@pageTitle</title>
     <meta name="description" content="@pageDesc" />
-    @if (ViewData["Robots"] as string is { Length: > 0 } robots)
+    @if ((tpl.IsPreview ? "noindex, nofollow, noarchive" : ViewData["Robots"] as string) is { Length: > 0 } robots)
     {
         <meta name="robots" content="@robots" />
     }
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="@tpl.ThemeColor" />
     <meta name="color-scheme" content="light dark" />
     <link rel="canonical" href="@absUrl" />
     <script type="application/ld+json">@Html.Raw(websiteLd)</script>
@@ -89,6 +91,22 @@
     <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
 </head>
 <body class="flex min-h-screen flex-col">
+    @if (tpl.IsPreview)
+    {
+        <p class="bg-accent px-4 py-1.5 text-center font-mono text-xs text-bg" role="status">Previewing the @tpl.Definition.Name template. Nothing is saved or public.</p>
+        <script>
+            (function () {
+                var key = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(tpl.Key));
+                document.addEventListener('click', function (e) {
+                    var a = e.target.closest && e.target.closest('a[href^="/"]');
+                    if (!a || a.getAttribute('href').indexOf('//') === 0) return;
+                    var u = new URL(a.href);
+                    u.searchParams.set('preview', key);
+                    a.href = u.pathname + u.search + u.hash;
+                }, true);
+            })();
+        </script>
+    }
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-accent focus:px-4 focus:py-2 focus:text-bg">Skip to content</a>
     <header class="sticky top-0 z-40 border-b border-border/70 bg-bg/80 backdrop-blur">
         <div class="container-page flex h-16 items-center justify-between">
@@ -96,14 +114,10 @@
                 @site.BrandName<span class="text-accent">.</span>
             </a>
             <nav class="hidden items-center gap-6 md:flex">
-                <a class="nav-link" href="/about">about</a>
-                <a class="nav-link" href="/experience">experience</a>
-                <a class="nav-link" href="/projects">work</a>
-                <a class="nav-link" href="/skills">skills</a>
-                <a class="nav-link" href="/certifications">certs</a>
-                <a class="nav-link" href="/blog">blog</a>
-                <a class="nav-link" href="/talks">talks</a>
-                <a class="nav-link" href="/cv">cv</a>
+                @foreach (var (path, label) in tpl.NavLinks(mobile: false))
+                {
+                <a class="nav-link" href="@path">@label</a>
+                }
             </nav>
             <div class="flex items-center gap-3">
                 <button id="theme-btn" class="text-muted hover:text-accent" aria-label="Toggle light/dark theme">
@@ -114,7 +128,10 @@
                         <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
                     </svg>
                 </button>
+                @if (tpl.IsEnabled(SectionRegistry.Contact))
+                {
                 <a href="/contact" class="btn btn-primary hidden text-xs sm:inline-flex">Get in touch</a>
+                }
                 <button id="menu-btn" class="md:hidden text-muted hover:text-text" aria-label="Toggle menu" aria-expanded="false">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                         <line x1="4" y1="7" x2="20" y2="7" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="17" x2="20" y2="17" />
@@ -124,15 +141,10 @@
         </div>
         <nav id="mobile-nav" class="hidden border-t border-border/70 md:hidden">
             <div class="container-page flex flex-col py-3">
-                <a class="nav-link py-2" href="/about">about</a>
-                <a class="nav-link py-2" href="/experience">experience</a>
-                <a class="nav-link py-2" href="/projects">work</a>
-                <a class="nav-link py-2" href="/skills">skills</a>
-                <a class="nav-link py-2" href="/certifications">certifications</a>
-                <a class="nav-link py-2" href="/blog">blog</a>
-                <a class="nav-link py-2" href="/talks">talks</a>
-                <a class="nav-link py-2" href="/cv">cv</a>
-                <a class="nav-link py-2" href="/contact">contact</a>
+                @foreach (var (path, label) in tpl.NavLinks(mobile: true))
+                {
+                <a class="nav-link py-2" href="@path">@label</a>
+                }
             </div>
         </nav>
     </header>
@@ -158,7 +170,10 @@
                     <a class="text-muted hover:text-accent" href="@site.EmailHref">Email</a>
                 }
             </div>
-            <p class="font-mono text-xs text-muted">ASP.NET Core · SQL Server · Plesk</p>
+            @if (!string.IsNullOrWhiteSpace(tpl.Copy.Layout.FooterNote))
+            {
+            <p class="font-mono text-xs text-muted">@TemplateView.Text(tpl.Copy.Layout.FooterNote)</p>
+            }
         </div>
     </footer>
 

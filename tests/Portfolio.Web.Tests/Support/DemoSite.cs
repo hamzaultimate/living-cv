@@ -42,11 +42,12 @@ public static class DemoSite
                 db.BlogPosts.Where(b => !b.Draft).OrderByDescending(b => b.Date).Select(b => b.Slug).First());
     }
 
-    /// <summary>Removes what differs between two renders of the same page: antiforgery tokens, nonces, asset version hashes and the copyright year.</summary>
+    /// <summary>Removes what differs between two renders of the same page: antiforgery tokens, nonces, asset version hashes and fingerprints and the copyright year.</summary>
     public static string Normalise(string html)
     {
         html = Regex.Replace(html, "(__RequestVerificationToken\" type=\"hidden\" value=\"|nonce=\")[^\"]*", "$1");
         html = Regex.Replace(html, @"\?v=[A-Za-z0-9_\-]+", "?v=HASH");
+        html = Regex.Replace(html, @"/(css|js)/(app|site)\.[a-z0-9]{8,}\.(css|js)", "/$1/$2.HASH.$3");
         html = Regex.Replace(html, @"© \d{4}", "© YEAR");
         return html.Replace("\r\n", "\n");
     }

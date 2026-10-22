@@ -41,6 +41,16 @@ public class ProfileEditor
         return previous;
     }
 
+    /// <summary>Makes <paramref name="template"/> the site's template. Takes a catalog entry rather than a key, so only a template that
+    /// loaded can be chosen. Only the template choice changes: every content row stays, and sections the template does not use are
+    /// hidden by the pages, not removed.</summary>
+    public async Task SetTemplateAsync(TemplateDefinition template, CancellationToken ct = default)
+    {
+        var profile = await LoadOrCreateAsync(ct);
+        profile.TemplateKey = template.Key;
+        await CommitAsync(profile, ct);
+    }
+
     private async Task<SiteProfile> LoadOrCreateAsync(CancellationToken ct)
     {
         var profile = await _db.SiteProfiles.FirstOrDefaultAsync(p => p.Id == SiteProfile.SingletonId, ct);

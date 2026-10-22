@@ -15,7 +15,14 @@ public record CvData(
     IReadOnlyList<IGrouping<string, Skill>> SkillGroups,
     IReadOnlyList<Project> Projects,
     IReadOnlyList<Certification> Certifications,
-    string? Website = null);
+    string? Website = null,
+    CvHeadings? Headings = null);
+
+/// <summary>Section headings and certification status words on the CV; the template supplies them.</summary>
+public record CvHeadings(string Experience, string Skills, string Projects, string Certifications, string Earned, string InProgress, string Planned)
+{
+    public static readonly CvHeadings Default = new("Experience", "Skills", "Selected Projects", "Certifications", "Earned", "In progress", "Planned");
+}
 
 /// <summary>Print-friendly CV rendered with QuestPDF (light background, blue accent).</summary>
 public class CvDocument : IDocument
@@ -25,7 +32,12 @@ public class CvDocument : IDocument
     private const string Muted = "#555555";
 
     private readonly CvData _d;
-    public CvDocument(CvData d) => _d = d;
+    private readonly CvHeadings _h;
+    public CvDocument(CvData d)
+    {
+        _d = d;
+        _h = d.Headings ?? CvHeadings.Default;
+    }
 
     public DocumentMetadata GetMetadata() => new() { Title = $"{_d.Name} — CV" };
 
@@ -63,7 +75,7 @@ public class CvDocument : IDocument
 
         if (_d.Experience.Count > 0)
         {
-            col.Item().Element(x => SectionTitle(x, "Experience"));
+            col.Item().Element(x => SectionTitle(x, _h.Experience));
             foreach (var r in _d.Experience)
             {
                 col.Item().Column(e =>
@@ -88,7 +100,7 @@ public class CvDocument : IDocument
 
         if (_d.SkillGroups.Count > 0)
         {
-            col.Item().Element(x => SectionTitle(x, "Skills"));
+            col.Item().Element(x => SectionTitle(x, _h.Skills));
             foreach (var g in _d.SkillGroups)
             {
                 col.Item().Text(t =>
@@ -101,7 +113,7 @@ public class CvDocument : IDocument
 
         if (_d.Projects.Count > 0)
         {
-            col.Item().Element(x => SectionTitle(x, "Selected Projects"));
+            col.Item().Element(x => SectionTitle(x, _h.Projects));
             foreach (var p in _d.Projects)
             {
                 col.Item().Column(pc =>
@@ -116,7 +128,7 @@ public class CvDocument : IDocument
 
         if (_d.Certifications.Count > 0)
         {
-            col.Item().Element(x => SectionTitle(x, "Certifications"));
+            col.Item().Element(x => SectionTitle(x, _h.Certifications));
             foreach (var cert in _d.Certifications)
             {
                 col.Item().Text(t =>
@@ -132,10 +144,10 @@ public class CvDocument : IDocument
         c.PaddingTop(6).BorderBottom(1).BorderColor("#DDDDDD").PaddingBottom(2)
             .Text(title.ToUpperInvariant()).FontSize(11).Bold().FontColor(Accent);
 
-    private static string Status(CertificationStatus s) => s switch
+    private string Status(CertificationStatus s) => s switch
     {
-        CertificationStatus.Earned => "Earned",
-        CertificationStatus.InProgress => "In progress",
-        _ => "Planned",
+        CertificationStatus.Earned => _h.Earned,
+        CertificationStatus.InProgress => _h.InProgress,
+        _ => _h.Planned,
     };
 }

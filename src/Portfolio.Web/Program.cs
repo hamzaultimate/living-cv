@@ -20,7 +20,12 @@ builder.Services.AddRazorPages(o =>
 {
     // Everything under /Admin needs the signed-in owner; only the login page opts out (see Login.cshtml.cs).
     o.Conventions.AuthorizeFolder("/Admin");
-});
+})
+// A page marked [SectionPage] answers 404 while the template has its section disabled.
+.AddMvcOptions(o => o.Filters.Add<SectionGateFilter>());
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<RequestTemplate>();
+builder.Services.AddSingleton<TemplateResolver>();
 builder.Services.AddOwnerAuth(builder.Environment);
 builder.Services.AddScoped<ProfileEditor>();
 builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection("Uploads"));
@@ -158,6 +163,7 @@ app.UseRouting();
 app.UseOutputCache();
 
 app.UseAuthentication();
+app.UseTemplatePreview();
 app.UseAdminDenyByDefault();
 app.UseAuthorization();
 
@@ -203,15 +209,18 @@ app.MapGet("/og.png", async (ISiteProfileProvider profile) =>
 // static/project routes have no reliable last-changed date, so it's omitted rather than guessed.
 // URLs use the site profile Url (via AbsoluteBaseAsync), never the request Host, so the sitemap always lists the
 // canonical domain.
-app.MapGet("/sitemap.xml", async (HttpContext ctx, PortfolioContentService repo) =>
+app.MapGet("/sitemap.xml", async (HttpContext ctx, PortfolioContentService repo, ISiteProfileProvider profile, TemplateResolver templates) =>
 {
     var baseUrl = await SeoHelpers.AbsoluteBaseAsync(ctx);
-    var urls = new List<(string Path, string? LastMod)> {
-        ("/", null), ("/about", null), ("/experience", null), ("/projects", null), ("/skills", null),
-        ("/certifications", null), ("/blog", null), ("/talks", null), ("/cv", null), ("/contact", null),
-    };
-    urls.AddRange((await repo.GetProjectsAsync()).Select(p => ($"/projects/{p.Slug}", (string?)null)));
-    urls.AddRange((await repo.GetBlogPostsAsync()).Select(b => ($"/blog/{b.Slug}", (string?)b.Date.ToString("yyyy-MM-dd"))));
+    // The saved template decides which pages exist: a disabled section has no page, so it has no sitemap entry either.
+    // Always the saved template, never an owner preview, because this response is cached for everyone.
+    var template = templates.Resolve(await profile.GetAsync());
+    var urls = new List<(string Path, string? LastMod)> { ("/", null) };
+    urls.AddRange(template.NavLinks(mobile: true).Select(l => (l.Path, (string?)null)));
+    if (template.IsEnabled(SectionRegistry.Projects))
+        urls.AddRange((await repo.GetProjectsAsync()).Select(p => ($"/projects/{p.Slug}", (string?)null)));
+    if (template.IsEnabled(SectionRegistry.Blog))
+        urls.AddRange((await repo.GetBlogPostsAsync()).Select(b => ($"/blog/{b.Slug}", (string?)b.Date.ToString("yyyy-MM-dd"))));
     SkipCacheIfFallback(ctx, repo);
 
     var sb = new StringBuilder();

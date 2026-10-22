@@ -101,6 +101,11 @@ public static class AdminAuth
         return new ClaimsPrincipal(identity);
     }
 
+    /// <summary>True for a signed-in owner whose session is still valid (current stamp, within the age cap). Public pages never
+    /// validate the cookie themselves, so anything that grants the owner extra access outside /admin must call this.</summary>
+    public static async Task<bool> IsOwnerSessionAsync(HttpContext http) =>
+        http.User.Identity?.IsAuthenticated == true && await IsSessionValidAsync(http, http.User);
+
     /// <summary>
     /// A session is valid while its stamp still matches the account (it changes on password reset) and it is younger
     /// than <see cref="MaxSessionAge"/>: the cookie slides while the owner is active, but never past that cap.

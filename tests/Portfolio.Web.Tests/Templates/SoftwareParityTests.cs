@@ -7,7 +7,7 @@ namespace Portfolio.Web.Tests.Templates;
 /// <summary>
 /// The software template must keep rendering exactly what it did before the template engine existed. The snapshots under
 /// Snapshots/software were captured from the demo persona on the code that preceded it; only tokens, nonces, asset hashes and
-/// the copyright year are normalised. Set UPDATE_SNAPSHOTS=1 to rewrite them after an intentional change.
+/// the copyright year are normalised. Set UPDATE_SNAPSHOTS=1 to rewrite them after an intentional change, or SNAPSHOT_ACTUAL_DIR=<folder> to write what was rendered for diffing.
 /// </summary>
 public class SoftwareParityTests : IClassFixture<AdminApp>
 {
@@ -41,6 +41,12 @@ public class SoftwareParityTests : IClassFixture<AdminApp>
             Assert.True(response.StatusCode is HttpStatusCode.OK or HttpStatusCode.NotFound, $"{path} returned {(int)response.StatusCode}");
             var actual = DemoSite.Normalise(await response.Content.ReadAsStringAsync());
             Assert.True(actual.Length > 200, $"{path} rendered almost nothing");
+
+            if (Environment.GetEnvironmentVariable("SNAPSHOT_ACTUAL_DIR") is { Length: > 0 } actualDir)
+            {
+                Directory.CreateDirectory(actualDir);
+                File.WriteAllText(Path.Combine(actualDir, file), actual);
+            }
 
             var golden = Path.Combine(SnapshotDir, file);
             if (update)
