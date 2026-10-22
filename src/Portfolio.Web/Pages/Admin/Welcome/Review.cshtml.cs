@@ -90,6 +90,12 @@ public class WelcomeReviewModel : WelcomePageModel
     public async Task<IActionResult> OnPostPublishAsync(CancellationToken ct)
     {
         await LoadAsync(ct);
+        if (Draft is null && !FirstRun)
+        {
+            // A second click or a replayed request after a publish: the draft is gone and the wizard is done. Nothing to apply.
+            Flash("This setup was already published, so nothing changed.");
+            return Redirect("/admin");
+        }
         if (RequireStep(2) is { } back) return back;
         if (!ModelState.IsValid) { await PrepareAsync(ct); return Page(); }
         if (!await Onboarding.SaveChoicesAsync(Form, ct))
