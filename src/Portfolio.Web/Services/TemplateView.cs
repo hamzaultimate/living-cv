@@ -44,6 +44,37 @@ public sealed class TemplateView
 
     public string ThemeColor => string.IsNullOrWhiteSpace(Definition.Theme.ThemeColor) ? "#0f172a" : Definition.Theme.ThemeColor;
 
+    /// <summary>The accent the owner picked, when the template offers it. The stored key is looked up in the manifest's list, so anything else
+    /// (a leftover from another template, a value typed into the database) selects nothing and the template keeps its own colour.</summary>
+    public TemplateAccent? Accent =>
+        string.IsNullOrWhiteSpace(Site.AccentColor) ? null
+        : Definition.Theme.Accents.FirstOrDefault(a => string.Equals(a.Key, Site.AccentColor.Trim(), StringComparison.Ordinal));
+
+    /// <summary>CSS that overrides the two accent variables for the picked accent, or null when none is picked (nothing is emitted then, so the
+    /// page is exactly what it was). Built only from colours that matched #rrggbb, as space-separated channels like the base tokens.
+    /// The doubled <c>:root</c> raises the specificity above the theme blocks, which also set these variables.</summary>
+    public string? AccentStyle
+    {
+        get
+        {
+            if (Accent is not { } a) return null;
+            var dark = Channels(a.Dark.Accent, a.Dark.Strong);
+            var light = Channels(a.Light.Accent, a.Light.Strong);
+            if (dark is null || light is null) return null;
+            return $":root:root:root:not([data-theme=\"light\"]){{--c-accent:{dark.Value.Accent};--c-accent-strong:{dark.Value.Strong}}}"
+                 + $":root:root:root[data-theme=\"light\"]{{--c-accent:{light.Value.Accent};--c-accent-strong:{light.Value.Strong}}}";
+        }
+    }
+
+    private static (string Accent, string Strong)? Channels(string accent, string strong)
+    {
+        static string? One(string hex) =>
+            System.Text.RegularExpressions.Regex.IsMatch(hex, "^#[0-9a-fA-F]{6}$")
+                ? $"{Convert.ToInt32(hex.Substring(1, 2), 16)} {Convert.ToInt32(hex.Substring(3, 2), 16)} {Convert.ToInt32(hex.Substring(5, 2), 16)}"
+                : null;
+        return One(accent) is { } a && One(strong) is { } s ? (a, s) : null;
+    }
+
     /// <summary>The section, or a disabled placeholder when the template does not have it.</summary>
     public ResolvedSection Section(string key) =>
         _sections.TryGetValue(key, out var s) ? s : new ResolvedSection(key, key, key, null, false);

@@ -29,6 +29,9 @@ public class TemplateStarter
     public List<Certification> Certifications { get; set; } = new();
     public List<Testimonial> Testimonials { get; set; } = new();
 
+    /// <summary>An independent copy, so rows handed to a database context never share state with the catalog's cached starter.</summary>
+    public TemplateStarter Clone() => Parse(JsonSerializer.Serialize(this, Json));
+
     public static TemplateStarter Parse(string json) =>
         JsonSerializer.Deserialize<TemplateStarter>(json, Json) ?? throw new InvalidDataException("Starter file is empty.");
 }

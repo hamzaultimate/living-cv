@@ -84,7 +84,7 @@ public class TemplateManifestTests
         foreach (var folder in TemplateFolders())
         {
             var template = Load(Path.GetFileName(folder));
-            if (template.Starter is null) continue;
+            if (template.Starter?.File is null) continue; // a "seed" source has no file of its own
             withStarter++;
             var starter = TemplateStarter.Parse(File.ReadAllText(Path.Combine(folder, template.Starter.File)));
             Assert.Empty(TemplateValidator.ValidateStarter(starter));

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Razor.Compilation;
+using Microsoft.AspNetCore.Mvc.RazorPages.Infrastructure;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Portfolio.Web.Tests.Support;
@@ -45,10 +47,11 @@ public class AdminAccessTests : IClassFixture<AdminApp>
     [Fact]
     public void EveryAdminPageModel_IsEitherAnonymousOnPurpose_OrReachableOnlyThroughAnAuthorizedEndpoint()
     {
+        // The page models that endpoints actually exist for (pages may sit in subfolders such as /Admin/Welcome).
         var modelsWithEndpoints = AdminEndpoints()
-            .Select(e => e.Metadata.GetMetadata<PageActionDescriptor>()?.RelativePath)
+            .Select(e => (e.Metadata.GetMetadata<PageActionDescriptor>() as CompiledPageActionDescriptor)?.ModelTypeInfo?.AsType())
             .Where(x => x is not null)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            .ToHashSet();
         var models = typeof(Program).Assembly.GetTypes()
             .Where(t => !t.IsAbstract && typeof(PageModel).IsAssignableFrom(t) && t.Namespace?.StartsWith("Portfolio.Web.Pages.Admin", StringComparison.Ordinal) == true)
             .ToList();
@@ -56,8 +59,7 @@ public class AdminAccessTests : IClassFixture<AdminApp>
         Assert.NotEmpty(models);
         foreach (var model in models)
         {
-            var pageFile = $"/Pages/Admin/{model.Name.Replace("Model", "")}.cshtml";
-            Assert.Contains(pageFile, modelsWithEndpoints);
+            Assert.Contains(model, modelsWithEndpoints);
             var anonymous = model.GetCustomAttributes(typeof(AllowAnonymousAttribute), inherit: true).Length > 0;
             Assert.Equal(model.Name == "LoginModel", anonymous);
         }
@@ -69,7 +71,10 @@ public class AdminAccessTests : IClassFixture<AdminApp>
         // Adding an admin page must be a conscious change here, next to the checks above that prove it is protected.
         var routes = AdminEndpoints().Select(e => e.RoutePattern.RawText!.ToLowerInvariant()).Distinct().OrderBy(x => x).ToList();
 
-        Assert.Equal(["admin", "admin/login", "admin/logout", "admin/photo", "admin/profile", "admin/template"], routes);
+        Assert.Equal(
+            ["admin", "admin/login", "admin/logout", "admin/photo", "admin/profile", "admin/template",
+             "admin/welcome", "admin/welcome/basics", "admin/welcome/draft-photo", "admin/welcome/photo", "admin/welcome/review", "admin/welcome/thumb/{key}"],
+            routes);
     }
 
     [Fact]

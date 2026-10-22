@@ -31,6 +31,9 @@ public class TemplateDefinition
 
     public TemplateTheme Theme { get; set; } = new();
 
+    /// <summary>Wording the onboarding wizard offers as a starting point for the owner's title and summary. Suggestions only: the owner edits them.</summary>
+    public TemplateHeroSuggestions HeroSuggestions { get; set; } = new();
+
     /// <summary>Default order of the public navigation and sections. A section left out is not part of the template (hidden).</summary>
     public List<TemplateSection> Sections { get; set; } = new();
 
@@ -66,6 +69,41 @@ public class TemplateTheme
 
     /// <summary>Browser UI colour (meta theme-color). Empty keeps the base value.</summary>
     public string? ThemeColor { get; set; }
+
+    /// <summary>The accent colours an owner may pick instead of the template's own. The allow-list for <c>SiteProfile.AccentColor</c>:
+    /// a stored key that is not listed here is ignored. Empty means the template offers none.</summary>
+    public List<TemplateAccent> Accents { get; set; } = new();
+}
+
+/// <summary>An alternative accent colour for a template, with a tone for each colour mode so text on it keeps its contrast.
+/// Applied as the <c>--c-accent</c> and <c>--c-accent-strong</c> variables only (see <see cref="TemplateView.AccentStyle"/>).</summary>
+public class TemplateAccent
+{
+    /// <summary>Lowercase kebab-case identifier, stored on the profile.</summary>
+    public string Key { get; set; } = "";
+
+    /// <summary>Plain-text name shown to the owner.</summary>
+    public string Label { get; set; } = "";
+
+    public TemplateAccentTone Dark { get; set; } = new();
+    public TemplateAccentTone Light { get; set; } = new();
+}
+
+/// <summary>The accent and its stronger (hover) shade for one colour mode, as #rrggbb.</summary>
+public class TemplateAccentTone
+{
+    public string Accent { get; set; } = "";
+    public string Strong { get; set; } = "";
+}
+
+/// <summary>Starting wording for the wizard's Basics step. Plain text; the summary may use {title}.</summary>
+public class TemplateHeroSuggestions
+{
+    /// <summary>A typical professional title for this profession, e.g. "Registered Nurse".</summary>
+    public string Title { get; set; } = "";
+
+    /// <summary>A short summary the owner can keep or rewrite. Must not describe a real person.</summary>
+    public string Summary { get; set; } = "";
 }
 
 /// <summary>One entry of the template's section list. Order is the default navigation and home order.</summary>
@@ -120,9 +158,19 @@ public class TemplateSeo
     }
 }
 
+/// <summary>Where a template's sample content comes from: its own <see cref="File"/> in the template folder, or
+/// <see cref="SeedSource"/> for the app's built-in demo persona (the seed files), so it is not copied into a second file.</summary>
 public class TemplateStarterRef
 {
-    public string File { get; set; } = "";
+    public const string SeedSource = "seed";
+
+    /// <summary>Sample content file in the template folder. Exclusive with <see cref="Source"/>.</summary>
+    public string? File { get; set; }
+
+    /// <summary>Only "seed": use the demo persona in <c>Portfolio.Data/Seed</c>. Exclusive with <see cref="File"/>.</summary>
+    public string? Source { get; set; }
+
+    public bool IsSeed() => string.Equals(Source, SeedSource, StringComparison.Ordinal);
 }
 
 /// <summary>Marks a copy string that may be left empty in a manifest.</summary>

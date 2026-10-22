@@ -36,6 +36,9 @@ public class ProfileEditor
     {
         var profile = await LoadOrCreateAsync(ct);
         var previous = profile.PhotoUrl;
+        // The light-theme photo that is just a copy of the photo being replaced (the wizard sets both) follows it, so it never points at the
+        // deleted file; a separate light photo the owner chose is left alone.
+        if (previous is not null && profile.PhotoUrlLight == previous) profile.PhotoUrlLight = photoUrl;
         profile.PhotoUrl = photoUrl;
         await CommitAsync(profile, ct);
         return previous;
@@ -66,6 +69,13 @@ public class ProfileEditor
     private async Task CommitAsync(SiteProfile profile, CancellationToken ct)
     {
         await _db.SaveChangesAsync(ct);
+        await AfterCommitAsync(profile);
+    }
+
+    /// <summary>Makes a profile that has just been committed (by this editor or by the onboarding wizard's transaction) take effect everywhere:
+    /// the provider is handed the saved values and the "Generated" output cache is evicted.</summary>
+    public async Task AfterCommitAsync(SiteProfile profile)
+    {
         // The row is committed, so the cleanup below must run to completion even if the request is cancelled now:
         // stopping halfway would leave the old profile or old generated files being served.
         // Order matters: hand the provider the saved profile first (this also changes its version, which the

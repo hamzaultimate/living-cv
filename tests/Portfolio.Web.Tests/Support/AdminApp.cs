@@ -71,6 +71,11 @@ public sealed class AdminApp : WebApplicationFactory<Program>
     }
 
     private readonly IReadOnlyDictionary<string, string?>? _extraConfig;
+    private string? _templatesDir;
+
+    /// <summary>An app whose template catalog is read from <paramref name="templatesDir"/> instead of the shipped templates.</summary>
+    public static AdminApp WithTemplates(string templatesDir, IReadOnlyDictionary<string, string?>? extraConfig = null) =>
+        new(SetupKey, extraConfig) { _templatesDir = templatesDir };
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -97,6 +102,11 @@ public sealed class AdminApp : WebApplicationFactory<Program>
                          && d.ServiceType.GetGenericArguments().Contains(typeof(PortfolioDbContext))).ToList())
                 services.Remove(d);
             services.AddDbContext<PortfolioDbContext>(o => o.UseSqlite(_connection));
+            if (_templatesDir is not null)
+            {
+                services.RemoveAll<Portfolio.Web.Services.ITemplateCatalog>();
+                services.AddSingleton<Portfolio.Web.Services.ITemplateCatalog>(new Portfolio.Web.Services.TemplateCatalog(_templatesDir));
+            }
             services.AddTransient<IStartupFilter, TestClientAddressFilter>();
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
@@ -165,6 +175,15 @@ public sealed class AdminApp : WebApplicationFactory<Program>
         var client = NewClient();
         var setup = await RunSetupAsync(client);
         Assert.Equal(HttpStatusCode.Redirect, setup.StatusCode);
+        var login = await SignInAsync(client);
+        Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
+        return client;
+    }
+
+    /// <summary>A fresh client signed in as the owner, for an app whose owner already exists (a second browser, or after the first one signed out).</summary>
+    public async Task<HttpClient> NewClientSignedInAsync()
+    {
+        var client = NewClient();
         var login = await SignInAsync(client);
         Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
         return client;

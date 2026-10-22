@@ -63,7 +63,8 @@ public class SetupTests
         var response = await app.RunSetupAsync(client);
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal("/admin/login", response.Headers.Location?.OriginalString);
+        // The first run continues into the setup wizard once the owner has signed in.
+        Assert.Equal("/admin/login?ReturnUrl=%2Fadmin%2Fwelcome", response.Headers.Location?.OriginalString);
         Assert.Equal(1, await OwnerCountAsync(app));
 
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/setup")).StatusCode);

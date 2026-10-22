@@ -7,7 +7,20 @@
   "archetype": "credentials",
   "sensitive": true,
   "guidance": "Never publish patient-identifiable information: no names, dates of birth, record numbers, photographs or details that could identify a patient, relative, colleague or ward. Describe cases only in aggregate or fully anonymised, and check your employer's and regulator's confidentiality and social media policies before publishing.",
-  "theme": { "default": "healthcare", "themeColor": "#0a1418" },
+  "theme": {
+    "default": "healthcare",
+    "themeColor": "#0a1418",
+    "accents": [
+      { "key": "blue", "label": "Blue", "dark": { "accent": "#60a5fa", "strong": "#93c5fd" }, "light": { "accent": "#1d4ed8", "strong": "#1e40af" } },
+      { "key": "violet", "label": "Violet", "dark": { "accent": "#a78bfa", "strong": "#c4b5fd" }, "light": { "accent": "#6d28d9", "strong": "#5b21b6" } },
+      { "key": "rose", "label": "Rose", "dark": { "accent": "#fb7185", "strong": "#fda4af" }, "light": { "accent": "#be123c", "strong": "#9f1239" } },
+      { "key": "amber", "label": "Amber", "dark": { "accent": "#fbbf24", "strong": "#fcd34d" }, "light": { "accent": "#a84a09", "strong": "#92400e" } }
+    ]
+  },
+  "heroSuggestions": {
+    "title": "Registered Nurse",
+    "summary": "Registered nurse committed to safe, compassionate and evidence-based care, with a focus on clear communication and supporting colleagues."
+  },
   "sections": [
     { "key": "about", "label": "about" },
     { "key": "certifications", "label": "licences & registrations", "shortLabel": "registrations" },

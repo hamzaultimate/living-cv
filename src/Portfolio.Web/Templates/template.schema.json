@@ -11,6 +11,7 @@
     "profession",
     "description",
     "archetype",
+    "heroSuggestions",
     "sections",
     "seo",
     "copy"
@@ -68,6 +69,38 @@
           "type": "string",
           "description": "Browser UI colour.",
           "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "accents": {
+          "type": "array",
+          "description": "Accent colours the owner may pick in the onboarding wizard; the allow-list for the stored choice. Applied as the --c-accent and --c-accent-strong variables only. Each tone must keep 4.5:1 contrast on the template's backgrounds (a test checks it).",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "label",
+              "dark",
+              "light"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                "maxLength": 40
+              },
+              "label": {
+                "type": "string",
+                "maxLength": 30
+              },
+              "dark": {
+                "$ref": "#/$defs/accentTone"
+              },
+              "light": {
+                "$ref": "#/$defs/accentTone"
+              }
+            }
+          }
         }
       }
     },
@@ -552,17 +585,74 @@
         }
       }
     },
-    "starter": {
+    "heroSuggestions": {
       "type": "object",
+      "description": "Wording the wizard offers for the owner's title and summary. Plain text; the owner edits it.",
       "additionalProperties": false,
       "required": [
-        "file"
+        "title",
+        "summary"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "A typical professional title, e.g. Registered Nurse.",
+          "maxLength": 120
+        },
+        "summary": {
+          "type": "string",
+          "description": "A short summary to keep or rewrite. Must not describe a real person.",
+          "maxLength": 400
+        }
+      }
+    },
+    "starter": {
+      "type": "object",
+      "description": "Optional sample content the wizard can load into empty tables. Give either a file or the built-in source.",
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "file"
+          ]
+        },
+        {
+          "required": [
+            "source"
+          ]
+        }
       ],
       "properties": {
         "file": {
           "type": "string",
           "description": "Sample content file in the template folder.",
           "pattern": "^[^/\\\\]+\\.json$"
+        },
+        "source": {
+          "const": "seed",
+          "description": "Use the app's built-in demo persona (Portfolio.Data/Seed) instead of a file."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "accentTone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accent",
+        "strong"
+      ],
+      "properties": {
+        "accent": {
+          "type": "string",
+          "description": "Accent colour as #rrggbb.",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "strong": {
+          "type": "string",
+          "description": "Stronger shade used for hover, as #rrggbb.",
+          "pattern": "^#[0-9a-fA-F]{6}$"
         }
       }
     }

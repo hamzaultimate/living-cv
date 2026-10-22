@@ -5,6 +5,19 @@
   "profession": "Software engineer",
   "description": "Case-study showcase for software engineers and IT professionals.",
   "archetype": "showcase",
+  "theme": {
+    "accents": [
+      { "key": "violet", "label": "Violet", "dark": { "accent": "#a78bfa", "strong": "#c4b5fd" }, "light": { "accent": "#6d28d9", "strong": "#5b21b6" } },
+      { "key": "emerald", "label": "Emerald", "dark": { "accent": "#34d399", "strong": "#6ee7b7" }, "light": { "accent": "#047857", "strong": "#065f46" } },
+      { "key": "amber", "label": "Amber", "dark": { "accent": "#fbbf24", "strong": "#fcd34d" }, "light": { "accent": "#a84a09", "strong": "#92400e" } },
+      { "key": "rose", "label": "Rose", "dark": { "accent": "#fb7185", "strong": "#fda4af" }, "light": { "accent": "#be123c", "strong": "#9f1239" } }
+    ]
+  },
+  "heroSuggestions": {
+    "title": "Software Engineer",
+    "summary": "Software engineer who builds reliable, maintainable systems and enjoys turning unclear requirements into shipped products."
+  },
+  "starter": { "source": "seed" },
   "sections": [
     { "key": "about", "label": "about" },
     { "key": "experience", "label": "experience" },

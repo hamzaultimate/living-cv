@@ -1,0 +1,138 @@
+@page "/admin/welcome/review"
+@model WelcomeReviewModel
+@{
+    ViewData["Title"] = "Setup · Step 4 of 4 · Review and launch";
+    var draft = Model.Draft!;
+    var site = Model.DraftSite;
+    var offersSample = StarterContent.Offers(Model.Template);
+    var willAdd = Model.Sample.Where(t => t.WouldAdd > 0).ToList();
+    var skipped = Model.Sample.Where(t => t.SkippedBecauseNotEmpty).ToList();
+}
+<partial name="_WizardHeader" model="Model" />
+<p class="adm-lede">Check how your site will look, choose an accent colour and what to start with, then publish. Until you publish, nothing here is visible to visitors, search engines, the sitemap, the CV or the share image.</p>
+
+<section class="adm-card" aria-labelledby="summary-heading">
+    <h2 id="summary-heading">Your answers</h2>
+    <dl class="adm-summary">
+        <dt>Template</dt><dd>@Model.Template.Name (<a href="/admin/welcome">change</a>)</dd>
+        <dt>Name</dt><dd>@draft.OwnerName (<a href="/admin/welcome/basics">change</a>)</dd>
+        <dt>Title</dt><dd>@draft.JobTitle</dd>
+        <dt>Email</dt><dd>@draft.Email</dd>
+        <dt>Location</dt><dd>@(string.IsNullOrWhiteSpace(draft.Location) ? "Not shown" : draft.Location)</dd>
+        <dt>Summary</dt><dd>@draft.Summary</dd>
+        <dt>Photo</dt><dd>@(Model.HasDraftPhoto ? "Added" : "None (monogram)") (<a href="/admin/welcome/photo">change</a>)</dd>
+    </dl>
+    @if (!string.IsNullOrWhiteSpace(Model.Template.Guidance))
+    {
+        <p class="adm-callout"><strong>Before you publish.</strong> @Model.Template.Guidance</p>
+    }
+</section>
+
+<form method="post" asp-page="/Admin/Welcome/Review" novalidate>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div id="error-summary" class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus>
+            <strong>Some choices need attention.</strong>
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
+
+    <fieldset class="adm-fieldset">
+        <legend>Where it will live</legend>
+        <div class="adm-field">
+            <label for="Form_SiteUrl">Site address</label>
+            <input asp-for="Form.SiteUrl" type="url" maxlength="300" required inputmode="url" aria-describedby="url-hint Form_SiteUrl-error" />
+            <span id="url-hint" class="adm-hint">The public address, for example https://example.com. Used for canonical links, the sitemap and sharing.</span>
+            <span id="Form_SiteUrl-error" asp-validation-for="Form.SiteUrl"></span>
+        </div>
+    </fieldset>
+
+    <fieldset class="adm-fieldset">
+        <legend>Accent colour</legend>
+        <p class="adm-hint">The highlight colour for links, buttons and headings. It only changes colour variables; the template's own look is otherwise unchanged.</p>
+        <div class="adm-choices">
+            <div class="adm-choice">
+                <input type="radio" name="Form.Accent" id="accent-default" value="" checked="@string.IsNullOrEmpty(Model.Form.Accent)" />
+                <label for="accent-default">Template default</label>
+            </div>
+            @foreach (var accent in Model.Template.Theme.Accents)
+            {
+                <div class="adm-choice">
+                    <input type="radio" name="Form.Accent" id="accent-@(accent.Key)" value="@accent.Key" checked="@(accent.Key == Model.Form.Accent)" />
+                    <label for="accent-@(accent.Key)">
+                        <svg class="adm-swatch" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true" focusable="false">
+                            <path d="M14 2a12 12 0 0 0 0 24Z" fill="@accent.Dark.Accent" />
+                            <path d="M14 2a12 12 0 0 1 0 24Z" fill="@accent.Light.Accent" />
+                        </svg>
+                        @accent.Label
+                    </label>
+                </div>
+            }
+        </div>
+    </fieldset>
+
+    <fieldset class="adm-fieldset">
+        <legend>Starting content</legend>
+        <div class="adm-choices adm-choices-stacked">
+            <div class="adm-choice">
+                <input type="radio" name="Form.Content" id="content-blank" value="@StarterChoice.Blank" checked="@(Model.Form.Content != StarterChoice.Sample)" aria-describedby="content-blank-hint" />
+                <label for="content-blank">Start blank</label>
+                <span id="content-blank-hint" class="adm-hint">Only your details. Pages with no content show an empty state until you add some (editing content arrives in a later release).</span>
+            </div>
+            @if (offersSample)
+            {
+                <div class="adm-choice">
+                    <input type="radio" name="Form.Content" id="content-sample" value="@StarterChoice.Sample" checked="@(Model.Form.Content == StarterChoice.Sample)" aria-describedby="content-sample-hint" />
+                    <label for="content-sample">Add sample content for @Model.Template.Profession.ToLowerInvariant()</label>
+                    <span id="content-sample-hint" class="adm-hint">
+                        Fictional example entries so you can see a full site. Replace them with your own before sharing the site.
+                        @if (willAdd.Count > 0)
+                        {
+                            <text>This would add: @string.Join(", ", willAdd.Select(t => $"{t.WouldAdd} {t.Name.ToLowerInvariant()}")).</text>
+                        }
+                        @if (skipped.Count > 0)
+                        {
+                            <text> Left alone because they already have content (nothing is replaced or deleted): @string.Join(", ", skipped.Select(t => $"{t.Name.ToLowerInvariant()} ({t.Existing})")).</text>
+                        }
+                        @if (willAdd.Count == 0 && skipped.Count > 0)
+                        {
+                            <text> Choosing this will not add anything.</text>
+                        }
+                    </span>
+                </div>
+            }
+        </div>
+    </fieldset>
+
+    <div class="adm-actions">
+        <a class="adm-btn" href="/admin/welcome/photo">Back</a>
+        <button type="submit" class="adm-btn" asp-page-handler="Save">Save and update preview</button>
+        <button type="submit" class="adm-btn adm-btn-primary" asp-page-handler="Publish">Publish my site</button>
+    </div>
+</form>
+
+<section class="adm-card" aria-labelledby="search-heading">
+    <h2 id="search-heading">How it may appear in search results</h2>
+    <p class="adm-serp-title">@Model.SearchTitle</p>
+    <p class="adm-serp-description">@Model.SearchDescription</p>
+</section>
+
+<section class="adm-card" aria-labelledby="preview-heading">
+    <h2 id="preview-heading">Preview of your draft</h2>
+    <p class="adm-hint">Only you can see this. It shows the template, your details, photo and accent colour as saved above (use "Save and update preview" after changing a choice). Sample content is added when you publish.</p>
+    <nav class="adm-tabs" aria-label="Preview page">
+        @foreach (var (path, label) in Model.PreviewPages)
+        {
+            <a href="/admin/welcome/review?tab=@Uri.EscapeDataString(path)&size=@(Model.Mobile ? "mobile" : "desktop")"
+               aria-current="@(path == Model.PreviewPath ? "page" : null)">@label</a>
+        }
+    </nav>
+    <p class="adm-hint">
+        Width:
+        <a href="/admin/welcome/review?tab=@Uri.EscapeDataString(Model.PreviewPath)&size=desktop">desktop</a> ·
+        <a href="/admin/welcome/review?tab=@Uri.EscapeDataString(Model.PreviewPath)&size=mobile">mobile</a>
+    </p>
+    <iframe class="adm-preview@(Model.Mobile ? " adm-preview-mobile" : "")" src="@Model.PreviewUrl"
+            title="Preview of your draft site in the @Model.Template.Name template" referrerpolicy="same-origin"></iframe>
+</section>
+<partial name="_WizardFooter" model="Model" />

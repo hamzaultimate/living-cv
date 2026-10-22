@@ -1,0 +1,63 @@
+@page "/admin/welcome"
+@model WelcomeTemplateModel
+@{
+    ViewData["Title"] = "Setup · Step 1 of 4 · Template";
+}
+<partial name="_WizardHeader" model="Model" />
+<p class="adm-lede">A template sets the layout, the wording and which pages your site has. Pick the one closest to your profession. You can change it later at any time: nothing you add is ever deleted, sections a template does not use are only hidden.</p>
+
+<form method="post" asp-page="/Admin/Welcome/Template" novalidate>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div id="error-summary" class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus>
+            <strong>Choose a template to continue.</strong>
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
+    <fieldset class="adm-fieldset">
+        <legend>Choose a template</legend>
+        @foreach (var group in Model.Groups)
+        {
+            <h2 class="adm-group-heading" id="group-@(group.First().Template.Key)">@group.Key</h2>
+            <div class="adm-templates" role="group" aria-labelledby="group-@(group.First().Template.Key)">
+                @foreach (var card in group)
+                {
+                    var t = card.Template;
+                    <div class="adm-card adm-template adm-pick">
+                        @if (card.HasPreview)
+                        {
+                            <img class="adm-thumb" src="/admin/welcome/thumb/@Uri.EscapeDataString(t.Key)" width="1200" height="800" loading="lazy"
+                                 alt="Preview of the @t.Name template: the home page of a sample site." />
+                        }
+                        else
+                        {
+                            <div class="adm-thumb adm-thumb-fallback" aria-hidden="true">@t.Name</div>
+                        }
+                        <div class="adm-pick-head">
+                            <input type="radio" name="Key" id="tpl-@(t.Key)" value="@t.Key" checked="@(t.Key == Model.SelectedKey)" aria-describedby="tpl-@(t.Key)-info" required />
+                            <label for="tpl-@(t.Key)">@t.Name</label>
+                        </div>
+                        <div id="tpl-@(t.Key)-info">
+                            <p class="adm-hint">@t.Profession · @TemplateView.Cap(t.Archetype) layout</p>
+                            <p>@t.Description</p>
+                            <p class="adm-included"><strong>Pages:</strong> @string.Join(", ", card.Pages), contact.</p>
+                            @if (card.ItemLabel is { Length: > 0 })
+                            {
+                                <p class="adm-included"><strong>A piece of work is called:</strong> @card.ItemLabel</p>
+                            }
+                            <p class="adm-included"><strong>Sample content:</strong> @(card.HasSample ? "available in the last step (fictional example entries)" : "not available")</p>
+                            @if (!string.IsNullOrWhiteSpace(t.Guidance))
+                            {
+                                <p class="adm-callout"><strong>Before you publish.</strong> @t.Guidance</p>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </fieldset>
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Continue to basics</button>
+    </div>
+</form>
+<partial name="_WizardFooter" model="Model" />

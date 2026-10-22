@@ -101,12 +101,19 @@
     <link rel="preload" href="~/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="~/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin />
     }
-    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />@(tpl.AccentStyle is { } accentCss ? Html.Raw($"<style>{accentCss}</style>") : null)
 </head>
 <body class="flex min-h-screen flex-col">
     @if (tpl.IsPreview)
     {
+        @if (Context.Items.ContainsKey(DraftPreviewProfileProvider.DraftItem))
+        {
+        <p class="bg-accent px-4 py-1.5 text-center font-mono text-xs text-bg" role="status">Previewing your draft in the @tpl.Definition.Name template. Nothing is public until you publish.</p>
+        }
+        else
+        {
         <p class="bg-accent px-4 py-1.5 text-center font-mono text-xs text-bg" role="status">Previewing the @tpl.Definition.Name template. Nothing is saved or public.</p>
+        }
         <script>
             (function () {
                 var key = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(tpl.Key));
@@ -115,6 +122,10 @@
                     if (!a || a.getAttribute('href').indexOf('//') === 0) return;
                     var u = new URL(a.href);
                     u.searchParams.set('preview', key);
+                    @if (Context.Items.ContainsKey(DraftPreviewProfileProvider.DraftItem))
+                    {
+                    <text>u.searchParams.set('draft', '1');</text>
+                    }
                     a.href = u.pathname + u.search + u.hash;
                 }, true);
             })();

@@ -1,0 +1,56 @@
+@page "/admin/welcome/basics"
+@model WelcomeBasicsModel
+@{
+    ViewData["Title"] = "Setup · Step 2 of 4 · Basics";
+    bool Bad(string field) => ViewData.ModelState.TryGetValue("Form." + field, out var entry) && entry.Errors.Count > 0;
+}
+<partial name="_WizardHeader" model="Model" />
+<p class="adm-lede">The essentials for your header, home page, contact page and search results. Your title and summary start from a suggestion for the @Model.Template.Name template: keep them or write your own.</p>
+
+<form method="post" asp-page="/Admin/Welcome/Basics" novalidate>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div id="error-summary" class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus>
+            <strong>Some fields need attention.</strong>
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
+    <fieldset class="adm-fieldset">
+        <legend>About you</legend>
+        <div class="adm-field">
+            <label for="Form_OwnerName">Name</label>
+            <input asp-for="Form.OwnerName" type="text" maxlength="200" required autocomplete="name" aria-describedby="name-hint Form_OwnerName-error" aria-invalid="@(Bad("OwnerName") ? "true" : null)" />
+            <span id="name-hint" class="adm-hint">As you want it shown on your site, for example Jordan Alexander.</span>
+            <span id="Form_OwnerName-error" asp-validation-for="Form.OwnerName"></span>
+        </div>
+        <div class="adm-field">
+            <label for="Form_JobTitle">Professional title</label>
+            <input asp-for="Form.JobTitle" type="text" maxlength="200" required autocomplete="organization-title" aria-describedby="title-hint Form_JobTitle-error" aria-invalid="@(Bad("JobTitle") ? "true" : null)" />
+            <span id="title-hint" class="adm-hint">@(Model.Form.JobTitle == Model.Suggestions.Title ? "Suggested by the template; change it to match you." : "The template suggests: " + Model.Suggestions.Title)</span>
+            <span id="Form_JobTitle-error" asp-validation-for="Form.JobTitle"></span>
+        </div>
+        <div class="adm-field">
+            <label for="Form_Email">Email</label>
+            <input asp-for="Form.Email" type="email" maxlength="300" required autocomplete="email" inputmode="email" aria-describedby="email-hint Form_Email-error" aria-invalid="@(Bad("Email") ? "true" : null)" />
+            <span id="email-hint" class="adm-hint">Shown on your Contact page so people can reach you.</span>
+            <span id="Form_Email-error" asp-validation-for="Form.Email"></span>
+        </div>
+        <div class="adm-field">
+            <label for="Form_Location">Location <span class="adm-optional">(optional)</span></label>
+            <input asp-for="Form.Location" type="text" maxlength="120" autocomplete="address-level2" aria-describedby="location-hint Form_Location-error" aria-invalid="@(Bad("Location") ? "true" : null)" />
+            <span id="location-hint" class="adm-hint">A city or region, for example Leeds, UK.</span>
+            <span id="Form_Location-error" asp-validation-for="Form.Location"></span>
+        </div>
+        <div class="adm-field">
+            <label for="Form_Summary">Short summary</label>
+            <textarea asp-for="Form.Summary" rows="5" maxlength="600" required aria-describedby="summary-hint Form_Summary-error" aria-invalid="@(Bad("Summary") ? "true" : null)"></textarea>
+            <span id="summary-hint" class="adm-hint">Up to 600 characters. It leads your home page and is used in search results. @(Model.Form.Summary == Model.Suggestions.Summary ? "This is the template's suggestion: it is published as written, so make it yours." : "")</span>
+            <span id="Form_Summary-error" asp-validation-for="Form.Summary"></span>
+        </div>
+    </fieldset>
+    <div class="adm-actions">
+        <a class="adm-btn" href="/admin/welcome">Back</a>
+        <button type="submit" class="adm-btn adm-btn-primary">Continue to photo</button>
+    </div>
+</form>
+<partial name="_WizardFooter" model="Model" />

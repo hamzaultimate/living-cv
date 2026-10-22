@@ -15,6 +15,7 @@ public static class SiteProfileMapper
         Url = p.Url,
         GoogleAnalyticsId = p.GoogleAnalyticsId,
         Summary = p.Summary,
+        Location = p.Location,
         KnowsAbout = p.KnowsAbout.ToList(),
         PhotoUrl = p.PhotoUrl,
         PhotoUrlLight = p.PhotoUrlLight,
@@ -63,6 +64,7 @@ public static class SiteProfileMapper
         p.JobTitle = Fit(p.JobTitle, SiteProfile.MaxLength.JobTitle)!;
         p.Url = Fit(p.Url, SiteProfile.MaxLength.Url)!;
         p.GoogleAnalyticsId = Fit(p.GoogleAnalyticsId, SiteProfile.MaxLength.GoogleAnalyticsId);
+        p.Location = Fit(p.Location, SiteProfile.MaxLength.Location);
         p.PhotoUrl = Fit(p.PhotoUrl, SiteProfile.MaxLength.PhotoUrl);
         p.PhotoUrlLight = Fit(p.PhotoUrlLight, SiteProfile.MaxLength.PhotoUrlLight);
         p.TemplateKey = Fit(p.TemplateKey, SiteProfile.MaxLength.TemplateKey)!;
@@ -87,6 +89,7 @@ public static class SiteProfileMapper
         p.Url = o.Url;
         p.GoogleAnalyticsId = o.GoogleAnalyticsId;
         p.Summary = o.Summary;
+        p.Location = o.Location;
         p.KnowsAbout = o.KnowsAbout.ToList();
         p.PhotoUrl = o.PhotoUrl;
         p.PhotoUrlLight = o.PhotoUrlLight;

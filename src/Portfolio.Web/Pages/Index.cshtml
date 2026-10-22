@@ -25,6 +25,7 @@
     };
     if (site.HasEmail) person["email"] = site.Email;
     if (site.HasPhone) person["telephone"] = site.Phone;
+    if (site.HasLocation) person["address"] = new Dictionary<string, object?> { ["@type"] = "PostalAddress", ["addressLocality"] = site.Location };
     if (sameAs.Length > 0) person["sameAs"] = sameAs;
     // Credentials are listed only when the template asks for it and has the section enabled, and only the ones actually held:
     // a course in progress or a planned exam is not a credential and must not be published as one.

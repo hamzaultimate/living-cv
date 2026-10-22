@@ -10,7 +10,7 @@ A template is two independent parts:
 
 | Part | What it is | Where it lives |
 |---|---|---|
-| Preset | Sections and their order, wording ("copy"), skill groups, SEO patterns, guidance, optional starter content | `src/Portfolio.Web/Templates/<key>/template.json` (+ `starter.json`) |
+| Preset | Sections and their order, wording ("copy"), skill groups, SEO patterns, guidance, wizard suggestions, accent colours, optional starter content and thumbnail | `src/Portfolio.Web/Templates/<key>/template.json` (+ `starter.json`, `preview.png`) |
 | Layout | One of a fixed set of archetypes plus a theme | Razor partials under `Pages/Shared/Layouts/<archetype>/` (shared blocks in `Pages/Shared/Blocks/`), theme in `Styles/themes/<key>.css` |
 
 Archetypes with a layout today: `showcase` (Software & IT) and `credentials` (Healthcare). `gallery` and `results`
@@ -62,7 +62,16 @@ load, the site renders the software template. See `Templates/healthcare/template
   "archetype": "credentials",        // showcase | credentials today (gallery | results planned)
   "sensitive": true,                 // required for healthcare/legal; needs "guidance"
   "guidance": "Never publish patient-identifiable information ...",
-  "theme": { "default": "healthcare", "themeColor": "#0a1418" },  // data-template value; omit for the base look
+  "theme": {
+    "default": "healthcare", "themeColor": "#0a1418",               // data-template value; omit for the base look
+    "accents": [                                                    // alternative accent colours the wizard offers (allow-list)
+      { "key": "blue", "label": "Blue", "dark": { "accent": "#60a5fa", "strong": "#93c5fd" }, "light": { "accent": "#1d4ed8", "strong": "#1e40af" } }
+    ]
+  },
+  "heroSuggestions": {               // what the wizard's Basics step starts from (required)
+    "title": "Registered Nurse",
+    "summary": "Registered nurse committed to safe, compassionate and evidence-based care, ..."
+  },
   "sections": [                      // order = navigation order; a section not listed, or enabled:false, is hidden
     { "key": "certifications", "label": "licences & registrations", "shortLabel": "registrations" },
     { "key": "projects", "label": "research & initiatives", "shortLabel": "initiatives", "itemLabel": "Initiative" },
@@ -77,7 +86,7 @@ load, the site renders the software template. See `Templates/healthcare/template
   },
   "copy": { "layout": {}, "home": {}, "projects": {}, "experience": {}, "skills": {},
             "certifications": {}, "blog": {}, "talks": {}, "contact": {}, "cv": {} },  // every string is required
-  "starter": { "file": "starter.json" }   // optional fictional sample content
+  "starter": { "file": "starter.json" }   // optional fictional sample content: a file, or { "source": "seed" } for the built-in demo persona
 }
 ```
 
@@ -98,9 +107,31 @@ character pair). Word patterns so they read correctly for any title
 `screenshotsHeading` (gallery heading), `galleryLabel` (accessible name of the gallery), `openImageLabel` (accessible name of
 the button that opens an image; a caption is appended) and `imageAlt` (alt text for an image without a caption; must contain `{title}`, the project title). Software says "screenshot", Healthcare says "image".
 
+> **Upgrading a custom template:** `heroSuggestions` is now required. A manifest without it fails validation, is skipped with a logged
+> error, and the site falls back to the default template for any profile that named it. Add the block (and ideally `theme.accents`
+> and a `preview.png`) before upgrading.
+
+`heroSuggestions` is required. `title` (at most 120 characters) and `summary` (at most 400) are plain text offered in the
+wizard's Basics step, which pre-fills them; the owner edits them and **whatever stays is published as written**, so write
+a summary that reads correctly for anyone in the profession, never an instruction ("Add your specialty") and never a
+claim about a person. Suggestions are never hardcoded in Razor: a test adds a template with a unique suggestion and checks
+it appears. The wizard's review step also shows the SEO title and description that your `seo` patterns produce.
+
+`theme.accents` lists at most 8 colours the owner can pick on the review step. The stored choice is the **key**, never a
+CSS value, and a key the template does not list is ignored. Each accent gives an `accent` and a `strong` (hover) colour as
+`#rrggbb` for the dark and the light mode, and every tone must keep 4.5:1 contrast on the template's `bg`, `surface` and
+`surface-2` tokens (a test checks this against the template's own stylesheet, or `Styles/app.css` for the base look). An
+accent is applied by one small `<style>` block that sets only `--c-accent` and `--c-accent-strong`; when none is picked
+nothing is emitted, so the page is exactly the template's own.
+
+`starter` is either `{ "file": "starter.json" }` or `{ "source": "seed" }`, never both. `seed` points at the app's built-in
+demo persona (`Portfolio.Data/Seed`), which Software & IT uses so that data is not copied into a second file.
+
 `starter.json` holds `"fictional": true`, a `profile` (same shape as the `Site` config section) and arrays in the seed
 file shape (`experiences`, `skills`, `projects`, `certifications`, `testimonials`). Mark every person, employer and
-credential as sample content. Starter content is only applied on request (the Phase 3 wizard); it never overwrites a site.
+credential as sample content. Starter content is only applied on request, in the wizard's review step, and only into tables that have no rows (seed-if-empty
+per table): it never updates or deletes a row, and it brings the sample rows only, never the starter profile's identity or
+text, so the owner's name, title and summary are always their own.
 
 ### Theme
 
@@ -120,14 +151,28 @@ session, only for keys in the catalog, and only on GET requests for public pages
 (header and meta), `no-store`, never output-cached, carries no analytics script and is not in the sitemap; nothing is saved until the owner presses
 "Use ...". Anyone else gets the normal page, indistinguishable from one without the parameter.
 
+### Thumbnail
+
+Ship `Templates/<key>/preview.png`, 1200 x 800, under about 600 KB: a real screenshot of the home page of a running site in
+that template (dark mode, sample content) works well. The wizard finds it through the catalog by key
+(`ITemplateCatalog.GetPreviewImagePath`) and serves it from `/admin/welcome/thumb/<key>`, owner-only: the key must be in the
+catalog and the file name is fixed, so nothing in the request becomes a path. It is not a static file and needs no manifest
+field. A template without one still works: its card shows the template name instead of a picture.
+
+### Draft preview
+
+The wizard's review step frames `/?preview=<key>&draft=1`. It uses the same owner-only session check, `noindex`, `no-store`,
+no analytics and no canonical link as the template preview, and additionally swaps in the owner's unpublished identity,
+accent and photo for that one request. Anyone else, a stale session, or a missing draft gets the normal page.
+
 ## 4. Adding a template: checklist
 
-1. Copy `Templates/healthcare/` to `Templates/<key>/` and edit `template.json` (every `copy` string is required).
+1. Copy `Templates/healthcare/` to `Templates/<key>/` and edit `template.json` (every `copy` string and `heroSuggestions` are required).
 2. Choose an archetype. Add `Styles/themes/<key>.css` and its `@import` line in `Styles/app.css` only if the base theme
    is not enough.
-3. Add `starter.json` (optional, fictional, clearly marked).
+3. Add `starter.json` (optional, fictional, clearly marked), a few `theme.accents` and a `preview.png` thumbnail.
 4. Run `dotnet test`. The manifest tests cover every template found on disk: validity, unique key, known section keys,
-   SEO lengths, guidance for sensitive professions, schema drift, theme contrast, and the rendering tests show no other
+   SEO lengths, guidance for sensitive professions, suggestions, accent contrast, the thumbnail, schema drift, theme contrast, and the rendering tests show no other
    template's wording. Add the new template to the rendering tests' wording lists.
 5. Update the template list in the README.
 6. Open a PR. Description must state the archetype and attach desktop and mobile screenshots.

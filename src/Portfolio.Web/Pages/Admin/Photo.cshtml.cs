@@ -22,7 +22,7 @@ public class PhotoModel : AdminPageModel
 
     public string? PhotoUrl { get; private set; }
 
-    public string MaxSize => _store.MaxBytes >= 1024 * 1024 ? $"{_store.MaxBytes / (1024 * 1024)} MB" : $"{Math.Max(1, _store.MaxBytes / 1024)} KB";
+    public string MaxSize => UploadForm.Label(_store.MaxBytes);
 
     [BindProperty]
     public IFormFile? Photo { get; set; }
@@ -39,7 +39,7 @@ public class PhotoModel : AdminPageModel
         ProcessedImage processed;
         try
         {
-            processed = await _processor.ProcessAsync(await ReadAsync(Photo, ct), ct);
+            processed = await _processor.ProcessAsync(await UploadForm.ReadAsync(Photo, _store.MaxBytes, MaxSize, ct), ct);
         }
         catch (ImageRejectedException ex)
         {
@@ -75,21 +75,5 @@ public class PhotoModel : AdminPageModel
         ModelState.AddModelError(nameof(Photo), message);
         PhotoUrl = (await _editor.LoadAsync(ct)).PhotoUrl;
         return Page();
-    }
-
-    /// <summary>Reads at most the configured size plus one byte, so an oversized stream is never fully buffered.</summary>
-    private async Task<byte[]> ReadAsync(IFormFile file, CancellationToken ct)
-    {
-        await using var input = file.OpenReadStream();
-        using var buffer = new MemoryStream();
-        var chunk = new byte[81920];
-        int read;
-        while ((read = await input.ReadAsync(chunk, ct)) > 0)
-        {
-            if (buffer.Length + read > _store.MaxBytes)
-                throw new ImageRejectedException($"That file is larger than {MaxSize}.");
-            buffer.Write(chunk, 0, read);
-        }
-        return buffer.ToArray();
     }
 }
