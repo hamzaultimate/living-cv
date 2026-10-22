@@ -22,7 +22,7 @@
   "skillGroups": ["Clinical", "Procedures", "Documentation", "Languages"],
   "seo": {
     "title": "{name} — {title}",
-    "description": "{name} is a {title}. Registrations, clinical experience and professional references.",
+    "description": "{name}, {title}. Registrations, clinical experience and professional references.",
     "aboutDescription": "About {name}, {title}: training, registrations and approach to patient care.",
     "credentialsJsonLd": true
   },

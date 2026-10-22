@@ -8,7 +8,7 @@
     var site = await SiteProfile.GetAsync();
     var tpl = await Template.GetAsync();
     var copy = tpl.Copy;
-    ViewData["Description"] = TemplateSeo.Apply(copy.Cv.Description, site);
+    ViewData["Description"] = TemplateSeo.ApplyDescription(copy.Cv.Description, site);
     var data = await Repo.BuildCvDataAsync(site, tpl);
     var roles = data.Experience;
     var groups = data.SkillGroups;

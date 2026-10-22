@@ -56,6 +56,24 @@ public class TemplateCatalogTests
         finally { Directory.Delete(dir, true); }
     }
 
+    [Theory]
+    [InlineData("Jo", "Nurse")]
+    [InlineData("Dr Alexandra Wilhelmina Featherstonehaugh-Montgomery", "Advanced Clinical Practitioner in Paediatric Intensive Care and Retrieval Medicine")]
+    public void ApplyDescription_NeverExceeds160Characters_AndCutsAtAWordBoundary(string name, string title)
+    {
+        var site = new SiteOptions { OwnerName = name, JobTitle = title, Summary = new string('x', 40) + " " + new string('y', 200) };
+
+        foreach (var pattern in new[] { "{name}, {title}. Registrations, clinical experience and professional references.", "{summary}", "Short." })
+        {
+            var text = TemplateSeo.ApplyDescription(pattern, site);
+            Assert.True(text.Length <= 160, text);
+            if (TemplateSeo.Apply(pattern, site).Length <= 160) Assert.Equal(TemplateSeo.Apply(pattern, site), text);
+            else Assert.EndsWith("…", text);
+        }
+        var cut = TemplateSeo.ApplyDescription("{name}, {title}. Registrations, clinical experience and professional references.", new SiteOptions { OwnerName = name + name, JobTitle = title + " and Education", Summary = "s" });
+        Assert.DoesNotMatch(@"[\s,;:.\-—]…$", cut);
+    }
+
     [Fact]
     public void SoftwarePreset_KeepsTheCvSkillGroupOrder()
     {

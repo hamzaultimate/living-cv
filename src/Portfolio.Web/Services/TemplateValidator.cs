@@ -11,7 +11,7 @@ namespace Portfolio.Web.Services;
 public static partial class TemplateValidator
 {
     public const int MaxTitleLength = 65;
-    public const int MaxDescriptionLength = 160;
+    public const int MaxDescriptionLength = TemplateSeo.MaxDescriptionLength;
 
     /// <summary>Professions where published content can identify third parties; their templates must carry guidance.</summary>
     public static readonly IReadOnlyList<string> SensitiveKeys = ["healthcare", "legal"];

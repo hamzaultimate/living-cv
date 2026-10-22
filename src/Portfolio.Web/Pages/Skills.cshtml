@@ -6,7 +6,7 @@
     var tpl = await Template.GetAsync();
     var copy = tpl.Copy.Skills;
     ViewData["Title"] = copy.Title;
-    ViewData["Description"] = TemplateSeo.Apply(copy.Description, tpl.Site);
+    ViewData["Description"] = TemplateSeo.ApplyDescription(copy.Description, tpl.Site);
     var skills = await Repo.GetSkillsAsync();
     var order = tpl.Definition.SkillGroups;
     var groups = skills.GroupBy(s => s.Group).OrderBy(g => { var i = order.IndexOf(g.Key); return i < 0 ? int.MaxValue : i; });

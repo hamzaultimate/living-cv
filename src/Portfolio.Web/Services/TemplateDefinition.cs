@@ -102,6 +102,21 @@ public class TemplateSeo
             .Replace("{name}", site.OwnerName)
             .Replace("{title}", site.JobTitle)
             .Replace("{summary}", site.Summary);
+
+    /// <summary>Longest meta description search engines show before cutting it themselves.</summary>
+    public const int MaxDescriptionLength = 160;
+
+    /// <summary><see cref="Apply"/> for a meta description: a long name or title can push the expanded pattern past
+    /// <see cref="MaxDescriptionLength"/>, so it is cut at a word boundary and ends with an ellipsis instead of mid-word.</summary>
+    public static string ApplyDescription(string pattern, SiteOptions site)
+    {
+        var text = Apply(pattern, site).Trim();
+        if (text.Length <= MaxDescriptionLength) return text;
+        var cut = text[..(MaxDescriptionLength - 1)];
+        var space = cut.LastIndexOf(' ');
+        if (space > MaxDescriptionLength / 2) cut = cut[..space];
+        return cut.TrimEnd(' ', ',', ';', ':', '-', '—', '.') + "…";
+    }
 }
 
 public class TemplateStarterRef

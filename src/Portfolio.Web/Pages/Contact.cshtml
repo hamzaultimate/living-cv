@@ -6,7 +6,7 @@
     ViewData["Title"] = "Contact";
     var site = await SiteProfile.GetAsync();
     var copy = (await Template.GetAsync()).Copy.Contact;
-    ViewData["Description"] = TemplateSeo.Apply(copy.Description, site);
+    ViewData["Description"] = TemplateSeo.ApplyDescription(copy.Description, site);
     var absBase = await SeoHelpers.AbsoluteBaseAsync(HttpContext);
     var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("Contact", "/contact"));
 }

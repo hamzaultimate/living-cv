@@ -191,6 +191,34 @@ public class TemplateRenderingTests
     }
 
     [Fact]
+    public async Task Healthcare_MetaDescriptions_StayWithin160Characters_ForALongNameAndTitle()
+    {
+        using var app = new AdminApp();
+        await DemoSite.ApplyStarterAsync(app, "healthcare");
+        using (var db = app.CreateDbContext())
+        {
+            var profile = await db.SiteProfiles.SingleAsync();
+            profile.OwnerName = "Dr Alexandra Wilhelmina Featherstonehaugh-Montgomery";
+            profile.JobTitle = "Advanced Clinical Practitioner in Paediatric Intensive Care and Retrieval Medicine";
+            await db.SaveChangesAsync();
+        }
+        app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
+        var client = app.NewClient();
+
+        foreach (var path in new[] { "/", "/about", "/experience", "/skills", "/certifications", "/projects", "/contact", "/cv" })
+        {
+            var html = (await GetAsync(client, path)).Html;
+            var description = WebUtility.HtmlDecode(Regex.Match(html, "<meta name=\"description\" content=\"([^\"]*)\"").Groups[1].Value);
+            Assert.False(string.IsNullOrWhiteSpace(description), $"{path} has no description");
+            Assert.True(description.Length <= 160, $"{path} description is {description.Length} characters: {description}");
+            Assert.DoesNotMatch(@"\b(is a|is an)\b", description);
+        }
+        var home = WebUtility.HtmlDecode(Regex.Match((await GetAsync(client, "/")).Html, "<meta name=\"description\" content=\"([^\"]*)\"").Groups[1].Value);
+        Assert.StartsWith("Dr Alexandra Wilhelmina Featherstonehaugh-Montgomery, Advanced Clinical Practitioner", home);
+        Assert.EndsWith("…", home);
+    }
+
+    [Fact]
     public async Task Healthcare_MissingInitiative_UsesItsItemWord()
     {
         using var app = new AdminApp();

@@ -11,7 +11,7 @@
     // site.Role and site.Summary are the long-form versions used on /cv and the CV PDF —
     // give the homepage its own shorter copy instead of shortening those shared strings.
     ViewData["FullTitle"] = TemplateSeo.Apply(seo.Title, site);
-    ViewData["Description"] = TemplateSeo.Apply(seo.Description, site);
+    ViewData["Description"] = TemplateSeo.ApplyDescription(seo.Description, site);
     var sameAs = new[] { site.HasLinkedIn ? site.LinkedIn : null, site.HasGitHub ? site.GitHub : null, site.HasYouTube ? site.YouTube : null }
         .Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
     var person = new Dictionary<string, object?>

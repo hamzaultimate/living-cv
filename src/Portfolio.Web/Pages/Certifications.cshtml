@@ -7,7 +7,7 @@
     var tpl = await Template.GetAsync();
     var copy = tpl.Copy.Certifications;
     ViewData["Title"] = copy.Title;
-    ViewData["Description"] = TemplateSeo.Apply(copy.Description, tpl.Site);
+    ViewData["Description"] = TemplateSeo.ApplyDescription(copy.Description, tpl.Site);
     var certs = await Repo.GetCertificationsAsync();
     // Group by issuer, ordering groups by the lowest sortOrder they contain so the most
     // prominent issuers lead. Filter chips and grouped sections share this order.
