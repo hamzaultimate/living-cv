@@ -176,17 +176,34 @@ public class TemplatePreviewTests
     }
 
     [Fact]
-    public async Task APostWithAPreviewParameter_IsNotAPreview()
+    public async Task APreviewPage_CarriesNoAnalytics_WhileTheSamePageNormallyDoes()
+    {
+        using var app = AdminApp.Create(AdminApp.SetupKey, new Dictionary<string, string?> { ["Site:GoogleAnalyticsId"] = "G-PREVIEW1" });
+        await DemoSite.SeedAsync(app);
+        var owner = await app.SignedInClientAsync();
+
+        var normal = await owner.GetStringAsync("/about");
+        var previewed = await owner.GetStringAsync("/about?preview=healthcare");
+
+        Assert.Contains("googletagmanager.com/gtag/js?id=G-PREVIEW1", normal);
+        Assert.Contains("Previewing the Healthcare template", previewed);
+        Assert.DoesNotContain("googletagmanager", previewed);
+        Assert.DoesNotContain("gtag(", previewed);
+        Assert.DoesNotContain("G-PREVIEW1", previewed);
+    }
+
+    [Fact]
+    public async Task OnlyTheBaseLook_PreloadsItsFonts()
     {
         using var app = new AdminApp();
         await DemoSite.SeedAsync(app);
         var owner = await app.SignedInClientAsync();
 
-        // Only GET requests for public pages can preview; the admin pages ignore the parameter entirely.
-        var admin = await owner.GetAsync("/admin?preview=healthcare");
-        var html = await admin.Content.ReadAsStringAsync();
+        var software = await owner.GetStringAsync("/about");
+        var healthcare = await owner.GetStringAsync("/about?preview=healthcare");
 
-        Assert.Equal(HttpStatusCode.OK, admin.StatusCode);
-        Assert.DoesNotContain("Previewing", html);
+        Assert.Contains("space-grotesk-latin", software);
+        Assert.Contains("jetbrains-mono-latin", software);
+        Assert.DoesNotContain("woff2", healthcare);
     }
 }

@@ -19,7 +19,8 @@
     // Same dev-subdomain exclusion as robots.txt (Program.cs) — don't let local/dev
     // browsing pollute production analytics.
     var isDevHost = Context.Request.Host.Host.StartsWith("dev.", StringComparison.OrdinalIgnoreCase);
-    var showAnalytics = site.HasGoogleAnalytics && !isDevHost;
+    // An owner's template preview is not a visit to the public site, so it is not counted either.
+    var showAnalytics = site.HasGoogleAnalytics && !isDevHost && !tpl.IsPreview;
     // Site-wide identity markup — separate from the homepage's Person schema, which
     // describes the person rather than the site itself. Every page carries this.
     var websiteLd = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object?>
@@ -86,8 +87,12 @@
     <link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="~/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="~/apple-touch-icon.png" />
+    @if (tpl.ThemeName is null)
+    {
+        @* Only the base look uses these two fonts; a themed template sets its own font stacks, so preloading them would waste a fetch. *@
     <link rel="preload" href="~/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="~/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin />
+    }
     <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
 </head>
 <body class="flex min-h-screen flex-col">
