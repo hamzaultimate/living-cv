@@ -64,6 +64,28 @@ public class AdminAccessTests : IClassFixture<AdminApp>
     }
 
     [Fact]
+    public void TheAdminAreaHasExactlyTheExpectedPages_SoANewPageIsAddedOnPurpose()
+    {
+        // Adding an admin page must be a conscious change here, next to the checks above that prove it is protected.
+        var routes = AdminEndpoints().Select(e => e.RoutePattern.RawText!.ToLowerInvariant()).Distinct().OrderBy(x => x).ToList();
+
+        Assert.Equal(["admin", "admin/login", "admin/logout", "admin/photo", "admin/profile", "admin/template"], routes);
+    }
+
+    [Fact]
+    public async Task TheTemplatePage_RejectsAnonymousPosts_WithoutChangingTheTemplate()
+    {
+        var client = _app.NewClient();
+
+        var post = await client.PostAsync("/admin/template", new FormUrlEncodedContent(new Dictionary<string, string> { ["Key"] = "healthcare" }));
+
+        Assert.Equal(HttpStatusCode.Redirect, post.StatusCode);
+        Assert.Contains("/admin/login", post.Headers.Location!.OriginalString);
+        using var db = _app.CreateDbContext();
+        Assert.DoesNotContain(db.SiteProfiles.Select(p => p.TemplateKey), k => k == "healthcare");
+    }
+
+    [Fact]
     public async Task EveryProtectedAdminRoute_RedirectsAnonymousVisitorsToLogin_ForGetAndPost()
     {
         var client = _app.NewClient();
@@ -95,6 +117,9 @@ public class AdminAccessTests : IClassFixture<AdminApp>
     [InlineData("/admin/profile/extra")]
     [InlineData("/admin/photo.png")]
     [InlineData("/admin/logout")]
+    [InlineData("/admin/template")]
+    [InlineData("/admin/TEMPLATE?show=healthcare")]
+    [InlineData("/admin/template?preview=healthcare")]
     public async Task UnknownAndMixedCaseAdminPaths_AreDeniedToo(string path)
     {
         var response = await _app.NewClient().GetAsync(path);
