@@ -146,9 +146,9 @@ applies to all visitors together.
 ### Managing your content
 
 Once the wizard has run (or you skipped it), everything the site shows besides your profile is edited in the
-browser under **Content** (`/admin/content`). There are four editors, named in your template's words (Software & IT says
-experience, skills, work and certifications; Healthcare says clinical experience, clinical skills, research & initiatives
-and licences & registrations):
+browser under **Content** (`/admin/content`). There are six editors, named in your template's words (Software & IT says
+experience, skills, work, certifications, talks and testimonials; Healthcare says clinical experience, clinical skills, research & initiatives,
+licences & registrations, presentations and references):
 
 | Editor | Address | What an entry has |
 |---|---|---|
@@ -156,8 +156,10 @@ and licences & registrations):
 | Skills | `/admin/content/skills` | a name in a group (groups follow the template's order on the site and the CV) |
 | Work (projects) | `/admin/content/projects` | title, web address name, summary, write-up, impact lines, links, a cover image and gallery images |
 | Certifications | `/admin/content/certifications` | name, issuer, status, date, links to the credential, certificate and badge |
+| Talks | `/admin/content/talks` | title, type, event, date, a YouTube video (a link or the video id) and a link. The public page lists talks newest first by date, so this list has no Move buttons |
+| Testimonials | `/admin/content/testimonials` | the quote (plain text), the person, their role and organisation, and a source link. They appear in a block on the home page in the order shown |
 
-Each editor lists its entries in the order the public page shows them. You can **add**, **edit**, **remove** and
+Each editor lists its entries in the order the public page shows them (talks: newest first by date). You can **add**, **edit**, **remove** and
 **reorder** them, and a blank site can be built from here alone:
 
 - **Reordering** uses **Move up** and **Move down** buttons beside each entry, so it works with a keyboard and a screen
@@ -295,9 +297,9 @@ address is `/?preview=<template key>` and is marked noindex.
 
 ### Content and pages
 
-Add, edit and reorder experience, skills, work and certifications in the browser at `/admin/content` (see "Managing your
-content" above). Blog posts, talks and testimonials are not editable in the browser yet; they come from the seed files below
-until their editors arrive.
+Add, edit and reorder experience, skills, work, certifications, talks and testimonials in the browser at `/admin/content` (see "Managing your
+content" above). Blog posts are not editable in the browser yet; they come from the seed file below
+until their editor arrives.
 
 The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed). Each table is seeded only when it is empty, so editing a seed file does not change a database that already has rows. To apply edited seed files to an existing database, set `Seed:Mode` to `Authoritative` (for example `Seed__Mode=Authoritative` as an environment variable): then rows are added, updated, and removed to match the files on every start. Update those JSON files to change:
 

@@ -340,6 +340,27 @@ Implementation notes for 4a (decisions worth reviewing):
   export `ConcurrencyStamp`-free rows and decide how imported rows interact with the unique name and slug rules above.
 
 ### Phase 4b breakdown (status: in progress)
+**4b-1 part (a), Talks and Testimonials: implemented, pending review.** Decisions:
+- **Same pattern as 4a**: `/admin/content/talks` and `/admin/content/testimonials` (list, `edit/{id?}`, `delete/{id}`), row `ConcurrencyStamp` (additive nullable column on both
+  tables, migration `AddTalkTestimonialStamps`: two `ALTER TABLE ... ADD ... NULL`, read in the generated script), `IOrderedContent` on both entities, manifest `editor.talks` /
+  `editor.testimonials` (schema, `TemplateEditor`, `EditorFields`, validator, both shipped manifests, authoring guide), hub cards with counts, dashboard label list.
+- **Ordering.** Public Talks order is `Date` descending (not `SortOrder`), so a manual Move would change nothing: the Talks list shows the public order (undated last, ties by position
+  then id, now also the tie-break of the public query) and has **no Move buttons** (`CanReorder`; a posted Move is refused with a message and writes nothing). New talks append a
+  position that only breaks ties and need no list stamp. Testimonials are public-ordered by `SortOrder`: new entries append, Move uses the list stamp (section key `testimonials`),
+  creates take it with `BeginOrderChangeAsync`.
+- **Validation.** Quote is rendered as escaped plain text, so tags are refused (`FormCheck.Paragraph`, 2000 = column length); author 120 (column), role 200, URLs http(s) only with
+  the stored-value exception; talk title 200, event 200, date as a date or month/year/`yyyy-MM-dd` (`PartialDate`, stored as the first day), type from the enum allow-list.
+  `YoutubeId` goes into an iframe address, so only an 11 character id (or a YouTube watch / youtu.be / embed / shorts link it is extracted from) is accepted.
+- **Unique keys.** Authoritative seeding keys Talks by `Title` and Testimonials by `Author|first 40 characters of Quote`: both editors refuse a second entry with the same key
+  (case-insensitive) with the 4a "already have a ... called" style message (nouns from the manifest).
+- **Not editable on purpose.** `Testimonial.Relation` and `Featured` are stored but no public page shows them, so the form has no field for them (stored values are untouched); `Talk`
+  has no image and `Testimonial` no avatar, so no upload code was added.
+- **Messages** take every noun from the manifest (`View.ItemLabelLower`, `View.Label(key)`); a new entry that loses an order race gets "The list changed while saving, so nothing was
+  saved. Press Save again." Healthcare keeps Talks off in the public template; the editor stays reachable with the "not shown" note and the guidance.
+- **Tests**: `TalkEditorTests`, `TestimonialEditorTests`, `TalkTestimonialTemplateTests`, the manifest validator cases, and the new routes added to `AdminAccessTests` (route list),
+  `ContentSecurityTests` (anonymous, no token, stale session, GET-never-mutates, CSP, body caps, two rows per table), `ContentAccessibilityTests`, `ContentSeedingTests` (delete through the pages).
+
+
 **Scope split.** 4b-1 (this PR): (a) Talks and Testimonials, then (b) Blog with drafts and a safe Markdown preview, after a review checkpoint. 4b-2 (later PR, only listed
 here): (c) hero / metrics / About editing on the profile, (d) section on/off and ordering (the `Sections` JSON on the profile, with the list-stamp pattern reused
 for the order). Everything follows the 4a pattern (`ContentPageModel` / `ContentListModel` / `ContentDeleteModel`, `FormCheck`, `ContentEditor`, row stamp, list

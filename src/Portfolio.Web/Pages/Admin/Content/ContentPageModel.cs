@@ -189,7 +189,8 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
         var groups = new List<ListGroup>();
         foreach (var set in rows.GroupBy(GroupOf))
         {
-            var list = set.OrderBy(r => r.SortOrder).ThenBy(r => r.Id).ToList();
+            // A list with a manual order is sorted by position; one the public page orders itself keeps the order of its query.
+            var list = Reorderable ? set.OrderBy(r => r.SortOrder).ThenBy(r => r.Id).ToList() : set.ToList();
             groups.Add(new ListGroup(set.Key, list.Select((r, i) => ToRow(r, i > 0, i < list.Count - 1)).ToList()));
         }
         Groups = OrderGroups(groups);

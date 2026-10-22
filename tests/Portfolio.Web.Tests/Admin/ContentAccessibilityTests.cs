@@ -58,7 +58,9 @@ public class ContentAccessibilityTests
         var seeded = await ContentFlow.SeedRowsAsync(app);
         var pages = new[]
         {
-            "/admin/content", ContentFlow.Experience, ContentFlow.Skills, ContentFlow.Projects, ContentFlow.Certifications,
+            "/admin/content", ContentFlow.Experience, ContentFlow.Skills, ContentFlow.Projects, ContentFlow.Certifications, ContentFlow.Talks, ContentFlow.Testimonials,
+            ContentFlow.Talks + "/edit", $"{ContentFlow.Talks}/edit/{seeded.TalkId}", $"{ContentFlow.Talks}/delete/{seeded.TalkId}",
+            ContentFlow.Testimonials + "/edit", $"{ContentFlow.Testimonials}/edit/{seeded.TestimonialId}", $"{ContentFlow.Testimonials}/delete/{seeded.TestimonialId}",
             ContentFlow.Experience + "/edit", $"{ContentFlow.Experience}/edit/{seeded.ExperienceId}", $"{ContentFlow.Experience}/delete/{seeded.ExperienceId}",
             ContentFlow.Skills + "/edit", $"{ContentFlow.Skills}/edit/{seeded.SkillId}", $"{ContentFlow.Skills}/delete/{seeded.SkillId}",
             ContentFlow.Projects + "/edit", $"{ContentFlow.Projects}/edit/{seeded.ProjectId}", $"{ContentFlow.Projects}/delete/{seeded.ProjectId}", $"{ContentFlow.Projects}/images/{seeded.ProjectId}",

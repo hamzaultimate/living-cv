@@ -55,7 +55,7 @@ testable the moment you run it. Swap in your own details to make it yours.
   (no drag and drop needed), project cover and gallery images (re-encoded, with required alt text), validation, a warning
   before you leave unsaved changes, and a refusal (not a silent overwrite) when the same entry is saved from two tabs. Public
   pages, the sitemap, the CV and the share image follow every save at once, so a blank site can be built from the admin
-  alone. Blog posts, talks and testimonials are still seeded from JSON.
+  alone. Talks and testimonials have editors too; blog posts are still seeded from JSON.
 - Health checks at `/health` (liveness) and `/health/db` (DB readiness)
 - Zero front-end build dependencies to *run* it (Tailwind is compiled during build)
 
@@ -99,8 +99,8 @@ Everything personal lives in two places — **no code changes required**:
    (name, role, hero text, metrics, About narrative, contact links, `PhotoUrl`). These values are
    the defaults: on first run with a database they are copied into a profile row, which is read
    from then on (without a database the config values are used directly).
-2. **Content** → edit experience, skills, work and certifications in the browser at `/admin/content`. Blog posts,
-   talks and testimonials (and the demo persona a fresh database starts with) come from the JSON files in
+2. **Content** → edit experience, skills, work, certifications, talks and testimonials in the browser at `/admin/content`. Blog posts
+   (and the demo persona a fresh database starts with) come from the JSON files in
    `src/Portfolio.Data/Seed/` (`projects`, `experiences`, `skills`, `certifications`, `talks`, `blog`, `testimonials`).
    Each file has a header comment describing its shape. They seed an empty database; to re-apply
    edited files to a populated one, set `Seed:Mode=Authoritative` (emptying the tables does not re-seed them).
