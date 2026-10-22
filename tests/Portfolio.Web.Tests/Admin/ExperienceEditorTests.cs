@@ -41,14 +41,15 @@ public class ExperienceEditorTests
     }
 
     [Fact]
-    public async Task AfterASave_TheFlashMessageIsAnnounced_AndTheListScrollsToTheRow()
+    public async Task AfterASave_TheFlashMessageIsAnnouncedAndTakesFocus_WithNoFragmentToCancelThat()
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
 
         var create = await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields());
         var id = (await RowsAsync(app)).Single().Id;
-        Assert.EndsWith($"/admin/content/experience#row-{id}", create.Headers.Location!.OriginalString);
+        // A browser skips autofocus when the address has a fragment, so a save goes to the plain list.
+        Assert.Equal("/admin/content/experience", create.Headers.Location!.OriginalString);
         var list = await owner.GetStringAsync(ContentFlow.Experience);
 
         Assert.Contains("role=\"status\" aria-live=\"polite\" tabindex=\"-1\" autofocus=\"autofocus\"", list);
@@ -56,6 +57,21 @@ public class ExperienceEditorTests
         Assert.Contains($"id=\"row-{id}\"", list);
         // The message is shown once.
         Assert.DoesNotContain("Saved Staff Nurse", await owner.GetStringAsync(ContentFlow.Experience));
+    }
+
+    [Fact]
+    public async Task AfterAMove_TheKeyboardUserIsReturnedToTheRowThatMoved()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("A Co", "First"));
+        await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("B Co", "Second"));
+        var first = (await RowsAsync(app)).First().Id;
+
+        var move = await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={first}", new Dictionary<string, string> { ["direction"] = "down" }, ContentFlow.Experience);
+
+        Assert.Equal($"/admin/content/experience#row-{first}", move.Headers.Location!.OriginalString);
+        Assert.Contains("Moved First at A Co down.", await owner.GetStringAsync(ContentFlow.Experience));
     }
 
     [Fact]

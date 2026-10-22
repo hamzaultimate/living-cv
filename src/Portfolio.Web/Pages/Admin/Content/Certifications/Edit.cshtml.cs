@@ -126,6 +126,7 @@ public class EditModel : ContentPageModel
         }
 
         Flash($"Saved {name}.");
-        return Redirect($"{ListUrl}#row-{row.Id}");
+        // No fragment: a browser skips autofocus when the address has one, and the saved message should take focus.
+        return Redirect(ListUrl);
     }
 }

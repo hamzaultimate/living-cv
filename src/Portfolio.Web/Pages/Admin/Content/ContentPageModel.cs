@@ -158,6 +158,7 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
         var outcome = await Writer.MoveAsync(scope, id, delta, ct);
         if (outcome != SaveOutcome.Saved) return ListWithError("The list was changed somewhere else, so it was not reordered. It is shown again as it is now.");
 
+        // The fragment keeps a keyboard user at the row they just moved (the browser starts tabbing from it) instead of at the top of the page.
         Flash($"Moved {Describe(row)} {(delta < 0 ? "up" : "down")}.");
         return Redirect($"{ListUrl}#row-{id}");
     }

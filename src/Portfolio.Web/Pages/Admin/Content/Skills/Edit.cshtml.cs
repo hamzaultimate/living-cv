@@ -107,7 +107,8 @@ public class EditModel : ContentPageModel
             return Redirect($"{ListUrl}/edit?group={Uri.EscapeDataString(group!)}");
         }
         Flash($"Saved {name}.");
-        return Redirect($"{ListUrl}#row-{row.Id}");
+        // No fragment: a browser skips autofocus when the address has one, and the saved message should take focus.
+        return Redirect(ListUrl);
     }
 
     private async Task LoadGroupsAsync(CancellationToken ct)
