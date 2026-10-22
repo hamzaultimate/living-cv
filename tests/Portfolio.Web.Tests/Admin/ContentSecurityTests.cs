@@ -33,8 +33,9 @@ public class ContentSecurityTests
         ($"{ContentFlow.Projects}/edit/{s.ProjectId}", ContentFlow.Fields(("Title", "Renamed project"), ("Summary", "New summary."))),
         ($"{ContentFlow.Projects}?handler=Move&id={s.ProjectId}", new() { ["direction"] = "down" }),
         ($"{ContentFlow.Projects}/delete/{s.ProjectId}", new()),
-        ($"{ContentFlow.Projects}/images/{s.ProjectId}?handler=Remove", new() { ["url"] = "/uploads/none.jpg" }),
-        ($"{ContentFlow.Projects}/images/{s.ProjectId}?handler=Move", new() { ["url"] = "/uploads/none.jpg", ["direction"] = "up" }),
+        ($"{ContentFlow.Projects}/images/{s.ProjectId}?handler=Remove", new() { ["url"] = s.ScreenshotUrl }),
+        ($"{ContentFlow.Projects}/images/{s.ProjectId}?handler=Move", new() { ["url"] = s.ScreenshotUrl, ["direction"] = "down" }),
+        ($"{ContentFlow.Projects}/images/{s.ProjectId}?handler=Upload", new() { ["Caption"] = "Sneaky" }),
         ($"{ContentFlow.Certifications}/edit", ContentFlow.Fields(("Name", "New cert"), ("Issuer", "Board"), ("Status", "Earned"))),
         ($"{ContentFlow.Certifications}/edit/{s.CertificationId}", ContentFlow.Fields(("Name", "Renamed cert"), ("Issuer", "Board"), ("Status", "Earned"))),
         ($"{ContentFlow.Certifications}?handler=Move&id={s.CertificationId}", new() { ["direction"] = "down" }),
@@ -46,7 +47,7 @@ public class ContentSecurityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        var seeded = await ContentFlow.SeedRowsAsync(app);
+        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
         var before = await ContentFlow.SnapshotAsync(app);
         var anonymous = app.NewClient();
 
@@ -71,7 +72,7 @@ public class ContentSecurityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        var seeded = await ContentFlow.SeedRowsAsync(app);
+        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
         var before = await ContentFlow.SnapshotAsync(app);
 
         foreach (var (path, fields) in Posts(seeded))
@@ -103,7 +104,7 @@ public class ContentSecurityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        var seeded = await ContentFlow.SeedRowsAsync(app);
+        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
         var token = await AdminApp.GetTokenAsync(owner, $"{ContentFlow.Experience}/edit"); // fetched while the session was good
         using (var db = app.CreateDbContext())
         {
@@ -133,7 +134,7 @@ public class ContentSecurityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        var seeded = await ContentFlow.SeedRowsAsync(app);
+        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
         var before = await ContentFlow.SnapshotAsync(app);
 
         foreach (var path in Gets(seeded))
@@ -144,7 +145,11 @@ public class ContentSecurityTests
             $"{ContentFlow.Experience}/delete/{seeded.ExperienceId}?handler=Delete",
             $"{ContentFlow.Skills}/delete/{seeded.SkillId}?confirm=true",
             $"{ContentFlow.Projects}/delete/{seeded.ProjectId}?handler=Post",
-            $"{ContentFlow.Projects}/images/{seeded.ProjectId}?handler=Remove&url=/uploads/x.jpg",
+            $"{ContentFlow.Projects}/images/{seeded.ProjectId}?handler=Remove&url={seeded.ScreenshotUrl}",
+            $"{ContentFlow.Projects}/images/{seeded.ProjectId}?handler=Move&url={seeded.ScreenshotUrl}&direction=down",
+            $"{ContentFlow.Skills}?handler=Move&id={seeded.SkillId}&direction=down",
+            $"{ContentFlow.Projects}?handler=Move&id={seeded.ProjectId}&direction=down",
+            $"{ContentFlow.Certifications}?handler=Move&id={seeded.CertificationId}&direction=down",
             $"{ContentFlow.Certifications}/delete/{seeded.CertificationId}?confirm=1",
             $"{ContentFlow.Certifications}/edit/{seeded.CertificationId}?Form.Name=Hacked&Form.Issuer=Hacked",
         };
@@ -159,13 +164,13 @@ public class ContentSecurityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        var seeded = await ContentFlow.SeedRowsAsync(app);
+        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
 
         foreach (var path in Gets(seeded))
         {
             var response = await owner.GetAsync(path);
             var csp = string.Join(";", response.Headers.GetValues("Content-Security-Policy"));
-            var isEdit = path.Contains("/edit");
+            var isEdit = path.Contains("/edit") || path.Contains("/images/"); // the forms that carry the unsaved changes warning
             Assert.Equal(isEdit, csp.Contains("script-src 'self'"));
             Assert.DoesNotContain("unsafe-inline", csp);
             Assert.DoesNotContain("unsafe-eval", csp);
@@ -220,7 +225,7 @@ public class ContentSecurityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        var seeded = await ContentFlow.SeedRowsAsync(app);
+        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
         var before = await ContentFlow.SnapshotAsync(app);
         var big = new Dictionary<string, string> { ["direction"] = "down", ["Stamp"] = new string('x', 100 * 1024) };
 

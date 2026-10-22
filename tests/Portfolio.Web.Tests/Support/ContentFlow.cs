@@ -75,19 +75,30 @@ public static class ContentFlow
         return await ids(db).OrderBy(x => x).ToListAsync();
     }
 
-    public sealed record Seeded(int ExperienceId, int SkillId, int ProjectId, int CertificationId);
+    public sealed record Seeded(int ExperienceId, int SkillId, int ProjectId, int CertificationId, string ScreenshotUrl = "");
 
     /// <summary>One row in each table, written straight to the database (stamped, like rows the editors write).</summary>
-    public static async Task<Seeded> SeedRowsAsync(AdminApp app)
+    public static async Task<Seeded> SeedRowsAsync(AdminApp app, bool pairs = false)
     {
         using var db = app.CreateDbContext();
         var e = new Experience { Company = "Seed Co", Title = "Seed Role", Start = "2020", End = "2021", Summary = "Did seed things.", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
         var k = new Skill { Name = "Seeding", Group = "Garden", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
         var p = new Project { Title = "Seed Project", Slug = "seed-project", Summary = "A seeded project.", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
         var c = new Certification { Name = "Seed Certificate", Issuer = "Seed Board", Status = CertificationStatus.Earned, Date = "2020", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
+        var shot = "/uploads/" + new string('b', 32) + ".jpg";
+        if (pairs)
+        {
+            // Two rows per table (so a Move has somewhere to go) and a gallery image (so a Remove has something to target).
+            p.Screenshots = [new ProjectImage { Url = shot, Caption = "First" }, new ProjectImage { Url = "/uploads/" + new string('c', 32) + ".jpg", Caption = "Second" }];
+            db.AddRange(
+                new Experience { Company = "Second Co", Title = "Second Role", Start = "2021", End = "2022", Summary = "More.", SortOrder = 2, ConcurrencyStamp = ContentEditor.NewStamp() },
+                new Skill { Name = "Second skill", Group = "Garden", SortOrder = 2, ConcurrencyStamp = ContentEditor.NewStamp() },
+                new Project { Title = "Second Project", Slug = "second-project", Summary = "Another.", SortOrder = 2, ConcurrencyStamp = ContentEditor.NewStamp() },
+                new Certification { Name = "Second Certificate", Issuer = "Seed Board", Status = CertificationStatus.Earned, Date = "2021", SortOrder = 2, ConcurrencyStamp = ContentEditor.NewStamp() });
+        }
         db.AddRange(e, k, p, c);
         await db.SaveChangesAsync();
-        return new Seeded(e.Id, k.Id, p.Id, c.Id);
+        return new Seeded(e.Id, k.Id, p.Id, c.Id, shot);
     }
 
     /// <summary>Every column the editors can change, as one string, to prove a request left the content alone.</summary>
