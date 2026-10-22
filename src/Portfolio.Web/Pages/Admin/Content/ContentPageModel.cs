@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Portfolio.Data;
 using Portfolio.Data.Entities;
+using Portfolio.Web.Security;
 using Portfolio.Web.Services;
 
 namespace Portfolio.Web.Pages.Admin.Content;
@@ -123,6 +124,8 @@ public abstract class ContentPageModel : AdminPageModel
 }
 
 /// <summary>A list screen: the entries of one section in their public order, with Move up and Move down buttons.</summary>
+// The only post is a button press; anything much larger is not from this page.
+[BodyLimit(16 * 1024)]
 public abstract class ContentListModel<T> : ContentPageModel, IContentList where T : class, IOrderedContent
 {
     protected ContentListModel(PortfolioDbContext db, ContentEditor content, RequestTemplate template) : base(db, content, template) { }
@@ -176,6 +179,7 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
 }
 
 /// <summary>A confirmation page: GET shows what will be removed, POST removes it.</summary>
+[BodyLimit(16 * 1024)]
 public abstract class ContentDeleteModel<T> : ContentPageModel, IContentDelete where T : class, IOrderedContent
 {
     protected ContentDeleteModel(PortfolioDbContext db, ContentEditor content, RequestTemplate template) : base(db, content, template) { }

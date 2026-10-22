@@ -214,4 +214,29 @@ public class ContentSecurityTests
         Assert.Equal(HttpStatusCode.RequestEntityTooLarge, response.StatusCode);
         Assert.Equal(0, await ContentFlow.CountAsync(app));
     }
+
+    [Fact]
+    public async Task EveryContentPage_CapsItsPostBody_NotJustTheEditForms()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        var seeded = await ContentFlow.SeedRowsAsync(app);
+        var before = await ContentFlow.SnapshotAsync(app);
+        var big = new Dictionary<string, string> { ["direction"] = "down", ["Stamp"] = new string('x', 100 * 1024) };
+
+        foreach (var (path, tokenFrom) in new[]
+                 {
+                     ($"{ContentFlow.Experience}?handler=Move&id={seeded.ExperienceId}", ContentFlow.Experience),
+                     ($"{ContentFlow.Skills}?handler=Move&id={seeded.SkillId}", ContentFlow.Skills),
+                     ($"{ContentFlow.Projects}?handler=Move&id={seeded.ProjectId}", ContentFlow.Projects),
+                     ($"{ContentFlow.Certifications}?handler=Move&id={seeded.CertificationId}", ContentFlow.Certifications),
+                     ($"{ContentFlow.Experience}/delete/{seeded.ExperienceId}", $"{ContentFlow.Experience}/delete/{seeded.ExperienceId}"),
+                     ($"{ContentFlow.Projects}/delete/{seeded.ProjectId}", $"{ContentFlow.Projects}/delete/{seeded.ProjectId}"),
+                 })
+        {
+            var response = await ContentFlow.PostAsync(owner, path, big, tokenFrom);
+            Assert.True(response.StatusCode == HttpStatusCode.RequestEntityTooLarge, $"POST {path} returned {(int)response.StatusCode}");
+        }
+        Assert.Equal(before, await ContentFlow.SnapshotAsync(app));
+    }
 }
