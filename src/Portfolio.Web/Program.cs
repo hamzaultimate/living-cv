@@ -312,11 +312,8 @@ static async Task MigrateAndSeedAsync(WebApplication app)
         var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
         await db.Database.MigrateAsync(cts.Token);
         var seedDir = Path.Combine(AppContext.BaseDirectory, "Seed");
-        // A new install that can still be claimed is not filled with the demo persona: the onboarding wizard loads sample content when asked to.
-        if (await FirstRun.ShouldDeferContentSeedAsync(db, scope.ServiceProvider.GetRequiredService<SetupKeyGate>().IsConfigured, seedMode, cts.Token))
-            app.Logger.LogInformation("Onboarding is pending: the demo content is not seeded. The wizard loads sample content if the owner asks for it (or skips).");
-        else
-            await PortfolioSeeder.SeedAsync(db, seedDir, seedMode, app.Logger, cts.Token);
+        // The onboarding wizard owns the demo content of a new install and of a site it has finished (see FirstRun).
+        await FirstRun.SeedAtStartupAsync(db, seedDir, seedMode, scope.ServiceProvider.GetRequiredService<SetupKeyGate>().IsConfigured, app.Logger, cts.Token);
         await scope.ServiceProvider.GetRequiredService<ISiteProfileProvider>().GetAsync(cts.Token);
         app.Logger.LogInformation("Database migrated and seeded.");
     }

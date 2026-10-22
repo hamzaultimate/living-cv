@@ -37,6 +37,7 @@ public class PortfolioDbContext : DbContext
             e.Property(x => x.AccentColor).HasMaxLength(SiteProfile.MaxLength.AccentColor);
             e.Property(x => x.Location).HasMaxLength(SiteProfile.MaxLength.Location);
             e.Property(x => x.OnboardingCompletedAt).IsConcurrencyToken();
+            e.Property(x => x.OnboardingOutcome).HasMaxLength(SiteProfile.MaxLength.OnboardingOutcome);
             e.OwnsOne(x => x.Hero, o => o.ToJson());
             e.OwnsMany(x => x.Metrics, o => o.ToJson());
             e.OwnsOne(x => x.About, o =>

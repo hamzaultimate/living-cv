@@ -36,6 +36,9 @@ public class ProfileEditor
     {
         var profile = await LoadOrCreateAsync(ct);
         var previous = profile.PhotoUrl;
+        // The light-theme photo that is just a copy of the photo being replaced (the wizard sets both) follows it, so it never points at the
+        // deleted file; a separate light photo the owner chose is left alone.
+        if (previous is not null && profile.PhotoUrlLight == previous) profile.PhotoUrlLight = photoUrl;
         profile.PhotoUrl = photoUrl;
         await CommitAsync(profile, ct);
         return previous;

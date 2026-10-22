@@ -23,6 +23,9 @@ public class OnboardingColumnsTests
         Assert.Contains("ADD [Location] nvarchar(120) NULL", script);
         Assert.Contains("ADD [OnboardingCompletedAt] datetimeoffset NULL", script);
         Assert.Contains("ADD [OnboardingDraft] nvarchar(max) NULL", script);
+        // The outcome is left empty for existing rows on purpose: only a site that went through the wizard stops being seeded at start-up.
+        Assert.Contains("ADD [OnboardingOutcome] nvarchar(20) NULL", script);
+        Assert.DoesNotContain("SET [OnboardingOutcome]", script);
         // Rows that exist when the migration runs belong to sites set up before the wizard: they must not be sent into it.
         Assert.Contains("UPDATE [SiteProfiles] SET [OnboardingCompletedAt] =", script);
         Assert.True(script.IndexOf("ADD [OnboardingCompletedAt]", StringComparison.Ordinal) < script.IndexOf("UPDATE [SiteProfiles] SET [OnboardingCompletedAt]", StringComparison.Ordinal));

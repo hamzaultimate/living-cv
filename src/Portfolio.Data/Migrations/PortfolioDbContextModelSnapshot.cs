@@ -313,6 +313,10 @@ namespace Portfolio.Data.Migrations
                     b.Property<string>("OnboardingDraft")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("OnboardingOutcome")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("OwnerName")
                         .IsRequired()
                         .HasMaxLength(200)

@@ -107,6 +107,10 @@ character pair). Word patterns so they read correctly for any title
 `screenshotsHeading` (gallery heading), `galleryLabel` (accessible name of the gallery), `openImageLabel` (accessible name of
 the button that opens an image; a caption is appended) and `imageAlt` (alt text for an image without a caption; must contain `{title}`, the project title). Software says "screenshot", Healthcare says "image".
 
+> **Upgrading a custom template:** `heroSuggestions` is now required. A manifest without it fails validation, is skipped with a logged
+> error, and the site falls back to the default template for any profile that named it. Add the block (and ideally `theme.accents`
+> and a `preview.png`) before upgrading.
+
 `heroSuggestions` is required. `title` (at most 120 characters) and `summary` (at most 400) are plain text offered in the
 wizard's Basics step, which pre-fills them; the owner edits them and **whatever stays is published as written**, so write
 a summary that reads correctly for anyone in the profession, never an instruction ("Add your specialty") and never a

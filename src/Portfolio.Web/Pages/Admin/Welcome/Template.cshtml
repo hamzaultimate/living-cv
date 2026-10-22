@@ -45,7 +45,7 @@
                             {
                                 <p class="adm-included"><strong>A piece of work is called:</strong> @card.ItemLabel</p>
                             }
-                            <p class="adm-included"><strong>Sample content:</strong> @(card.HasSample ? "available in the last step (fictional, clearly marked)" : "not available")</p>
+                            <p class="adm-included"><strong>Sample content:</strong> @(card.HasSample ? "available in the last step (fictional example entries)" : "not available")</p>
                             @if (!string.IsNullOrWhiteSpace(t.Guidance))
                             {
                                 <p class="adm-callout"><strong>Before you publish.</strong> @t.Guidance</p>

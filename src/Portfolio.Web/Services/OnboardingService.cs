@@ -154,7 +154,6 @@ public class OnboardingService
         draft.AccentKey = accent;
         draft.Content = form.Content;
         draft.SiteUrl = ProfileForm.Line(form.SiteUrl);
-        draft.Step = Math.Max(draft.Step, 2);
         await SaveDraftAsync(state, draft, ct);
         return true;
     }
@@ -217,6 +216,7 @@ public class OnboardingService
                 Apply(profile, draft, template, firstRun, promoted);
                 profile.OnboardingDraft = null;
                 profile.OnboardingCompletedAt = _time.GetUtcNow();
+                profile.OnboardingOutcome = "published";
                 SiteProfileMapper.FitToColumns(profile);
                 await _db.SaveChangesAsync(ct);
 
@@ -280,6 +280,7 @@ public class OnboardingService
                 if (firstRun)
                 {
                     profile.OnboardingCompletedAt = _time.GetUtcNow();
+                    profile.OnboardingOutcome = "skipped";
                     await _db.SaveChangesAsync(ct);
                     await PortfolioSeeder.SeedAsync(_db, _seedDir, SeedMode.IfEmpty, _logger, ct);
                     skipped = profile;
@@ -323,8 +324,9 @@ public class OnboardingService
         p.TemplateKey = template.Key;
         if (!string.IsNullOrWhiteSpace(d.OwnerName))
         {
+            // The short name (header wordmark) is the owner's own wording on a re-run; it follows the name only when the name changes.
+            if (firstRun || p.OwnerName != d.OwnerName) p.BrandName = ShortName(d.OwnerName);
             p.OwnerName = d.OwnerName;
-            p.BrandName = ShortName(d.OwnerName);
         }
         if (!string.IsNullOrWhiteSpace(d.JobTitle))
         {

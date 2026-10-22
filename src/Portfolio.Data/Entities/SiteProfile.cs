@@ -21,6 +21,7 @@ public class SiteProfile
         public const int ThemeKey = 60;
         public const int AccentColor = 40;
         public const int Location = 120;
+        public const int OnboardingOutcome = 20;
     }
 
     public const int SingletonId = 1;
@@ -68,6 +69,10 @@ public class SiteProfile
     /// Also the concurrency token for publishing, so two overlapping publishes cannot both apply.
     /// </summary>
     public DateTimeOffset? OnboardingCompletedAt { get; set; }
+
+    /// <summary>How the wizard was finished: "published" or "skipped". Null on a site that never went through it, including every site that existed
+    /// before the wizard (the migration leaves it empty). Start-up never seeds demo content into a site where this is set: the owner's blank stays blank.</summary>
+    public string? OnboardingOutcome { get; set; }
 
     /// <summary>The wizard's unpublished answers as JSON (see the web project's OnboardingDraft). Never read by the public site.</summary>
     public string? OnboardingDraft { get; set; }

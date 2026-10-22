@@ -91,9 +91,17 @@ that already has content is left exactly as it is, and the review step says whic
 is the built-in demo persona (the seed files); for Healthcare it is the template's fictional `starter.json`. Sample
 rows come without the sample persona's profile text: your name, title and summary are always your own.
 
+**Restarts.** Once the wizard has been published or skipped, the app never again seeds demo content at start-up, so a
+blank site stays blank (only the choices above load demo content). Sites that existed before the wizard, installs with
+no `Setup:Key` and no owner, and `Seed:Mode=Authoritative` seed exactly as before.
+
+The site address on the review step is prefilled from the address the request arrived at. Behind a reverse proxy that
+can be an internal host name: check it before publishing (or configure forwarded headers as described above).
+
 Run the wizard again any time from the dashboard (**Setup wizard**). A re-run starts from what the site says now,
 changes only the template, your basics, address, accent colour and photo, and never touches your hero, About text,
-metrics or content rows. A site that existed before the wizard was added counts as already set up and is not sent
+metrics or content rows. If you change your name on a re-run the short name (header wordmark) follows it, but the home
+page headline built on the first run does not: edit it in `/admin/profile`. An unchanged name leaves an edited short name alone. A site that existed before the wizard was added counts as already set up and is not sent
 into it; an unfinished wizard only shows a prompt on the dashboard and never blocks any other admin page.
 
 Sign-in locks for 15 minutes after 5 consecutive failures (any user name counts, because there is

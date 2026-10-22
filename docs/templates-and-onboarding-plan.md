@@ -232,15 +232,19 @@ Implementation notes (decisions worth reviewing):
   skipped and the review step says which. The software sample rows are the existing fictional persona; they are not marked "sample" inline (the
   seed files are covered by the parity snapshots), the wizard labels them fictional.
 - **Start-up seeding is deferred on a claimable, unfinished install** (a `Setup:Key` is set or an owner exists, and the wizard is not finished):
-  otherwise the first start would already have loaded the demo persona and "blank" could not be honest. Everything else seeds as before. Skipping the
-  wizard on a first run loads the demo content into empty tables, which restores exactly what a new install showed before the wizard.
+  otherwise the first start would already have loaded the demo persona and "blank" could not be honest. It also **never runs again on a site the wizard
+  finished**: a second additive migration column, `OnboardingOutcome` ("published" or "skipped"), is set by publish and skip and left empty by the backfill, so
+  a restart cannot refill a blank site (review finding). Sites that existed before the wizard, unclaimable legacy installs and `Seed:Mode=Authoritative`
+  seed as before. Skipping the wizard on a first run loads the demo content into empty tables, which restores what a new install showed before the wizard.
+  The start-up step is `FirstRun.SeedAtStartupAsync`, tested by replaying it after blank, sample and skipped completions.
 - **First-run publish replaces the placeholder persona** from the `Site` config (hero, metrics, About, links, phone, light photo) with a plain hero built
   from the owner's answers (title as eyebrow, name as headline, summary as lede) and the summary as the first About paragraph. A re-run changes only
   template, name, short name, title (and the role line when the title changed), email, location, summary, address, accent and photo.
 - **Photo.** Uploads use `ImageProcessor` and `UploadStore`. A draft photo lives in a hidden draft area (no public URL) and is served to the owner only;
   publish copies it to a public file, then deletes the draft and the replaced upload; stale drafts are purged on later uploads. `/uploads` now serves
   flat files only (`UploadFileProvider`), because the physical provider's dot-prefix exclusion does not hide a file inside a dotted folder. Both theme
-  photo fields are set, since the pages hide the dark photo in the light theme when no light photo exists. There is no client-side crop: the admin policy
+  photo fields are set, since the pages hide the dark photo in the light theme when no light photo exists; `ProfileEditor.SetPhotoAsync` keeps a light photo that
+  equals the replaced one in step (replace or remove on the Photo page), and leaves a separately chosen light photo alone. There is no client-side crop: the admin policy
   allows no script, so the step is a server-rendered preview and the site shows a centred circle.
 - **Draft preview** reuses `?preview=<key>` with `&draft=1`: same owner-session check, noindex, no-store, no analytics, no canonical. A wrapper around the
   profile provider returns the draft identity only when the middleware set it for that request after the session check; sitemap, CV and share image never
@@ -252,8 +256,12 @@ Implementation notes (decisions worth reviewing):
   described in the schema and the authoring guide. Suggested text is published as written if the owner keeps it, so it is written to stand alone.
 - **Contact page.** Location is shown there and in Person markup only when set, and the "Online" card is hidden when there are no links (software output
   is unchanged because the demo persona has links).
+- **Re-run** keeps an edited short name and role line unless the name or title changes; a renamed owner gets a new short name but the first-run hero headline stays
+  until edited in `/admin/profile`. The review step's site address is prefilled from the request address, which behind a proxy may be an internal host (documented).
+- **Upgrade note.** `heroSuggestions` is a required manifest field: a custom manifest without it is skipped and the site falls back to the default template.
 - **Not done / limits.** No crop. No per-step "back" without a full page load. Sample rows are not previewed before publish. Two simultaneous publishes are
-  covered by the concurrency token and a unit-level test, not by a parallel HTTP test.
+  covered by the concurrency token and a unit-level test, not by a parallel HTTP test; the `Conflict` outcome path of `PublishAsync` itself is not exercised
+  by a test.
 
 ### Phase 4: Content management UI (replaces seed editing)
 Split so users are never left with content they cannot edit:
