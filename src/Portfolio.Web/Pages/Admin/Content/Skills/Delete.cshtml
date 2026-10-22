@@ -1,0 +1,6 @@
+@page "/admin/content/skills/delete/{id:int}"
+@model Portfolio.Web.Pages.Admin.Content.Skills.DeleteModel
+@{
+    ViewData["Title"] = "Remove " + Model.View.ItemLabelLower;
+}
+<partial name="_Delete" model="Model" />

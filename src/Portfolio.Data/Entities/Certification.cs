@@ -1,7 +1,7 @@
 namespace Portfolio.Data.Entities;
 
 /// <summary>A certification — earned, in-progress, or planned — with optional proof.</summary>
-public class Certification
+public class Certification : IOrderedContent
 {
     public int Id { get; set; }
     public required string Name { get; set; }
@@ -18,4 +18,7 @@ public class Certification
     public string? CertificateUrl { get; set; }
     public List<Proof> Proofs { get; set; } = new();
     public int SortOrder { get; set; }
+
+    /// <summary>Changes on every admin write; the concurrency token (see <see cref="IOrderedContent"/>).</summary>
+    public string? ConcurrencyStamp { get; set; }
 }

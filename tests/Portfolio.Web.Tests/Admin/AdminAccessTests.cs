@@ -72,7 +72,12 @@ public class AdminAccessTests : IClassFixture<AdminApp>
         var routes = AdminEndpoints().Select(e => e.RoutePattern.RawText!.ToLowerInvariant()).Distinct().OrderBy(x => x).ToList();
 
         Assert.Equal(
-            ["admin", "admin/login", "admin/logout", "admin/photo", "admin/profile", "admin/template",
+            ["admin", "admin/content",
+             "admin/content/certifications", "admin/content/certifications/delete/{id:int}", "admin/content/certifications/edit/{id:int?}",
+             "admin/content/experience", "admin/content/experience/delete/{id:int}", "admin/content/experience/edit/{id:int?}",
+             "admin/content/projects", "admin/content/projects/delete/{id:int}", "admin/content/projects/edit/{id:int?}", "admin/content/projects/images/{id:int}",
+             "admin/content/skills", "admin/content/skills/delete/{id:int}", "admin/content/skills/edit/{id:int?}",
+             "admin/login", "admin/logout", "admin/photo", "admin/profile", "admin/template",
              "admin/welcome", "admin/welcome/basics", "admin/welcome/draft-photo", "admin/welcome/photo", "admin/welcome/review", "admin/welcome/thumb/{key}"],
             routes);
     }

@@ -54,6 +54,21 @@ public class ProfileEditor
         await CommitAsync(profile, ct);
     }
 
+    /// <summary>Makes a change to the content rows (experience, skills, projects, certifications) show up everywhere at once: the provider's version
+    /// moves on, which the "Generated" cache varies on, and the cache is evicted, so /sitemap.xml, /cv.pdf and /og.png follow without a restart.
+    /// Call it after the rows are committed.</summary>
+    public async Task AfterContentCommitAsync()
+    {
+        var saved = await _db.SiteProfiles.AsNoTracking().FirstOrDefaultAsync(p => p.Id == SiteProfile.SingletonId, CancellationToken.None);
+        if (saved is not null) await AfterCommitAsync(saved);
+        else
+        {
+            // No profile row yet: nothing to prime, but cached output must still go.
+            _provider.Invalidate();
+            await _outputCache.EvictByTagAsync(OutputCacheTags.Generated, CancellationToken.None);
+        }
+    }
+
     private async Task<SiteProfile> LoadOrCreateAsync(CancellationToken ct)
     {
         var profile = await _db.SiteProfiles.FirstOrDefaultAsync(p => p.Id == SiteProfile.SingletonId, ct);

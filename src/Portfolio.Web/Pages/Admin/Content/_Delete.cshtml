@@ -1,0 +1,28 @@
+@model IContentDelete
+@using Portfolio.Web.Pages.Admin.Content
+@{
+    var v = Model.View;
+    var pageName = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+}
+<h1 id="delete-heading" tabindex="-1" autofocus>Remove this @v.ItemLabelLower?</h1>
+<section class="adm-card" aria-labelledby="delete-heading">
+    <p>You are about to remove <strong>@Model.Info.Title</strong> from @v.SectionLabel.ToLowerInvariant(). This cannot be undone.</p>
+    @if (Model.Info.Lines.Count > 0)
+    {
+        <p>Details:</p>
+        <ul>
+            @foreach (var line in Model.Info.Lines)
+            {
+                <li>@line</li>
+            }
+        </ul>
+    }
+    <p class="adm-hint">Nothing else changes. Other sections and the rest of your site stay as they are.</p>
+    <form method="post" asp-page="@pageName" asp-route-id="@Model.Id">
+        <input type="hidden" name="Stamp" value="@Model.Stamp" />
+        <div class="adm-actions">
+            <button type="submit" class="adm-btn adm-btn-danger">Remove @v.ItemLabelLower</button>
+            <a class="adm-btn" href="@Model.ListUrl">Keep it</a>
+        </div>
+    </form>
+</section>

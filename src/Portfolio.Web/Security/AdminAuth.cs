@@ -20,6 +20,7 @@ public static class AdminAuth
     public const string TemplatePath = "/admin/template";
     public const string WelcomePath = "/admin/welcome";
     public const string WelcomeReviewPath = "/admin/welcome/review";
+    public const string ContentPath = "/admin/content";
 
     public static IServiceCollection AddOwnerAuth(this IServiceCollection services, IWebHostEnvironment env)
     {
@@ -145,12 +146,13 @@ public static class AdminAuth
                     ctx.Response.Headers.CacheControl = "no-store, no-cache, max-age=0";
                     ctx.Response.Headers.Pragma = "no-cache";
                     ctx.Response.Headers["X-Robots-Tag"] = "noindex, nofollow, noarchive";
-                    // These pages load only their own stylesheet and photos and run no script of their own.
+                    // These pages load only their own stylesheet and photos and run no script of their own, except the content edit forms,
+                    // which may load one first-party file (the unsaved changes warning) and nothing inline.
                     // The template page and the wizard's review step also frame the public site (same origin) to preview a template or the draft.
                     var frames = ctx.Request.Path.StartsWithSegments(TemplatePath, StringComparison.OrdinalIgnoreCase)
                                  || ctx.Request.Path.StartsWithSegments(WelcomeReviewPath, StringComparison.OrdinalIgnoreCase) ? " frame-src 'self';" : "";
                     ctx.Response.Headers.ContentSecurityPolicy =
-                        $"default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self';{frames} frame-ancestors 'none'; base-uri 'none'";
+                        $"default-src 'none'; style-src 'self';{(AllowsScript(ctx.Request.Path) ? " script-src 'self';" : "")} img-src 'self'; form-action 'self';{frames} frame-ancestors 'none'; base-uri 'none'";
                     return Task.CompletedTask;
                 });
             }
@@ -174,6 +176,11 @@ public static class AdminAuth
             }
             await next();
         });
+
+    /// <summary>Only the pages whose path is <c>/admin/content/{section}/edit[/{id}]</c> or <c>/admin/content/projects/images/{id}</c> load a script: a first-party file that warns about unsaved changes.</summary>
+    internal static bool AllowsScript(PathString path) =>
+        path.StartsWithSegments(ContentPath, StringComparison.OrdinalIgnoreCase)
+        && path.Value!.Split('/', StringSplitOptions.RemoveEmptyEntries).Skip(3).FirstOrDefault() is { } page && (page.Equals("edit", StringComparison.OrdinalIgnoreCase) || page.Equals("images", StringComparison.OrdinalIgnoreCase));
 
     private static bool IsPrivateArea(PathString path) =>
         path.StartsWithSegments(AdminPath, StringComparison.OrdinalIgnoreCase)

@@ -1,0 +1,45 @@
+@page "/admin/content/experience/edit/{id:int?}"
+@model Portfolio.Web.Pages.Admin.Content.Experiences.EditModel
+@{
+    ViewData["Title"] = (Model.IsNew ? "Add " : "Edit ") + Model.View.ItemLabelLower;
+    var f = Model.Form;
+}
+<h1 id="page-heading">@(Model.IsNew ? "Add" : "Edit") @Model.View.ItemLabelLower</h1>
+<p class="adm-lede">Appears on your @Model.View.SectionLabel.ToLowerInvariant() page. Changes apply as soon as you save.</p>
+<partial name="_Guidance" model="Model.View" />
+
+<form method="post" asp-page="/Admin/Content/Experiences/Edit" asp-route-id="@Model.Id" novalidate data-unsaved-warning data-has-errors="@(ViewData.ModelState.IsValid ? "false" : "true")">
+    <partial name="_ErrorSummary" />
+    <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
+
+    <fieldset class="adm-fieldset">
+        <legend>@Model.View.ItemLabel</legend>
+        <partial name="_Field" model="@(Model.Field("company", nameof(f.Company), f.Company, autocomplete: "organization"))" />
+        <partial name="_Field" model="@(Model.Field("title", nameof(f.Title), f.Title, autocomplete: "organization-title"))" />
+        <partial name="_Field" model="@(Model.Field("summary", nameof(f.Summary), f.Summary, FieldKind.Textarea, EditModel.SummaryMax, rows: 5))" />
+    </fieldset>
+
+    <fieldset class="adm-fieldset">
+        <legend>Dates</legend>
+        <partial name="_Field" model="@(Model.Field("start", nameof(f.Start), f.Start, maxLength: 30))" />
+        <partial name="_Field" model="@(Model.Field("end", nameof(f.End), f.End, maxLength: 30))" />
+        <partial name="_Field" model="@(Model.Field("current", nameof(f.Current), null, FieldKind.Checkbox, isChecked: f.Current))" />
+    </fieldset>
+
+    @if (Model.View.Visible("highlights") || Model.View.Visible("tech"))
+    {
+        <fieldset class="adm-fieldset">
+            <legend>Details</legend>
+            <partial name="_Field" model="@(Model.Field("highlights", nameof(f.HighlightsText), f.HighlightsText, FieldKind.Textarea, 4000, rows: 5))" />
+            <partial name="_Field" model="@(Model.Field("tech", nameof(f.TechText), f.TechText, FieldKind.Textarea, 1500, rows: 4))" />
+        </fieldset>
+    }
+
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @Model.View.ItemLabelLower</button>
+        <a class="adm-btn" href="@Model.ListUrl">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+    <script src="~/js/admin-unsaved.js" defer asp-append-version="true"></script>
+}

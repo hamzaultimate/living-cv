@@ -28,6 +28,7 @@ builder.Services.AddScoped<RequestTemplate>();
 builder.Services.AddSingleton<TemplateResolver>();
 builder.Services.AddOwnerAuth(builder.Environment);
 builder.Services.AddScoped<ProfileEditor>();
+builder.Services.AddScoped<ContentEditor>();
 builder.Services.AddScoped<StarterContent>(sp => new StarterContent(sp.GetRequiredService<ITemplateCatalog>(), sp.GetRequiredService<ILogger<StarterContent>>()));
 builder.Services.AddScoped<OnboardingService>();
 builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection("Uploads"));

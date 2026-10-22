@@ -52,6 +52,13 @@ describe what you changed and why.
   Sample content is seed-if-empty per table and must never update or delete a row. Unpublished photos live in the draft area of
   `UploadStore` (no public URL; `/uploads` serves flat files only). Wizard suggestions, accents and thumbnails come from the template
   manifest, never from Razor.
+- The content editors (`Pages/Admin/Content`) follow one pattern: a page model derived from `ContentListModel`, `ContentDeleteModel` or
+  `ContentPageModel`, a form class whose fields are read only when the template shows them (`EditorView.Visible`), validation through
+  `FormCheck`, writes through `ContentEditor` (it stamps the row, refuses a stale form and, after the commit, refreshes the profile version
+  and the "Generated" output cache), and a confirmation page for every removal. Labels, hints and the name of an entry come from the
+  manifest's `editor` block (`EditorFields` holds the neutral defaults); never decide wording or visibility by template key. A new editable
+  entity needs a `ConcurrencyStamp` (`IOrderedContent`) and an additive migration. Admin pages run no inline script: the one exception is the
+  first-party `wwwroot/js/admin-unsaved.js` on the edit forms (the admin CSP allows `script-src 'self'` there only, see `AdminAuth.AllowsScript`).
 - Never trust an upload: go through `ImageProcessor` and `UploadStore`, which sniff the bytes, re-encode,
   and generate the file name. The owner account is created only by `/setup` and reset only by
   `dotnet run --project src/Portfolio.Web -- reset-owner`; do not add other account paths.

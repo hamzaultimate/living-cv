@@ -1,0 +1,6 @@
+@page "/admin/content/experience/delete/{id:int}"
+@model Portfolio.Web.Pages.Admin.Content.Experiences.DeleteModel
+@{
+    ViewData["Title"] = "Remove " + Model.View.ItemLabelLower;
+}
+<partial name="_Delete" model="Model" />

@@ -29,7 +29,7 @@
                             }
                             else
                             {
-                                <img src="@p.HeroImage" alt="@tpl.Copy.Projects.AltFor(p.Title)" loading="lazy"
+                                <img src="@p.HeroImage" alt="@(string.IsNullOrWhiteSpace(p.HeroImageAlt) ? tpl.Copy.Projects.AltFor(p.Title) : p.HeroImageAlt)" loading="lazy"
                                      class="aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
                             }
                         </a>

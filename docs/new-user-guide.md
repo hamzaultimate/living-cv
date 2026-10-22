@@ -138,6 +138,65 @@ applies to all visitors together.
 > proxy that appends to or overwrites `X-Forwarded-For`. A proxy that passes the header through lets an
 > attacker send a different value on every request and get a fresh per-address allowance each time.
 
+### Managing your content
+
+Once the wizard has run (or you skipped it), everything the site shows besides your profile is edited in the
+browser under **Content** (`/admin/content`). There are four editors, named in your template's words (Software & IT says
+experience, skills, work and certifications; Healthcare says clinical experience, clinical skills, research & initiatives
+and licences & registrations):
+
+| Editor | Address | What an entry has |
+|---|---|---|
+| Experience | `/admin/content/experience` | employer, role, dates (or "current role"), summary, highlights, tools |
+| Skills | `/admin/content/skills` | a name in a group (groups follow the template's order on the site and the CV) |
+| Work (projects) | `/admin/content/projects` | title, web address name, summary, write-up, impact lines, links, a cover image and gallery images |
+| Certifications | `/admin/content/certifications` | name, issuer, status, date, links to the credential, certificate and badge |
+
+Each editor lists its entries in the order the public page shows them. You can **add**, **edit**, **remove** and
+**reorder** them, and a blank site can be built from here alone:
+
+- **Reordering** uses **Move up** and **Move down** buttons beside each entry, so it works with a keyboard and a screen
+  reader. The order is saved as soon as you press one. New entries go to the end of the list (Skills: the end of their
+  group), so move a new role to the top if you list newest first. There is no drag and drop.
+- **Removing** always goes through a confirmation page that says what goes with the entry: the page address of a project
+  stops working (it answers "not found"), and the images you uploaded for it are deleted from storage. Removing an entry
+  never touches any other entry or section.
+- **Work addresses.** A project's web address name is built from its title (`ward-handover-redesign`), made unique with a
+  number if needed, and does not change when you retitle the project. Change it yourself only if you must: links to the
+  old address stop working. Reserved words (`new`, `edit`, `admin`, ...) and anything that is not lower-case letters,
+  digits and single hyphens are refused.
+- **Images.** The cover image is uploaded on the project form; gallery images are added one at a time on the project's
+  **Images** page. Both need a description (alt text) for people who cannot see the image. They go through the same
+  checks as the profile photo (JPEG, PNG or WebP, re-encoded, metadata removed, up to `Uploads:MaxBytes`, stored under
+  random names in `Uploads:Path`). Replacing or removing an image deletes the old file, unless another entry still uses it;
+  images that ship with the site (`/img/...`) are never deleted.
+- **Dates** are typed as you would write them on a CV: `2021`, `Mar 2021` or `2021-03`. An end cannot be earlier than the
+  start, and an entry marked earned/current cannot be dated in the future.
+- **Links** must be full `http://` or `https://` addresses. Everything is plain text; anything that looks like markup
+  (`<b>`, `<script>`) is refused. A few older entries that ship with the site point at files of the site itself
+  (`/img/...`); they keep working and can be saved unchanged, but you cannot type a new site-relative link.
+- **Template wording and fields.** Labels, hints and the name of one entry ("Initiative", "Licence or registration") come
+  from the template. A template may leave out an optional field (Healthcare has no badge image link); a field that is left
+  out of the form keeps whatever value is stored, so switching templates never loses data. Sensitive templates show their
+  guidance on every editor (Healthcare: never publish patient-identifiable information).
+- **Two tabs.** Every entry carries a version. If you open an entry in two tabs and save in both, the second save is refused
+  with a message that says nothing was saved and your typing is still on the page; reload to see the latest version.
+- **Unsaved changes.** The edit forms warn before you leave with unsaved changes. That uses one small script file served by
+  the site; the admin pages run no inline script, and the form works without it.
+
+Every save makes the public pages, `sitemap.xml`, the CV (HTML and PDF) and the share image follow at once; there is nothing
+to restart or clear.
+
+**Deleting everything.** Emptying a section really empties it. Once the wizard has been published or skipped the app never
+seeds demo content at start-up again, so a restart does not refill a table you emptied. The exception is a site that
+existed before the wizard: it keeps the older behaviour, so an emptied section is filled again from the seed files at the next
+start, while a section that still has at least one entry is never touched. Pinning those sites too is an open decision in
+the [plan](templates-and-onboarding-plan.md).
+
+**Backups.** Your content is in the database and your uploaded images are in `Uploads:Path`; back up both (a database
+backup alone restores the entries but not the images they point at). A one-file export and import of all content is planned
+as the next step of this work.
+
 ### Forgot the password
 
 There is no email reset. Whoever can run commands on the server resets it from the app folder:
@@ -161,7 +220,7 @@ with a message that the database is not configured.
 
 ### Uploaded photos and where they live
 
-Photos are uploaded at `/admin/photo`: JPEG, PNG or WebP up to 5 MB (`Uploads:MaxBytes`). Each file
+Photos are uploaded at `/admin/photo`, and project cover and gallery images in the Work editor: JPEG, PNG or WebP up to 5 MB (`Uploads:MaxBytes`). Each file
 is decoded and re-encoded (so location and camera details are removed, rotation is applied, and
 anything hidden inside the file is discarded), scaled to at most 1600 px on the long edge, saved under
 a random name and served from `/uploads/<name>`. SVG, GIF and anything that is not a real raster
@@ -231,6 +290,10 @@ address is `/?preview=<template key>` and is marked noindex.
 
 ### Content and pages
 
+Add, edit and reorder experience, skills, work and certifications in the browser at `/admin/content` (see "Managing your
+content" above). Blog posts, talks and testimonials are not editable in the browser yet; they come from the seed files below
+until their editors arrive.
+
 The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed). Each table is seeded only when it is empty, so editing a seed file does not change a database that already has rows. To apply edited seed files to an existing database, set `Seed:Mode` to `Authoritative` (for example `Seed__Mode=Authoritative` as an environment variable): then rows are added, updated, and removed to match the files on every start. Update those JSON files to change:
 
 - projects
@@ -239,6 +302,7 @@ The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed
 - certifications
 - blog posts
 - talks
+- testimonials
 
 ### Images
 

@@ -1,0 +1,27 @@
+@page "/admin/content"
+@model Portfolio.Web.Pages.Admin.Content.IndexModel
+@{
+    ViewData["Title"] = "Content";
+}
+<h1>Content</h1>
+<p class="adm-lede">Everything your site shows besides your profile: add, edit, reorder and remove it here. Changes appear on your public pages, the sitemap and the CV straight away.</p>
+@if (Model.Guidance is not null)
+{
+    <aside class="adm-card adm-callout" aria-labelledby="guidance-heading">
+        <h2 id="guidance-heading">Before you publish</h2>
+        <p>@Model.Guidance</p>
+    </aside>
+}
+<div class="adm-grid">
+    @foreach (var card in Model.Cards)
+    {
+        <section class="adm-card" aria-labelledby="card-@card.Section">
+            <h2 id="card-@card.Section"><a href="/admin/content/@card.Section">@card.Label</a></h2>
+            <p>@card.Count @(card.Count == 1 ? "entry" : "entries")@(card.Enabled ? "" : ". Not shown by your current template")</p>
+            <div class="adm-actions">
+                <a class="adm-btn" href="/admin/content/@card.Section">Manage</a>
+                <a class="adm-btn adm-btn-primary" href="/admin/content/@card.Section/edit" aria-label="Add: @card.ItemLabel">Add @card.ItemLabel.ToLowerInvariant()</a>
+            </div>
+        </section>
+    }
+</div>

@@ -64,7 +64,7 @@ public abstract class WelcomePageModel : AdminPageModel
         var first = (await Onboarding.GetStateAsync(ct)).FirstRun;
         await Onboarding.SkipAsync(ct);
         Flash(first
-            ? "Setup skipped. The site keeps its placeholder profile and demo content; run the wizard again from the dashboard whenever you like."
+            ? "Setup skipped. The site keeps its placeholder profile and demo content; run the wizard again from the dashboard whenever you like. You can add your own content under Content at any time."
             : "Nothing was published. Your draft was discarded and the site is unchanged.");
         return Redirect("/admin");
     }

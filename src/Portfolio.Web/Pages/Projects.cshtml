@@ -71,7 +71,7 @@
                                 }
                                 else
                                 {
-                                    <img src="@cover.Url" alt="@copy.AltFor(p.Title)" loading="lazy"
+                                    <img src="@cover.Url" alt="@(!string.IsNullOrWhiteSpace(p.HeroImage) && !string.IsNullOrWhiteSpace(p.HeroImageAlt) ? p.HeroImageAlt : copy.AltFor(p.Title))" loading="lazy"
                                          class="aspect-video w-full object-cover transition duration-300 group-hover/media:scale-[1.03]" />
                                 }
                                 <span class="pointer-events-none absolute inset-0 flex items-center justify-center bg-bg/30 opacity-0 transition group-hover/media:opacity-100">

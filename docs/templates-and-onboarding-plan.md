@@ -270,13 +270,64 @@ Implementation notes (decisions worth reviewing):
 ### Phase 4: Content management UI (replaces seed editing)
 Split so users are never left with content they cannot edit:
 - **4a (release gate for the wizard):** Experience, Skills, Projects/Work, Certifications.
-  List with drag reorder, create/edit/delete, slug generation, image upload for hero and
-  screenshots, validation, unsaved-change warning.
+  List with reorder, create/edit/delete, slug generation, image upload for hero and
+  screenshots, validation, unsaved-change warning. **Status: done** (pending independent review); notes below.
 - **4b:** Blog (Markdown editor with preview, drafts), Talks, Testimonials, hero/metrics/about
   editing, section on/off and ordering.
 - **4c:** JSON export/import of all content. This replaces hand-editing seed files and gives
   backup and portability.
 Wizard and 4a ship together; 4b and 4c follow.
+
+Implementation notes for 4a (decisions worth reviewing):
+- **Routes.** `/admin/content` (hub with counts), and per section `/admin/content/{experience|skills|projects|certifications}` (list, with the Move
+  up / Move down POST handler), `/edit/{id?}` (create and edit), `/delete/{id}` (GET shows the confirmation, POST removes), plus
+  `/admin/content/projects/images/{id}` for gallery images. All sit in the deny-by-default admin folder, every POST is antiforgery-protected and
+  has a body limit, a GET never changes state; `AdminAccessTests` lists every route and `ContentSecurityTests` replays anonymous, no-token,
+  stale-session and GET-with-handler requests against all of them and compares the whole content tables before and after.
+- **Concurrency.** Each of the four tables gets a nullable `ConcurrencyStamp` (32 character GUID set by the app on every admin write, an EF
+  concurrency token), not a SQL Server `rowversion`: like `SiteProfile.OnboardingCompletedAt` it works the same on SQL Server and on the SQLite the
+  tests use, and existing rows simply have no stamp until their first edit. A stale form, a stale confirmation, a stale gallery page and a reorder that
+  loses a race are all refused with a message that says nothing was saved; the owner's typing stays on the page. `Project.HeroImageAlt` is the other
+  additive column (nullable); public pages use it only when set, so Software output is unchanged (the parity snapshots pass untouched).
+- **Template-driven editors.** A new optional `editor` block in the manifest (schema, validator, schema-drift test, both shipped manifests, authoring
+  guide) gives each section an `itemLabel` and per-field `label`, `hint` and `hidden`. `EditorFields` holds neutral fallback wording (a deliberate exception
+  to "copy has no defaults": these are structural field names, and every profession word still comes from the manifest or `copy`; projects reuse the
+  `copy.projects` headings and certification statuses reuse `copy.certifications`). Fields an entry cannot exist without can be relabelled, never hidden
+  (validated). A hidden `screenshots` setting removes the Images link and makes the Images page and its posts refuse. A template that hides `current` can still end a role: saving an end date clears a stored current flag, otherwise the flag is kept. A hidden field is not drawn, not validated and not read from the post, and its stored value is untouched by every save (tested with a
+  template carrying unique wording, in all four sections). Sensitive templates show `guidance` on the hub and every editor. A section the template does
+  not use stays editable, with a note that the public site does not show it.
+- **Ordering.** The existing `SortOrder` columns, no new column. Move up / Move down are POST buttons (named after their row, disabled at the ends,
+  keyboard operable); a move renumbers the scope consecutively and writes only rows whose position changed, without restamping them (a form open for another row stays valid, while the update still checks the stamp it loaded, so a move over a concurrent edit of the same rows is refused; the trade-off is that two overlapping moves, or a move racing a skill group change, can leave a duplicate `SortOrder`: the display breaks ties by `Id` and the next move renumbers), so rows that shared a position are
+  separated. Skills order within their group, like the public page and the CV. New entries are appended (Skills: end of their group). **No drag and
+  drop**: it needs script, the admin CSP allows none, and the buttons are the mandatory fallback; left out on purpose.
+- **Unsaved-change warning** is `wwwroot/js/admin-unsaved.js`, loaded only by the edit forms. The admin CSP gains `script-src 'self'` on
+  `/admin/content/{section}/edit` only (`AdminAuth.AllowsScript`); tests assert every other admin page still has no `script-src`, no
+  `unsafe-inline`/`unsafe-eval`, and that no admin page carries an inline script or handler. The form works without the script. A form shown again after a refused save starts dirty, and the project Images page carries the warning too (same CSP scope, `AllowsScript`). Checked in Chromium for the skill edit form (prompt after an invalid re-render, none after a save or on an untouched form); the Images page script path is covered by markup tests only.
+- **Validation** is server side (`FormCheck`, `ContentRules`): required fields, lengths (column maxima, plus caps on unbounded columns), plain text
+  only (a tag, comment or declaration start is refused; a bare `<50ms` is allowed), control characters refused, address fields http/https only
+  (a site-relative value is accepted only when it is exactly the one already stored, because older seeded entries use `/img/...`), enums from
+  allow-lists, free-text dates (`2021`, `Mar 2021`, `2021-03`) parsed for order and for the future (earned certifications cannot be future-dated; the
+  clock is `TimeProvider`). Skill names, certification names and role (company, title) must be unique case-insensitively, because the authoritative
+  seeder keys on them, and a `|` is refused in a role's company or title because that key joins them with one (a value the row already has is kept as stored). Two simultaneous identical creates can still both pass the pre-check (no unique index on these names): a known gap. No field of these four sections is Markdown (the public pages print project text as plain text), so `Md` is not involved.
+- **Project addresses.** Generated from the title (accents folded, everything else a hyphen), numbered on collision, reserved words suffixed; typed
+  addresses must be lower-case letters, digits and single hyphens and not reserved or taken; an edit keeps the current address exactly as stored (an unchanged legacy address is never re-validated) unless the owner types a
+  different one (an emptied box keeps it too). A renamed or removed address answers the ordinary 404 (no redirect is kept). A unique-index violation
+  from a race is mapped to the same friendly message, but only the pre-check path is covered by tests.
+- **Images.** Cover image on the project form (replace / remove), gallery images one per request on the Images page (up to 12, description required,
+  reorder, remove); all through `ImageProcessor` and `UploadStore`, so names are generated and the uploads folder stays flat. An upload saved for a save
+  that fails is deleted again; a replaced, removed or deleted-with-its-project upload is deleted only if no other project or the profile photo still
+  points at it, and addresses that are not generated `/uploads/...` names (the bundled images) are never touched. Alt text is required for any image
+  the owner uploads (the cover's is `HeroImageAlt`, a gallery image's is its caption). Project and certification **proofs** are kept but not editable yet.
+- **Seeding.** Nothing in the editors seeds. Because wizard-finished sites never seed at start-up, emptying every table stays empty across restarts
+  (`ContentSeedingTests` replays `FirstRun.SeedAtStartupAsync` for blank, sample and skipped sites). A site that existed before the wizard keeps
+  the old behaviour: an emptied table is refilled from the seed files at the next start. That is documented in the user guide and left as an owner decision.
+- **Known gaps.** The CV PDF of a project that has impact lines cannot be rendered on a host without the fonts it names (the "▸" glyph; the same limit the
+  earlier tests note), so the end-to-end test builds a project without impact lines for the PDF check. The editors have not been run against a real SQL
+  Server (tests and the browser check use SQLite). Parallel requests from one client against the test host's single shared in-memory SQLite connection ended
+  with the session rejected (probably the session check failing closed on a busy connection; not investigated further), so the tests issue requests one at a time.
+- **For 4b / 4c.** 4b adds editors for blog posts, talks and testimonials, hero / metrics / About editing, and section on/off and ordering; the content
+  pages, `ContentEditor`, `FormCheck`, the `editor` manifest block and the stamp pattern are reusable for those. 4c (JSON export and import) should
+  export `ConcurrencyStamp`-free rows and decide how imported rows interact with the unique name and slug rules above.
 
 ### Phase 5: Remaining templates and archetypes
 Build one archetype per step, then the presets that use it:

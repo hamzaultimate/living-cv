@@ -1,0 +1,41 @@
+@page "/admin/content/certifications/edit/{id:int?}"
+@model Portfolio.Web.Pages.Admin.Content.Certifications.EditModel
+@{
+    ViewData["Title"] = (Model.IsNew ? "Add " : "Edit ") + Model.View.ItemLabelLower;
+    var f = Model.Form;
+}
+<h1>@(Model.IsNew ? "Add" : "Edit") @Model.View.ItemLabelLower</h1>
+<p class="adm-lede">Appears on your @Model.View.SectionLabel.ToLowerInvariant() page. Changes apply as soon as you save.</p>
+<partial name="_Guidance" model="Model.View" />
+
+<form method="post" asp-page="/Admin/Content/Certifications/Edit" asp-route-id="@Model.Id" novalidate data-unsaved-warning data-has-errors="@(ViewData.ModelState.IsValid ? "false" : "true")">
+    <partial name="_ErrorSummary" />
+    <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
+    <fieldset class="adm-fieldset">
+        <legend>@Model.View.ItemLabel</legend>
+        <partial name="_Field" model="@(Model.Field("name", nameof(f.Name), f.Name, maxLength: 200))" />
+        <partial name="_Field" model="@(Model.Field("issuer", nameof(f.Issuer), f.Issuer, maxLength: 160))" />
+        <partial name="_Field" model="@(Model.Field("category", nameof(f.Category), f.Category, maxLength: 80))" />
+    </fieldset>
+    <fieldset class="adm-fieldset">
+        <legend>Status and date</legend>
+        <partial name="_Field" model="@(Model.Field("status", nameof(f.Status), f.Status, FieldKind.Select, options: Model.StatusOptions))" />
+        <partial name="_Field" model="@(Model.Field("date", nameof(f.Date), f.Date, maxLength: 30))" />
+    </fieldset>
+    @if (Model.View.Visible("credentialUrl") || Model.View.Visible("certificateUrl") || Model.View.Visible("badgeImageUrl"))
+    {
+        <fieldset class="adm-fieldset">
+            <legend>Links</legend>
+            <partial name="_Field" model="@(Model.Field("credentialUrl", nameof(f.CredentialUrl), f.CredentialUrl, FieldKind.Url, 400))" />
+            <partial name="_Field" model="@(Model.Field("certificateUrl", nameof(f.CertificateUrl), f.CertificateUrl, FieldKind.Url, 400))" />
+            <partial name="_Field" model="@(Model.Field("badgeImageUrl", nameof(f.BadgeImageUrl), f.BadgeImageUrl, FieldKind.Url, 400))" />
+        </fieldset>
+    }
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @Model.View.ItemLabelLower</button>
+        <a class="adm-btn" href="@Model.ListUrl">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+    <script src="~/js/admin-unsaved.js" defer asp-append-version="true"></script>
+}

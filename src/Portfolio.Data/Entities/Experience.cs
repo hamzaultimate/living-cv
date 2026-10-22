@@ -1,7 +1,7 @@
 namespace Portfolio.Data.Entities;
 
 /// <summary>A role in the reverse-chronological work history.</summary>
-public class Experience
+public class Experience : IOrderedContent
 {
     public int Id { get; set; }
     public required string Company { get; set; }
@@ -13,4 +13,7 @@ public class Experience
     public List<string> Highlights { get; set; } = new();
     public List<string> Tech { get; set; } = new();
     public int SortOrder { get; set; }
+
+    /// <summary>Changes on every admin write; the concurrency token (see <see cref="IOrderedContent"/>).</summary>
+    public string? ConcurrencyStamp { get; set; }
 }

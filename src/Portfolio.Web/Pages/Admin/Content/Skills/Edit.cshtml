@@ -1,0 +1,36 @@
+@page "/admin/content/skills/edit/{id:int?}"
+@model Portfolio.Web.Pages.Admin.Content.Skills.EditModel
+@{
+    ViewData["Title"] = (Model.IsNew ? "Add " : "Edit ") + Model.View.ItemLabelLower;
+    var f = Model.Form;
+}
+<h1>@(Model.IsNew ? "Add" : "Edit") @Model.View.ItemLabelLower</h1>
+<p class="adm-lede">Appears on your @Model.View.SectionLabel.ToLowerInvariant() page and on the CV. Changes apply as soon as you save.</p>
+<partial name="_Guidance" model="Model.View" />
+
+<form method="post" asp-page="/Admin/Content/Skills/Edit" asp-route-id="@Model.Id" novalidate data-unsaved-warning data-has-errors="@(ViewData.ModelState.IsValid ? "false" : "true")">
+    <partial name="_ErrorSummary" />
+    <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
+    <fieldset class="adm-fieldset">
+        <legend>@Model.View.ItemLabel</legend>
+        <partial name="_Field" model="@(Model.Field("name", nameof(f.Name), f.Name, maxLength: 100))" />
+        <partial name="_Field" model="@(Model.Field("group", nameof(f.Group), f.Group, maxLength: 60, listId: "group-options"))" />
+        <datalist id="group-options">
+            @foreach (var g in Model.GroupOptions)
+            {
+                <option value="@g"></option>
+            }
+        </datalist>
+    </fieldset>
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @Model.View.ItemLabelLower</button>
+        @if (Model.IsNew)
+        {
+            <button type="submit" name="AddAnother" value="true" class="adm-btn">Save and add another</button>
+        }
+        <a class="adm-btn" href="@Model.ListUrl">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+    <script src="~/js/admin-unsaved.js" defer asp-append-version="true"></script>
+}

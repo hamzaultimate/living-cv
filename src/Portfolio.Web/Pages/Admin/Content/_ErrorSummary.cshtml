@@ -1,0 +1,16 @@
+@using Microsoft.AspNetCore.Mvc.ModelBinding
+@if (!ViewData.ModelState.IsValid)
+{
+    <div id="error-summary" class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus>
+        <strong>@(ViewData["Conflict"] is true ? "Nothing was saved." : "Some fields need attention.")</strong>
+        <ul>
+            @foreach (var entry in ViewData.ModelState.Where(e => e.Value?.Errors.Count > 0))
+            {
+                foreach (var error in entry.Value!.Errors)
+                {
+                    <li>@if (entry.Key.StartsWith("Form.", StringComparison.Ordinal)) { <a href="#@System.Text.RegularExpressions.Regex.Replace(entry.Key, @"[.\[\]]", "_")">@error.ErrorMessage</a> } else { @error.ErrorMessage }</li>
+                }
+            }
+        </ul>
+    </div>
+}

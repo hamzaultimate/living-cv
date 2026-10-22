@@ -39,6 +39,77 @@
     "aboutDescription": "About {name}, {title}: training, registrations and approach to patient care.",
     "credentialsJsonLd": true
   },
+  "editor": {
+    "experience": {
+      "itemLabel": "Position",
+      "fields": {
+        "company": {
+          "label": "Employer or placement"
+        },
+        "title": {
+          "label": "Role"
+        },
+        "summary": {
+          "hint": "Describe your responsibilities and outcomes in general terms. Never include patient information."
+        },
+        "highlights": {
+          "label": "Key responsibilities",
+          "hint": "One per line, up to 12. No patient details."
+        },
+        "tech": {
+          "label": "Systems and equipment"
+        }
+      }
+    },
+    "skills": {
+      "itemLabel": "Clinical skill",
+      "fields": {
+        "name": {
+          "label": "Skill or competency"
+        }
+      }
+    },
+    "projects": {
+      "fields": {
+        "problem": {
+          "label": "Background",
+          "hint": "Why the work was needed. Plain text. No patient information."
+        },
+        "approach": {
+          "label": "What was done",
+          "hint": "Plain text. No patient information."
+        },
+        "impact": {
+          "label": "Outcomes",
+          "hint": "One outcome per line, up to 8. Aggregate or anonymised only."
+        },
+        "tech": {
+          "label": "Methods and tools"
+        },
+        "category": {
+          "hint": "A type such as Quality improvement or Audit. Used by the filter on the listing page."
+        }
+      }
+    },
+    "certifications": {
+      "itemLabel": "Licence or registration",
+      "fields": {
+        "name": {
+          "label": "Registration or qualification"
+        },
+        "issuer": {
+          "label": "Issuing body"
+        },
+        "credentialUrl": {
+          "label": "Register entry link",
+          "hint": "Where someone can check the registration (http or https)."
+        },
+        "badgeImageUrl": {
+          "hidden": true
+        }
+      }
+    }
+  },
   "starter": { "file": "starter.json" },
   "copy": {
     "layout": { "footerNote": "Professional portfolio. It contains no patient information." },
