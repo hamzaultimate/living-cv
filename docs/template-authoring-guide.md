@@ -10,7 +10,7 @@ A template is two independent parts:
 
 | Part | What it is | Where it lives |
 |---|---|---|
-| Preset | Sections and their order, wording ("copy"), skill groups, SEO patterns, guidance, wizard suggestions, accent colours, optional starter content and thumbnail | `src/Portfolio.Web/Templates/<key>/template.json` (+ `starter.json`, `preview.png`) |
+| Preset | Sections and their order, wording ("copy"), skill groups, SEO patterns, guidance, wizard suggestions, accent colours, editor wording and field visibility, optional starter content and thumbnail | `src/Portfolio.Web/Templates/<key>/template.json` (+ `starter.json`, `preview.png`) |
 | Layout | One of a fixed set of archetypes plus a theme | Razor partials under `Pages/Shared/Layouts/<archetype>/` (shared blocks in `Pages/Shared/Blocks/`), theme in `Styles/themes/<key>.css` |
 
 Archetypes with a layout today: `showcase` (Software & IT) and `credentials` (Healthcare). `gallery` and `results`
@@ -86,6 +86,17 @@ load, the site renders the software template. See `Templates/healthcare/template
   },
   "copy": { "layout": {}, "home": {}, "projects": {}, "experience": {}, "skills": {},
             "certifications": {}, "blog": {}, "talks": {}, "contact": {}, "cv": {} },  // every string is required
+  "editor": {                        // optional: wording and field visibility in the admin content editors
+    "experience": {
+      "itemLabel": "Position",        // what one entry is called ("Add position")
+      "fields": {
+        "company": { "label": "Employer or placement" },
+        "summary": { "hint": "Describe your responsibilities. Never include patient information." },
+        "tech": { "label": "Systems and equipment" }
+      }
+    },
+    "certifications": { "itemLabel": "Licence or registration", "fields": { "badgeImageUrl": { "hidden": true } } }
+  },
   "starter": { "file": "starter.json" }   // optional fictional sample content: a file, or { "source": "seed" } for the built-in demo persona
 }
 ```
@@ -110,6 +121,27 @@ the button that opens an image; a caption is appended) and `imageAlt` (alt text 
 > **Upgrading a custom template:** `heroSuggestions` is now required. A manifest without it fails validation, is skipped with a logged
 > error, and the site falls back to the default template for any profile that named it. Add the block (and ideally `theme.accents`
 > and a `preview.png`) before upgrading.
+
+`editor` is optional and shapes the admin content editors (`/admin/content`: experience, skills, projects, certifications). Anything it
+leaves out uses the neutral wording in `EditorFields`, so a template only needs to say what differs. For each of the four sections:
+
+| Setting | Effect |
+|---|---|
+| `itemLabel` | What one entry is called in buttons and headings ("Add position"). `projects` uses the section's own `itemLabel` from `sections` when this is empty. Plain text, at most 40 characters. |
+| `fields.<key>.label` | The field's label (at most 60 characters, plain text). |
+| `fields.<key>.hint` | The short help under the field (at most 200 characters, plain text). |
+| `fields.<key>.hidden` | `true` leaves the field off the form. The value already stored in it is kept untouched by every save, and a crafted post cannot write to it. |
+
+Field keys are a closed list (a typo or unknown key fails validation): `experience`: `company`, `title`, `start`, `end`, `current`,
+`summary`, `highlights`, `tech`; `skills`: `name`, `group`; `projects`: `title`, `slug`, `role`, `org`, `period`, `summary`, `category`, `problem`,
+`approach`, `impact`, `tech`, `links`, `featured`, `heroImage`, `screenshots`; `certifications`: `name`, `issuer`, `status`, `date`, `category`,
+`credentialUrl`, `certificateUrl`, `badgeImageUrl`. Fields an entry cannot exist without (`company`, `title`, `start`, `summary`; `name`, `group`;
+`title`, `slug`, `summary`; `name`, `issuer`, `status`) can be relabelled but not hidden. Some labels already come from `copy`: a project's
+`problem`, `approach`, `tech`, `links` and `screenshots` fields default to `copy.projects` headings, and a certification's status options
+are `copy.certifications.statusEarned`, `statusInProgress` and `statusPlanned`, so a template that words those correctly needs no `editor`
+entry for them. Sensitive templates (`sensitive: true`) have their `guidance` shown on every editor. The section's label and
+whether it is enabled also drive the editor headings and a "not shown by your template" note, and a test adds a template with
+unique wording to prove none of this is hardcoded.
 
 `heroSuggestions` is required. `title` (at most 120 characters) and `summary` (at most 400) are plain text offered in the
 wizard's Basics step, which pre-fills them; the owner edits them and **whatever stays is published as written**, so write
@@ -170,7 +202,8 @@ accent and photo for that one request. Anyone else, a stale session, or a missin
 1. Copy `Templates/healthcare/` to `Templates/<key>/` and edit `template.json` (every `copy` string and `heroSuggestions` are required).
 2. Choose an archetype. Add `Styles/themes/<key>.css` and its `@import` line in `Styles/app.css` only if the base theme
    is not enough.
-3. Add `starter.json` (optional, fictional, clearly marked), a few `theme.accents` and a `preview.png` thumbnail.
+3. Add `starter.json` (optional, fictional, clearly marked), a few `theme.accents` and a `preview.png` thumbnail. Add an `editor` block where the
+   neutral editor wording does not fit the profession (what an entry is called, employer vs company, fields the profession never uses).
 4. Run `dotnet test`. The manifest tests cover every template found on disk: validity, unique key, known section keys,
    SEO lengths, guidance for sensitive professions, suggestions, accent contrast, the thumbnail, schema drift, theme contrast, and the rendering tests show no other
    template's wording. Add the new template to the rendering tests' wording lists.

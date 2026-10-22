@@ -19,8 +19,12 @@ public class ContentEndToEndTests
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app, template);
         var anonymous = app.NewClient();
-        Assert.All(new[] { ContentFlow.Experience, ContentFlow.Skills, ContentFlow.Projects, ContentFlow.Certifications },
-            async path => Assert.Contains("No entries yet", await owner.GetStringAsync(path)));
+        foreach (var path in ContentFlow.Sections)
+        {
+            var empty = await owner.GetAsync(path);
+            Assert.True(empty.StatusCode == HttpStatusCode.OK, $"{path} returned {(int)empty.StatusCode} to {empty.Headers.Location}");
+            Assert.Contains("No entries yet", await empty.Content.ReadAsStringAsync());
+        }
         var sitemapBefore = await anonymous.GetStringAsync("/sitemap.xml");
         var homeBefore = await anonymous.GetStringAsync("/");
         Assert.DoesNotContain("Quokka Rota", homeBefore);

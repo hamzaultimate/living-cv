@@ -45,7 +45,7 @@ public class ContentAccessibilityTests
         Assert.Contains("<main id=\"main-content\"", html);
         Assert.Contains("class=\"adm-skip\"", html);
         Assert.Matches(@"<h1\b", html);
-        Assert.Equal(1, Regex.Matches(html, @"<h1\b").Count);
+        Assert.Single(Regex.Matches(html, @"<h1\b"));
         foreach (Match button in Regex.Matches(html, @"<button\b([^>]*)>(.*?)</button>", RegexOptions.Singleline))
             Assert.True(Regex.Replace(button.Groups[2].Value, "<[^>]+>", "").Trim().Length > 0 || Attr(button.Value, "aria-label").Length > 0, $"{path}: a button has no name");
     }
