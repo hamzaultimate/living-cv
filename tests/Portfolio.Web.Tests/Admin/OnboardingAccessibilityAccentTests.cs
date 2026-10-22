@@ -66,7 +66,7 @@ public class OnboardingAccessibilityAccentTests
             var list = Regex.Match(html, @"<ol class=""adm-steps"">(.*?)</ol>", RegexOptions.Singleline);
             Assert.True(list.Success, WizardFlow.Pages[i]);
             Assert.Equal(4, Regex.Matches(list.Value, "<li\\b").Count);
-            Assert.Equal(1, Regex.Matches(list.Value, "aria-current=\"step\"").Count);
+            Assert.Single(Regex.Matches(list.Value, "aria-current=\"step\""));
             Assert.Matches(new Regex($@"<li aria-current=""step"">\s*<span class=""adm-step-num"">{current[i]}</span>"), list.Value);
             Assert.Contains("<nav aria-label=\"Setup progress\">", html);
             Assert.Matches(new Regex($@"<div id=""wizard-status"" class=""adm-sr"" role=""status"" aria-live=""polite"" aria-atomic=""true"">Step {current[i]} of 4: "), html);
@@ -86,8 +86,8 @@ public class OnboardingAccessibilityAccentTests
             var html = await owner.GetStringAsync(path);
 
             Assert.Matches(new Regex(@"<h1 id=""step-heading"" tabindex=""-1"" autofocus=""autofocus"">"), html);
-            Assert.Equal(1, Regex.Matches(html, @"\sautofocus\b").Count);
-            Assert.Equal(1, Regex.Matches(html, "<h1\\b").Count);
+            Assert.Single(Regex.Matches(html, @"\sautofocus\b"));
+            Assert.Single(Regex.Matches(html, "<h1\\b"));
         }
     }
 
@@ -101,7 +101,7 @@ public class OnboardingAccessibilityAccentTests
 
         Assert.Matches(new Regex(@"<div id=""error-summary""[^>]*role=""alert""[^>]*tabindex=""-1""[^>]*autofocus"), html);
         Assert.Matches(new Regex(@"<h1 id=""step-heading"" tabindex=""-1"">"), html);
-        Assert.Equal(1, Regex.Matches(html, @"\sautofocus\b").Count);
+        Assert.Single(Regex.Matches(html, @"\sautofocus\b"));
         var email = Tags(html, "input").Single(t => Attr(t, "id") == "Form_Email");
         Assert.Equal("true", Attr(email, "aria-invalid"));
         Assert.Contains("Enter a valid email address.", html);
@@ -226,7 +226,7 @@ public class OnboardingAccessibilityAccentTests
         var style = Regex.Match(html, "<style>(.*?)</style>").Groups[1].Value;
         Assert.Equal(":root:root:root:not([data-theme=\"light\"]){--c-accent:251 113 133;--c-accent-strong:253 164 175}:root:root:root[data-theme=\"light\"]{--c-accent:190 18 60;--c-accent-strong:159 18 57}", style);
         Assert.Equal("rose", (await WizardFlow.ProfileAsync(app)).AccentColor);
-        Assert.Equal(1, Regex.Matches(html, "<style").Count);
+        Assert.Single(Regex.Matches(html, "<style"));
     }
 
     [Fact]

@@ -381,6 +381,9 @@ public class OnboardingSecurityTests
     [InlineData("%2e%2e/%2e%2e/appsettings.json")]
     [InlineData("..%5c..%5cappsettings.json")]
     [InlineData("software%2f..%2f..%2fappsettings.json")]
+    [InlineData("software%2f..%2fhealthcare")]           // would resolve to a real thumbnail if the key were used as a path
+    [InlineData("..%2fsoftware%2f..%2fhealthcare")]
+    [InlineData("software%5c..%5chealthcare")]
     [InlineData("software.png")]
     [InlineData("preview.png")]
     [InlineData("%2fetc%2fpasswd")]

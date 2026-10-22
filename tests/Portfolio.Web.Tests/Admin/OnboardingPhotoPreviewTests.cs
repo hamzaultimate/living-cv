@@ -174,7 +174,7 @@ public class OnboardingPhotoPreviewTests
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Matches(new Regex(@"^[0-9a-f]{32}\.jpg$"), Path.GetFileName(Assert.Single(DraftFiles(app))));
-        Assert.Equal(1, Directory.GetFiles(app.UploadsPath, "*", SearchOption.AllDirectories).Length);
+        Assert.Single(Directory.GetFiles(app.UploadsPath, "*", SearchOption.AllDirectories));
         Assert.False(File.Exists(Path.Combine(app.UploadsPath, "..", "evil.php.jpg")));
     }
 

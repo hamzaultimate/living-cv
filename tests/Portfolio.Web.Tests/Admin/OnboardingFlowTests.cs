@@ -297,7 +297,7 @@ public class OnboardingFlowTests
         Assert.Contains("licences & registrations", html);
         Assert.Contains("Case study", html);
         Assert.Contains("Initiative", html);
-        Assert.Equal(1, Regex.Matches(html, "Before you publish").Count); // only the sensitive template carries guidance
+        Assert.Single(Regex.Matches(html, "Before you publish")); // only the sensitive template carries guidance
         Assert.Contains("patient-identifiable", html);
         Assert.Equal(2, Regex.Matches(html, "type=\"radio\" name=\"Key\"").Count);
     }
