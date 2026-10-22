@@ -58,7 +58,8 @@ public class ContentAccessibilityTests
         var seeded = await ContentFlow.SeedRowsAsync(app);
         var pages = new[]
         {
-            "/admin/content", ContentFlow.Experience, ContentFlow.Skills, ContentFlow.Projects, ContentFlow.Certifications, ContentFlow.Talks, ContentFlow.Testimonials,
+            "/admin/content", ContentFlow.Experience, ContentFlow.Skills, ContentFlow.Projects, ContentFlow.Certifications, ContentFlow.Talks, ContentFlow.Testimonials, ContentFlow.Blog,
+            ContentFlow.Blog + "/edit", $"{ContentFlow.Blog}/edit/{seeded.BlogId}", $"{ContentFlow.Blog}/delete/{seeded.BlogId}",
             ContentFlow.Talks + "/edit", $"{ContentFlow.Talks}/edit/{seeded.TalkId}", $"{ContentFlow.Talks}/delete/{seeded.TalkId}",
             ContentFlow.Testimonials + "/edit", $"{ContentFlow.Testimonials}/edit/{seeded.TestimonialId}", $"{ContentFlow.Testimonials}/delete/{seeded.TestimonialId}",
             ContentFlow.Experience + "/edit", $"{ContentFlow.Experience}/edit/{seeded.ExperienceId}", $"{ContentFlow.Experience}/delete/{seeded.ExperienceId}",
@@ -167,7 +168,7 @@ public class ContentAccessibilityTests
         Assert.Contains("<a href=\"/admin/content\" aria-current=\"page\">Content</a>", list);
         Assert.Contains("<a href=\"/admin/content\">Content</a>", dashboard);
         Assert.Contains("href=\"/admin/content\"", dashboard);
-        Assert.Contains("Add, edit, reorder and remove your experience, skills, work, certifications, talks and testimonials.", dashboard);
+        Assert.Contains("Add, edit, reorder and remove your experience, skills, work, certifications, talks, testimonials and blog.", dashboard);
     }
 
     [Fact]

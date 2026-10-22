@@ -107,6 +107,8 @@ public class PortfolioDbContext : DbContext
 
         b.Entity<BlogPost>(e =>
         {
+            e.Property(x => x.ConcurrencyStamp).HasMaxLength(IStampedContent.StampLength).IsConcurrencyToken();
+            e.Property(x => x.CoverAlt).HasMaxLength(BlogPost.MaxLength.CoverAlt);
             e.HasIndex(x => x.Slug).IsUnique();
             e.Property(x => x.Title).HasMaxLength(200);
             e.Property(x => x.Slug).HasMaxLength(120);

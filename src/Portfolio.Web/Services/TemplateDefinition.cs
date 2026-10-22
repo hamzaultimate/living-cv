@@ -44,7 +44,7 @@ public class TemplateDefinition
 
     public TemplateCopy Copy { get; set; } = new();
 
-    /// <summary>Wording and field visibility for the admin content editors (experience, skills, projects, certifications, talks, testimonials). Optional: whatever it
+    /// <summary>Wording and field visibility for the admin content editors (experience, skills, projects, certifications, talks, testimonials, blog). Optional: whatever it
     /// leaves out uses the neutral wording in <see cref="EditorFields"/>.</summary>
     public TemplateEditor Editor { get; set; } = new();
 
@@ -172,6 +172,7 @@ public class TemplateEditor
     public TemplateEditorSection Certifications { get; set; } = new();
     public TemplateEditorSection Talks { get; set; } = new();
     public TemplateEditorSection Testimonials { get; set; } = new();
+    public TemplateEditorSection Blog { get; set; } = new();
 
     /// <summary>The editor settings for a section key (<see cref="SectionRegistry"/>), or null for a section that has no editor.</summary>
     public TemplateEditorSection? For(string section) => section switch
@@ -182,6 +183,7 @@ public class TemplateEditor
         SectionRegistry.Certifications => Certifications,
         SectionRegistry.Talks => Talks,
         SectionRegistry.Testimonials => Testimonials,
+        SectionRegistry.Blog => Blog,
         _ => null,
     };
 }

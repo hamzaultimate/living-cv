@@ -136,7 +136,7 @@ public abstract class ContentPageModel : AdminPageModel
 /// <summary>A list screen: the entries of one section in their public order, with Move up and Move down buttons.</summary>
 // The only post is a button press; anything much larger is not from this page.
 [BodyLimit(16 * 1024)]
-public abstract class ContentListModel<T> : ContentPageModel, IContentList where T : class, IOrderedContent
+public abstract class ContentListModel<T> : ContentPageModel, IContentList where T : class, IStampedContent
 {
     protected ContentListModel(PortfolioDbContext db, ContentEditor content, RequestTemplate template) : base(db, content, template) { }
 
@@ -154,7 +154,7 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
     public string ListStamp { get; private set; } = ContentEditor.InitialListStamp;
     public IReadOnlyList<ListGroup> Groups { get; private set; } = [];
 
-    public async Task OnGetAsync(CancellationToken ct)
+    public virtual async Task OnGetAsync(CancellationToken ct)
     {
         await LoadViewAsync();
         // Read before the rows: if the order changes in between, the stamp is the older one and a move from this page is refused rather than applied to a list it did not show.
@@ -173,7 +173,7 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
         var row = rows.FirstOrDefault(r => r.Id == id);
         if (row is null) return ListWithError($"That {View.ItemLabelLower} no longer exists.");
 
-        var scope = rows.Where(r => GroupOf(r) == GroupOf(row)).ToList();
+        var scope = rows.Where(r => GroupOf(r) == GroupOf(row)).Cast<IOrderedContent>().ToList();
         var outcome = await Writer.MoveAsync(Section, scope, id, delta, listStamp, ct);
         if (outcome != SaveOutcome.Saved) return ListWithError("The list was changed somewhere else, so it was not reordered. It is shown again as it is now.");
 
@@ -190,7 +190,7 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
         foreach (var set in rows.GroupBy(GroupOf))
         {
             // A list with a manual order is sorted by position; one the public page orders itself keeps the order of its query.
-            var list = Reorderable ? set.OrderBy(r => r.SortOrder).ThenBy(r => r.Id).ToList() : set.ToList();
+            var list = Reorderable ? set.Cast<IOrderedContent>().OrderBy(r => r.SortOrder).ThenBy(r => r.Id).Cast<T>().ToList() : set.ToList();
             groups.Add(new ListGroup(set.Key, list.Select((r, i) => ToRow(r, i > 0, i < list.Count - 1)).ToList()));
         }
         Groups = OrderGroups(groups);
@@ -201,7 +201,7 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
 
 /// <summary>A confirmation page: GET shows what will be removed, POST removes it.</summary>
 [BodyLimit(16 * 1024)]
-public abstract class ContentDeleteModel<T> : ContentPageModel, IContentDelete where T : class, IOrderedContent
+public abstract class ContentDeleteModel<T> : ContentPageModel, IContentDelete where T : class, IStampedContent
 {
     protected ContentDeleteModel(PortfolioDbContext db, ContentEditor content, RequestTemplate template) : base(db, content, template) { }
 

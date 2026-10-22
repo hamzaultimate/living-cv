@@ -17,7 +17,7 @@
     {
         <section class="adm-card" aria-labelledby="card-@card.Section">
             <h2 id="card-@card.Section"><a href="/admin/content/@card.Section">@card.Label</a></h2>
-            <p>@card.Count @(card.Count == 1 ? "entry" : "entries")@(card.Enabled ? "" : ". Not shown by your current template")</p>
+            <p>@card.Count @(card.Count == 1 ? "entry" : "entries")@(card.Detail is null ? "" : " (" + card.Detail + ")")@(card.Enabled ? "" : ". Not shown by your current template")</p>
             <div class="adm-actions">
                 <a class="adm-btn" href="/admin/content/@card.Section">Manage</a>
                 <a class="adm-btn adm-btn-primary" href="/admin/content/@card.Section/edit" aria-label="Add: @card.ItemLabel">Add @card.ItemLabel.ToLowerInvariant()</a>

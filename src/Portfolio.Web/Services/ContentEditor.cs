@@ -42,7 +42,7 @@ public class ContentEditor
     public static string NewStamp() => Guid.NewGuid().ToString("N");
 
     /// <summary>Stamps the row as written now, naming the stamp the editor saw when it loaded the row.</summary>
-    public void Stamp<T>(T row, string? seenStamp) where T : class, IOrderedContent
+    public void Stamp<T>(T row, string? seenStamp) where T : class, IStampedContent
     {
         _db.Entry(row).Property(x => x.ConcurrencyStamp).OriginalValue = string.IsNullOrWhiteSpace(seenStamp) ? null : seenStamp;
         row.ConcurrencyStamp = NewStamp();
@@ -166,13 +166,15 @@ public class ContentEditor
         return await CommitAsync(ct);
     }
 
-    /// <summary>True when <paramref name="url"/> is an uploaded file that a project or the profile photo still points at (other than <paramref name="except"/>).</summary>
+    /// <summary>True when <paramref name="url"/> is an uploaded file that a project, a blog post or the profile photo still points at (other than <paramref name="except"/>).</summary>
     public async Task<bool> IsUploadReferencedAsync(string url, int? exceptProjectId, CancellationToken ct)
     {
         var profile = await _db.SiteProfiles.AsNoTracking().Select(p => new { p.PhotoUrl, p.PhotoUrlLight }).FirstOrDefaultAsync(ct);
         if (profile is not null && (profile.PhotoUrl == url || profile.PhotoUrlLight == url)) return true;
         var projects = await _db.Projects.AsNoTracking().Where(p => p.Id != exceptProjectId).ToListAsync(ct);
-        return projects.Any(p => p.HeroImage == url || p.Screenshots.Any(s => s.Url == url));
+        if (projects.Any(p => p.HeroImage == url || p.Screenshots.Any(s => s.Url == url))) return true;
+        // A blog post uses an upload as its cover, and may also point at one from its text (an image in the Markdown).
+        return await _db.BlogPosts.AsNoTracking().AnyAsync(b => b.Cover == url || b.BodyMarkdown.Contains(url), ct);
     }
 
     /// <summary>Deletes uploaded files that nothing points at any more. Only generated <c>/uploads/…</c> addresses are touched (the store ignores

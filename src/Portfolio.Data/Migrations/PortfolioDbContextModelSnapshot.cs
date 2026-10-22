@@ -34,8 +34,17 @@ namespace Portfolio.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<string>("Cover")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CoverAlt")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");

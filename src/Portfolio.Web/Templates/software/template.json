@@ -60,6 +60,13 @@
       "fields": {
         "authorTitle": { "label": "Role and company" }
       }
+    },
+    "blog": {
+      "itemLabel": "Post",
+      "fields": {
+        "body": { "label": "Post text" },
+        "draft": { "label": "Keep as a draft (not public)" }
+      }
     }
   },
   "starter": { "source": "seed" },

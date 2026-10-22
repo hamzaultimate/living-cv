@@ -7,7 +7,7 @@ namespace Portfolio.Web.Pages.Admin.Content;
 /// <summary>The content hub: one card per editor, in the template's wording, with how many entries each holds.</summary>
 public class IndexModel : AdminPageModel
 {
-    public sealed record Card(string Section, string Label, string ItemLabel, int Count, bool Enabled);
+    public sealed record Card(string Section, string Label, string ItemLabel, int Count, bool Enabled, string? Detail = null);
 
     private readonly PortfolioDbContext _db;
     private readonly RequestTemplate _template;
@@ -32,11 +32,14 @@ public class IndexModel : AdminPageModel
             [SectionRegistry.Certifications] = await _db.Certifications.CountAsync(ct),
             [SectionRegistry.Talks] = await _db.Talks.CountAsync(ct),
             [SectionRegistry.Testimonials] = await _db.Testimonials.CountAsync(ct),
+            [SectionRegistry.Blog] = await _db.BlogPosts.CountAsync(ct),
         };
+        var drafts = await _db.BlogPosts.CountAsync(b => b.Draft, ct);
         Cards = EditorFields.Sections.Select(s =>
         {
             var view = new EditorView(template, s);
-            return new Card(s, view.SectionLabel, view.ItemLabel, counts[s], view.SectionEnabled);
+            var detail = s == SectionRegistry.Blog && counts[s] > 0 ? $"{counts[s] - drafts} published, {drafts} {(drafts == 1 ? "draft" : "drafts")}" : null;
+            return new Card(s, view.SectionLabel, view.ItemLabel, counts[s], view.SectionEnabled, detail);
         }).ToList();
         Guidance = new EditorView(template, SectionRegistry.Experience).Guidance;
     }

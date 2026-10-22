@@ -68,7 +68,7 @@ public class PortfolioContentService
         QueryAsync(db => db.Certifications.OrderBy(c => c.SortOrder).ToListAsync(), new List<Certification>());
 
     public Task<List<BlogPost>> GetBlogPostsAsync() =>
-        QueryAsync(db => db.BlogPosts.Where(b => !b.Draft).OrderByDescending(b => b.Date).ToListAsync(), new List<BlogPost>());
+        QueryAsync(db => db.BlogPosts.Where(b => !b.Draft).OrderByDescending(b => b.Date).ThenBy(b => b.Id).ToListAsync(), new List<BlogPost>());
 
     public Task<BlogPost?> GetBlogPostAsync(string slug) =>
         QueryAsync(db => db.BlogPosts.FirstOrDefaultAsync(b => b.Slug == slug && !b.Draft), (BlogPost?)null);

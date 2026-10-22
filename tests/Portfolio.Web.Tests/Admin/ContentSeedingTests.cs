@@ -27,6 +27,7 @@ public class ContentSeedingTests
             .Concat((await db.Certifications.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Certifications}/delete/{i}"))
             .Concat((await db.Talks.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Talks}/delete/{i}"))
             .Concat((await db.Testimonials.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Testimonials}/delete/{i}"))
+            .Concat((await db.BlogPosts.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Blog}/delete/{i}"))
             .ToList();
         foreach (var path in targets)
         {
