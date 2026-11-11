@@ -192,6 +192,6 @@ public class TalkTestimonialTemplateTests
         // The editor is reachable and saves although the public page is off; the entry is kept for a template that uses it.
         var save = await ContentFlow.PostAsync(owner, ContentFlow.Talks + "/edit", ContentFlow.Fields(("Title", "Grand rounds")));
         Assert.Equal(HttpStatusCode.Redirect, save.StatusCode);
-        Assert.Equal(1, (await ContentFlow.IdsAsync(app, db => db.Talks.Select(t => t.Id))).Count);
+        Assert.Single(await ContentFlow.IdsAsync(app, db => db.Talks.Select(t => t.Id)));
     }
 }

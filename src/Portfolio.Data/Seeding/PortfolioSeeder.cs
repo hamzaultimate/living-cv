@@ -72,7 +72,7 @@ public static class PortfolioSeeder
 
         complete &= await UpsertAsync(db, seedDir, "blog.json", db.BlogPosts, x => x.Slug, mode, log, ct,
             (cur, inc) => { cur.Title = inc.Title; cur.Description = inc.Description; cur.Date = inc.Date; cur.Tags = inc.Tags;
-                            cur.Draft = inc.Draft; cur.Cover = inc.Cover; cur.BodyMarkdown = inc.BodyMarkdown; });
+                            cur.Draft = inc.Draft; cur.Cover = inc.Cover; cur.CoverAlt = inc.CoverAlt; cur.BodyMarkdown = inc.BodyMarkdown; });
 
         complete &= await UpsertAsync(db, seedDir, "testimonials.json", db.Testimonials, x => $"{x.Author}|{x.Quote[..Math.Min(40, x.Quote.Length)]}", mode, log, ct,
             (cur, inc) => { cur.Quote = inc.Quote; cur.AuthorTitle = inc.AuthorTitle; cur.SourceUrl = inc.SourceUrl;

@@ -644,7 +644,7 @@ public class BlogEditorTests
         Assert.Contains("no-store", string.Join(",", response.Headers.GetValues("Cache-Control")));
         Assert.Contains("noindex", string.Join(",", response.Headers.GetValues("X-Robots-Tag")));
         Assert.Equal(before, await ContentFlow.SnapshotAsync(app));
-        Assert.Equal(0, Regex.Matches(html, "<script(?![^>]*\\ssrc=)").Count);
+        Assert.Empty(Regex.Matches(html, "<script(?![^>]*\\ssrc=)"));
     }
 
     [Fact]

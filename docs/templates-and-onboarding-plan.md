@@ -377,8 +377,10 @@ home-page block, no per-post share image, not the CV); the repository filters dr
 - **Safe Markdown (`SafeMd`).** `Md.ToHtml` (raw HTML allowed) is gone; `SafeMd.ToHtml` is the only renderer and is used by the public post page **and** the preview. Markdig with `DisableHtml`, pipe tables, auto
   identifiers, auto links, emphasis extras, list extras, smarty pants and referral links (`rel="noopener nofollow ugc"`); no generic attributes, media links, math, diagrams, custom containers or footnotes. After parsing, every
   link, image and `<scheme:...>` autolink address is decided on the decoded value (control characters and whitespace removed, scheme lower-cased): relative, `http`, `https` (and `mailto` for links) pass; anything else is
-  rendered as its text. **It changed no byte of the Software parity snapshots**: `SafeMdTests` renders every shipped post body with the old trusted pipeline and the safe one and requires identical HTML, and the parity
-  snapshots pass untouched. Known cost: a post cannot contain raw HTML, footnotes, definition lists or task lists any more (the shipped posts use none); say so to owners who ask.
+  rendered as its text. **It changed no byte of the Software parity snapshots** (and none of the shipped posts' output): `SafeMdTests` renders every shipped post body with the old trusted pipeline and the safe one and requires identical HTML, and the parity
+  snapshots pass untouched. That holds for the shipped posts only: an operator's own `blog.json` with links (now carrying `rel`) or raw HTML (now escaped) renders differently. Automatic heading ids are not prefixed, because that would change the bytes
+  of the shipped posts (`<h2 id="the-symptom">`); a generated id can therefore equal a layout id (`main-content`, `theme-btn`): accepted, documented.
+  `SafeMd` never throws (nested text and more than 200 headings fall back to the encoded text in a `<pre>`; the editor and preview refuse such text) and keeps renders by the hash of the text. `Seed:Mode=Authoritative` now copies `CoverAlt` too, and deletes browser-written posts that are not in `blog.json`, leaving their uploaded covers orphaned in storage. Known cost: a post cannot contain raw HTML, footnotes, definition lists or task lists any more (the shipped posts use none); say so to owners who ask.
 - **Template wording.** `editor.talks`, `editor.testimonials`, `editor.blog` in the schema, `TemplateEditor`, `EditorFields`, the validator (required fields cannot be hidden: `title`; `quote`, `author`; `title`, `slug`, `date`,
   `body`, `draft`), both shipped manifests and the authoring guide. Healthcare keeps Talks and Blog off in the public template: the editors stay reachable with the "not shown" note and the guidance.
 - **Tests.** `TalkEditorTests`, `TestimonialEditorTests`, `BlogEditorTests` (drafts on every surface, transitions with the cached sitemap, slug rules, covers and orphan cleanup, preview, XSS corpus on preview
@@ -398,8 +400,9 @@ with the profile's `Sections` overrides), `Services/TemplateCatalog.cs`/`Templat
 pattern (`Pages/Admin/Content/*`, `ContentEditor`, `FormCheck`, `EditorFields`, `admin-unsaved.js`, `AdminAuth.AllowsScript`).
 **Requirements carried from the owner.**
 - Public pages for the default Software template stay **byte-identical** (parity snapshots untouched); if a change would alter them, stop and report.
-- **No migration unless proven necessary**: hero / metrics / about / sections already live in `SiteProfile` JSON columns. If a stamp is needed, an additive nullable column only (D3: no renames); prefer the existing
-  `OnboardingCompletedAt`-style token or a new nullable stamp on the profile row, and say why.
+- **No migration unless proven necessary**: hero / metrics / about / sections already live in `SiteProfile` JSON columns. Profile edits today have no per-write stamp (`ProfileEditor` is last write wins);
+  `OnboardingCompletedAt` is a concurrency token but only moves when the wizard publishes, so it cannot guard these edits. Recommended: one additive nullable `ConcurrencyStamp` column on `SiteProfiles`
+  (replaced on every profile write, checked from the form like the content stamps; D3: no renames), justified because two tabs would otherwise overwrite each other. If the owner prefers no migration, keep last write wins and say so.
 - **Hiding a section never deletes rows.** Turning a section off only hides its page, nav entry and home block; the entries stay and show again when it is turned on.
 - Nav, `/sitemap.xml`, JSON-LD, the CV, routes (`[SectionPage]` 404s) and the home page blocks must all follow a save immediately (`ProfileEditor.AfterCommitAsync` already invalidates the provider version and the
   "Generated" output cache). Sections a template lists as `enabled: false` (Healthcare: Blog and Talks) default off; the owner may turn them on.

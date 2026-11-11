@@ -184,7 +184,7 @@ public partial class EditModel : ContentPageModel
         }
     }
 
-    private string SlugTakenMessage(string slug) => $"The web address name \"{slug}\" is already used by another {View.ItemLabelLower}. Choose a different one.";
+    private string SlugTakenMessage(string slug) => $"The {View.Label("slug").ToLowerInvariant()} \"{slug}\" is already used by another {View.ItemLabelLower}. Choose a different one.";
 
     private static string NormaliseBody(string? body) => (body ?? "").Replace("\r\n", "\n").Replace('\r', '\n').Trim();
 
@@ -283,7 +283,7 @@ public partial class EditModel : ContentPageModel
         // An image the owner uploaded needs a description; an older one that ships with the site keeps working without.
         var mustDescribe = hasCover && (image is not null || _uploads.TryResolve(stored?.Cover, out _));
         if (mustDescribe && alt is null && c.IsValid(nameof(Form.CoverAlt)))
-            c.Error(nameof(Form.CoverAlt), "Describe the cover image in a few words for people who cannot see it (alt text).");
+            c.Error(nameof(Form.CoverAlt), $"Describe the {View.Label("cover").ToLowerInvariant()} in a few words for people who cannot see it (alt text).");
         return new CoverChange(image, remove, hasCover ? alt : null);
     }
 }

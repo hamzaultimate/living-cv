@@ -70,6 +70,33 @@ public class BlogTemplateTests
     }
 
     [Fact]
+    public async Task TheAddressAndCoverMessages_UseTheManifestWords_NotNeutralOnes()
+    {
+        var dir = TemplateDirs.WithExtra("quirky", node =>
+        {
+            node["name"] = "Quirky";
+            node["editor"] = JsonNode.Parse("""{ "blog": { "itemLabel": "Scribble", "fields": { "slug": { "label": "Scribble handle" }, "cover": { "label": "Doodle" } } } }""");
+        });
+        using var app = AdminApp.WithTemplates(dir);
+        var owner = await ContentFlow.BlankSiteAsync(app, "quirky");
+        await ContentFlow.PostAsync(owner, Edit, ContentFlow.Fields(("Title", "One"), ("Date", "2025-01-01"), ("Body", "x"), ("Slug", "same-one")));
+
+        var taken = WebUtility.HtmlDecode(await (await ContentFlow.PostAsync(owner, Edit, ContentFlow.Fields(("Title", "Two"), ("Date", "2025-01-01"), ("Body", "x"), ("Slug", "same-one")))).Content.ReadAsStringAsync());
+        var noAlt = await (await ContentFlow.PostMultipartAsync(owner, Edit, ContentFlow.Fields(("Title", "Three"), ("Date", "2025-01-01"), ("Body", "x")),
+            ("Form.CoverFile", TestImages.Split(SkiaSharp.SKEncodedImageFormat.Jpeg, 80, 60), "c.jpg", "image/jpeg"), Edit)).Content.ReadAsStringAsync();
+        var form = await owner.GetStringAsync(Edit);
+
+        Assert.Contains("The scribble handle \"same-one\" is already used by another scribble", taken);
+        Assert.Contains("Describe the doodle in a few words", noAlt);
+        Assert.Contains("Describe the doodle (alt text)", form);
+        foreach (var text in new[] { taken, noAlt, form })
+        {
+            Assert.DoesNotContain("web address name", text.Replace("Web address name", ""));
+            Assert.DoesNotContain("cover image", text);
+        }
+    }
+
+    [Fact]
     public async Task AFieldTheTemplateHides_IsNotDrawn_NotReadFromThePost_AndItsStoredDataSurvivesAnEdit()
     {
         using var app = AdminApp.WithTemplates(Quirky());

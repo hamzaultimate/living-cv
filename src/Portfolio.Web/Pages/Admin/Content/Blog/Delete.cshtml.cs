@@ -23,7 +23,7 @@ public class DeleteModel : ContentDeleteModel<BlogPost>
             $"{View.Label("date")}: {b.Date:yyyy-MM-dd}",
         };
         if (!string.IsNullOrWhiteSpace(b.Cover))
-            lines.Add(_uploads.TryResolve(b.Cover, out _) ? "The cover image you uploaded for it will be deleted from storage unless something else uses it." : "Its cover image comes with the site and is not touched.");
+            lines.Add(_uploads.TryResolve(b.Cover, out _) ? $"The {View.Label("cover").ToLowerInvariant()} you uploaded for it will be deleted from storage unless something else uses it." : $"Its {View.Label("cover").ToLowerInvariant()} comes with the site and is not touched.");
         return new DeleteInfo(b.Title, lines);
     }
 

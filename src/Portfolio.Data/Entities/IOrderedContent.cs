@@ -8,7 +8,7 @@ namespace Portfolio.Data.Entities;
 public interface IOrderedContent : IStampedContent
 {
     /// <summary>Column length of <see cref="IStampedContent.ConcurrencyStamp"/> (a 32 character GUID).</summary>
-    public const int StampLength = IStampedContent.StampLength;
+    public new const int StampLength = IStampedContent.StampLength;
 
     int SortOrder { get; set; }
 }

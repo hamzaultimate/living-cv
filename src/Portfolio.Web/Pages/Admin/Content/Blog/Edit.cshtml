@@ -52,7 +52,7 @@
             <legend>@v.Label("cover")</legend>
             @if (!string.IsNullOrWhiteSpace(Model.CurrentCover))
             {
-                <img class="adm-cover" src="@Model.CurrentCover" alt="Current cover image" width="320" height="180" />
+                <img class="adm-cover" src="@Model.CurrentCover" alt="Current @v.Label("cover").ToLowerInvariant()" width="320" height="180" />
             }
             <div class="adm-field">
                 <label for="@Id("CoverFile")">@(string.IsNullOrWhiteSpace(Model.CurrentCover) ? "Choose an image" : "Replace the image") <span class="adm-optional">(optional)</span></label>
@@ -61,7 +61,7 @@
                 @if (coverError is not null) { <span class="field-validation-error">@coverError</span> }
             </div>
             <div class="adm-field">
-                <label for="@Id("CoverAlt")">Describe the image (alt text)</label>
+                <label for="@Id("CoverAlt")">Describe the @v.Label("cover").ToLowerInvariant() (alt text)</label>
                 <input type="text" id="@Id("CoverAlt")" name="Form.CoverAlt" value="@f.CoverAlt" maxlength="@BlogPost.MaxLength.CoverAlt" aria-describedby="@Id("CoverAlt")-hint" aria-invalid="@(altError is null ? null : "true")" />
                 <span id="@Id("CoverAlt")-hint" class="adm-hint">Required for an image you upload. A short description for people who cannot see it.</span>
                 @if (altError is not null) { <span class="field-validation-error">@altError</span> }
@@ -71,7 +71,7 @@
                 <div class="adm-field adm-check">
                     <input type="checkbox" id="@Id("RemoveCover")" name="Form.RemoveCover" value="true" checked="@f.RemoveCover" />
                     <input type="hidden" name="Form.RemoveCover" value="false" />
-                    <label for="@Id("RemoveCover")">Remove the current cover image</label>
+                    <label for="@Id("RemoveCover")">Remove the current @v.Label("cover").ToLowerInvariant()</label>
                 </div>
             }
         </fieldset>

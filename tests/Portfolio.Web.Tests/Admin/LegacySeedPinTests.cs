@@ -158,10 +158,10 @@ public class LegacySeedPinTests
     }
 
     [Theory]
-    [InlineData("unreadable", "talks.json")]
-    [InlineData("unreadable", "skills.json")]
-    [InlineData("unreadable", "blog.json")]
-    public async Task AnUnreadableSeedFile_DoesNotPinTheSite_TheNextStartWithIntactFilesCompletesIt(string problem, string file)
+    [InlineData("talks.json")]
+    [InlineData("skills.json")]
+    [InlineData("blog.json")]
+    public async Task AnUnreadableSeedFile_DoesNotPinTheSite_TheNextStartWithIntactFilesCompletesIt(string file)
     {
         using var t = new TestDatabase();
         await AddProfileAsync(t, Site.Legacy);
