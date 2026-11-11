@@ -127,6 +127,17 @@ public class SafeMdTests
     }
 
     [Fact]
+    public void EveryLink_GetsTheRel_ExceptAnEmailAddressTurnedIntoALinkAutomatically()
+    {
+        var html = SafeMd.ToHtml("[abs](https://example.org) [rel](/blog/x) [frag](#top) [mail](mailto:a@b.c) <a@b.c> <https://example.org/auto>");
+
+        Assert.Contains("<a href=\"https://example.org\" rel=\"noopener nofollow ugc\">abs</a>", html);
+        Assert.Contains("<a href=\"/blog/x\" rel=\"noopener nofollow ugc\">rel</a>", html);
+        Assert.Contains("<a href=\"mailto:a@b.c\">a@b.c</a>", html); // the automatic email link has no rel
+        Assert.Contains("<a href=\"https://example.org/auto\" rel=\"noopener nofollow ugc\">", html);
+    }
+
+    [Fact]
     public void ARejectedLink_KeepsItsText_AndARejectedImage_KeepsItsAltText()
     {
         Assert.Equal("<p>click <strong>here</strong></p>\n", SafeMd.ToHtml("[click **here**](javascript:alert(1))"));
