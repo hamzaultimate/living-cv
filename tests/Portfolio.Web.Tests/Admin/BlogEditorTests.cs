@@ -747,20 +747,6 @@ public class BlogEditorTests
     }
 
     [Fact]
-    public async Task AnEditorSaveRendersEachTextOnce_AndThePublicPageServesItFromTheCache()
-    {
-        using var app = new AdminApp();
-        var owner = await ContentFlow.BlankSiteAsync(app);
-        var body = "Unique cache body " + Guid.NewGuid();
-        await ContentFlow.PostAsync(owner, Edit, PostFields(body: body, slug: "cached-one"));
-        var afterSave = SafeMd.Renders;
-
-        for (var i = 0; i < 3; i++) Assert.Equal(HttpStatusCode.OK, (await app.NewClient().GetAsync("/blog/cached-one")).StatusCode);
-
-        Assert.Equal(afterSave, SafeMd.Renders); // the save validated (rendered) the text; three public views cost nothing more
-    }
-
-    [Fact]
     public async Task APublicPostLinks_GetNofollowUgc_AndAnOverlongAutolink_DoesNotBreakThePage()
     {
         using var app = new AdminApp();

@@ -98,7 +98,7 @@ public partial class EditModel : ContentPageModel
         else
         {
             // The same refusal as a save: a text that cannot be rendered is not previewed as if it could be published.
-            var problem = SafeMd.TryRender(body, out var html);
+            var problem = SafeMd.TryRender(body, out var html, remember: false); // unsaved text: use a kept result, add none
             if (problem == SafeMd.Problem.None) PreviewHtml = html;
             else ModelState.AddModelError("Form.Body", BodyProblemMessage(problem));
         }
@@ -201,9 +201,12 @@ public partial class EditModel : ContentPageModel
     }
 
     /// <summary>Wording for a text the renderer cannot take; the noun is the manifest's label for the body field.</summary>
-    private string BodyProblemMessage(SafeMd.Problem problem) => problem == SafeMd.Problem.TooManyHeadings
-        ? $"{View.Label("body")} has more than {SafeMd.MaxHeadings} headings. Remove some of them."
-        : $"{View.Label("body")} is nested too deeply: lists, quotes or emphasis inside one another many levels down. Flatten it and try again.";
+    private string BodyProblemMessage(SafeMd.Problem problem) => problem switch
+    {
+        SafeMd.Problem.TooManyHeadings => $"{View.Label("body")} has more than {SafeMd.MaxHeadings} headings. Remove some of them.",
+        SafeMd.Problem.TooDeeplyNested => $"{View.Label("body")} is nested too deeply: lists, quotes or emphasis inside one another many levels down. Flatten it and try again.",
+        _ => $"{View.Label("body")} could not be turned into a page. Simplify it and try again.",
+    };
 
     private DateOnly? CheckDate(FormCheck c)
     {

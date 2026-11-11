@@ -14,30 +14,28 @@ namespace Portfolio.Web.Services;
 /// </summary>
 public static class SafeMd
 {
-    private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
-        .DisableHtml()
-        .UsePipeTables()
-        .UseAutoIdentifiers()
-        .UseAutoLinks()
-        .UseEmphasisExtras()
-        .UseListExtras()
-        .UseSmartyPants()
-        .UseReferralLinks("noopener", "nofollow", "ugc")
-        .Build();
+    private static MarkdownPipelineBuilder Configure(bool identifiers)
+    {
+        var builder = new MarkdownPipelineBuilder().DisableHtml().UsePipeTables();
+        // Automatic heading identifiers are made unique by trying names in turn, which grows with the square of the number of equal headings.
+        // The counting pipeline leaves them out, so counting is cheap however many headings there are.
+        if (identifiers) builder.UseAutoIdentifiers();
+        return builder.UseAutoLinks().UseEmphasisExtras().UseListExtras().UseSmartyPants().UseReferralLinks("noopener", "nofollow", "ugc");
+    }
 
-    /// <summary>The most headings a text may have. Automatic heading identifiers are made unique by trying names in turn, which grows with the square of the number of equal headings.</summary>
+    private static readonly MarkdownPipeline Pipeline = Configure(identifiers: true).Build();
+    private static readonly MarkdownPipeline CountingPipeline = Configure(identifiers: false).Build();
+
+    /// <summary>The most headings a text may have, wherever they sit (top level, in a quote, in a list item).</summary>
     public const int MaxHeadings = 200;
 
-    /// <summary>Why a text cannot be rendered: too many headings, or nested more deeply than the Markdown library allows.</summary>
-    public enum Problem { None, TooManyHeadings, TooDeeplyNested }
+    /// <summary>Why a text cannot be rendered: too many headings, nested more deeply than the Markdown library allows, or the library refused it for another reason.</summary>
+    public enum Problem { None, TooManyHeadings, TooDeeplyNested, CannotRender }
 
     // Rendering is a pure function of the text, so the result is kept by the text's hash: no invalidation is ever needed (an edit is a new text), the preview and the public page
-    // share it, and an expensive text is rendered once however often it is requested. Bounded by the size of the HTML, not by the number of entries.
+    // share it, and an expensive text is rendered once however often it is requested. Bounded by size: one unit is about 1,024 characters of HTML (about 2 KB), so the limit
+    // of 20,000 units is a ceiling of roughly 40 MB.
     private static readonly MemoryCache Cache = new(new MemoryCacheOptions { SizeLimit = 20_000 });
-    private static long _renders;
-
-    /// <summary>How many texts have actually been rendered (a cache hit does not count). For tests and diagnostics.</summary>
-    public static long Renders => Interlocked.Read(ref _renders);
 
     /// <summary>Renders <paramref name="markdown"/>. Never throws: a text that cannot be rendered is shown as its own encoded text in a preformatted block.</summary>
     public static string ToHtml(string? markdown)
@@ -46,56 +44,42 @@ public static class SafeMd
         return html;
     }
 
-    /// <summary>Like <see cref="ToHtml"/>, and says whether the text could be rendered as Markdown. When it could not, <paramref name="html"/> is the safe fallback and the result says why.</summary>
-    public static Problem TryRender(string? markdown, out string html)
+    /// <summary>
+    /// Like <see cref="ToHtml"/>, and says whether the text could be rendered as Markdown. When it could not, <paramref name="html"/> is the safe fallback and the result says why.
+    /// <paramref name="remember"/> false (an unsaved preview) still uses a result that is already kept but adds none, so previews cannot push published posts out of the cache.
+    /// </summary>
+    public static Problem TryRender(string? markdown, out string html, bool remember = true)
     {
         var text = markdown ?? string.Empty;
         if (text.Length == 0) { html = string.Empty; return Problem.None; }
-        var key = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(text)));
+        // The hash covers the UTF-16 code units, not a UTF-8 encoding: a lone surrogate would encode as U+FFFD and collide with a text that really contains it.
+        var key = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Runtime.InteropServices.MemoryMarshal.AsBytes(text.AsSpan())));
         if (Cache.TryGetValue(key, out (Problem Problem, string Html) hit)) { html = hit.Html; return hit.Problem; }
 
         var problem = Render(text, out html);
-        Cache.Set(key, (problem, html), new MemoryCacheEntryOptions { Size = 1 + html.Length / 1024 });
+        if (remember) Cache.Set(key, (problem, html), new MemoryCacheEntryOptions { Size = 1 + html.Length * 2 / 1024 });
         return problem;
     }
 
     private static Problem Render(string text, out string html)
     {
-        Interlocked.Increment(ref _renders);
-        if (CountHeadings(text) > MaxHeadings) { html = Fallback(text); return Problem.TooManyHeadings; }
         try
         {
+            // Count first with the cheap pipeline; this parse can also hit the library's depth limit, which is mapped like a failure in the real one.
+            var counting = Markdown.Parse(text, CountingPipeline);
+            if (counting.Descendants<HeadingBlock>().Count() > MaxHeadings) { html = Fallback(text); return Problem.TooManyHeadings; }
             html = RenderMarkdown(text);
             return Problem.None;
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
-            // Markdig refuses text nested beyond its depth limit (a hundred list levels, a hundred quote marks, a long run of emphasis marks) by throwing.
             html = Fallback(text);
-            return Problem.TooDeeplyNested;
+            // The library refuses text nested beyond its depth limit (a hundred list levels, a hundred quote marks, a long run of emphasis marks) by throwing.
+            return ex is ArgumentException && ex.Message.Contains("nested", StringComparison.OrdinalIgnoreCase) ? Problem.TooDeeplyNested : Problem.CannotRender;
         }
     }
 
     private static string Fallback(string text) => "<pre>" + System.Net.WebUtility.HtmlEncode(text) + "</pre>\n";
-
-    /// <summary>Lines that start a heading (<c>#</c> up to three spaces in, or an underline of = or -). An over-count is harmless: it only has to stay above the limit for a text that is really over it.</summary>
-    private static int CountHeadings(string text)
-    {
-        var count = 0;
-        foreach (var line in text.AsSpan().EnumerateLines())
-        {
-            var t = line.TrimStart(' ');
-            if (line.Length - t.Length > 3 || t.Length == 0) continue;
-            if (t[0] == '#' || ((t[0] == '=' || t[0] == '-') && IsOnly(t.TrimEnd(), t[0]))) count++;
-        }
-        return count;
-    }
-
-    private static bool IsOnly(ReadOnlySpan<char> s, char c)
-    {
-        foreach (var x in s) if (x != c) return false;
-        return s.Length > 0;
-    }
 
     private static string RenderMarkdown(string text)
     {

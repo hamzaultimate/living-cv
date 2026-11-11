@@ -306,10 +306,9 @@ address (which answers "not found"), not in the sitemap, and nowhere else. Untic
 down at once (it is kept). **Preview** shows the text exactly as it will be published and saves nothing. The text is Markdown: headings, bold,
 italics, lists, quotes, tables, code and links work. **Raw HTML is shown as text, never run**, links must start with http, https or mailto (or be addresses
 on your own site), and pictures must be http, https or on your own site; anything else is shown as plain text. Every link in a post gets `rel="noopener nofollow ugc"` (links to your own pages too); an email address that is turned into a link automatically does not.
-A cover image is re-encoded on upload and needs alt text. The pictures a post uses stay in storage as long as any post still points at them. If your
+A cover image is re-encoded on upload and needs alt text. The pictures a post uses stay in storage as long as any post still points at them.
 If you keep your own `blog.json` seed file and load it with `Seed:Mode=Authoritative`, the same rules apply when it is shown: raw HTML in it is now escaped as text and its links gain the `rel` above (the shipped posts contain neither, so they look exactly as before); Authoritative seeding also removes posts you wrote in the browser that are not in the file, and the pictures uploaded for them stay in storage unused.
-If your
-template does not show the blog (Healthcare keeps it off), the editor stays available with a note and nothing is published.
+If your template does not show the blog (Healthcare keeps it off), the editor stays available with a note and nothing is published.
 
 The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed). Each table is seeded only when it is empty, so editing a seed file does not change a database that already has rows. To apply edited seed files to an existing database, set `Seed:Mode` to `Authoritative` (for example `Seed__Mode=Authoritative` as an environment variable): then rows are added, updated, and removed to match the files on every start. Update those JSON files to change:
 

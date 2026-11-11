@@ -204,15 +204,97 @@ public class SafeMdTests
     public void ARenderedText_IsServedFromTheCache_TheSecondTime_AndAnEditIsANewRender()
     {
         var text = "## Cache probe " + Guid.NewGuid() + "\n\nBody.";
-        var before = SafeMd.Renders;
 
         var first = SafeMd.ToHtml(text);
         var second = SafeMd.ToHtml(text);
         var edited = SafeMd.ToHtml(text + " More.");
 
-        Assert.Equal(first, second);
-        Assert.Equal(before + 2, SafeMd.Renders); // one render for the text (the repeat was a hit) and one for the edit
+        Assert.Same(first, second); // the very same string instance: nothing was rendered the second time
         Assert.NotEqual(first, edited);
+    }
+
+    [Fact]
+    public void AnUnsavedPreview_UsesAKeptResult_ButAddsNone()
+    {
+        var text = "## Preview probe " + Guid.NewGuid() + "\n\nBody.";
+
+        SafeMd.TryRender(text, out var a, remember: false);
+        SafeMd.TryRender(text, out var b, remember: false);
+        Assert.NotSame(a, b); // nothing was kept by the previews
+
+        var kept = SafeMd.ToHtml(text);
+        SafeMd.TryRender(text, out var viaPreview, remember: false);
+        Assert.Same(kept, viaPreview); // a result that is already kept is used
+    }
+
+    [Fact]
+    public void TextsThatDifferOnlyByALoneSurrogate_DoNotShareACacheEntry()
+    {
+        var unique = Guid.NewGuid().ToString("N");
+        var replacement = "x" + unique + "\uFFFD";   // what a UTF-8 encoding of the lone surrogate would turn into
+        var lone = "x" + unique + "\uD800";
+
+        var first = SafeMd.ToHtml(replacement);
+        var second = SafeMd.ToHtml(lone);
+
+        Assert.NotSame(first, second);
+        Assert.Contains("\uD800", second);
+        Assert.DoesNotContain("\uD800", first);
+    }
+
+    [Fact]
+    public void TheFallback_IsExactlyTheEncodedText_InAPreBlock()
+    {
+        var text = string.Concat(Enumerable.Repeat("- ", 100)) + "<script>x</script>&amp;";
+
+        var problem = SafeMd.TryRender(text, out var html);
+
+        Assert.Equal(SafeMd.Problem.TooDeeplyNested, problem);
+        Assert.Equal("<pre>" + System.Net.WebUtility.HtmlEncode(text) + "</pre>\n", html);
+        Assert.Contains("&lt;script&gt;x&lt;/script&gt;&amp;amp;", html);
+    }
+
+    private static string Fill(string unit, int chars = 60_000) => string.Concat(Enumerable.Repeat(unit, chars / unit.Length + 1))[..chars];
+
+    [Theory]
+    [InlineData("# h\n")]
+    [InlineData("> # h\n")]
+    [InlineData("- # h\n")]
+    [InlineData("1. # h\n")]
+    [InlineData("> > > # h\n")]
+    [InlineData("- > # h\n")]
+    [InlineData("> Title\n> =====\n>\n")]
+    [InlineData("- Title\n  =====\n\n")]
+    public void HeadingsAnywhereInTheText_AreCounted_SoSixtyThousandCharactersOfThemAreRefused(string unit)
+    {
+        var problem = SafeMd.TryRender(Fill(unit), out var html);
+
+        // Either way it is answered at once and safely: refused for its headings, or (for the deepest nests) for its nesting; never rendered with thousands of headings.
+        Assert.Contains(problem, new[] { SafeMd.Problem.TooManyHeadings, SafeMd.Problem.TooDeeplyNested });
+        Assert.StartsWith("<pre>", html);
+    }
+
+    [Theory]
+    [InlineData("> # h\n")]
+    [InlineData("- # h\n")]
+    [InlineData("1. # h\n")]
+    public void TheLimitIsCountedInNestedContainersToo(string unit)
+    {
+        Assert.Equal(SafeMd.Problem.None, SafeMd.TryRender(string.Concat(Enumerable.Repeat(unit, SafeMd.MaxHeadings)), out _));
+        Assert.Equal(SafeMd.Problem.TooManyHeadings, SafeMd.TryRender(string.Concat(Enumerable.Repeat(unit, SafeMd.MaxHeadings + 1)), out _));
+    }
+
+    [Fact]
+    public void ThingsThatOnlyLookLikeHeadings_AreNotCounted()
+    {
+        var comments = "```bash\n" + string.Concat(Enumerable.Repeat("# comment\n", 300)) + "```\n";
+        var rules = string.Concat(Enumerable.Repeat("---\n", 300));
+        var hashtags = string.Concat(Enumerable.Repeat("#hashtag\n\n", 300));
+        var emptyItems = string.Concat(Enumerable.Repeat("-\n", 300));
+        var indentedCode = string.Concat(Enumerable.Repeat("    # not a heading\n", 300));
+
+        foreach (var text in new[] { comments, rules, hashtags, emptyItems, indentedCode })
+            Assert.Equal(SafeMd.Problem.None, SafeMd.TryRender(text, out _));
     }
 
     [Theory]
