@@ -29,8 +29,19 @@ public static class SafeMd
     /// <summary>The most headings a text may have, wherever they sit (top level, in a quote, in a list item).</summary>
     public const int MaxHeadings = 200;
 
-    /// <summary>Why a text cannot be rendered: too many headings, nested more deeply than the Markdown library allows, or the library refused it for another reason.</summary>
-    public enum Problem { None, TooManyHeadings, TooDeeplyNested, CannotRender }
+    /// <summary>
+    /// The most <c>[</c> characters a text may have (links, images, references). The library's link parser is quadratic in the number of unclosed openers
+    /// (measured at about 60 ms for 2,000 and 3 s for 8,000 of <c>[a](</c>, more with the parse used for counting); 1,000 keeps the worst case near 100 ms per parse and is far
+    /// above any real post (the shipped ones have none; an article with a hundred links is already long).
+    /// </summary>
+    public const int MaxBrackets = 1000;
+
+    /// <summary>Why a text cannot be rendered: too many headings or brackets, nested more deeply than the Markdown library allows, or the library refused it for another reason.</summary>
+    public enum Problem { None, TooManyHeadings, TooDeeplyNested, CannotRender, TooManyBrackets }
+
+    /// <summary>Diagnostics for tests: the counting parse must not use the quadratic identifier extension, the real one must.</summary>
+    public static bool CountingUsesIdentifiers => CountingPipeline.Extensions.Any(e => e is Markdig.Extensions.AutoIdentifiers.AutoIdentifierExtension);
+    public static bool RenderingUsesIdentifiers => Pipeline.Extensions.Any(e => e is Markdig.Extensions.AutoIdentifiers.AutoIdentifierExtension);
 
     // Rendering is a pure function of the text, so the result is kept by the text's hash: no invalidation is ever needed (an edit is a new text), the preview and the public page
     // share it, and an expensive text is rendered once however often it is requested. Bounded by size: one unit is about 1,024 characters of HTML (about 2 KB), so the limit
@@ -52,8 +63,7 @@ public static class SafeMd
     {
         var text = markdown ?? string.Empty;
         if (text.Length == 0) { html = string.Empty; return Problem.None; }
-        // The hash covers the UTF-16 code units, not a UTF-8 encoding: a lone surrogate would encode as U+FFFD and collide with a text that really contains it.
-        var key = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Runtime.InteropServices.MemoryMarshal.AsBytes(text.AsSpan())));
+        var key = KeyOf(text);
         if (Cache.TryGetValue(key, out (Problem Problem, string Html) hit)) { html = hit.Html; return hit.Problem; }
 
         var problem = Render(text, out html);
@@ -61,8 +71,17 @@ public static class SafeMd
         return problem;
     }
 
+    // The hash covers the UTF-16 code units, not a UTF-8 encoding: a lone surrogate would encode as U+FFFD and collide with a text that really contains it.
+    private static string KeyOf(string text) =>
+        Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Runtime.InteropServices.MemoryMarshal.AsBytes(text.AsSpan())));
+
+    /// <summary>True when the rendering of exactly this text is kept (a diagnostic for tests).</summary>
+    public static bool IsKept(string? markdown) => !string.IsNullOrEmpty(markdown) && Cache.TryGetValue(KeyOf(markdown), out _);
+
     private static Problem Render(string text, out string html)
     {
+        // Cheapest check first, before any parse: the bound on link openers is what keeps the parse below from becoming slow.
+        if (text.AsSpan().Count('[') > MaxBrackets) { html = Fallback(text); return Problem.TooManyBrackets; }
         try
         {
             // Count first with the cheap pipeline; this parse can also hit the library's depth limit, which is mapped like a failure in the real one.

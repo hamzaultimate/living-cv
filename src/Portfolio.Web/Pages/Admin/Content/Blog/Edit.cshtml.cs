@@ -176,6 +176,7 @@ public partial class EditModel : ContentPageModel
                 return Page();
             }
 
+            SafeMd.TryRender(body, out _); // a saved text is kept for the public page; a refused one never was
             if (replacedCover != row.Cover) await Writer.DeleteUploadsAsync([replacedCover], null);
             Flash(row.Draft ? $"Saved {title} as a draft. It is not shown on your site." : $"Saved {title}. It is shown on your site.");
             return Redirect(ListUrl); // no fragment: a browser skips autofocus when the address has one, and the saved message should take focus
@@ -199,7 +200,7 @@ public partial class EditModel : ContentPageModel
         if (body.Length == 0) c.Error(nameof(Form.Body), $"{label} is required.");
         else if (body.Length > BodyMax) c.Error(nameof(Form.Body), $"{label} can be at most {BodyMax:N0} characters.");
         else if (ContentRules.HasControlCharacters(body, multiline: true)) c.Error(nameof(Form.Body), $"{label} contains characters that are not allowed.");
-        else if (SafeMd.TryRender(body, out _) is var problem && problem != SafeMd.Problem.None) c.Error(nameof(Form.Body), BodyProblemMessage(problem));
+        else if (SafeMd.TryRender(body, out _, remember: false) is var problem && problem != SafeMd.Problem.None) c.Error(nameof(Form.Body), BodyProblemMessage(problem));
         return body;
     }
 
@@ -207,6 +208,7 @@ public partial class EditModel : ContentPageModel
     private string BodyProblemMessage(SafeMd.Problem problem) => problem switch
     {
         SafeMd.Problem.TooManyHeadings => $"{View.Label("body")} has more than {SafeMd.MaxHeadings} headings. Remove some of them.",
+        SafeMd.Problem.TooManyBrackets => $"{View.Label("body")} has more than {SafeMd.MaxBrackets:N0} opening square brackets (links, images and references). Remove some of them.",
         SafeMd.Problem.TooDeeplyNested => $"{View.Label("body")} is nested too deeply: lists, quotes or emphasis inside one another many levels down. Flatten it and try again.",
         _ => $"{View.Label("body")} could not be turned into a page. Simplify it and try again.",
     };

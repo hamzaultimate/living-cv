@@ -303,9 +303,47 @@ public class SafeMdTests
         Assert.Equal(SafeMd.Problem.TooDeeplyNested, SafeMd.Classify(new ArgumentException("Markdown elements in the input are too deeply nested - depth limit exceeded.")));
         Assert.Equal(SafeMd.Problem.CannotRender, SafeMd.Classify(new InvalidOperationException("something else")));
         Assert.Equal(SafeMd.Problem.CannotRender, SafeMd.Classify(new ArgumentException("bad argument")));
-        // And the real failure the library gives for the known deep input maps to nesting.
-        try { Markdown.Parse(string.Concat(Enumerable.Repeat("- ", 100)) + "x", new MarkdownPipelineBuilder().Build()); }
-        catch (Exception ex) { Assert.Equal(SafeMd.Problem.TooDeeplyNested, SafeMd.Classify(ex)); }
+        Assert.Equal(SafeMd.Problem.CannotRender, SafeMd.Classify(new InvalidOperationException("the text is too deeply nested"))); // the wording alone is not enough: only the depth limit's exception type
+        // And the real failure the library gives for the known deep input maps to nesting: if the library stops throwing, this fails loudly.
+        var thrown = Record.Exception(() => Markdown.Parse(string.Concat(Enumerable.Repeat("- ", 100)) + "x", new MarkdownPipelineBuilder().Build()));
+        Assert.NotNull(thrown);
+        Assert.Equal(SafeMd.Problem.TooDeeplyNested, SafeMd.Classify(thrown));
+    }
+
+    [Theory]
+    [InlineData("[a](x) ")]
+    [InlineData("[](x) ")]
+    [InlineData("[*a](*) ")]
+    [InlineData("[[a]](x) ")]
+    [InlineData("![a](x) ")]
+    public void TheBracketLimit_IsCounted_AcceptedAtTheCap_AndRefusedAboveIt(string unit)
+    {
+        var perUnit = unit.Count(c => c == '[');
+        var atCap = string.Concat(Enumerable.Repeat(unit, SafeMd.MaxBrackets / perUnit));
+        var above = atCap + unit;
+
+        Assert.Equal(SafeMd.Problem.None, SafeMd.TryRender(atCap, out _, remember: false));
+        Assert.Equal(SafeMd.Problem.TooManyBrackets, SafeMd.TryRender(above, out var html, remember: false));
+        Assert.StartsWith("<pre>", html);
+    }
+
+    [Theory]
+    [InlineData("[](")]
+    [InlineData("[a](")]
+    [InlineData("[*a](*")]
+    [InlineData("[a](\"")]
+    public void UnclosedLinkOpeners_AreRefusedBeforeAnyParse_SoNothingQuadraticRuns(string unit)
+    {
+        var text = string.Concat(Enumerable.Repeat(unit, 60_000 / unit.Length));
+
+        Assert.Equal(SafeMd.Problem.TooManyBrackets, SafeMd.TryRender(text, out _, remember: false));
+    }
+
+    [Fact]
+    public void TheCountingParse_LeavesOutTheIdentifierExtension_AndTheRealRenderKeepsIt()
+    {
+        Assert.False(SafeMd.CountingUsesIdentifiers); // with it, counting would itself be quadratic in equal headings
+        Assert.True(SafeMd.RenderingUsesIdentifiers);  // and the shipped posts keep their heading ids
     }
 
     [Theory]

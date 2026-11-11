@@ -750,6 +750,7 @@ public class BlogEditorTests
     {
         string.Concat(Enumerable.Repeat("- ", 100)) + "x",
         string.Concat(Enumerable.Repeat("# h\n", 201)),
+        string.Concat(Enumerable.Repeat("[a](", 1001)),
     }.Select(p => new object[] { p });
 
     [Theory]
@@ -763,7 +764,7 @@ public class BlogEditorTests
         var save = await ContentFlow.PostAsync(owner, Edit, PostFields(body: body, slug: "unrenderable"));
 
         Assert.Contains("Some fields need attention", await TextAsync(save));
-        Assert.Matches("(nested too deeply|more than 200 headings)", preview);
+        Assert.Matches("(nested too deeply|more than 200 headings|more than 1,000 opening square brackets)", preview);
         Assert.DoesNotContain("Nothing has been saved", preview); // no preview was produced
         Assert.Empty(await RowsAsync(app));
 
@@ -777,6 +778,25 @@ public class BlogEditorTests
         Assert.Equal(HttpStatusCode.OK, pub.StatusCode);
         Assert.Contains("<pre>", await pub.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.OK, (await app.NewClient().GetAsync("/blog")).StatusCode);
+    }
+
+    [Fact]
+    public async Task OnlyASavedText_IsKeptForThePublicPage_NotAPreviewAndNotARefusedSave()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        var previewed = "Preview only body " + Guid.NewGuid();
+        var refused = "Refused save body " + Guid.NewGuid();
+        var saved = "Saved body " + Guid.NewGuid();
+
+        await ContentFlow.PostAsync(owner, $"{Edit}?handler=Preview", ContentFlow.Fields(("Body", previewed)), Edit);
+        await ContentFlow.PostAsync(owner, Edit, PostFields(title: "", body: refused)); // another field is invalid
+        Assert.False(SafeMd.IsKept(previewed));
+        Assert.False(SafeMd.IsKept(refused));
+
+        await ContentFlow.PostAsync(owner, Edit, PostFields(body: saved));
+        Assert.True(SafeMd.IsKept(saved));
+        Assert.Single(await RowsAsync(app));
     }
 
     [Fact]
