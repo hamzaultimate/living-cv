@@ -41,6 +41,9 @@ public class LoginModel : PageModel
     public async Task<IActionResult> OnPostAsync(CancellationToken ct)
     {
         // Oversized input is refused before any hashing; the message is the same as for any other failure.
+        // A form that leaves a field out binds null (the model's empty defaults are replaced): that is just empty input, refused like any other.
+        UserName ??= "";
+        Password ??= "";
         var plausible = UserName.Length is > 0 and <= OwnerAccount.MaxLength.UserName * 2
             && Password.Length is > 0 and <= PasswordPolicy.MaxLength;
         var context = new SignInContext(SignInThrottle.KeyFor(HttpContext.Connection.RemoteIpAddress), _devices.Read(HttpContext));

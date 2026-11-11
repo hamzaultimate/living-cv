@@ -647,6 +647,39 @@ public class BlogEditorTests
         Assert.Empty(Regex.Matches(html, "<script(?![^>]*\\ssrc=)"));
     }
 
+    private static readonly Regex PreviewButton = new("<button[^>]*\\sformaction=\"([^\"]*)\"[^>]*>Preview</button>", RegexOptions.Compiled);
+
+    [Fact]
+    public async Task ThePreviewButton_PostsToThePreviewHandler_OnTheNewFormAndTheEditForm_AndNeverSaves()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
+        int Version() => app.Services.GetRequiredService<ISiteProfileProvider>().Version;
+
+        foreach (var formPath in new[] { Edit, $"{Edit}/{seeded.BlogId}" })
+        {
+            var html = await owner.GetStringAsync(formPath);
+            var match = PreviewButton.Match(html);
+            Assert.True(match.Success, $"{formPath}: the Preview button has no formaction");
+            var action = WebUtility.HtmlDecode(match.Groups[1].Value);
+            Assert.Contains("handler=Preview", action); // not empty: an empty address posts to Save
+            var before = await ContentFlow.SnapshotAsync(app);
+            var version = Version();
+
+            var fields = PostFields("Previewed only", body: "## Previewed\n\nText.", slug: "previewed-only");
+            if (formPath != Edit) fields["Form.Stamp"] = await ContentFlow.StampAsync(owner, formPath);
+            var response = await ContentFlow.PostAsync(owner, action, fields, formPath);
+
+            var page = await TextAsync(response);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode); // the page again, not a redirect after a save
+            Assert.Contains("Nothing has been saved", page);
+            Assert.Contains("<h2 id=\"previewed\">Previewed</h2>", page);
+            Assert.Equal(before, await ContentFlow.SnapshotAsync(app));
+            Assert.Equal(version, Version());
+        }
+    }
+
     [Fact]
     public async Task ThePreview_IsOwnerOnly_NeedsTheAntiforgeryToken_AndRefusesAnOversizedBody()
     {
@@ -688,7 +721,7 @@ public class BlogEditorTests
         Assert.Equal(HttpStatusCode.OK, pubResponse.StatusCode);
         var pub = await pubResponse.Content.ReadAsStringAsync();
 
-        foreach (var (name, html) in new[] { ("preview", Region(preview, "adm-preview", "</section>")), ("public", Region(pub, "article", "</article>")) })
+        foreach (var (name, html) in new[] { ("preview", Region(preview, "adm-post-preview", "</section>")), ("public", Region(pub, "article", "</article>")) })
         {
             Assert.True(html.Length > 0, name + " region not found");
             Assert.DoesNotMatch(@"<(script|iframe|style|svg|img\s+[^>]*onerror|object|embed|math|form|input)\b", html);

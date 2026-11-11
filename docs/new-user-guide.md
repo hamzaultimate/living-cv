@@ -303,7 +303,7 @@ content" above).
 
 **Blog posts and drafts.** A new post starts as a draft and is dated today. A draft is saved but appears nowhere on your site: not in the list, not at its
 address (which answers "not found"), not in the sitemap, and nowhere else. Untick **Keep as a draft** to publish; tick it again to take the post
-down at once (it is kept). **Preview** shows the text exactly as it will be published and saves nothing. The text is Markdown: headings, bold,
+down at once (it is kept). **Preview** shows the text exactly as it will be published and saves nothing (on a new post too). Unlike Talks, the blog does not refuse a second post with the same title: the address name gets a number suffix (`my-post-2`) instead, so give each post its own title if you want them told apart. The text is Markdown: headings, bold,
 italics, lists, quotes, tables, code and links work. **Raw HTML is shown as text, never run**, links must start with http, https or mailto (or be addresses
 on your own site), and pictures must be http, https or on your own site; anything else is shown as plain text. Every link in a post gets `rel="noopener nofollow ugc"` (links to your own pages too); an email address that is turned into a link automatically does not.
 A cover image is re-encoded on upload and needs alt text. The pictures a post uses stay in storage as long as any post still points at them.

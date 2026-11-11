@@ -54,6 +54,9 @@ public partial class EditModel : ContentPageModel
 
     public int? Id { get; private set; }
     public bool IsNew => Id is null;
+
+    /// <summary>Where the Preview button posts: the Preview handler of this same page, with or without an id (a tag helper renders an empty address for a new entry, which would post to Save).</summary>
+    public string PreviewUrl => $"{ListUrl}/edit{(Id is { } id ? "/" + id : "")}?handler=Preview";
     public string MaxSize => UploadForm.Label(_uploads.MaxBytes);
 
     /// <summary>The cover image the post has now, if any (for the preview and the Remove option).</summary>
