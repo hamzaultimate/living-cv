@@ -297,6 +297,17 @@ public class SafeMdTests
             Assert.Equal(SafeMd.Problem.None, SafeMd.TryRender(text, out _));
     }
 
+    [Fact]
+    public void OnlyTheDepthLimit_IsCalledNesting_AnyOtherFailureIsNeutral()
+    {
+        Assert.Equal(SafeMd.Problem.TooDeeplyNested, SafeMd.Classify(new ArgumentException("Markdown elements in the input are too deeply nested - depth limit exceeded.")));
+        Assert.Equal(SafeMd.Problem.CannotRender, SafeMd.Classify(new InvalidOperationException("something else")));
+        Assert.Equal(SafeMd.Problem.CannotRender, SafeMd.Classify(new ArgumentException("bad argument")));
+        // And the real failure the library gives for the known deep input maps to nesting.
+        try { Markdown.Parse(string.Concat(Enumerable.Repeat("- ", 100)) + "x", new MarkdownPipelineBuilder().Build()); }
+        catch (Exception ex) { Assert.Equal(SafeMd.Problem.TooDeeplyNested, SafeMd.Classify(ex)); }
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

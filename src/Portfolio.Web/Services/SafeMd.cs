@@ -75,9 +75,13 @@ public static class SafeMd
         {
             html = Fallback(text);
             // The library refuses text nested beyond its depth limit (a hundred list levels, a hundred quote marks, a long run of emphasis marks) by throwing.
-            return ex is ArgumentException && ex.Message.Contains("nested", StringComparison.OrdinalIgnoreCase) ? Problem.TooDeeplyNested : Problem.CannotRender;
+            return Classify(ex);
         }
     }
+
+    /// <summary>Only the library's depth limit (an ArgumentException that says the text is too deeply nested) is called nesting; any other failure is neutral.</summary>
+    public static Problem Classify(Exception ex) =>
+        ex is ArgumentException && ex.Message.Contains("nested", StringComparison.OrdinalIgnoreCase) ? Problem.TooDeeplyNested : Problem.CannotRender;
 
     private static string Fallback(string text) => "<pre>" + System.Net.WebUtility.HtmlEncode(text) + "</pre>\n";
 
