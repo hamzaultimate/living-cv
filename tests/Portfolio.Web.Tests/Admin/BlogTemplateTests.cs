@@ -52,6 +52,8 @@ public class BlogTemplateTests
         Assert.Contains("already used by another scribble", dup);
         var noBody = await (await ContentFlow.PostAsync(owner, Edit, ContentFlow.Fields(("Title", "No text"), ("Date", "2025-01-01"), ("Body", "")))).Content.ReadAsStringAsync();
         Assert.Contains("Scribble text is required.", noBody);
+        var deep = await (await ContentFlow.PostAsync(owner, Edit, ContentFlow.Fields(("Title", "Deep"), ("Date", "2025-01-01"), ("Body", string.Concat(Enumerable.Repeat("- ", 100)) + "x")))).Content.ReadAsStringAsync();
+        Assert.Contains("Scribble text is nested too deeply", deep);
         var badDate = await (await ContentFlow.PostAsync(owner, Edit, ContentFlow.Fields(("Title", "Bad date"), ("Date", "never"), ("Body", "x")))).Content.ReadAsStringAsync();
         Assert.Contains("Scribbled on must be a date", badDate);
         var id = (await ContentFlow.IdsAsync(app, db => db.BlogPosts.Select(b => b.Id))).Single();

@@ -713,6 +713,53 @@ public class BlogEditorTests
         return end < 0 ? html[start..] : html[start..end];
     }
 
+    public static IEnumerable<object[]> UnrenderableBodies() => new[]
+    {
+        string.Concat(Enumerable.Repeat("- ", 100)) + "x",
+        string.Concat(Enumerable.Repeat("# h\n", 201)),
+    }.Select(p => new object[] { p });
+
+    [Theory]
+    [MemberData(nameof(UnrenderableBodies))]
+    public async Task ATextTheRendererCannotTake_IsRefusedByThePreviewAndTheSave_AndAStoredOneStillShowsAs200(string body)
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+
+        var preview = WebUtility.HtmlDecode(await TextAsync(await ContentFlow.PostAsync(owner, $"{Edit}?handler=Preview", ContentFlow.Fields(("Body", body)), Edit)));
+        var save = await ContentFlow.PostAsync(owner, Edit, PostFields(body: body, slug: "unrenderable"));
+
+        Assert.Contains("Some fields need attention", await TextAsync(save));
+        Assert.Matches("(nested too deeply|more than 200 headings)", preview);
+        Assert.DoesNotContain("Nothing has been saved", preview); // no preview was produced
+        Assert.Empty(await RowsAsync(app));
+
+        // A row that is already stored (an older post, or one written by the seeder) must not turn the public page into an error.
+        using (var db = app.CreateDbContext())
+        {
+            db.BlogPosts.Add(new BlogPost { Title = "Stored", Slug = "stored", Date = new DateOnly(2024, 1, 1), BodyMarkdown = body, ConcurrencyStamp = "s" });
+            await db.SaveChangesAsync();
+        }
+        var pub = await app.NewClient().GetAsync("/blog/stored");
+        Assert.Equal(HttpStatusCode.OK, pub.StatusCode);
+        Assert.Contains("<pre>", await pub.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.OK, (await app.NewClient().GetAsync("/blog")).StatusCode);
+    }
+
+    [Fact]
+    public async Task AnEditorSaveRendersEachTextOnce_AndThePublicPageServesItFromTheCache()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        var body = "Unique cache body " + Guid.NewGuid();
+        await ContentFlow.PostAsync(owner, Edit, PostFields(body: body, slug: "cached-one"));
+        var afterSave = SafeMd.Renders;
+
+        for (var i = 0; i < 3; i++) Assert.Equal(HttpStatusCode.OK, (await app.NewClient().GetAsync("/blog/cached-one")).StatusCode);
+
+        Assert.Equal(afterSave, SafeMd.Renders); // the save validated (rendered) the text; three public views cost nothing more
+    }
+
     [Fact]
     public async Task APublicPostLinks_GetNofollowUgc_AndAnOverlongAutolink_DoesNotBreakThePage()
     {

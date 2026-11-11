@@ -95,7 +95,13 @@ public partial class EditModel : ContentPageModel
         CurrentCover = id is null ? null : await Db.BlogPosts.AsNoTracking().Where(x => x.Id == id).Select(x => x.Cover).FirstOrDefaultAsync(ct);
         var body = NormaliseBody(Form.Body);
         if (body.Length > BodyMax) ModelState.AddModelError("Form.Body", $"{View.Label("body")} can be at most {BodyMax:N0} characters.");
-        else PreviewHtml = SafeMd.ToHtml(body);
+        else
+        {
+            // The same refusal as a save: a text that cannot be rendered is not previewed as if it could be published.
+            var problem = SafeMd.TryRender(body, out var html);
+            if (problem == SafeMd.Problem.None) PreviewHtml = html;
+            else ModelState.AddModelError("Form.Body", BodyProblemMessage(problem));
+        }
         return Page();
     }
 
@@ -190,8 +196,14 @@ public partial class EditModel : ContentPageModel
         if (body.Length == 0) c.Error(nameof(Form.Body), $"{label} is required.");
         else if (body.Length > BodyMax) c.Error(nameof(Form.Body), $"{label} can be at most {BodyMax:N0} characters.");
         else if (ContentRules.HasControlCharacters(body, multiline: true)) c.Error(nameof(Form.Body), $"{label} contains characters that are not allowed.");
+        else if (SafeMd.TryRender(body, out _) is var problem && problem != SafeMd.Problem.None) c.Error(nameof(Form.Body), BodyProblemMessage(problem));
         return body;
     }
+
+    /// <summary>Wording for a text the renderer cannot take; the noun is the manifest's label for the body field.</summary>
+    private string BodyProblemMessage(SafeMd.Problem problem) => problem == SafeMd.Problem.TooManyHeadings
+        ? $"{View.Label("body")} has more than {SafeMd.MaxHeadings} headings. Remove some of them."
+        : $"{View.Label("body")} is nested too deeply: lists, quotes or emphasis inside one another many levels down. Flatten it and try again.";
 
     private DateOnly? CheckDate(FormCheck c)
     {

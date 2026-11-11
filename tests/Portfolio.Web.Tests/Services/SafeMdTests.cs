@@ -143,6 +143,67 @@ public class SafeMdTests
         Assert.Contains("href=\"mailto:a@b.c\"", html);
     }
 
+    public static IEnumerable<object[]> DeeplyNested() => new[]
+    {
+        string.Concat(Enumerable.Repeat("- ", 100)) + "x",
+        string.Concat(Enumerable.Repeat(">", 128)) + " x",
+        new string('*', 256) + "word" + new string('*', 256),
+        string.Concat(Enumerable.Repeat("_[", 256)),
+        string.Concat(Enumerable.Repeat("![", 256)),
+        string.Concat(Enumerable.Repeat("- ", 1000)) + "x",
+    }.Select(p => new object[] { p });
+
+    [Theory]
+    [MemberData(nameof(DeeplyNested))]
+    public void ATextNestedBeyondTheLibrariesLimit_NeverThrows_AndFallsBackToItsEncodedText(string markdown)
+    {
+        var html = SafeMd.ToHtml(markdown); // would throw ArgumentException from the Markdown library if it were not caught
+
+        var problem = SafeMd.TryRender(markdown, out var again);
+        Assert.Equal(html, again);
+        if (problem != SafeMd.Problem.None) Assert.StartsWith("<pre>", html);
+        Assert.DoesNotMatch(@"<(script|iframe|img|svg)\b", html);
+    }
+
+    [Fact]
+    public void TheKnownDepthFailures_AreReportedAsTooDeeplyNested()
+    {
+        // Pinned: these are the inputs that made the library throw when this guard was written; if a library upgrade stops throwing, delete the case, not the guard.
+        Assert.Equal(SafeMd.Problem.TooDeeplyNested, SafeMd.TryRender(string.Concat(Enumerable.Repeat("- ", 100)) + "x", out var html));
+        Assert.StartsWith("<pre>", html);
+        Assert.Contains("- - - -", html);
+    }
+
+    [Fact]
+    public void MoreHeadingsThanTheLimit_AreRefused_AndTheLimitItselfIsRendered()
+    {
+        var atLimit = string.Join("\n", Enumerable.Repeat("# h", SafeMd.MaxHeadings));
+        var over = string.Join("\n", Enumerable.Repeat("# h", SafeMd.MaxHeadings + 1));
+        var setext = string.Join("\n\n", Enumerable.Range(0, SafeMd.MaxHeadings + 1).Select(i => $"Title {i}\n====="));
+        var huge = string.Concat(Enumerable.Repeat("# h\n", 15_000)); // the input that took seconds to render before the limit
+
+        Assert.Equal(SafeMd.Problem.None, SafeMd.TryRender(atLimit, out _));
+        Assert.Equal(SafeMd.Problem.TooManyHeadings, SafeMd.TryRender(over, out var fallback));
+        Assert.StartsWith("<pre># h", fallback);
+        Assert.Equal(SafeMd.Problem.TooManyHeadings, SafeMd.TryRender(setext, out _));
+        Assert.Equal(SafeMd.Problem.TooManyHeadings, SafeMd.TryRender(huge, out _));
+    }
+
+    [Fact]
+    public void ARenderedText_IsServedFromTheCache_TheSecondTime_AndAnEditIsANewRender()
+    {
+        var text = "## Cache probe " + Guid.NewGuid() + "\n\nBody.";
+        var before = SafeMd.Renders;
+
+        var first = SafeMd.ToHtml(text);
+        var second = SafeMd.ToHtml(text);
+        var edited = SafeMd.ToHtml(text + " More.");
+
+        Assert.Equal(first, second);
+        Assert.Equal(before + 2, SafeMd.Renders); // one render for the text (the repeat was a hit) and one for the edit
+        Assert.NotEqual(first, edited);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
