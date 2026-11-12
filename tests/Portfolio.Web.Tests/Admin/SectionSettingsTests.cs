@@ -492,6 +492,25 @@ public class SectionSettingsTests
         Assert.Equal(HttpStatusCode.Redirect, (await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("skills", label: "certs"))).StatusCode);
     }
 
+    [Fact]
+    public async Task TheDashboard_UsesSectionNamesAsWritten_AndTheOffByDefaultNoteDescribesItsSwitch()
+    {
+        var (app, owner, _, _) = await SiteAsync("healthcare");
+        using var _a = app;
+        await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("skills", label: "LinkedIn Posts & NHS Skills"));
+
+        var dashboard = await owner.GetStringAsync("/admin");
+
+        Assert.Contains("LinkedIn Posts &amp; NHS Skills", dashboard); // not "linkedin posts & nhs skills"
+        Assert.DoesNotContain("linkedin posts", dashboard);
+        Assert.Contains("Show, hide, rename and reorder each "Page".", dashboard); // the template's word for a section
+
+        var html = await owner.GetStringAsync(SectionsFlow.Path);
+        Assert.Matches(@"id=""Form_Rows_5__Enabled""[^>]*aria-describedby=""Form_Rows_5__Enabled-default""|aria-describedby=""Form_Rows_5__Enabled-default""[^>]*id=""Form_Rows_5__Enabled""", html);
+        Assert.Contains("<p id=\"Form_Rows_5__Enabled-default\" class=\"adm-hint\">Off until you switch it on.", html);
+        Assert.DoesNotContain("Form_Rows_4__Enabled-default", html); // only the rows the template has off carry the note
+    }
+
     // ---------------------------------------------------------------- concurrency
 
     [Fact]

@@ -43,8 +43,9 @@ public class SectionsModel : ProfilePartModel
     /// <summary>What a row is called on this page: the name typed, or the template's.</summary>
     public string NameOf(SectionRowForm row) => TemplateView.Cap(!string.IsNullOrWhiteSpace(row.Label) ? row.Label.Trim() : TemplateRow(row)?.Label ?? "?");
 
-    public FieldVm Toggle(int index, SectionRowForm row) =>
-        FieldVm.For(View, ModelState, "shown", $"Rows[{index}].{nameof(SectionRowForm.Enabled)}", null, FieldKind.Checkbox, isChecked: row.Enabled, withHint: false);
+    /// <summary>The switch for a row; <paramref name="noteId"/> is the id of the note drawn beside it (the template's default), which then describes the switch to a screen reader.</summary>
+    public FieldVm Toggle(int index, SectionRowForm row, string? noteId = null) =>
+        FieldVm.For(View, ModelState, "shown", $"Rows[{index}].{nameof(SectionRowForm.Enabled)}", null, FieldKind.Checkbox, isChecked: row.Enabled, withHint: false, describedBy: noteId);
 
     private async Task<Portfolio.Data.Entities.SiteProfile> LoadAsync(CancellationToken ct)
     {

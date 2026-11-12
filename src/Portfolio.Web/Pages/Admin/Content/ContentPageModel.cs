@@ -33,7 +33,7 @@ public sealed class FieldVm
 
     /// <summary>The control for field <paramref name="key"/> of <paramref name="view"/>, with the errors recorded for it; hidden when the template hides the field.</summary>
     public static FieldVm For(EditorView view, ModelStateDictionary state, string key, string property, string? value, FieldKind kind = FieldKind.Text, int maxLength = 200, int rows = 4,
-        bool isChecked = false, string? listId = null, string? autocomplete = null, IReadOnlyList<(string Value, string Text)>? options = null, bool? required = null, bool withHint = true)
+        bool isChecked = false, string? listId = null, string? autocomplete = null, IReadOnlyList<(string Value, string Text)>? options = null, bool? required = null, bool withHint = true, string? describedBy = null)
     {
         if (!view.Visible(key)) return new FieldVm { Key = key, Property = property, Label = key, Visible = false };
         state.TryGetValue("Form." + property, out var entry);
@@ -41,14 +41,17 @@ public sealed class FieldVm
         {
             Key = key, Property = property, Label = view.Label(key), Hint = withHint ? view.Hint(key) : null, Value = value, Kind = kind, MaxLength = maxLength,
             Required = required ?? view.Required(key), Rows = rows, IsChecked = isChecked, ListId = listId, Autocomplete = autocomplete, Options = options ?? [],
-            Errors = entry?.Errors.Select(e => e.ErrorMessage).ToList() ?? [],
+            Errors = entry?.Errors.Select(e => e.ErrorMessage).ToList() ?? [], ExtraDescribedBy = describedBy,
         };
     }
 
     public string Name => "Form." + Property;
     /// <summary>The element id: the property path with its dots and brackets as underscores, which is also what the error summary links to (<c>Form_Metrics_0__Value</c>).</summary>
     public string Id => "Form_" + System.Text.RegularExpressions.Regex.Replace(Property, @"[.\[\]]", "_");
-    public string DescribedBy => string.Join(' ', new[] { Hint is null ? null : Id + "-hint", Errors.Count > 0 ? Id + "-error" : null }.Where(x => x is not null));
+    /// <summary>Ids of other elements on the page that describe this control (a note drawn beside it), added to its description.</summary>
+    public string? ExtraDescribedBy { get; init; }
+
+    public string DescribedBy => string.Join(' ', new[] { Hint is null ? null : Id + "-hint", Errors.Count > 0 ? Id + "-error" : null, ExtraDescribedBy }.Where(x => x is not null));
 }
 
 /// <summary>One line of a list screen.</summary>

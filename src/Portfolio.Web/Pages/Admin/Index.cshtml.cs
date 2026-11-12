@@ -21,6 +21,9 @@ public class IndexModel : AdminPageModel
     /// <summary>The profile's own editors (home page introduction, metrics, About) with their names in the template's words.</summary>
     public IReadOnlyList<(string Url, string Heading)> Parts { get; private set; } = [];
 
+    /// <summary>What one section is called in the template's words, for the sections tile.</summary>
+    public string SectionsItem { get; private set; } = "Section";
+
     /// <summary>The sections page's name in the template's words.</summary>
     public string SectionsHeading { get; private set; } = "Sections";
 
@@ -36,8 +39,10 @@ public class IndexModel : AdminPageModel
         {
             var template = await _template.GetAsync();
             Parts = EditorView.ProfileLinks(template);
-            SectionsHeading = new EditorView(template, ProfileParts.Sections).Heading;
-            var labels = EditorFields.Sections.Select(s => template.Section(s).Label.ToLowerInvariant()).ToList();
+            var sections = new EditorView(template, ProfileParts.Sections);
+            SectionsHeading = sections.Heading;
+            SectionsItem = sections.ItemLabel;
+            var labels = EditorFields.Sections.Select(s => template.Section(s).Label).ToList();
             ContentLabels = labels.Count > 1 ? string.Join(", ", labels.Take(labels.Count - 1)) + " and " + labels[^1] : labels.FirstOrDefault() ?? "content";
             var state = await _onboarding.GetStateAsync(ct);
             SetupPending = state.FirstRun;

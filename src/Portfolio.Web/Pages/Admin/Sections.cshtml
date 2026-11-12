@@ -38,10 +38,11 @@
             }
             else
             {
-                <partial name="_Field" model="@Model.Toggle(i, row)" />
-                @if (template is { Enabled: false })
+                var noteId = template is { Enabled: false } ? $"Form_Rows_{i}__Enabled-default" : null;
+                <partial name="_Field" model="@Model.Toggle(i, row, noteId)" />
+                @if (noteId is not null)
                 {
-                    <p class="adm-hint">@v.Label("defaultOff"). @v.Hint("defaultOff")</p>
+                    <p id="@noteId" class="adm-hint">@v.Label("defaultOff"). @v.Hint("defaultOff")</p>
                 }
             }
             <partial name="_RowButtons" model="@(new RowButtonsVm(i, f.Rows.Count, name, Model.FocusId, CanRemove: false))" />
