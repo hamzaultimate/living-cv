@@ -242,7 +242,7 @@ For each you can switch it on or off, give it your own name in the menu (leave t
   A switch is refused only when nothing is on even now. **Once you have made a choice for a section it cannot be reset to "follow the template"**: it stays as you set it (you can switch it either way). Saving this page under another template stores what differs from *that* template.
 - **Limits to know.** Moving Contact or Testimonials has no effect on the menu (Contact is a fixed button, last in the mobile menu, and Testimonials is a block on the home page); those rows say so.
   Renaming a section changes its name in the menu and in the links back to it, not the headings, page titles or breadcrumbs of the page itself, which come from the template.
-  A name may not match another section's name or short menu name, or the fixed "CV" entry, and may not contain invisible characters (a zero-width joiner or non-joiner between letters, as in Persian or Urdu names and emoji, is fine).
+  A name may not match another section's name or short menu name, or the fixed "CV" entry, and may not contain invisible characters (a zero-width joiner or non-joiner between letters, as in Persian or Urdu names and emoji, is fine, and an emoji selector right after a symbol or digit; flag tag sequences, selectors anywhere else and names with nothing visible are refused). Names are compared without joiners, so a hidden joiner cannot make a duplicate.
 - As on the other editors, a save from a page that was open before something else changed the profile is refused with a message that says nothing was saved.
 
 ### Forgot the password
