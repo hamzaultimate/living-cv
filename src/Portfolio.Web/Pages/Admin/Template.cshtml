@@ -55,6 +55,10 @@
             These stay in the database and reappear if you switch to a template that uses them.
         </p>
     }
+    @if (Model.LeavesNoMenuSection && !isCurrent)
+    {
+        <p class="adm-callout" role="note">With your saved section choices this template would show no section in the menu, so it cannot be switched to yet. Switch a section on at <a href="/admin/sections">Sections</a> first.</p>
+    }
     <nav class="adm-tabs" aria-label="Preview page">
         @foreach (var (path, label) in Model.PreviewPages)
         {

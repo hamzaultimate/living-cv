@@ -404,6 +404,31 @@ public class SectionSettingsTests
         Assert.Equal(HttpStatusCode.Redirect, (await SectionsFlow.SaveAsync(owner, r => SectionsFlow.Set("talks", label: "blog")(SectionsFlow.Set("blog", label: "talks")(r)))).StatusCode);
     }
 
+    [Fact]
+    public async Task ATemplateSwitch_ThatWouldLeaveNoMenuSection_IsRefusedWithAMessage_AndTheSiteKeepsItsMenu()
+    {
+        var (app, owner, visitor, _) = await SiteAsync("software");
+        using var _a = app;
+        // Everything but the blog is hidden: allowed on software, where the blog is on by default and nothing needs storing for it.
+        Assert.Equal(HttpStatusCode.Redirect, (await SectionsFlow.SaveAsync(owner, r => r.Select(x => x with { Enabled = x.Key == "blog" }).ToList())).StatusCode);
+
+        var preview = await owner.GetStringAsync("/admin/template?show=healthcare");
+        Assert.Contains("would show no section in the menu", preview);
+        var refused = await ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "healthcare" });
+        Assert.Equal(HttpStatusCode.Redirect, refused.StatusCode);
+        var page = await owner.GetStringAsync("/admin/template");
+        Assert.Contains("Switching to Healthcare would leave no &quot;Page&quot; switched on that appears in the menu, so the template was not switched.", page);
+        Assert.Contains("Open Pages of your site and switch one on first.", page); // the target template's own words
+        Assert.Equal("software", (await ProfileFlow.ProfileAsync(app)).TemplateKey);
+        Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/blog")).StatusCode);
+
+        // With one more section on, the switch goes through.
+        await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("contact", true));
+        Assert.Equal(HttpStatusCode.Redirect, (await ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "healthcare" })).StatusCode);
+        Assert.Equal("healthcare", (await ProfileFlow.ProfileAsync(app)).TemplateKey);
+        Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/contact")).StatusCode);
+    }
+
     // ---------------------------------------------------------------- concurrency
 
     [Fact]

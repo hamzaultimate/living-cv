@@ -61,6 +61,7 @@ public class TemplateModel : AdminPageModel
         PreviewPages = [("/", "Home"), .. view.NavLinks(mobile: true).Select(l => (l.Path, l.Path == "/cv" ? "CV" : Cap(l.Label)))];
         PreviewPath = PreviewPages.Select(p => p.Path).FirstOrDefault(p => p == Tab) ?? "/";
         HiddenContent = await HiddenContentAsync(view, ct);
+        LeavesNoMenuSection = !HasMenuSection(view);
     }
 
     public async Task<IActionResult> OnPostAsync(CancellationToken ct)
@@ -68,6 +69,14 @@ public class TemplateModel : AdminPageModel
         if (!_catalog.TryGet(Key, out var template))
         {
             FlashError("That template is not available.");
+            return RedirectToPage();
+        }
+
+        // The sections page never leaves a site without a menu section; a switch must not either: the new template's defaults, with the owner's stored choices on top, need at least one on.
+        var target = await ResolveAsync(template.Key, ct);
+        if (!HasMenuSection(target))
+        {
+            FlashError($"Switching to {template.Name} would leave no \"{new EditorView(target, ProfileParts.Sections).ItemLabel}\" switched on that appears in the menu, so the template was not switched. Open {new EditorView(target, ProfileParts.Sections).Heading} and switch one on first.");
             return RedirectToPage();
         }
 
@@ -79,6 +88,14 @@ public class TemplateModel : AdminPageModel
         Flash($"Switched to the {template.Name} template. Nothing was deleted: sections it does not use are hidden, and come back if you switch again.");
         return RedirectToPage();
     }
+
+    private async Task<TemplateView> ResolveAsync(string key, CancellationToken ct) =>
+        _resolver.Resolve(SiteProfileMapper.ToOptions(await _editor.LoadAsync(ct)), key);
+
+    private static bool HasMenuSection(TemplateView view) => view.Sections.Any(s => s.Enabled && s.Path is not null);
+
+    /// <summary>True when switching to the selected template would leave the site without a section in the menu (the switch is then refused).</summary>
+    public bool LeavesNoMenuSection { get; private set; }
 
     private async Task<IReadOnlyList<(string Label, int Count)>> HiddenContentAsync(TemplateView view, CancellationToken ct)
     {
