@@ -48,7 +48,7 @@ public class SectionTemplateTests
         var rows = await SectionsFlow.RowsAsync(owner);
         // Messages: a duplicate name, a list that does not match, the row button, a stale save and the save message.
         var dup = await (await SectionsFlow.SaveAsync(owner, r => SectionsFlow.Set("experience", label: "about")(r))).Content.ReadAsStringAsync();
-        Assert.Contains("Each &quot;Zork&quot; needs its own name: &quot;about&quot; is already used by another.", dup);
+        Assert.Contains("Each &quot;Zork&quot; needs its own name: &quot;about&quot; is already used by another menu entry.", dup);
         var forged = await (await SectionsFlow.SaveAsync(owner, r => r.Where(x => x.Key != "talks").ToList())).Content.ReadAsStringAsync();
         Assert.Contains("The list on this page does not match your template any more", forged);
         var moved = await (await ProfileFlow.PostAsync(owner, SectionsFlow.Path + "?handler=Move&index=2&direction=up", SectionsFlow.Fields(rows), tokenFrom: SectionsFlow.Path)).Content.ReadAsStringAsync();

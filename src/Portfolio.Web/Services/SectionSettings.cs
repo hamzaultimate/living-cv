@@ -65,10 +65,20 @@ public static class SectionSettings
         }
 
         // Two sections with one name in the menu would be indistinguishable. Compared case-insensitively over the names the owner would end up with, switched off or not.
+        // A typed name must also differ from what the menu shows for every other section (its short name on a wide screen, or its own typed name) and from the fixed "CV" entry.
         var effective = rows.Select((r, i) => labelShown && !string.IsNullOrWhiteSpace(typed[i]) ? typed[i]! : Find(definition, r.Key)!.Label).ToList();
+        var shown = rows.Select((r, i) => labelShown && !string.IsNullOrWhiteSpace(typed[i]) ? typed[i]! : Find(definition, r.Key)!.ShortLabel ?? Find(definition, r.Key)!.Label).ToList();
         for (var i = 0; i < rows.Count; i++)
-            if (check.IsValid($"Rows[{i}].{nameof(SectionRowForm.Label)}") && effective.Take(i).Any(e => string.Equals(e, effective[i], StringComparison.OrdinalIgnoreCase)))
-                check.Error($"Rows[{i}].{nameof(SectionRowForm.Label)}", $"Each \"{item}\" needs its own name: \"{effective[i]}\" is already used by another.");
+        {
+            var property = $"Rows[{i}].{nameof(SectionRowForm.Label)}";
+            if (!check.IsValid(property)) continue;
+            bool Same(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+            var typedName = labelShown && !string.IsNullOrWhiteSpace(typed[i]);
+            if (effective.Take(i).Any(e => Same(e, effective[i])) || (typedName && Enumerable.Range(0, rows.Count).Any(j => j != i && (Same(shown[j], effective[i]) || Same(effective[j], effective[i])))))
+                check.Error(property, $"Each \"{item}\" needs its own name: \"{effective[i]}\" is already used by another menu entry.");
+            else if (typedName && Same(effective[i], "cv"))
+                check.Error(property, $"Each \"{item}\" needs its own name: \"{effective[i]}\" is the name of the CV link, which is always in the menu.");
+        }
 
         // A site with no section that has its own page would have an empty menu.
         var anyPage = rows.Any((r, i) => (Find(definition, r.Key)!.Required || r.Enabled) && SectionRegistry.PathFor(r.Key!) is not null);

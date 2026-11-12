@@ -398,9 +398,9 @@ public class SectionSettingsTests
         var before = ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app));
 
         var same = await (await SectionsFlow.SaveAsync(owner, r => SectionsFlow.Set("talks", label: "BLOG")(r))).Content.ReadAsStringAsync(); // the template's own name for blog, in other case
-        Assert.Contains("Each &quot;Section&quot; needs its own name: &quot;BLOG&quot; is already used by another.", same);
+        Assert.Contains("Each &quot;Section&quot; needs its own name: &quot;BLOG&quot; is already used by another menu entry.", same);
         var twice = await (await SectionsFlow.SaveAsync(owner, r => SectionsFlow.Set("talks", label: "Dup")(SectionsFlow.Set("blog", false, "dup")(r)))).Content.ReadAsStringAsync();
-        Assert.Contains("is already used by another.", twice);
+        Assert.Contains("is already used by another menu entry.", twice);
         Assert.Equal(before, ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app)));
         // Swapping the two names is fine: the result has no duplicate.
         Assert.Equal(HttpStatusCode.Redirect, (await SectionsFlow.SaveAsync(owner, r => SectionsFlow.Set("talks", label: "blog")(SectionsFlow.Set("blog", label: "talks")(r)))).StatusCode);
@@ -468,6 +468,28 @@ public class SectionSettingsTests
 
         Assert.Contains("<strong>Shown again:</strong>", preview);
         Assert.Contains("Blog, Talks", preview);
+    }
+
+    [Fact]
+    public async Task ANameCannotMatchAnotherSectionsShortMenuName_OrTheFixedCvEntry()
+    {
+        var (app, owner, _, _) = await SiteAsync("software");
+        using var _a = app;
+        var before = ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app));
+
+        // Certifications shows as "certs" on a wide screen, so no other section may be called that.
+        var short1 = await (await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("skills", label: "CERTS"))).Content.ReadAsStringAsync();
+        Assert.Contains("&quot;CERTS&quot; is already used by another menu entry.", short1);
+        var cv = await (await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("skills", label: "cv"))).Content.ReadAsStringAsync();
+        Assert.Contains("&quot;cv&quot; is the name of the CV link, which is always in the menu.", cv);
+        // A renamed section's own name is what the menu shows for it, so it counts for others too.
+        await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("certifications", label: "Credentials"));
+        var again = await (await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("skills", label: "credentials"))).Content.ReadAsStringAsync();
+        Assert.Contains("is already used by another menu entry.", again);
+        Assert.NotEqual(before, ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app))); // only the one valid rename was saved
+        Assert.DoesNotContain(await SectionsFlow.StoredAsync(app), s => s.Key == "skills");
+        // And "certs" is free once certifications has its own name.
+        Assert.Equal(HttpStatusCode.Redirect, (await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("skills", label: "certs"))).StatusCode);
     }
 
     // ---------------------------------------------------------------- concurrency
