@@ -192,7 +192,7 @@ public class ProfileStampTests
         var fields = path switch
         {
             ProfileFlow.Hero => ProfileFlow.HeroFields(),
-            ProfileFlow.Metrics => ProfileFlow.MetricsFields(("5", "", "")),
+            ProfileFlow.Metrics => ProfileFlow.MetricsFields(("5", "", "five")),
             ProfileFlow.About => ProfileFlow.AboutFields(),
             _ => new Dictionary<string, string> { ["Form.OwnerName"] = "No Stamp", ["Form.BrandName"] = "No", ["Form.Url"] = "https://nostamp.example" },
         };

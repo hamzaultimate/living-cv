@@ -79,13 +79,13 @@ public class ProfilePartEditorTests
     {
         var (app, owner, visitor) = await BlankAsync();
         using var _ = app;
-        var fields = ProfileFlow.MetricsFields(("42", "ms", "median latency"), ("", "", ""), ("99.9", "%", "uptime"), ("7", "", ""));
+        var fields = ProfileFlow.MetricsFields(("42", "ms", "median latency"), ("", "", ""), ("99.9", "%", "uptime"), ("7", "", "seven"));
 
         var save = await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics, fields);
 
         Assert.Equal(HttpStatusCode.Redirect, save.StatusCode);
         var stored = (await ProfileFlow.ProfileAsync(app)).Metrics;
-        Assert.Equal(["42/ms/median latency", "99.9/%/uptime", "7//"], stored.Select(m => $"{m.Value}/{m.Unit}/{m.Label}"));
+        Assert.Equal(["42/ms/median latency", "99.9/%/uptime", "7//seven"], stored.Select(m => $"{m.Value}/{m.Unit}/{m.Label}"));
         var home = await visitor.GetStringAsync("/");
         var a = home.IndexOf("median latency", StringComparison.Ordinal);
         var b = home.IndexOf("uptime", StringComparison.Ordinal);
@@ -193,6 +193,23 @@ public class ProfilePartEditorTests
         Assert.Contains("is not on the page any more", gone);
         var sideways = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics + "?handler=Move&index=0&direction=sideways", one, tokenFrom: ProfileFlow.Metrics)).Content.ReadAsStringAsync();
         Assert.Contains("That row cannot move any further.", sideways);
+        Assert.Equal(before, ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app)));
+    }
+
+    [Fact]
+    public async Task AMetricNeedsALabel_WheneverTheTemplateShowsTheLabelField_SoNoBareNumberIsPublished()
+    {
+        var (app, owner, visitor) = await BlankAsync();
+        using var _a = app;
+        var before = ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app));
+
+        var response = await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics, ProfileFlow.MetricsFields(("1", "x", "fine"), ("42", "ms", "   ")));
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Metric 2: &quot;Label&quot; is required.", html);
+        Assert.Contains("<a href=\"#Form_Rows_1__Label\">", html);
+        Assert.Matches(@"id=""Form_Rows_1__Label""[^>]*aria-invalid=""true""", html);
         Assert.Equal(before, ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app)));
     }
 

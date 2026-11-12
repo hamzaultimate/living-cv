@@ -100,7 +100,7 @@ public class ProfilePartTemplateTests
         Assert.Contains("Zing intro was changed somewhere else", conflict);
         var aboutConflict = await (await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(), stamp: stale)).Content.ReadAsStringAsync();
         Assert.Contains("Zonk page was changed somewhere else", aboutConflict);
-        var metricsConflict = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics, ProfileFlow.MetricsFields(("1", "", "")), stamp: stale)).Content.ReadAsStringAsync();
+        var metricsConflict = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics, ProfileFlow.MetricsFields(("1", "", "x")), stamp: stale)).Content.ReadAsStringAsync();
         Assert.Contains("Zoink board was changed somewhere else", metricsConflict);
         seen.AddRange([noValue, noTitle, noBanner, added, removed, full, tooMany, tooManyCards, conflict, aboutConflict, metricsConflict]);
 
@@ -261,5 +261,23 @@ public class ProfilePartTemplateTests
         var tooLong = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics, ProfileFlow.MetricsFields(("1", "", new string('l', 81))))).Content.ReadAsStringAsync();
         Assert.Contains("NHS figure 1: &quot;What it measures&quot; can be at most 80", tooLong);
         foreach (var lowered in new[] { "Save cqc", "Add nhs", "nhs figure 1" }) Assert.DoesNotContain(lowered, page + bad + tooLong);
+    }
+
+    [Fact]
+    public async Task WhenTheTemplateHidesTheMetricLabel_NoLabelIsRequired_AndTheStoredOneIsKept()
+    {
+        var dir = TemplateDirs.WithExtra("nolabel", node =>
+            node["editor"] = JsonNode.Parse("""{ "metrics": { "fields": { "label": { "hidden": true } } } }"""));
+        using var app = AdminApp.WithTemplates(dir);
+        var owner = await ContentFlow.BlankSiteAsync(app, "nolabel");
+        await ProfileFlow.SeedTextAsync(app);
+
+        var rows = new Dictionary<string, string>
+        {
+            ["Form.Rows[0].Source"] = "0", ["Form.Rows[0].Value"] = "11", ["Form.Rows[0].Unit"] = "ms",
+            ["Form.Rows[1].Source"] = "1", ["Form.Rows[1].Value"] = "21", ["Form.Rows[1].Unit"] = "rps",
+        };
+        Assert.Equal(HttpStatusCode.Redirect, (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics, rows)).StatusCode);
+        Assert.Equal(["11/ms/first", "21/rps/second"], (await ProfileFlow.ProfileAsync(app)).Metrics.Select(m => $"{m.Value}/{m.Unit}/{m.Label}"));
     }
 }

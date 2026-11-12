@@ -66,7 +66,8 @@ public class MetricsModel : ProfilePartModel
             var i = number - 1;
             var value = c.Text($"Rows[{i}].{nameof(row.Value)}", "value", row.Value, ProfileParts.MetricValueMax, required: true, context: name);
             var unit = showUnit ? c.Text($"Rows[{i}].{nameof(row.Unit)}", "unit", row.Unit, ProfileParts.MetricUnitMax, context: name) : null;
-            var label = showLabel ? c.Text($"Rows[{i}].{nameof(row.Label)}", "label", row.Label, ProfileParts.MetricLabelMax, context: name) : null;
+            // A figure with no label is a bare number on the home page, so the label is required whenever the template shows the field (a hidden label keeps the stored one).
+            var label = showLabel ? c.Text($"Rows[{i}].{nameof(row.Label)}", "label", row.Label, ProfileParts.MetricLabelMax, required: true, context: name) : null;
             kept.Add((row.Source, value ?? "", unit, label));
         }
         if (!ModelState.IsValid) return Page();
