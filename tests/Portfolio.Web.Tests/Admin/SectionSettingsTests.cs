@@ -565,6 +565,52 @@ public class SectionSettingsTests
         Assert.DoesNotContain("Position does not matter", skills);
     }
 
+    [Fact]
+    public async Task AWizardRerun_ThatMovesToATemplateWhichWouldEmptyTheMenu_KeepsTheSectionsThatAreOn()
+    {
+        var (app, owner, visitor, _) = await SiteAsync("software");
+        using var _a = app;
+        await SectionsFlow.SaveAsync(owner, r => r.Select(x => x with { Enabled = x.Key == "blog" }).ToList()); // blog only: stores nothing for the blog
+
+        Assert.Equal("/admin/welcome/basics", WizardFlow.Where(await WizardFlow.PickTemplateAsync(owner, "healthcare")));
+        Assert.Equal("/admin/welcome/photo", WizardFlow.Where(await WizardFlow.SaveBasicsAsync(owner)));
+        Assert.Equal(HttpStatusCode.Redirect, (await WizardFlow.PublishAsync(owner)).StatusCode);
+
+        var p = await ProfileFlow.ProfileAsync(app);
+        Assert.Equal("healthcare", p.TemplateKey);
+        Assert.Equal(true, p.Sections.Single(s => s.Key == "blog").Shown); // kept on explicitly, as the admin's switch does
+        Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/blog")).StatusCode);
+        Assert.Contains("href=\"/blog\"", await visitor.GetStringAsync("/"));
+    }
+
+    [Fact]
+    public async Task AWizardRerun_ThatCouldOnlyLeaveNoMenuSection_IsRefusedAtTheTemplateStep_AndAtPublish_InTheTargetsWords()
+    {
+        var (app, owner, visitor, _) = await SiteAsync("software");
+        using var _a = app;
+        // Draft saved while the menu still had sections, then everything is hidden by hand before publishing.
+        Assert.Equal("/admin/welcome/basics", WizardFlow.Where(await WizardFlow.PickTemplateAsync(owner, "healthcare")));
+        Assert.Equal("/admin/welcome/photo", WizardFlow.Where(await WizardFlow.SaveBasicsAsync(owner)));
+        using (var db = app.CreateDbContext())
+        {
+            var p = await db.SiteProfiles.SingleAsync();
+            p.Sections = SoftwareOrder.Select(k => new SectionSetting { Key = k, Enabled = false, Shown = false }).ToList();
+            await db.SaveChangesAsync();
+        }
+        app.Services.GetRequiredService<Portfolio.Web.Services.ISiteProfileProvider>().Invalidate();
+
+        var publish = await WizardFlow.PublishAsync(owner);
+        Assert.Equal(WizardFlow.Template, WizardFlow.Where(publish));
+        Assert.Contains("would leave no &quot;Page&quot; switched on that appears in the menu, so nothing was changed.", await owner.GetStringAsync(WizardFlow.Template));
+        var profile = await ProfileFlow.ProfileAsync(app);
+        Assert.Equal("software", profile.TemplateKey);
+        Assert.NotNull(profile.OnboardingDraft); // the answers are kept
+
+        var step = await WizardFlow.PickTemplateAsync(owner, "healthcare");
+        Assert.Equal(HttpStatusCode.OK, step.StatusCode); // the step itself refuses too, and says why
+        Assert.Contains("would leave no &quot;Page&quot;", await step.Content.ReadAsStringAsync());
+    }
+
     // ---------------------------------------------------------------- concurrency
 
     [Fact]

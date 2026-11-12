@@ -115,6 +115,9 @@ public class WelcomeReviewModel : WelcomePageModel
             case PublishOutcome.Incomplete:
                 FlashError("Something from an earlier step is missing or no longer valid. Please check it and try again.");
                 return Redirect(Steps[Math.Clamp(result.Step, 1, 4) - 1].Path);
+            case PublishOutcome.NoMenu:
+                FlashError(result.Detail ?? "That template would leave your site without a menu section, so nothing was published.");
+                return Redirect(Steps[0].Path);
             case PublishOutcome.Changed:
                 // Not "already published": the wizard is still open and the draft is kept, so the only truthful advice is to publish again.
                 FlashError("Your profile was changed while publishing, so nothing was published. Your answers are kept: check them and press Publish again.");

@@ -30,6 +30,9 @@ public enum PublishOutcome
 
     /// <summary>The profile was written by something else while this publish ran, twice in a row, and the wizard is still not finished. Nothing was applied and the draft is kept; pressing Publish again is safe.</summary>
     Changed,
+
+    /// <summary>The chosen template would leave no menu section on and nothing is on now either (<see cref="PublishResult.Detail"/> says so). Nothing was applied; the draft is kept.</summary>
+    NoMenu,
 }
 
 public enum SkipOutcome
@@ -47,7 +50,7 @@ public enum SkipOutcome
     Changed,
 }
 
-public sealed record PublishResult(PublishOutcome Outcome, int Step = 0, IReadOnlyList<StarterTable>? Sample = null);
+public sealed record PublishResult(PublishOutcome Outcome, int Step = 0, IReadOnlyList<StarterTable>? Sample = null, string? Detail = null);
 
 /// <summary>
 /// The onboarding wizard's server side. Answers are saved to a draft on the profile row after every step and never touch the public
@@ -73,11 +76,13 @@ public class OnboardingService
     private readonly ILogger<OnboardingService> _logger;
     private readonly string _seedDir;
     private readonly SiteOptions _placeholder;
+    private readonly TemplateResolver _resolver;
 
     public OnboardingService(PortfolioDbContext db, ProfileEditor editor, ITemplateCatalog catalog, UploadStore store, ImageProcessor processor,
-        StarterContent starter, TimeProvider time, ILogger<OnboardingService> logger, IOptions<SiteOptions> placeholder)
+        StarterContent starter, TimeProvider time, ILogger<OnboardingService> logger, IOptions<SiteOptions> placeholder, TemplateResolver resolver)
     {
         _placeholder = placeholder.Value;
+        _resolver = resolver;
         _db = db;
         _editor = editor;
         _catalog = catalog;
@@ -99,9 +104,13 @@ public class OnboardingService
 
     /// <summary>Step 1. The template must come from the catalog (the same allow-list as the admin switcher). Wording the owner has not changed
     /// from the previous template's suggestion is dropped, so the new template's suggestion takes its place.</summary>
-    public async Task SaveTemplateAsync(TemplateDefinition template, CancellationToken ct = default)
+    /// <returns>Null when the choice was saved; otherwise the message for a template the site cannot move to (nothing was saved): with the owner's stored section choices its defaults would leave no
+    /// menu section on and no menu section is on now either (see <see cref="SectionSettings.PlanSwitch"/>, which publishing applies again).</returns>
+    public async Task<string?> SaveTemplateAsync(TemplateDefinition template, CancellationToken ct = default)
     {
         var state = await GetStateAsync(ct);
+        var plan = SectionSettings.PlanSwitch(_resolver, SiteProfileMapper.ToEntity(SiteProfileMapper.ToOptions(state.Profile)), template);
+        if (!plan.Allowed) return SectionSettings.NoMenuMessage(template.Name, plan.Target);
         var draft = state.Draft ?? new OnboardingDraft();
         if (_catalog.TryGet(draft.TemplateKey, out var previous) && previous.Key != template.Key)
         {
@@ -113,6 +122,7 @@ public class OnboardingService
         draft.TemplateKey = template.Key;
         draft.Step = Math.Max(draft.Step, 1);
         await SaveDraftAsync(state, draft, ct);
+        return null;
     }
 
     /// <summary>Step 2. <paramref name="form"/> must already have passed validation; it is cleaned of control characters here.</summary>
@@ -227,6 +237,10 @@ public class OnboardingService
                 if (!_catalog.TryGet(draft.TemplateKey, out var template)) { early = new PublishResult(PublishOutcome.Incomplete, 1); return; }
                 if (!BasicsForm.IsComplete(draft)) { early = new PublishResult(PublishOutcome.Incomplete, 2); return; }
                 if (!IsValidAddress(draft.SiteUrl)) { early = new PublishResult(PublishOutcome.Incomplete, 4); return; }
+
+                // The same rule as the admin's template switch: the site must keep a menu section. When the template's defaults would empty it, the menu sections on now are kept on.
+                var plan = SectionSettings.PlanSwitch(_resolver, profile, template);
+                if (!plan.Allowed) { early = new PublishResult(PublishOutcome.NoMenu, 0, null, SectionSettings.NoMenuMessage(template.Name, plan.Target)); return; }
 
                 var firstRun = profile.OnboardingCompletedAt is null;
                 if (draft.PhotoDraft is not null)
