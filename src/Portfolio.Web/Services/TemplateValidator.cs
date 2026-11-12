@@ -139,7 +139,7 @@ public static partial class TemplateValidator
     /// a label, or an attempt to hide a field the entry cannot exist without would otherwise be silently ignored or break the form.</summary>
     private static void ValidateEditor(TemplateDefinition t, List<string> errors)
     {
-        foreach (var section in EditorFields.Sections)
+        foreach (var section in EditorFields.Sections.Concat(ProfileParts.All))
         {
             var settings = t.Editor.For(section)!;
             var known = EditorFields.For(section);
@@ -165,6 +165,7 @@ public static partial class TemplateValidator
                     errors.Add($"{path}.hint must be 1 to {MaxEditorHint} characters.");
                 if (HasMarkup(field.Label) || HasMarkup(field.Hint)) errors.Add($"{path} label and hint must be plain text (no < or >).");
                 if (field.Hidden && info.Required) errors.Add($"{path} cannot be hidden: an entry cannot exist without it.");
+                else if (field.Hidden && info.WordingOnly) errors.Add($"{path} cannot be hidden: it only carries wording for the editor.");
             }
         }
     }

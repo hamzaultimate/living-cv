@@ -28,9 +28,10 @@ public sealed class FormCheck
     public void Error(string property, string message) => _state.AddModelError($"{_prefix}.{property}", message);
 
     /// <summary>A single-line plain-text value.</summary>
-    public string? Text(string property, string key, string? value, int max, bool required = false)
+    /// <param name="context">Names the row a field is in ("Metric 2"), so a message says which of several rows it is about.</param>
+    public string? Text(string property, string key, string? value, int max, bool required = false, string? context = null)
     {
-        var label = _view.Label(key);
+        var label = Named(key, context);
         var text = ContentRules.Trim(value);
         if (text is null)
         {
@@ -42,6 +43,8 @@ public sealed class FormCheck
         else if (ContentRules.HasMarkup(text)) Error(property, $"{label} is plain text: remove anything that looks like a tag, such as <b>.");
         return text;
     }
+
+    private string Named(string key, string? context) => context is null ? _view.Label(key) : $"{context} {_view.Label(key).ToLowerInvariant()}";
 
     /// <summary>A multi-line plain-text value (paragraphs keep their line breaks).</summary>
     public string? Paragraph(string property, string key, string? value, int max, bool required = false)
@@ -57,6 +60,18 @@ public sealed class FormCheck
         else if (ContentRules.HasControlCharacters(text, multiline: true)) Error(property, $"{label} contains characters that are not allowed.");
         else if (ContentRules.HasMarkup(text)) Error(property, $"{label} is plain text: remove anything that looks like a tag, such as <b>.");
         return text;
+    }
+
+    /// <summary>Paragraphs separated by blank lines, each plain text, at most <paramref name="maxCount"/> of at most <paramref name="maxLength"/> characters.</summary>
+    public List<string> Paragraphs(string property, string key, string? value, int maxCount, int maxLength)
+    {
+        var label = _view.Label(key);
+        var paragraphs = ContentRules.Paragraphs(value);
+        if (paragraphs.Count > maxCount) Error(property, $"{label}: at most {maxCount} paragraphs.");
+        else if (paragraphs.Any(p => p.Length > maxLength)) Error(property, $"{label}: each paragraph can be at most {maxLength} characters.");
+        else if (paragraphs.Any(p => ContentRules.HasControlCharacters(p, multiline: true))) Error(property, $"{label} contains characters that are not allowed.");
+        else if (paragraphs.Any(ContentRules.HasMarkup)) Error(property, $"{label} is plain text: remove anything that looks like a tag, such as <b>.");
+        return paragraphs;
     }
 
     /// <summary>One entry per line of a text area, each plain text.</summary>

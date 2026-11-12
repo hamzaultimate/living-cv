@@ -27,7 +27,7 @@
             {
                 <nav class="adm-nav" aria-label="Admin">
                     <a href="/admin" aria-current="@(current == "/Admin/Index" ? "page" : null)">Dashboard</a>
-                    <a href="/admin/profile" aria-current="@(current == "/Admin/Profile" ? "page" : null)">Profile</a>
+                    <a href="/admin/profile" aria-current="@(current == "/Admin/Profile" || current.StartsWith("/Admin/Profile/") ? "page" : null)">Profile</a>
                     <a href="/admin/photo" aria-current="@(current == "/Admin/Photo" ? "page" : null)">Photo</a>
                     <a href="/admin/content" aria-current="@(current.StartsWith("/Admin/Content/") ? "page" : null)">Content</a>
                     <a href="/admin/template" aria-current="@(current == "/Admin/Template" ? "page" : null)">Template</a>

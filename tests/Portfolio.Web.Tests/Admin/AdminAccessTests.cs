@@ -80,7 +80,7 @@ public class AdminAccessTests : IClassFixture<AdminApp>
              "admin/content/skills", "admin/content/skills/delete/{id:int}", "admin/content/skills/edit/{id:int?}",
              "admin/content/talks", "admin/content/talks/delete/{id:int}", "admin/content/talks/edit/{id:int?}",
              "admin/content/testimonials", "admin/content/testimonials/delete/{id:int}", "admin/content/testimonials/edit/{id:int?}",
-             "admin/login", "admin/logout", "admin/photo", "admin/profile", "admin/template",
+             "admin/login", "admin/logout", "admin/photo", "admin/profile", "admin/profile/about", "admin/profile/hero", "admin/profile/metrics", "admin/template",
              "admin/welcome", "admin/welcome/basics", "admin/welcome/draft-photo", "admin/welcome/photo", "admin/welcome/review", "admin/welcome/thumb/{key}"],
             routes);
     }
@@ -128,6 +128,9 @@ public class AdminAccessTests : IClassFixture<AdminApp>
     [InlineData("/Admin/Profile")]
     [InlineData("/admin/does-not-exist")]
     [InlineData("/admin/profile/extra")]
+    [InlineData("/admin/profile/hero")]
+    [InlineData("/admin/PROFILE/Metrics")]
+    [InlineData("/admin/profile/about?handler=Add")]
     [InlineData("/admin/photo.png")]
     [InlineData("/admin/logout")]
     [InlineData("/admin/template")]

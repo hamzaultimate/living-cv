@@ -21,8 +21,15 @@
 <div class="adm-grid">
     <a class="adm-card adm-tile" href="/admin/profile">
         <h2>Profile</h2>
-        <p>Name, headline, summary, contact links, metrics and the About page.</p>
+        <p>Name, title, summary and contact links.</p>
     </a>
+    @foreach (var (url, heading) in Model.Parts)
+    {
+        <a class="adm-card adm-tile" href="@url">
+            <h2>@heading</h2>
+            <p>Edit the @heading.ToLowerInvariant() shown on your public site.</p>
+        </a>
+    }
     <a class="adm-card adm-tile" href="/admin/content">
         <h2>Content</h2>
         <p>Add, edit, reorder and remove your @Model.ContentLabels.</p>

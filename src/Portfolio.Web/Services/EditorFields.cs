@@ -1,7 +1,8 @@
 namespace Portfolio.Web.Services;
 
-/// <summary>One field of a content editor: its key in the manifest, the neutral wording used when the manifest says nothing, and whether a template may hide it.</summary>
-public sealed record EditorFieldInfo(string Key, string Label, string? Hint, bool Required);
+/// <summary>One field of a content editor: its key in the manifest, the neutral wording used when the manifest says nothing, and whether a template may hide it.
+/// <paramref name="WordingOnly"/> marks a key that only carries words (a heading, the name of a column): it is not a control of its own, so it can be relabelled but never hidden.</summary>
+public sealed record EditorFieldInfo(string Key, string Label, string? Hint, bool Required, bool WordingOnly = false);
 
 /// <summary>
 /// The closed list of fields each content editor has, with neutral default wording. A template changes the wording or hides an optional
@@ -91,9 +92,42 @@ public static class EditorFields
         new("draft", "Keep as a draft", "A draft is saved but not shown anywhere on your site.", true),
     ];
 
+    /// <summary>The home page introduction. <c>heading</c> is the wording of the page (its title is the label, the line under it the hint).</summary>
+    public static readonly IReadOnlyList<EditorFieldInfo> HeroFields =
+    [
+        new("heading", "Home page introduction", "The first thing visitors read on your home page. Plain text. Changes apply as soon as you save.", false, true),
+        new("eyebrow", "Eyebrow", "A short line above the headline, for example your role. Plain text.", false),
+        new("headline", "Headline", null, true),
+        new("headlineAccent", "Headline (highlighted part)", "Shown after the headline in the accent colour.", false),
+        new("lede", "Introduction", "One or two sentences under the headline.", false),
+    ];
+
+    public static readonly IReadOnlyList<EditorFieldInfo> MetricsFields =
+    [
+        new("heading", "Headline metrics", "Short figures shown under the introduction on your home page. Only publish figures you can stand behind. Changes apply as soon as you save.", false, true),
+        new("value", "Value", "For example 20k or 99.9.", true),
+        new("unit", "Unit", "For example rps or %.", false),
+        new("label", "Label", "What the figure measures.", false),
+    ];
+
+    public static readonly IReadOnlyList<EditorFieldInfo> AboutFields =
+    [
+        new("heading", "About page", "Plain text. Changes apply as soon as you save.", false, true),
+        new("headline", "Headline", "The main heading of the page.", true),
+        new("paragraphs", "Paragraphs", "Separate paragraphs with a blank line.", false),
+        new("valueProps", "Value cards", "Short cards shown above the text.", false),
+        new("valuePropTitle", "Title", null, false, true),
+        new("valuePropBody", "Text", null, false, true),
+        new("currentlyNote", "\"Currently\" note", "What you are working on or looking for at the moment.", false),
+        new("focus", "Focus areas", "One per line.", false),
+    ];
+
     /// <summary>The fields of a section, or an empty list for a section without an editor.</summary>
     public static IReadOnlyList<EditorFieldInfo> For(string section) => section switch
     {
+        ProfileParts.Hero => HeroFields,
+        ProfileParts.Metrics => MetricsFields,
+        ProfileParts.About => AboutFields,
         SectionRegistry.Experience => Experience,
         SectionRegistry.Skills => Skills,
         SectionRegistry.Projects => Projects,
@@ -107,4 +141,30 @@ public static class EditorFields
     /// <summary>The sections that have a content editor, in the order the editors are listed.</summary>
     public static readonly IReadOnlyList<string> Sections =
         [SectionRegistry.Experience, SectionRegistry.Skills, SectionRegistry.Projects, SectionRegistry.Certifications, SectionRegistry.Talks, SectionRegistry.Testimonials, SectionRegistry.Blog];
+}
+
+/// <summary>The profile's own editable parts. Unlike the content sections they are not lists of rows in a table: each is a block of text on the profile row.
+/// Their keys are the keys of the <c>editor</c> manifest block (<c>hero</c>, <c>metrics</c>, <c>about</c>) and of the routes under <c>/admin/profile</c>.</summary>
+public static class ProfileParts
+{
+    public const string Hero = "hero";
+    public const string Metrics = "metrics";
+    public const string About = SectionRegistry.About;
+
+    public static readonly IReadOnlyList<string> All = [Hero, Metrics, About];
+
+    // Limits of the text blocks (the profile stores them as JSON, so no column length applies).
+    public const int HeroMax = 300;
+    public const int LedeMax = 800;
+    public const int MetricRows = 8;
+    public const int MetricValueMax = 20;
+    public const int MetricUnitMax = 20;
+    public const int MetricLabelMax = 80;
+    public const int MaxParagraphs = 10;
+    public const int ParagraphMax = 2000;
+    public const int CardRows = 6;
+    public const int CardTitleMax = 120;
+    public const int CardBodyMax = 500;
+    public const int MaxFocus = 30;
+    public const int FocusMax = 120;
 }

@@ -54,10 +54,12 @@ public class OnboardingService
     private readonly TimeProvider _time;
     private readonly ILogger<OnboardingService> _logger;
     private readonly string _seedDir;
+    private readonly SiteOptions _placeholder;
 
     public OnboardingService(PortfolioDbContext db, ProfileEditor editor, ITemplateCatalog catalog, UploadStore store, ImageProcessor processor,
-        StarterContent starter, TimeProvider time, ILogger<OnboardingService> logger)
+        StarterContent starter, TimeProvider time, ILogger<OnboardingService> logger, IOptions<SiteOptions> placeholder)
     {
+        _placeholder = placeholder.Value;
         _db = db;
         _editor = editor;
         _catalog = catalog;
@@ -164,8 +166,7 @@ public class OnboardingService
         var state = await GetStateAsync(ct);
         if (state.Draft is null && string.IsNullOrEmpty(state.Profile.OnboardingDraft)) return;
         var photo = state.Draft?.PhotoDraft;
-        state.Profile.OnboardingDraft = null;
-        await TrySaveAsync(ct);
+        await WriteDraftAsync(state.Profile, null, ct);
         _store.TryDeleteDraft(photo);
     }
 
@@ -213,8 +214,9 @@ public class OnboardingService
                     usedDraftPhoto = draft.PhotoDraft;
                 }
                 replacedPhoto = profile.PhotoUrl;
-                Apply(profile, draft, template, firstRun, promoted);
+                Apply(profile, draft, template, firstRun, promoted, _placeholder);
                 profile.OnboardingDraft = null;
+                profile.ConcurrencyStamp = ProfileEditor.NewStamp();
                 profile.OnboardingCompletedAt = _time.GetUtcNow();
                 // Only a first run records an outcome: a re-run on a site that existed before the wizard must not change how that site seeds at start-up.
                 if (firstRun) profile.OnboardingOutcome = "published";
@@ -277,16 +279,16 @@ public class OnboardingService
                 var profile = await _editor.LoadAsync(ct);
                 photo = OnboardingDraft.Parse(profile.OnboardingDraft)?.PhotoDraft;
                 var firstRun = profile.OnboardingCompletedAt is null;
-                profile.OnboardingDraft = null;
                 if (firstRun)
                 {
+                    profile.OnboardingDraft = null;
                     profile.OnboardingCompletedAt = _time.GetUtcNow();
                     profile.OnboardingOutcome = "skipped";
                     await _db.SaveChangesAsync(ct);
                     await PortfolioSeeder.SeedAsync(_db, _seedDir, SeedMode.IfEmpty, _logger, ct);
                     skipped = profile;
                 }
-                else await _db.SaveChangesAsync(ct);
+                else await WriteDraftAsync(profile, null, ct);
                 await tx.CommitAsync(ct);
             });
         }
@@ -310,7 +312,7 @@ public class OnboardingService
         if (state.Draft is not { } draft || !_catalog.TryGet(draft.TemplateKey, out var template)) return null;
 
         var copy = SiteProfileMapper.ToEntity(SiteProfileMapper.ToOptions(state.Profile));
-        Apply(copy, draft, template, state.FirstRun, draft.PhotoDraft is null ? null : DraftPhotoPath);
+        Apply(copy, draft, template, state.FirstRun, draft.PhotoDraft is null ? null : DraftPhotoPath, _placeholder);
         return SiteProfileMapper.ToOptions(copy);
     }
 
@@ -319,8 +321,10 @@ public class OnboardingService
     /// summary, site address, accent and (when there is one) the photo. On a first run the placeholder persona that came from the Site config
     /// (hero, metrics, About text, links, phone) is replaced by a plain hero built from the owner's own answers and empty lists, so no stranger's text
     /// survives under the owner's name; on a re-run those stay as the owner edited them. Rows in other tables are never touched here.
+    /// The hero, the metrics and the About text are replaced only while they are still the placeholder (equal to what the Site config supplied): once the owner has
+    /// edited one of them in the admin, publishing keeps their text. <paramref name="placeholder"/> null means every part counts as untouched.
     /// </summary>
-    internal static void Apply(SiteProfile p, OnboardingDraft d, TemplateDefinition template, bool firstRun, string? photoUrl)
+    internal static void Apply(SiteProfile p, OnboardingDraft d, TemplateDefinition template, bool firstRun, string? photoUrl, SiteOptions? placeholder = null)
     {
         p.TemplateKey = template.Key;
         if (!string.IsNullOrWhiteSpace(d.OwnerName))
@@ -343,9 +347,12 @@ public class OnboardingService
 
         if (firstRun)
         {
-            p.Hero = new ProfileHero { Eyebrow = p.JobTitle, Headline = p.OwnerName, HeadlineAccent = null, Lede = p.Summary };
-            p.Metrics = [];
-            p.About = new ProfileAbout { Headline = null, Paragraphs = string.IsNullOrWhiteSpace(p.Summary) ? [] : [p.Summary] };
+            var original = placeholder is null ? null : SiteProfileMapper.ToEntity(placeholder);
+            if (original is null || IsSame(p.Hero, original.Hero))
+                p.Hero = new ProfileHero { Eyebrow = p.JobTitle, Headline = p.OwnerName, HeadlineAccent = null, Lede = p.Summary };
+            if (original is null || IsSame(p.Metrics, original.Metrics)) p.Metrics = [];
+            if (original is null || IsSame(p.About, original.About))
+                p.About = new ProfileAbout { Headline = null, Paragraphs = string.IsNullOrWhiteSpace(p.Summary) ? [] : [p.Summary] };
             p.KnowsAbout = [];
             p.Phone = p.WhatsApp = p.LinkedIn = p.GitHub = p.YouTube = null;
             p.SecondaryEmails = [];
@@ -361,6 +368,18 @@ public class OnboardingService
         }
     }
 
+    // Equality of the stored text blocks, with an empty value and a missing one counting the same.
+    private static bool IsSame(ProfileHero a, ProfileHero b) =>
+        (a.Eyebrow ?? "") == (b.Eyebrow ?? "") && (a.Headline ?? "") == (b.Headline ?? "") && (a.HeadlineAccent ?? "") == (b.HeadlineAccent ?? "") && (a.Lede ?? "") == (b.Lede ?? "");
+
+    private static bool IsSame(List<ProfileMetric> a, List<ProfileMetric> b) =>
+        a.Count == b.Count && a.Zip(b).All(x => x.First.Value == x.Second.Value && (x.First.Unit ?? "") == (x.Second.Unit ?? "") && (x.First.Label ?? "") == (x.Second.Label ?? ""));
+
+    private static bool IsSame(ProfileAbout a, ProfileAbout b) =>
+        (a.Headline ?? "") == (b.Headline ?? "") && (a.CurrentlyNote ?? "") == (b.CurrentlyNote ?? "")
+        && a.Paragraphs.SequenceEqual(b.Paragraphs) && a.Focus.SequenceEqual(b.Focus)
+        && a.ValueProps.Count == b.ValueProps.Count && a.ValueProps.Zip(b.ValueProps).All(x => x.First.Title == x.Second.Title && x.First.Body == x.Second.Body);
+
     private static bool IsUpload(string? url) => url is not null && url.StartsWith(UploadStore.RequestPath + "/", StringComparison.Ordinal);
 
     // ---------------------------------------------------------------- helpers
@@ -375,24 +394,29 @@ public class OnboardingService
     internal static bool IsValidAddress(string? url) =>
         !string.IsNullOrWhiteSpace(url) && url.Length <= SiteProfile.MaxLength.Url && new HttpUrlAttribute().IsValid(url);
 
-    private async Task SaveDraftAsync(OnboardingState state, OnboardingDraft draft, CancellationToken ct)
+    private Task SaveDraftAsync(OnboardingState state, OnboardingDraft draft, CancellationToken ct)
     {
         draft.UpdatedAt = _time.GetUtcNow();
-        state.Profile.OnboardingDraft = draft.ToJson();
-        await TrySaveAsync(ct);
+        return WriteDraftAsync(state.Profile, draft.ToJson(), ct);
     }
 
-    /// <summary>Saves a draft change. A concurrent publish changes the concurrency token; the answer is then simply not saved (the wizard is done).</summary>
-    private async Task TrySaveAsync(CancellationToken ct)
+    /// <summary>
+    /// Writes the draft column and nothing else. A concurrent publish changes the completion time; the answer is then simply not saved (the wizard is done).
+    /// The draft is not part of what the public site shows, so it leaves the profile's concurrency stamp alone, and the update does not name that stamp: an
+    /// answer saved while the owner edits the profile elsewhere must not be lost to a stamp that moved for an unrelated reason.
+    /// </summary>
+    private async Task WriteDraftAsync(SiteProfile profile, string? json, CancellationToken ct)
     {
-        try
+        if (_db.Entry(profile).State == EntityState.Added)
         {
+            // The row is only now being created (nothing has served the site yet), so it is inserted with the draft in it.
+            profile.OnboardingDraft = json;
             await _db.SaveChangesAsync(ct);
+            return;
         }
-        catch (DbUpdateConcurrencyException)
-        {
-            _db.ChangeTracker.Clear();
-            _logger.LogInformation("A wizard answer was not saved because the wizard was published in the meantime.");
-        }
+        var completedAt = profile.OnboardingCompletedAt;
+        var written = await _db.SiteProfiles.Where(p => p.Id == SiteProfile.SingletonId && p.OnboardingCompletedAt == completedAt)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.OnboardingDraft, json), ct);
+        if (written == 0) _logger.LogInformation("A wizard answer was not saved because the wizard was published in the meantime.");
     }
 }

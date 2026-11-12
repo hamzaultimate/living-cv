@@ -1,0 +1,74 @@
+@page "/admin/profile/about"
+@model Portfolio.Web.Pages.Admin.Profile.AboutModel
+@using Portfolio.Web.Pages.Admin.Content
+@using Portfolio.Web.Pages.Admin.Profile
+@{
+    var v = Model.View;
+    var f = Model.Form;
+    ViewData["Title"] = v.Heading;
+}
+<h1 id="page-heading">@v.Heading</h1>
+<p class="adm-lede">@v.Hint("heading")</p>
+@if (!v.SectionEnabled)
+{
+    <p class="adm-callout" role="note">The template you use does not show this page on the public site. What you write here is kept and will show again if you switch to a template that uses it.</p>
+}
+<partial name="_Guidance" model="v" />
+@if (Model.Status is not null)
+{
+    <div class="adm-flash adm-flash-ok" role="status" aria-live="polite">@Model.Status</div>
+}
+
+<form method="post" asp-page="/Admin/Profile/About" novalidate data-unsaved-warning data-has-errors="@(Model.StartsDirty ? "true" : "false")">
+    <partial name="_ErrorSummary" />
+    <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
+    @* Pressing Enter in a text box sends the first button of the form, so Save comes first, before any row button. *@
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @v.HeadingLower</button>
+        <a class="adm-btn" href="/admin">Cancel</a>
+    </div>
+    <fieldset class="adm-fieldset">
+        <legend>@v.Heading</legend>
+        <partial name="_Field" model="@(Model.Field("headline", nameof(f.Headline), f.Headline, maxLength: ProfileParts.HeroMax))" />
+        <partial name="_Field" model="@(Model.Field("paragraphs", nameof(f.ParagraphsText), f.ParagraphsText, FieldKind.Textarea, ProfileParts.MaxParagraphs * (ProfileParts.ParagraphMax + 4), rows: 12))" />
+        <partial name="_Field" model="@(Model.Field("currentlyNote", nameof(f.CurrentlyNote), f.CurrentlyNote, maxLength: ProfileParts.HeroMax))" />
+        <partial name="_Field" model="@(Model.Field("focus", nameof(f.FocusText), f.FocusText, FieldKind.Textarea, ProfileParts.MaxFocus * (ProfileParts.FocusMax + 2), rows: 5))" />
+    </fieldset>
+    @if (v.Visible("valueProps"))
+    {
+        <section aria-labelledby="cards-heading">
+            <h2 id="cards-heading">@v.Label("valueProps")</h2>
+            <p class="adm-hint">@v.Hint("valueProps") Up to @ProfileParts.CardRows. Rows you leave empty are not saved.</p>
+            @for (var i = 0; i < f.Cards.Count; i++)
+            {
+                var row = f.Cards[i];
+                var name = $"{v.ItemLabel} {i + 1}";
+                <fieldset class="adm-fieldset">
+                    <legend>@name</legend>
+                    <div class="adm-row adm-row-2">
+                        <partial name="_Field" model="@(Model.Field("valuePropTitle", $"Cards[{i}].Title", row.Title, maxLength: ProfileParts.CardTitleMax, required: true, withHint: false))" />
+                        <partial name="_Field" model="@(Model.Field("valuePropBody", $"Cards[{i}].Body", row.Body, maxLength: ProfileParts.CardBodyMax, required: true, withHint: false))" />
+                    </div>
+                    <partial name="_RowButtons" model="@(new RowButtonsVm(i, f.Cards.Count, name, Model.FocusId))" />
+                </fieldset>
+            }
+            <div class="adm-actions">
+                @if (Model.CanAdd)
+                {
+                    <button type="submit" id="add-row" class="adm-btn" asp-page-handler="Add" autofocus="@Model.Autofocus("add-row")">Add @v.ItemLabelLower</button>
+                }
+                else
+                {
+                    <p class="adm-hint">You have reached the limit of @ProfileParts.CardRows.</p>
+                }
+            </div>
+        </section>
+    }
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @v.HeadingLower</button>
+        <a class="adm-btn" href="/admin">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+    <script src="~/js/admin-unsaved.js" defer asp-append-version="true"></script>
+}
