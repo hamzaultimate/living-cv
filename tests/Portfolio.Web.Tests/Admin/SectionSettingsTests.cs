@@ -407,28 +407,66 @@ public class SectionSettingsTests
     }
 
     [Fact]
-    public async Task ATemplateSwitch_ThatWouldLeaveNoMenuSection_IsRefusedWithAMessage_AndTheSiteKeepsItsMenu()
+    public async Task ATemplateSwitch_ThatWouldEmptyTheMenu_KeepsTheSectionsThatAreOn_AndSaysSo()
     {
         var (app, owner, visitor, _) = await SiteAsync("software");
         using var _a = app;
         // Everything but the blog is hidden: allowed on software, where the blog is on by default and nothing needs storing for it.
         Assert.Equal(HttpStatusCode.Redirect, (await SectionsFlow.SaveAsync(owner, r => r.Select(x => x with { Enabled = x.Key == "blog" }).ToList())).StatusCode);
 
-        var preview = await owner.GetStringAsync("/admin/template?show=healthcare");
-        Assert.Contains("would show no section in the menu", preview);
-        var refused = await ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "healthcare" });
-        Assert.Equal(HttpStatusCode.Redirect, refused.StatusCode);
-        var page = await owner.GetStringAsync("/admin/template");
-        Assert.Contains("Switching to Healthcare would leave no &quot;Page&quot; switched on that appears in the menu, so the template was not switched.", page);
-        Assert.Contains("Open Pages of your site and switch one on first.", page); // the target template's own words
-        Assert.Equal("software", (await ProfileFlow.ProfileAsync(app)).TemplateKey);
-        Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/blog")).StatusCode);
-
-        // With one more section on, the switch goes through.
-        await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("contact", true));
+        Assert.Contains("stay on if you switch", await owner.GetStringAsync("/admin/template?show=healthcare"));
         Assert.Equal(HttpStatusCode.Redirect, (await ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "healthcare" })).StatusCode);
+
+        var page = await owner.GetStringAsync("/admin/template");
+        Assert.Contains("Switched to the Healthcare template. Articles stay on, although Healthcare shows them off by default", page);
         Assert.Equal("healthcare", (await ProfileFlow.ProfileAsync(app)).TemplateKey);
-        Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/contact")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/blog")).StatusCode); // the menu was not emptied
+        Assert.Contains("href=\"/blog\"", await visitor.GetStringAsync("/"));
+        var stored = await SectionsFlow.StoredAsync(app);
+        Assert.Equal(true, stored.Single(s => s.Key == "blog").Shown); // an explicit "on" for a section the new template has off by default
+        Assert.Equal(HttpStatusCode.NotFound, (await visitor.GetAsync("/talks")).StatusCode);
+        // The sections page now shows the blog as on and lets it be saved unchanged.
+        Assert.True((await SectionsFlow.RowsAsync(owner)).Single(r => r.Key == "blog").Enabled);
+        Assert.Equal(HttpStatusCode.Redirect, (await SectionsFlow.SaveAsync(owner, r => r)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/blog")).StatusCode);
+    }
+
+    [Fact]
+    public async Task ATemplateSwitch_WhenNothingIsOnEvenNow_IsRefused_InTheTargetsWords_AndChangesNothing()
+    {
+        var (app, owner, visitor, _) = await SiteAsync("software");
+        using var _a = app;
+        using (var db = app.CreateDbContext())
+        {
+            var p = await db.SiteProfiles.SingleAsync();
+            p.Sections = SoftwareOrder.Select(k => new SectionSetting { Key = k, Enabled = false, Shown = false }).ToList(); // written by hand: the page would not allow it
+            await db.SaveChangesAsync();
+        }
+        app.Services.GetRequiredService<Portfolio.Web.Services.ISiteProfileProvider>().Invalidate();
+
+        Assert.Equal(HttpStatusCode.Redirect, (await ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "healthcare" })).StatusCode);
+
+        var page = await owner.GetStringAsync("/admin/template");
+        Assert.Contains("Switching to Healthcare would leave no &quot;Page&quot; switched on that appears in the menu, so nothing was changed. Open Pages of your site and switch one on first.", page);
+        Assert.Equal("software", (await ProfileFlow.ProfileAsync(app)).TemplateKey);
+    }
+
+    [Fact]
+    public async Task ASectionsSave_ThatLandsInTheMiddleOfATemplateSwitch_CannotEmptyTheMenu()
+    {
+        var (app, owner, visitor, _) = await SiteAsync("software");
+        using var _a = app;
+        var other = await app.NewClientSignedInAsync();
+
+        // The switch has read a site where everything is on; the other tab then hides everything but the blog, before the switch writes.
+        var response = await app.OverlapAsync(
+            () => ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "healthcare" }),
+            async () => Assert.Equal(HttpStatusCode.Redirect, (await SectionsFlow.SaveAsync(other, r => r.Select(x => x with { Enabled = x.Key == "blog" }).ToList())).StatusCode));
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("healthcare", (await ProfileFlow.ProfileAsync(app)).TemplateKey);
+        Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/blog")).StatusCode); // the check ran again on the row as it then was
+        Assert.Contains("href=\"/blog\"", await visitor.GetStringAsync("/"));
     }
 
     [Fact]

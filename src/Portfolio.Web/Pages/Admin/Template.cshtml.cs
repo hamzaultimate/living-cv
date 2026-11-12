@@ -78,27 +78,36 @@ public class TemplateModel : AdminPageModel
             return RedirectToPage();
         }
 
-        // The sections page never leaves a site without a menu section; a switch must not either: the new template's defaults, with the owner's stored choices on top, need at least one on.
-        var target = await ResolveAsync(template.Key, ct);
-        if (!HasMenuSection(target))
+        // The sections page never leaves a site without a menu section; a switch must not either. The rule runs inside the write, on the row as it is then, so a sections save
+        // that lands in the middle cannot defeat it. When the new template's defaults would empty the menu, the menu sections that are on now stay on.
+        var kept = new List<string>();
+        SectionSettings.SwitchPlan? plan = null;
+        var outcome = await _editor.SetTemplateAsync(template, profile =>
         {
-            FlashError($"Switching to {template.Name} would leave no \"{new EditorView(target, ProfileParts.Sections).ItemLabel}\" switched on that appears in the menu, so the template was not switched. Open {new EditorView(target, ProfileParts.Sections).Heading} and switch one on first.");
+            plan = SectionSettings.PlanSwitch(_resolver, profile, template);
+            kept = plan.Kept.ToList();
+            return plan.Allowed;
+        }, ct);
+        if (outcome == SaveOutcome.Refused)
+        {
+            FlashError(SectionSettings.NoMenuMessage(template.Name, plan!.Target));
             return RedirectToPage();
         }
-
-        if (await _editor.SetTemplateAsync(template, ct) != SaveOutcome.Saved)
+        if (outcome != SaveOutcome.Saved)
         {
             FlashError("Your profile was changed at the same moment, so the template was not switched. Please try again.");
+            return RedirectToPage();
+        }
+        if (kept.Count > 0)
+        {
+            Flash($"Switched to the {template.Name} template. {string.Join(", ", kept)} stay on, although {template.Name} shows them off by default, so your menu is not left empty. Nothing was deleted.");
             return RedirectToPage();
         }
         Flash($"Switched to the {template.Name} template. Nothing was deleted: sections it does not use are hidden, and come back if you switch again.");
         return RedirectToPage();
     }
 
-    private async Task<TemplateView> ResolveAsync(string key, CancellationToken ct) =>
-        _resolver.Resolve(SiteProfileMapper.ToOptions(await _editor.LoadAsync(ct)), key);
-
-    private static bool HasMenuSection(TemplateView view) => view.Sections.Any(s => s.Enabled && s.Path is not null);
+    private static bool HasMenuSection(TemplateView view) => SectionSettings.HasMenuSection(view);
 
     /// <summary>Sections that are off now and would be on after switching to the selected template.</summary>
     public IReadOnlyList<string> Reappearing { get; private set; } = [];

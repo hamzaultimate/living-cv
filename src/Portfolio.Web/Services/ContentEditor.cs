@@ -15,6 +15,9 @@ public enum SaveOutcome
 
     /// <summary>The database refused the row for a unique key (a project address taken by a request that ran at the same time).</summary>
     Duplicate,
+
+    /// <summary>A rule refused the change on the row as it is now (for example a template switch that would leave no menu section); nothing was written.</summary>
+    Refused,
 }
 
 /// <summary>

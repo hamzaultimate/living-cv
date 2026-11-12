@@ -62,12 +62,13 @@ public class ProfileEditor
     /// now. It still replaces the stamp, so a form opened before it is refused, and it starts again from the stored row if another write lands first. After three
     /// losses in a row it gives up with <see cref="SaveOutcome.Conflict"/> and writes nothing, so the caller can say so and clean up.
     /// </summary>
-    private async Task<SaveOutcome> UpdateLatestAsync(Action<SiteProfile> apply, CancellationToken ct)
+    private async Task<SaveOutcome> UpdateLatestAsync(Func<SiteProfile, bool> apply, CancellationToken ct)
     {
         for (var attempt = 1; ; attempt++)
         {
             var profile = await LoadOrCreateAsync(ct);
-            apply(profile);
+            // The rule runs on every attempt, against the row that is actually about to be written, so a write that landed in between cannot defeat it.
+            if (!apply(profile)) { _db.ChangeTracker.Clear(); return SaveOutcome.Refused; }
             profile.ConcurrencyStamp = NewStamp();
             try
             {
@@ -95,6 +96,7 @@ public class ProfileEditor
             // deleted file; a separate light photo the owner chose is left alone.
             if (previous is not null && profile.PhotoUrlLight == previous) profile.PhotoUrlLight = photoUrl;
             profile.PhotoUrl = photoUrl;
+            return true;
         }, ct);
         return (outcome, previous);
     }
@@ -102,8 +104,14 @@ public class ProfileEditor
     /// <summary>Makes <paramref name="template"/> the site's template. Takes a catalog entry rather than a key, so only a template that
     /// loaded can be chosen. Only the template choice changes: every content row stays, and sections the template does not use are
     /// hidden by the pages, not removed.</summary>
-    public Task<SaveOutcome> SetTemplateAsync(TemplateDefinition template, CancellationToken ct = default) =>
-        UpdateLatestAsync(profile => profile.TemplateKey = template.Key, ct);
+    /// <param name="allow">Runs on the profile as it is about to be written (on every attempt) and may adjust it; false refuses the switch (<see cref="SaveOutcome.Refused"/>).</param>
+    public Task<SaveOutcome> SetTemplateAsync(TemplateDefinition template, Func<SiteProfile, bool>? allow = null, CancellationToken ct = default) =>
+        UpdateLatestAsync(profile =>
+        {
+            if (allow is not null && !allow(profile)) return false;
+            profile.TemplateKey = template.Key;
+            return true;
+        }, ct);
 
     /// <summary>Makes a change to the content rows (experience, skills, projects, certifications) show up everywhere at once: the provider's version
     /// moves on, which the "Generated" cache varies on, and the cache is evicted, so /sitemap.xml, /cv.pdf and /og.png follow without a restart.

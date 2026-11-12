@@ -120,4 +120,43 @@ public static class SectionSettings
         result.AddRange(stored.Where(s => !listed.Contains(s.Key)).Select(s => new SectionSetting { Key = s.Key, Label = s.Label, Enabled = s.Enabled, Shown = s.Shown, SortOrder = s.SortOrder }));
         return result;
     }
+
+    /// <summary>What a switch to another template does to the menu: whether it may go ahead, and which sections were kept on so the menu is not left empty.</summary>
+    public sealed record SwitchPlan(bool Allowed, IReadOnlyList<string> Kept, TemplateView Target);
+
+    /// <summary>True when at least one section that has its own page (so it appears in the menu) is on.</summary>
+    public static bool HasMenuSection(TemplateView view) => view.Sections.Any(s => s.Enabled && s.Path is not null);
+
+    /// <summary>
+    /// Decides a switch of <paramref name="profile"/> to <paramref name="target"/> against the row as it is. The new template's defaults with the owner's stored choices on top must leave a section
+    /// in the menu. When they would not (typically a site that shows only a section the new template has off by default), the menu sections that are on now are kept on by storing an explicit
+    /// <see cref="SectionSetting.Shown"/> for them, so the visible site keeps its menu; the switch is refused only when nothing is on now either. The profile is changed only when the plan allows it.
+    /// </summary>
+    public static SwitchPlan PlanSwitch(TemplateResolver resolver, SiteProfile profile, TemplateDefinition target)
+    {
+        var options = SiteProfileMapper.ToOptions(profile);
+        var after = resolver.Resolve(options, target.Key);
+        if (HasMenuSection(after)) return new SwitchPlan(true, [], after);
+
+        var now = resolver.Resolve(options);
+        var keep = after.Sections.Where(s => !s.Enabled && s.Path is not null && now.IsEnabled(s.Key)).ToList();
+        if (keep.Count == 0) return new SwitchPlan(false, [], after);
+
+        var sections = profile.Sections.ToList();
+        foreach (var s in keep)
+        {
+            var old = sections.LastOrDefault(x => string.Equals(x.Key, s.Key, StringComparison.OrdinalIgnoreCase));
+            if (old is null) sections.Add(new SectionSetting { Key = s.Key, Enabled = true, Shown = true });
+            else { sections.Remove(old); sections.Add(new SectionSetting { Key = old.Key, Label = old.Label, Enabled = true, Shown = true, SortOrder = old.SortOrder }); }
+        }
+        profile.Sections = sections;
+        return new SwitchPlan(true, keep.Select(s => TemplateView.Cap(s.Label)).ToList(), resolver.Resolve(SiteProfileMapper.ToOptions(profile), target.Key));
+    }
+
+    /// <summary>The words for a refused switch, in the target template's own wording.</summary>
+    public static string NoMenuMessage(string templateName, TemplateView target)
+    {
+        var view = new EditorView(target, ProfileParts.Sections);
+        return $"Switching to {templateName} would leave no \"{view.ItemLabel}\" switched on that appears in the menu, so nothing was changed. Open {view.Heading} and switch one on first.";
+    }
 }

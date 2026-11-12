@@ -61,7 +61,7 @@
     }
     @if (Model.LeavesNoMenuSection && !isCurrent)
     {
-        <p class="adm-callout" role="note">With your saved section choices this template would show no section in the menu, so it cannot be switched to yet. Switch a section on at <a href="/admin/sections">Sections</a> first.</p>
+        <p class="adm-callout" role="note">With your saved section choices this template would show no section in the menu by default, so the menu sections that are on now stay on if you switch (they are saved as your choice).</p>
     }
     <nav class="adm-tabs" aria-label="Preview page">
         @foreach (var (path, label) in Model.PreviewPages)
