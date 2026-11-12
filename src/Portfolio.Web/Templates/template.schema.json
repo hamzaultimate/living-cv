@@ -1128,14 +1128,15 @@
             },
             "fields": {
               "type": "object",
-              "description": "Overrides by field key. 'shown' cannot be hidden. The wording-only keys (heading, locked, defaultOff) carry words: 'heading' is the page title (label) and the line under it (hint); 'locked' and 'defaultOff' are the notes on a section that cannot be switched off and on one the template has off by default.",
+              "description": "Overrides by field key. 'shown' cannot be hidden. The wording-only keys (heading, locked, defaultOff, noOrder) carry words: 'heading' is the page title (label) and the line under it (hint); 'locked' and 'defaultOff' are the notes on a section that cannot be switched off and on one the template has off by default.",
               "propertyNames": {
                 "enum": [
                   "heading",
                   "label",
                   "shown",
                   "locked",
-                  "defaultOff"
+                  "defaultOff",
+                  "noOrder"
                 ]
               },
               "additionalProperties": {

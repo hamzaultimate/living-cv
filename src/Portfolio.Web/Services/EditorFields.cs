@@ -130,6 +130,7 @@ public static class EditorFields
         new("shown", "Show on the site", null, true),
         new("locked", "Always shown", "This section cannot be switched off.", false, true),
         new("defaultOff", "Off until you switch it on", "Your template does not show this section by default.", false, true),
+        new("noOrder", "Position does not matter", "This section is not part of the menu order, so moving it changes nothing visitors see.", false, true),
     ];
 
     /// <summary>The fields of a section, or an empty list for a section without an editor.</summary>

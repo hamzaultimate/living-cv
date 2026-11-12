@@ -511,6 +511,22 @@ public class SectionSettingsTests
         Assert.DoesNotContain("Form_Rows_4__Enabled-default", html); // only the rows the template has off carry the note
     }
 
+    [Fact]
+    public async Task OnlyTheRowsWhosePositionHasNoMenuEffect_SaySo()
+    {
+        var (app, owner, _, _) = await SiteAsync("software");
+        using var _a = app;
+
+        var html = await owner.GetStringAsync(SectionsFlow.Path);
+
+        // Contact (a fixed button, last in the mobile menu) and testimonials (a home block) are the only sections that do not take part in the menu order.
+        Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(html, "Position does not matter").Count);
+        var contact = html[html.IndexOf("Form.Rows[8].Key", StringComparison.Ordinal)..];
+        Assert.Contains("Position does not matter", contact);
+        var skills = html[html.IndexOf("Form.Rows[3].Key", StringComparison.Ordinal)..html.IndexOf("Form.Rows[4].Key", StringComparison.Ordinal)];
+        Assert.DoesNotContain("Position does not matter", skills);
+    }
+
     // ---------------------------------------------------------------- concurrency
 
     [Fact]

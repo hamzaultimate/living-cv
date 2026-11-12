@@ -45,6 +45,11 @@
                     <p id="@noteId" class="adm-hint">@v.Label("defaultOff"). @v.Hint("defaultOff")</p>
                 }
             }
+            @if (template is not null && (template.Key == SectionRegistry.Contact || SectionRegistry.PathFor(template.Key) is null))
+            {
+                @* The contact button and the home blocks have fixed places: moving this row changes nothing in the menu. *@
+                <p class="adm-hint">@v.Label("noOrder"). @v.Hint("noOrder")</p>
+            }
             <partial name="_RowButtons" model="@(new RowButtonsVm(i, f.Rows.Count, name, Model.FocusId, CanRemove: false))" />
         </fieldset>
     }

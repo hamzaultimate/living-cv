@@ -239,6 +239,9 @@ For each you can switch it on or off, give it your own name in the menu (leave t
   and a section you switched on or off stays recorded as your choice (even when it later equals the template's default), so it is never forgotten by a later save. Sections you never touched
   follow whichever template is in use. A switch of template rewrites nothing, so your choices stay; the template page lists the sections a switch would show again, and refuses a switch that would leave
   no section in the menu. Saving this page under another template stores what differs from *that* template.
+- **Limits to know.** Moving Contact or Testimonials has no effect on the menu (Contact is a fixed button, last in the mobile menu, and Testimonials is a block on the home page); those rows say so.
+  Renaming a section changes its name in the menu and in the links back to it, not the headings, page titles or breadcrumbs of the page itself, which come from the template.
+  A name may not match another section's name or short menu name, or the fixed "CV" entry, and may not contain invisible characters.
 - As on the other editors, a save from a page that was open before something else changed the profile is refused with a message that says nothing was saved.
 
 ### Forgot the password
@@ -316,7 +319,7 @@ Edit the `Site` section in [src/Portfolio.Web/appsettings.json](../src/Portfolio
 - links such as GitHub, LinkedIn, and email
 - the profile photo URL
 
-These values are the defaults for the site profile. With a database, they are copied into a profile row on first run and that row is used afterwards; edit the `Site` section before the first run, or set `Seed:Mode=Authoritative` to re-apply it on every start. Be careful with that second option once you use `/admin`: Authoritative overwrites the stored profile from the config on the first read after each start, which discards edits made in `/admin/profile` and its hero, metrics and About pages, and it replaces the photo URL, leaving an uploaded photo file in the uploads folder with nothing pointing at it. Once you have an owner account you can change all of these in the browser at `/admin/profile` instead.
+These values are the defaults for the site profile. With a database, they are copied into a profile row on first run and that row is used afterwards; edit the `Site` section before the first run, or set `Seed:Mode=Authoritative` to re-apply it on every start. Be careful with that second option once you use `/admin`: Authoritative overwrites the stored profile from the config on the first read after each start, which discards edits made in `/admin/profile`, its hero, metrics and About pages and the section settings (shown, hidden, renamed and reordered sections), and it replaces the photo URL, leaving an uploaded photo file in the uploads folder with nothing pointing at it. Once you have an owner account you can change all of these in the browser at `/admin/profile` instead.
 
 ### Template
 
