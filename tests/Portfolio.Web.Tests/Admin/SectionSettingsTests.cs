@@ -109,7 +109,7 @@ public class SectionSettingsTests
 
         // Showing them again brings everything back, because nothing was deleted.
         Assert.Equal(HttpStatusCode.Redirect, (await SectionsFlow.SaveAsync(owner, r => r.Select(x => x with { Enabled = true }).ToList())).StatusCode);
-        Assert.Empty(await SectionsFlow.StoredAsync(app));
+        Assert.All(await SectionsFlow.StoredAsync(app), s => Assert.Equal(true, s.Shown)); // the earlier explicit choices are kept, now as "shown"
         home = await visitor.GetStringAsync("/");
         Assert.Contains("href=\"/certifications\"", home);
         Assert.Contains("Seed Project", home);
@@ -168,9 +168,9 @@ public class SectionSettingsTests
         await SectionsFlow.SaveAsync(owner, r => r);
         Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/blog")).StatusCode);
 
-        // Switching them off again is the template's default, so nothing is stored.
+        // Switching them off again is an explicit choice now, kept as such (it is not forgotten and re-derived from the default).
         await SectionsFlow.SaveAsync(owner, r => SectionsFlow.Set("talks", false)(SectionsFlow.Set("blog", false)(r)));
-        Assert.Empty(await SectionsFlow.StoredAsync(app));
+        Assert.All(await SectionsFlow.StoredAsync(app), s => Assert.Equal(false, s.Shown));
         Assert.Equal(HttpStatusCode.NotFound, (await visitor.GetAsync("/blog")).StatusCode);
         Assert.Equal(await ContentRowsAsync(app), await ContentRowsAsync(app));
         using var db = app.CreateDbContext();
@@ -194,10 +194,10 @@ public class SectionSettingsTests
         await ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "software" });
         await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("talks", false));
         Assert.Equal(HttpStatusCode.NotFound, (await visitor.GetAsync("/talks")).StatusCode);
-        // The page stores what differs from the template in effect when it is saved: on software the blog is shown by default, so that save no longer holds a "blog on" choice.
-        Assert.Equal(["talks"], (await SectionsFlow.StoredAsync(app)).Select(s => s.Key));
+        // An explicit choice made earlier is kept by a later save, whatever the template's default is.
+        Assert.Equal(["blog", "talks"], (await SectionsFlow.StoredAsync(app)).Select(s => s.Key).OrderBy(x => x)); // the earlier explicit "on" is kept, not re-derived
         await ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "healthcare" });
-        Assert.Equal(HttpStatusCode.NotFound, (await visitor.GetAsync("/blog")).StatusCode); // back to healthcare's default
+        Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/blog")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await visitor.GetAsync("/talks")).StatusCode);
     }
 
@@ -427,6 +427,45 @@ public class SectionSettingsTests
         Assert.Equal(HttpStatusCode.Redirect, (await ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "healthcare" })).StatusCode);
         Assert.Equal("healthcare", (await ProfileFlow.ProfileAsync(app)).TemplateKey);
         Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/contact")).StatusCode);
+    }
+
+    [Fact]
+    public async Task AHideTheOwnerMade_NeverComesBack_BecauseOfASaveOrATemplateSwitch()
+    {
+        var (app, owner, visitor, _) = await SiteAsync("healthcare");
+        using var _a = app;
+        using (var db = app.CreateDbContext())
+        {
+            var p = await db.SiteProfiles.SingleAsync();
+            p.Sections = [new SectionSetting { Key = "blog", Enabled = false }]; // an older hide, written before the page existed
+            await db.SaveChangesAsync();
+        }
+        app.Services.GetRequiredService<Portfolio.Web.Services.ISiteProfileProvider>().Invalidate();
+
+        await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("skills", label: "Abilities")); // an unrelated save under healthcare, where the blog is off anyway
+        Assert.Equal(false, (await SectionsFlow.StoredAsync(app)).Single(s => s.Key == "blog").Shown); // the hide was kept, now explicit
+
+        Assert.Equal(HttpStatusCode.Redirect, (await ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "software" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await visitor.GetAsync("/blog")).StatusCode); // software would show it, but the owner hid it
+        // Same for a hide made on software and carried through healthcare and back.
+        await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("certifications", false));
+        await ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "healthcare" });
+        await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("skills", label: "Abilities too"));
+        await ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "software" });
+        Assert.Equal(HttpStatusCode.NotFound, (await visitor.GetAsync("/certifications")).StatusCode);
+        // The preview names what a switch would bring back.
+    }
+
+    [Fact]
+    public async Task TheTemplatePreview_NamesTheSectionsASwitchWouldBringBack()
+    {
+        var (app, owner, _, _) = await SiteAsync("healthcare");
+        using var _a = app;
+
+        var preview = await owner.GetStringAsync("/admin/template?show=software"); // blog and talks are off now and on under software
+
+        Assert.Contains("<strong>Shown again:</strong>", preview);
+        Assert.Contains("Blog, Talks", preview);
     }
 
     // ---------------------------------------------------------------- concurrency

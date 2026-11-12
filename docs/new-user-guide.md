@@ -235,8 +235,10 @@ For each you can switch it on or off, give it your own name in the menu (leave t
 - **Only your template's sections.** You cannot add a section the template does not have, and a template can mark a section as always on (none of the shipped ones does).
   At least one section that has its own page must stay on, and two sections cannot share a name (compared without regard to case). Names are plain text, at most 40 characters.
 - **The order** is the order of the menu (and of the pages in the sitemap). Blocks on the home page keep their fixed positions; they only follow whether their section is on.
-- **What is stored.** Only what differs from your template: an unchanged page stores nothing, a name equal to the template's is dropped, and a section you switch back to the template's default is no longer stored.
-  So a choice you made stays when you switch template (a switch rewrites nothing); saving this page under another template stores what differs from *that* template.
+- **What is stored.** Only what differs from your template, plus every choice you have already made: an unchanged page stores nothing on a fresh site, a name equal to the template's is dropped,
+  and a section you switched on or off stays recorded as your choice (even when it later equals the template's default), so it is never forgotten by a later save. Sections you never touched
+  follow whichever template is in use. A switch of template rewrites nothing, so your choices stay; the template page lists the sections a switch would show again, and refuses a switch that would leave
+  no section in the menu. Saving this page under another template stores what differs from *that* template.
 - As on the other editors, a save from a page that was open before something else changed the profile is refused with a message that says nothing was saved.
 
 ### Forgot the password

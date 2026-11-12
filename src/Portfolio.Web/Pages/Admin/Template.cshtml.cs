@@ -62,6 +62,12 @@ public class TemplateModel : AdminPageModel
         PreviewPath = PreviewPages.Select(p => p.Path).FirstOrDefault(p => p == Tab) ?? "/";
         HiddenContent = await HiddenContentAsync(view, ct);
         LeavesNoMenuSection = !HasMenuSection(view);
+        if (Selected.Key != CurrentKey)
+        {
+            // Sections the switch would bring back: on under the selected template, off under the current one (their content was kept all along).
+            var now = _resolver.Resolve(SiteProfileMapper.ToOptions(profile), CurrentKey);
+            Reappearing = view.Sections.Where(s => s.Enabled && !now.IsEnabled(s.Key)).Select(s => Cap(s.Label)).ToList();
+        }
     }
 
     public async Task<IActionResult> OnPostAsync(CancellationToken ct)
@@ -93,6 +99,9 @@ public class TemplateModel : AdminPageModel
         _resolver.Resolve(SiteProfileMapper.ToOptions(await _editor.LoadAsync(ct)), key);
 
     private static bool HasMenuSection(TemplateView view) => view.Sections.Any(s => s.Enabled && s.Path is not null);
+
+    /// <summary>Sections that are off now and would be on after switching to the selected template.</summary>
+    public IReadOnlyList<string> Reappearing { get; private set; } = [];
 
     /// <summary>True when switching to the selected template would leave the site without a section in the menu (the switch is then refused).</summary>
     public bool LeavesNoMenuSection { get; private set; }

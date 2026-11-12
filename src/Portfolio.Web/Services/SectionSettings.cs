@@ -19,7 +19,7 @@ public sealed class SectionRowForm
 /// The rules of the sections page, apart from the page: which rows it shows, whether a posted list is acceptable, and the settings it writes. The owner can rename, show,
 /// hide and reorder the sections the template lists; nothing here can add a section the template does not list, and nothing deletes a row of content.
 /// Only differences from the template are stored: a label equal to the template's is dropped, <see cref="SectionSetting.Shown"/> is written only when the choice differs
-/// from what the template does by default, and the positions are written (all of them) only when the order differs from the template's. Settings for keys the template does not list
+/// from what the template does by default or an earlier explicit choice exists (it is kept, not re-derived), and the positions are written (all of them) only when the order differs from the template's. Settings for keys the template does not list
 /// (left by another template or by hand) are carried over untouched.
 /// </summary>
 public static class SectionSettings
@@ -92,7 +92,10 @@ public static class SectionSettings
             var old = stored.LastOrDefault(s => string.Equals(s.Key, template.Key, StringComparison.OrdinalIgnoreCase));
             var typed = labelShown ? labels[i] : old?.Label;
             var label = !string.IsNullOrWhiteSpace(typed) && typed.Trim() != template.Label ? typed.Trim() : null;
-            bool? shown = !template.Required && rows[i].Enabled != template.Enabled ? rows[i].Enabled : null;
+            // A choice is stored when it differs from the template's default, and an earlier explicit choice (Shown, or the older Enabled: false) is never dropped by a later
+            // save, even when it now equals the default: otherwise a switch of template would bring back a section the owner hid.
+            var touched = old is { Shown: not null } or { Enabled: false };
+            bool? shown = !template.Required && (rows[i].Enabled != template.Enabled || touched) ? rows[i].Enabled : null;
             var order = orderChanged ? i + 1 : 0;
             if (label is null && shown is null && order == 0) continue;
             result.Add(new SectionSetting { Key = template.Key, Label = label, Enabled = shown != false, Shown = shown, SortOrder = order });

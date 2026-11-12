@@ -91,7 +91,7 @@ public class SectionAccessibilityEndToEndTests
         var back = await SectionsFlow.RowsAsync(owner);
         Assert.Equal(HttpStatusCode.Redirect, (await ProfileFlow.PostAsync(owner, SectionsFlow.Path, SectionsFlow.Fields(back.Select(x => new SectionsFlow.Row(x.Key, "", template == "software" || x.Key is not ("blog" or "talks")))
             .OrderBy(x => (template == "software" ? new[] { "about", "experience", "projects", "skills", "certifications", "blog", "talks", "testimonials", "contact" } : new[] { "about", "certifications", "experience", "skills", "projects", "blog", "talks", "testimonials", "contact" }).ToList().IndexOf(x.Key))))).StatusCode);
-        Assert.Empty(await SectionsFlow.StoredAsync(app));
+        Assert.DoesNotContain(await SectionsFlow.StoredAsync(app), s => s.SortOrder != 0 || s.Label != null); // no names and no order left; explicit show/hide choices are kept
         Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/experience")).StatusCode);
         Assert.Equal(template == "software" ? HttpStatusCode.OK : HttpStatusCode.NotFound, (await visitor.GetAsync("/blog")).StatusCode);
     }
