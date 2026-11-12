@@ -34,7 +34,8 @@ Ten professions map onto four archetypes, so we build four layouts and ten prese
 
 **D3. Keep the existing tables.** Do not rename `Project`/`Experience`/`Skill`. The preset
 supplies display labels and hides unused fields. This avoids a risky migration and keeps the
-existing software template working unchanged.
+existing software template working unchanged. *Recorded exception (4b-2):* one additive nullable `SiteProfiles.ConcurrencyStamp` column (migration
+`AddProfileConcurrencyStamp`, a single `ALTER TABLE ... ADD ... NULL`), because the profile is edited from several tabs and pages and would otherwise be last-write-wins. No rename, no data change.
 
 **D4. Seeds become demo/starter data only.** Seed runs only when the DB is empty, and only
 loads the sample persona if the owner picks "start with sample content". After that the DB is
@@ -272,8 +273,8 @@ Split so users are never left with content they cannot edit:
 - **4a (release gate for the wizard):** Experience, Skills, Projects/Work, Certifications.
   List with reorder, create/edit/delete, slug generation, image upload for hero and
   screenshots, validation, unsaved-change warning. **Status: done** (pending independent review); notes below.
-- **4b (split in two PRs):** **4b-1 done, pending review** = Talks, Testimonials and Blog (Markdown with safe server-side preview, drafts); **4b-2 not started** = hero / metrics / About editing and
-  section on/off and ordering. Status, notes and the 4b-2 brief are in "Phase 4b: status and hand-over" below.
+- **4b (split in two PRs):** **4b-1 done, pending review** = Talks, Testimonials and Blog (Markdown with safe server-side preview, drafts); **4b-2 in progress** = hero / metrics / About editing and
+  section on/off and ordering: **stage A (hero, metrics, About and the profile stamp) done, pending review; stage B (sections on/off and order) not started**. Status, notes and the 4b-2 brief are in "Phase 4b: status and hand-over" below.
 - **4c:** JSON export/import of all content. This replaces hand-editing seed files and gives
   backup and portability.
 Wizard and 4a ship together; 4b and 4c follow.
@@ -339,8 +340,8 @@ Implementation notes for 4a (decisions worth reviewing):
   pages, `ContentEditor`, `FormCheck`, the `editor` manifest block and the stamp pattern are reusable for those. 4c (JSON export and import) should
   export `ConcurrencyStamp`-free rows and decide how imported rows interact with the unique name and slug rules above.
 
-### Phase 4b: status and hand-over (4b-1 done, pending review; 4b-2 not started)
-**Split.** 4b-1 = Talks, Testimonials and the Blog editors (this PR). 4b-2 = hero / metrics / About editing and section on/off + ordering (a later PR, **not started**). 4c (JSON
+### Phase 4b: status and hand-over (4b-1 done, pending review; 4b-2 stage A done, pending review; stage B not started)
+**Split.** 4b-1 = Talks, Testimonials and the Blog editors (this PR). 4b-2 = hero / metrics / About editing and section on/off + ordering (a later PR; **stage A done, stage B not started**). 4c (JSON
 export / import) is untouched. Everything follows the 4a pattern: `ContentPageModel` / `ContentListModel` / `ContentDeleteModel`, `FormCheck`, `ContentEditor` (row stamp, list stamp,
 `CommitAsync` -> `ProfileEditor.AfterContentCommitAsync`), the manifest `editor` block, `admin-unsaved.js`.
 
@@ -351,8 +352,8 @@ export / import) is untouched. Everything follows the 4a pattern: `ContentPageMo
 | Talks | `Talk` | Title, Type (`Video`/`Talk`), YoutubeId, Event, Date (`DateOnly?`), Url, SortOrder | `Date` descending, then `SortOrder`, then `Id` | No image. YoutubeId goes into an iframe address. Seeder key: `Title`. |
 | Testimonials | `Testimonial` | Quote, Author, AuthorTitle, SourceUrl, Relation, Featured, SortOrder | `SortOrder`, then `Id` | No image. Quote is escaped plain text. `Relation` and `Featured` are stored but shown nowhere. Seeder key: `Author` + first 40 characters of `Quote`. |
 | Blog | `BlogPost` | Title, Slug, Description, Date, Tags, Draft, Cover, BodyMarkdown | `Date` descending, then `Id`; drafts hidden | Unique `Slug` index; no position column. Seeder key: `Slug`. |
-| Hero / metrics / About | `SiteProfile` JSON columns | Hero (4 text), Metrics (value, unit, label), About (headline, paragraphs, value props, currently note, focus) | n/a | 4b-2 |
-| Sections | `SiteProfile.Sections` JSON | Key, Label, Enabled, SortOrder | nav and home order | 4b-2 |
+| Hero / metrics / About | `SiteProfile` JSON columns | Hero (4 text), Metrics (value, unit, label), About (headline, paragraphs, value props, currently note, focus) | n/a | 4b-2 stage A (done) |
+| Sections | `SiteProfile.Sections` JSON | Key, Label, Enabled, SortOrder | nav and home order | 4b-2 stage B (not started) |
 
 **Public surfaces each type feeds.** Talks: `/talks` only. Testimonials: the home page block (`Blocks/_Testimonials`). Blog: `/blog`, `/blog/{slug}`, `/sitemap.xml` (posts, with the date as
 `lastmod`), `BlogPosting` + breadcrumb JSON-LD on the post page, the post's cover as its share image. Nothing else reads posts (no feed, no search, no tag pages, no related posts, no
@@ -392,7 +393,38 @@ home-page block, no per-post share image, not the CV); the repository filters dr
 preview and the public page are rendered by the same function but the preview sits in admin styles, not the site's Tailwind article styles. Raw HTML in posts is deliberately unsupported. Nothing has been run against a
 real SQL Server (tests use SQLite; the SQL scripts were read). No browser check of the new pages was done.
 
-#### 4b-2 brief (not started; self-contained)
+#### Implementation notes for 4b-2 stage A (hero, metrics, About, profile stamp)
+- **Routes.** `/admin/profile/hero`, `/admin/profile/metrics`, `/admin/profile/about` (one page model each under `Pages/Admin/Profile`, deriving from `ProfilePartModel`), linked from the dashboard and from `/admin/profile` with the
+  template's words. The identity page (`/admin/profile`) **no longer edits** the hero, metrics or About text (`ProfileForm` lost those fields; its save leaves them untouched), so a field has exactly one editor. Every POST is antiforgery-protected with a
+  `[BodyLimit]` (64 KB hero and metrics, 128 KB About, 256 KB identity), a GET only reads, the pages sit in the deny-by-default admin folder. Script: `AdminAuth.AllowsScript` now also allows `script-src 'self'` on exactly these three
+  paths (for `admin-unsaved.js`); the identity page and the dashboard stay script-free. `_Field`, `_ErrorSummary` and `_Guidance` moved from `Pages/Admin/Content` to `Pages/Admin` so both folders share them; `FieldVm.For` is the one place a field is built.
+- **Decision recorded: a profile stamp (D3 exception).** `SiteProfile.ConcurrencyStamp` (nullable `nvarchar(32)`, EF concurrency token, same shape as the content stamps). Written (replaced) by: the identity save, hero, metrics, About, a new photo, a template switch,
+  the wizard's publish and `Seed:Mode=Authoritative`'s overwrite. **Not** replaced by the wizard's draft saves (the draft is not public), by the wizard's skip, or by content rows (they are other tables). A form posts the stamp it was loaded with (`Form.Stamp`, hidden);
+  `ProfileEditor.UpdateAsync(apply, seenStamp)` names it as the original value, so the `UPDATE` only matches that stamp; a stale or missing stamp is `SaveOutcome.Conflict` with nothing written (a row that was never stamped matches an empty stamp once). The refusal
+  re-draws the page with what was typed and "Nothing was saved." (focus on the alert). Writes that do not come from a form (photo, template) have no earlier copy to be stale against: they replace the stamp and, if another write lands between their read and write, start again from
+  the stored row (up to three tries) instead of failing. A consequence worth knowing: after a photo change or a template switch, a hero / metrics / About form that was open is refused, because the profile did change. The migration SQL was read (one `ALTER TABLE [SiteProfiles] ADD [ConcurrencyStamp] nvarchar(32) NULL`); it was not run against SQL Server.
+- **Wizard interplay.** (1) Draft saves used to be a tracked `SaveChanges` that a moved stamp would have made fail silently (the old "published in the meantime" path would then drop the answer); they are now one `ExecuteUpdate` of the draft column that still requires the
+  wizard to be unfinished, so an answer is never lost to an unrelated edit. (2) Publish replaces the stamp. A form opened before a publish is refused after it (tested). (3) The first-run publish replaces the placeholder persona **per part** (hero, metrics, About) and only
+  while that part still equals what the `Site` config supplied; a part the owner already edited is kept. Edits made before publishing are therefore not clobbered, and the publish is not clobbered by a stale form. The comparison needs `IOptions<SiteOptions>` in `OnboardingService`. A real HTTP overlap of publish and edit cannot be shown on the single shared in-memory SQLite connection of the tests
+  (the publish transaction swallows the other request's write), so that direction is tested sequentially.
+- **Manifest.** `editor.hero`, `editor.metrics`, `editor.about` (schema, `TemplateEditor`, `EditorFields`, `TemplateValidator`, drift test, both shipped manifests, authoring guide). Keys: hero `heading`, `eyebrow`, `headline`\*, `headlineAccent`, `lede`; metrics `heading`, `value`\*, `unit`, `label`;
+  about `heading`, `headline`\*, `paragraphs`, `valueProps`, `valuePropTitle`, `valuePropBody`, `currentlyNote`, `focus` (\* cannot be hidden). `heading` (page title = label, line under it = hint) and `valuePropTitle`/`valuePropBody` are wording-only keys: new `EditorFieldInfo.WordingOnly`, which the validator refuses to hide.
+  `itemLabel` names one row ("Add metric", "Metric 2", "Add card"). Every noun in a message (page title, save message, "changed somewhere else", "Metric 2 value is required", "Metric 3 added", limits, empty state) is built from these words; `EditorView.Heading` is the block's name. Neutral defaults live in `EditorFields`. The About editor shows the "not shown by your template" note when the template disables the About section; the hero and metrics are home blocks and never switched off.
+  Software words them "Home page hero", "Headline metrics", "About page"; Healthcare "Home page introduction", "Key figures" (no unit), "About you", with no highlighted headline part, and its guidance on every page. A hidden field is not drawn, not validated, not read from the post and keeps its stored value; a hidden metric column follows its row (each row posts the position it had in the stored list as `Source`; an out of range, negative or repeated source borrows nothing).
+- **Row editing without script.** Metrics (up to 8) and About cards (up to 6) have Move up / Move down / Remove / Add buttons. They are POST handlers (`?handler=Move|Remove|Add`) that return the page with the typed rows rearranged **and write nothing**; Save is what writes. The "Save" button is first in the form (so Enter in a text box saves) and is repeated at the end;
+  the buttons are named after their row ("Move up: Metric 2"), the ends are disabled, a polite status region says what happened and "not saved yet", focus lands on the moved row's button (or the new row's first box, or "Add"), and the unsaved-changes warning starts on. Paragraphs and focus areas stay text areas (one blank-line separated paragraph, one line per focus area).
+- **Validation.** `FormCheck` (plain text only: a `<` followed by a letter, `/`, `!` or `?` is refused; control characters refused; NUL is refused by the framework with 400), new `FormCheck.Paragraphs` and a `context` argument so a row's message says which row. Limits: hero fields 300 (lede 800); metric value 20, unit 20, label 80; About headline 300, paragraph 2000 (10), card title 120 and text 500, note 300, focus line 120 (30).
+  Headline (hero and About) and the metric value are required. None of these fields is a link, so there is no URL rule to apply; the public pages print them through Razor's encoder as text (no `Html.Raw` on any of them), which the tests assert for a corpus of text that passes validation (`5 < 6 & 7 > 3`, quotes, entities, `javascript:...`, Razor and template syntax, Markdown).
+- **Public surfaces.** The hero is read by the home page (both archetypes) and the share image (`/og.png` tagline); metrics by the home page; About by `/about`. The sitemap, JSON-LD, CV and its PDF do not read these fields, so they are unchanged by an edit (asserted), and the output cache is evicted by every save (asserted with the share image). The Software parity snapshots pass unedited.
+- **Tests.** `ProfileStampTests` (stamp replaced by every kind of write, draft saves, photo overlapping an edit, stale / missing / forged stamps and real overlapping requests for the four forms, never-stamped rows), `ProfilePartEditorTests` (persistence, public follow, limits, row buttons, markup and control-character corpus on every text field, rendering corpus, first-run publish), `ProfilePartTemplateTests` (unique-word manifest: labels, hints, every message; hidden fields; hidden metric column; About disabled; both shipped manifests),
+  `ProfileAccessibilityTests`, `ProfileEndToEndTests` (both templates on a blank wizard-finished site), the new routes in `AdminAccessTests`, `ContentSecurityTests` (anonymous, no token, stale session, GET never mutates with two rows or values per table, real stamps, body caps, script scope) and `BodyLimitCoverageTests`. `AdminApp.OverlapAsync` (the save hook now also fires for the profile row) is the shared way to overlap two real requests.
+- **Mutations proven (scratch copy only).** Each of these was applied alone to a copy of the repository outside the working tree and the relevant tests run; every one was caught (no survivors): the owner check (an `[AllowAnonymous]` on the metrics page: `AdminAccessTests`, `ContentSecurityTests`), antiforgery (`[IgnoreAntiforgeryToken]` on the About page: the no-token replay and the editor tests), the stamp check (seen stamp ignored; stamp not replaced: 11 to 13 tests),
+  hidden-field data loss (hero, metric column, About: `ProfilePartTemplateTests`), a repeated metric source, cache invalidation skipped after a save (16 tests), the URL scheme allow-list (on the identity page, the only page with links: `InvalidValues_AreRejected`), the markup rule switched off (13 tests), the first-run placeholder check always true, a draft save that replaces the stamp, `[BodyLimit]` removed, the photo / template retry removed,
+  the script scope widened to the identity page, Move ignored and a row button that writes. Not applicable to stage A: "section disable not filtering a surface" (stage B).
+- **Known gaps / owner decisions.** The migration and the new pages were not run against SQL Server (SQLite in tests; the SQL was read). No browser check of the new pages was done (markup and header tests only). The wizard's skip is guarded by the old token and the new stamp only through the completion time: a skip that loses a race with an edit logs and does nothing (unchanged behaviour). Requiring a headline means a wizard-published site (About headline empty) must enter one before it can save its About text; that is intentional (an empty page heading), say so to owners who ask.
+  The identity page's own save wording ("Profile saved", the conflict message) still names "the profile", a product word. Metrics and cards are reordered by buttons and persisted by Save; there is no drag and drop for the same reason as in 4a.
+
+#### 4b-2 brief (stage A done, stage B not started; self-contained)
 **Goal.** Let the owner edit the hero, metrics and About text, and switch sections on / off and reorder them, from the admin, in the template's words.
 **Start from.** `Pages/Admin/Profile.cshtml(.cs)`, `Services/ProfileEditor.cs` and `ProfileForm.cs` (identity editing, `AfterCommitAsync` refreshes caches), `Data/Entities/SiteProfile.cs` (`Hero`, `Metrics`,
 `About`, `Sections` are JSON-mapped owned types), `Services/SiteProfileMapper.cs`, `Services/SectionRegistry.cs`, `Services/TemplateDefinition.cs` + `TemplateView.cs` (how a template's sections, labels and `enabled` combine
