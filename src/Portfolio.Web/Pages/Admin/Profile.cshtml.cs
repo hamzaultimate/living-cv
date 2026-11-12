@@ -9,7 +9,7 @@ namespace Portfolio.Web.Pages.Admin;
 public class ProfileModel : AdminPageModel
 {
     /// <summary>The identity page names what was refused as "the profile": a product word, not one of the template's.</summary>
-    public const string ConflictMessage = "The profile was changed somewhere else (another tab or session) since you opened it, so nothing was saved. Reload the page to see the latest version.";
+    public const string ConflictMessage = "The profile was changed somewhere else (another tab or session) since you opened it, so nothing was saved. Copy what you typed if you want to keep it, then reload the page to see the latest version.";
 
     private readonly ProfileEditor _editor;
     private readonly RequestTemplate _template;

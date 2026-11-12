@@ -48,7 +48,7 @@ public abstract class ProfilePartModel : AdminPageModel
 
     public string? Autofocus(string id) => FocusId == id ? "autofocus" : null;
 
-    public string ConflictMessage => $"{View.Heading} was changed somewhere else (another tab or session) since you opened it, so nothing was saved. Reload the page to see the latest version.";
+    public string ConflictMessage => $"{View.Heading} was changed somewhere else (another tab or session) since you opened it, so nothing was saved. Copy what you typed if you want to keep it, then reload the page to see the latest version.";
 
     public string SavedMessage => $"{View.Heading} saved. Your public pages now use it.";
 

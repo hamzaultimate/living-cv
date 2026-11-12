@@ -214,4 +214,14 @@ public class ContentAccessibilityTests
         Assert.Matches(@"<div class=""adm-post-preview"" tabindex=""0"" role=""region"" aria-label=""Post text preview"">", html);
         AssertAccessible("blog preview", html);
     }
+
+    [Fact]
+    public void ThePreviewScrollArea_HasPadding_AndTheSameFocusRingAsTheOtherAdminControls()
+    {
+        var css = File.ReadAllText(Path.Combine(Support.TemplateDirs.Web, "wwwroot", "css", "admin.css"));
+
+        Assert.Matches(@"\.adm-post-preview\s*\{[^}]*padding:\s*\.75rem 1rem", css);
+        Assert.Matches(@"\.adm-post-preview:focus-visible\s*\{\s*outline:\s*3px solid var\(--adm-accent\);\s*outline-offset:\s*2px;", css);
+        Assert.Contains(".adm-btn:focus-visible", css); // the ring it must match
+    }
 }
