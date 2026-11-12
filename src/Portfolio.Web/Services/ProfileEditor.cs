@@ -47,8 +47,9 @@ public class ProfileEditor
         {
             await _db.SaveChangesAsync(ct);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (Exception ex) when (ex is DbUpdateConcurrencyException || (ex is DbUpdateException && SiteProfileProvider.IsDuplicateKey(ex)))
         {
+            // Either the row changed since the form was loaded, or the row did not exist yet and something else created it first: nothing was written.
             _db.ChangeTracker.Clear();
             return SaveOutcome.Conflict;
         }
@@ -58,9 +59,10 @@ public class ProfileEditor
 
     /// <summary>
     /// A change that does not come from a form (a new photo, a new template): it has no earlier copy to be stale against, so it is applied to whatever the profile holds
-    /// now. It still replaces the stamp, so a form opened before it is refused, and it starts again from the stored row if another write lands first.
+    /// now. It still replaces the stamp, so a form opened before it is refused, and it starts again from the stored row if another write lands first. After three
+    /// losses in a row it gives up with <see cref="SaveOutcome.Conflict"/> and writes nothing, so the caller can say so and clean up.
     /// </summary>
-    private async Task UpdateLatestAsync(Action<SiteProfile> apply, CancellationToken ct)
+    private async Task<SaveOutcome> UpdateLatestAsync(Action<SiteProfile> apply, CancellationToken ct)
     {
         for (var attempt = 1; ; attempt++)
         {
@@ -71,21 +73,22 @@ public class ProfileEditor
             {
                 await _db.SaveChangesAsync(ct);
             }
-            catch (DbUpdateConcurrencyException) when (attempt < 3)
+            catch (Exception ex) when (ex is DbUpdateConcurrencyException || (ex is DbUpdateException && SiteProfileProvider.IsDuplicateKey(ex)))
             {
                 _db.ChangeTracker.Clear();
-                continue;
+                if (attempt < 3) continue;
+                return SaveOutcome.Conflict;
             }
             await AfterCommitAsync(profile);
-            return;
+            return SaveOutcome.Saved;
         }
     }
 
-    /// <summary>Points the profile at a new photo (or clears it) and returns the previous value.</summary>
-    public async Task<string?> SetPhotoAsync(string? photoUrl, CancellationToken ct = default)
+    /// <summary>Points the profile at a new photo (or clears it). The outcome says whether it was written (<see cref="SaveOutcome.Conflict"/> means nothing was) and <c>Previous</c> is the photo it replaced.</summary>
+    public async Task<(SaveOutcome Outcome, string? Previous)> SetPhotoAsync(string? photoUrl, CancellationToken ct = default)
     {
         string? previous = null;
-        await UpdateLatestAsync(profile =>
+        var outcome = await UpdateLatestAsync(profile =>
         {
             previous = profile.PhotoUrl;
             // The light-theme photo that is just a copy of the photo being replaced (the wizard sets both) follows it, so it never points at the
@@ -93,13 +96,13 @@ public class ProfileEditor
             if (previous is not null && profile.PhotoUrlLight == previous) profile.PhotoUrlLight = photoUrl;
             profile.PhotoUrl = photoUrl;
         }, ct);
-        return previous;
+        return (outcome, previous);
     }
 
     /// <summary>Makes <paramref name="template"/> the site's template. Takes a catalog entry rather than a key, so only a template that
     /// loaded can be chosen. Only the template choice changes: every content row stays, and sections the template does not use are
     /// hidden by the pages, not removed.</summary>
-    public Task SetTemplateAsync(TemplateDefinition template, CancellationToken ct = default) =>
+    public Task<SaveOutcome> SetTemplateAsync(TemplateDefinition template, CancellationToken ct = default) =>
         UpdateLatestAsync(profile => profile.TemplateKey = template.Key, ct);
 
     /// <summary>Makes a change to the content rows (experience, skills, projects, certifications) show up everywhere at once: the provider's version

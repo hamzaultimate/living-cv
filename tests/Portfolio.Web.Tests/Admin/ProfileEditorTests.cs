@@ -112,8 +112,8 @@ public class ProfileEditorTests
         using var db = test.CreateContext();
         var editor = new ProfileEditor(db, provider, store);
 
-        Assert.Null(await editor.SetPhotoAsync("/uploads/a.jpg"));
-        Assert.Equal("/uploads/a.jpg", await editor.SetPhotoAsync(null));
+        Assert.Null((await editor.SetPhotoAsync("/uploads/a.jpg")).Previous);
+        Assert.Equal("/uploads/a.jpg", (await editor.SetPhotoAsync(null)).Previous);
 
         Assert.Equal(["/uploads/a.jpg", null], provider.Primed.Select(p => p.PhotoUrl));
         Assert.Equal(2, store.EvictedTags.Count);

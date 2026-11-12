@@ -71,7 +71,11 @@ public class TemplateModel : AdminPageModel
             return RedirectToPage();
         }
 
-        await _editor.SetTemplateAsync(template, ct);
+        if (await _editor.SetTemplateAsync(template, ct) != SaveOutcome.Saved)
+        {
+            FlashError("Your profile was changed at the same moment, so the template was not switched. Please try again.");
+            return RedirectToPage();
+        }
         Flash($"Switched to the {template.Name} template. Nothing was deleted: sections it does not use are hidden, and come back if you switch again.");
         return RedirectToPage();
     }

@@ -27,6 +27,8 @@ public class PhotoModel : AdminPageModel
     [BindProperty]
     public IFormFile? Photo { get; set; }
 
+    public const string ChangedMessage = "Your profile was changed at the same moment, so the photo was not changed. Please try again.";
+
     public async Task OnGetAsync(CancellationToken ct) => PhotoUrl = (await _editor.LoadAsync(ct)).PhotoUrl;
 
     public async Task<IActionResult> OnPostUploadAsync(CancellationToken ct)
@@ -47,10 +49,10 @@ public class PhotoModel : AdminPageModel
         }
 
         var url = await _store.SaveAsync(processed, ct);
-        string? previous;
+        (SaveOutcome Outcome, string? Previous) result;
         try
         {
-            previous = await _editor.SetPhotoAsync(url, ct);
+            result = await _editor.SetPhotoAsync(url, ct);
         }
         catch
         {
@@ -58,14 +60,28 @@ public class PhotoModel : AdminPageModel
             throw;
         }
 
-        _store.TryDelete(previous);
+        if (result.Outcome != SaveOutcome.Saved)
+        {
+            // Nothing points at the new file, so it must not be left behind.
+            _store.TryDelete(url);
+            FlashError(ChangedMessage);
+            return RedirectToPage();
+        }
+
+        _store.TryDelete(result.Previous);
         Flash("Photo updated.");
         return RedirectToPage();
     }
 
     public async Task<IActionResult> OnPostRemoveAsync(CancellationToken ct)
     {
-        _store.TryDelete(await _editor.SetPhotoAsync(null, ct));
+        var result = await _editor.SetPhotoAsync(null, ct);
+        if (result.Outcome != SaveOutcome.Saved)
+        {
+            FlashError(ChangedMessage);
+            return RedirectToPage();
+        }
+        _store.TryDelete(result.Previous);
         Flash("Photo removed. The site falls back to the monogram.");
         return RedirectToPage();
     }

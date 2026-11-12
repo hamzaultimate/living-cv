@@ -10,7 +10,7 @@ namespace Portfolio.Web.Tests.Admin;
 public class WizardRaceTests
 {
     /// <summary>Moves the profile's stamp from another connection to the row, as a hero or photo save would, so the save in progress finds it changed.</summary>
-    private static async Task MoveStampAsync(AdminApp app)
+    internal static async Task MoveStampAsync(AdminApp app)
     {
         using var db = app.CreateDbContext();
         (await db.SiteProfiles.SingleAsync()).ConcurrencyStamp = ProfileEditor.NewStamp();
@@ -18,7 +18,7 @@ public class WizardRaceTests
     }
 
     /// <summary>A hook that races the next <paramref name="times"/> profile saves.</summary>
-    private static Func<Task> Race(AdminApp app, int times)
+    internal static Func<Task> Race(AdminApp app, int times)
     {
         var left = times;
         Func<Task>? hook = null;
