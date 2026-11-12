@@ -350,4 +350,18 @@ public class SafeMdTests
     [InlineData(null)]
     [InlineData("")]
     public void NothingRendersAsNothing(string? markdown) => Assert.Equal("", SafeMd.ToHtml(markdown));
+
+    [Fact]
+    public void AKeptRendering_IsUsedAsItIs_SoASaveThatAlreadyRenderedTheTextDoesNotParseItAgain()
+    {
+        var text = "Kept text " + Guid.NewGuid();
+        Assert.False(SafeMd.IsKept(text));
+
+        SafeMd.Keep(text, SafeMd.Problem.None, "<p>SENTINEL</p>");
+
+        Assert.True(SafeMd.IsKept(text));
+        Assert.Equal("<p>SENTINEL</p>", SafeMd.ToHtml(text)); // returned from the cache: nothing was rendered
+        SafeMd.Keep(text, SafeMd.Problem.None, "<p>OTHER</p>"); // an existing entry is never replaced
+        Assert.Equal("<p>SENTINEL</p>", SafeMd.ToHtml(text));
+    }
 }

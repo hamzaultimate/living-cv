@@ -31,8 +31,9 @@ public static class SafeMd
 
     /// <summary>
     /// The most <c>[</c> characters a text may have (links, images, references). The library's link parser is quadratic in the number of unclosed openers
-    /// (measured at about 60 ms for 2,000 and 3 s for 8,000 of <c>[a](</c>, more with the parse used for counting); 1,000 keeps the worst case near 100 ms per parse and is far
-    /// above any real post (the shipped ones have none; an article with a hundred links is already long).
+    /// (measured at about 60 ms for 2,000 and 3 s for 8,000 of <c>[a](</c>, more with the parse used for counting); 1,000 keeps the typical worst case in the low hundreds of
+    /// milliseconds per parse. Measured on the test machine with 999 of <c>[a](</c> followed by about 56,000 non-space characters (the nastiest input found), a parse took 300 to 600 ms, so a save of such a text
+    /// (which parses it once for the check) stays well under a second. The limit is far above any real post (the shipped ones have none; an article with a hundred links is already long).
     /// </summary>
     public const int MaxBrackets = 1000;
 
@@ -69,6 +70,18 @@ public static class SafeMd
         var problem = Render(text, out html);
         if (remember) Cache.Set(key, (problem, html), new MemoryCacheEntryOptions { Size = 1 + html.Length * 2 / 1024 });
         return problem;
+    }
+
+    /// <summary>
+    /// Keeps a rendering that <see cref="TryRender"/> returned earlier (with <c>remember: false</c>) for exactly this text, so a save that has already rendered the text to check it
+    /// does not parse it a second time once the post is committed. The caller passes the very pair that <see cref="TryRender"/> produced; nothing is rendered here.
+    /// </summary>
+    public static void Keep(string? markdown, Problem problem, string html)
+    {
+        var text = markdown ?? string.Empty;
+        if (text.Length == 0) return;
+        var key = KeyOf(text);
+        if (!Cache.TryGetValue(key, out _)) Cache.Set(key, (problem, html), new MemoryCacheEntryOptions { Size = 1 + html.Length * 2 / 1024 });
     }
 
     // The hash covers the UTF-16 code units, not a UTF-8 encoding: a lone surrogate would encode as U+FFFD and collide with a text that really contains it.

@@ -201,4 +201,17 @@ public class ContentAccessibilityTests
         using var db = app.CreateDbContext();
         Assert.True(db.Experiences.Single(e => e.Company == "Tick Co").Current);
     }
+
+    [Fact]
+    public async Task ThePreviewScrollArea_IsAKeyboardReachableNamedRegion_WithTheManifestsWording()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+
+        var html = await (await ContentFlow.PostAsync(owner, ContentFlow.Blog + "/edit?handler=Preview", ContentFlow.Fields(("Body", "## A heading\n\nSome text")), ContentFlow.Blog + "/edit")).Content.ReadAsStringAsync();
+
+        // The area scrolls (admin.css caps its height), so it must take focus from the keyboard and say what it is; the noun is the template's word for the body field.
+        Assert.Matches(@"<div class=""adm-post-preview"" tabindex=""0"" role=""region"" aria-label=""Post text preview"">", html);
+        AssertAccessible("blog preview", html);
+    }
 }

@@ -40,7 +40,7 @@
         <section class="adm-card" id="preview" aria-labelledby="preview-heading">
             <h2 id="preview-heading" tabindex="-1" autofocus>Preview</h2>
             <p class="adm-hint">This is how the text will look when it is published. Nothing has been saved. Pictures from other sites are not loaded in the admin area but are shown on your site.</p>
-            <div class="adm-post-preview">@Html.Raw(Model.PreviewHtml)</div>
+            <div class="adm-post-preview" tabindex="0" role="region" aria-label="@(v.Label("body")) preview">@Html.Raw(Model.PreviewHtml)</div>
         </section>
     }
 
