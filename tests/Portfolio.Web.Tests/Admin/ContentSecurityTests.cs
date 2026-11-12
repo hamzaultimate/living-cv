@@ -14,12 +14,24 @@ public class ContentSecurityTests
     {
         var rows = await ContentFlow.SeedRowsAsync(app, pairs: true);
         await ProfileFlow.SeedTextAsync(app);
+        using (var db = app.CreateDbContext())
+        {
+            // Two stored section settings (a renamed one and a hidden one), so a request that touched "one of them" would show.
+            var p = await db.SiteProfiles.SingleAsync();
+            p.Sections = [new Portfolio.Data.Entities.SectionSetting { Key = "blog", Label = "Journal" }, new Portfolio.Data.Entities.SectionSetting { Key = "talks", Enabled = false, Shown = false }];
+            await db.SaveChangesAsync();
+        }
         return (rows, (await ProfileFlow.ProfileAsync(app)).ConcurrencyStamp!);
     }
 
+    private static readonly string[] SoftwareKeys = ["about", "experience", "projects", "skills", "certifications", "blog", "talks", "testimonials", "contact"];
+
+    /// <summary>The sections page as software draws it untouched.</summary>
+    private static IEnumerable<SectionsFlow.Row> SoftwareRows => SoftwareKeys.Select(k => new SectionsFlow.Row(k, "", true));
+
     private static string[] Gets(ContentFlow.Seeded s) =>
     [
-        ProfileFlow.Identity, ProfileFlow.Hero, ProfileFlow.Metrics, ProfileFlow.About,
+        ProfileFlow.Identity, ProfileFlow.Hero, ProfileFlow.Metrics, ProfileFlow.About, SectionsFlow.Path,
         "/admin/content",
         ContentFlow.Experience, ContentFlow.Experience + "/edit", $"{ContentFlow.Experience}/edit/{s.ExperienceId}", $"{ContentFlow.Experience}/delete/{s.ExperienceId}",
         ContentFlow.Skills, ContentFlow.Skills + "/edit", $"{ContentFlow.Skills}/edit/{s.SkillId}", $"{ContentFlow.Skills}/delete/{s.SkillId}",
@@ -43,6 +55,8 @@ public class ContentSecurityTests
         (ProfileFlow.About + "?handler=Add", ProfileFlow.AboutFields().WithStamp(stamp)),
         (ProfileFlow.About + "?handler=Remove&index=0", ProfileFlow.AboutFields(cards: [("T", "B")]).WithStamp(stamp)),
         (ProfileFlow.About + "?handler=Move&index=1&direction=up", ProfileFlow.AboutFields(cards: [("T", "B"), ("U", "C")]).WithStamp(stamp)),
+        (SectionsFlow.Path, SectionsFlow.Fields(SoftwareRows.Select(r => r.Key == "talks" ? r with { Enabled = false, Label = "Changed" } : r)).WithStamp(stamp)),
+        (SectionsFlow.Path + "?handler=Move&index=1&direction=up", SectionsFlow.Fields(SoftwareRows).WithStamp(stamp)),
         ($"{ContentFlow.Experience}/edit", ContentFlow.RoleFields("New Co", "New Role")),
         ($"{ContentFlow.Experience}/edit/{s.ExperienceId}", ContentFlow.RoleFields("Seed Co", "Renamed Role")),
         ($"{ContentFlow.Experience}?handler=Move&id={s.ExperienceId}", new() { ["direction"] = "down" }),
@@ -209,6 +223,8 @@ public class ContentSecurityTests
             $"{ProfileFlow.About}?handler=Remove&index=0",
             $"{ProfileFlow.About}?handler=Move&index=1&direction=up",
             $"{ProfileFlow.About}?Form.Headline=Hacked&Form.Stamp={stamp}",
+            $"{SectionsFlow.Path}?handler=Move&index=1&direction=up",
+            $"{SectionsFlow.Path}?Form.Rows[6].Enabled=false&Form.Rows[6].Key=talks&Form.Stamp={stamp}",
             $"{ProfileFlow.Identity}?Form.OwnerName=Hacked&Form.BrandName=Hacked&Form.Url=https://hacked.example&Form.Stamp={stamp}",
         };
         foreach (var path in attempts)
@@ -228,7 +244,7 @@ public class ContentSecurityTests
         {
             var response = await owner.GetAsync(path);
             var csp = string.Join(";", response.Headers.GetValues("Content-Security-Policy"));
-            var isEdit = path.Contains("/edit") || path.Contains("/images/") || ProfileFlow.Parts.Contains(path); // the forms that carry the unsaved changes warning
+            var isEdit = path.Contains("/edit") || path.Contains("/images/") || ProfileFlow.Parts.Contains(path) || path == SectionsFlow.Path; // the forms that carry the unsaved changes warning
             Assert.Equal(isEdit, csp.Contains("script-src 'self'"));
             Assert.DoesNotContain("unsafe-inline", csp);
             Assert.DoesNotContain("unsafe-eval", csp);
@@ -321,6 +337,7 @@ public class ContentSecurityTests
                      ProfileFlow.Identity, ProfileFlow.Hero, ProfileFlow.Metrics, ProfileFlow.About,
                      ProfileFlow.Metrics + "?handler=Add", ProfileFlow.Metrics + "?handler=Move&index=1&direction=up", ProfileFlow.Metrics + "?handler=Remove&index=0",
                      ProfileFlow.About + "?handler=Add", ProfileFlow.About + "?handler=Move&index=1&direction=up", ProfileFlow.About + "?handler=Remove&index=0",
+                     SectionsFlow.Path, SectionsFlow.Path + "?handler=Move&index=1&direction=up",
                  })
         {
             var response = await ContentFlow.PostAsync(owner, path, big, path.Split('?')[0]);
@@ -337,7 +354,7 @@ public class ContentSecurityTests
         var (seeded, _) = await SeedAsync(app);
 
         // Each save with its real stamp is accepted and writes (the stamp moves), so a refusal in the replays above can only come from the owner check, the token or the stale session.
-        foreach (var path in new[] { ProfileFlow.Hero, ProfileFlow.Metrics, ProfileFlow.About, ProfileFlow.Identity })
+        foreach (var path in new[] { ProfileFlow.Hero, ProfileFlow.Metrics, ProfileFlow.About, ProfileFlow.Identity, SectionsFlow.Path })
         {
             var stamp = (await ProfileFlow.ProfileAsync(app)).ConcurrencyStamp!;
             var fields = Posts(seeded, stamp).First(p => p.Path == path).Fields;

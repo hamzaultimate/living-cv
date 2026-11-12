@@ -122,9 +122,20 @@ public static class EditorFields
         new("focus", "Focus areas", "One per line.", false),
     ];
 
+    /// <summary>The sections page (<c>/admin/sections</c>): which sections show, what they are called and in which order. <c>heading</c>, <c>locked</c> and <c>defaultOff</c> only carry words.</summary>
+    public static readonly IReadOnlyList<EditorFieldInfo> SectionFields =
+    [
+        new("heading", "Sections", "Choose which sections your site shows, what the menu calls them and in which order. Hiding a section never deletes what is in it. Changes apply as soon as you save.", false, true),
+        new("label", "Name in the menu", "Leave empty to use the template's own name. Plain text.", false),
+        new("shown", "Show on the site", null, true),
+        new("locked", "Always shown", "This section cannot be switched off.", false, true),
+        new("defaultOff", "Off until you switch it on", "Your template does not show this section by default.", false, true),
+    ];
+
     /// <summary>The fields of a section, or an empty list for a section without an editor.</summary>
     public static IReadOnlyList<EditorFieldInfo> For(string section) => section switch
     {
+        ProfileParts.Sections => SectionFields,
         ProfileParts.Hero => HeroFields,
         ProfileParts.Metrics => MetricsFields,
         ProfileParts.About => AboutFields,
@@ -152,6 +163,11 @@ public static class ProfileParts
     public const string About = SectionRegistry.About;
 
     public static readonly IReadOnlyList<string> All = [Hero, Metrics, About];
+
+    /// <summary>The sections page is also an editor with a block in the manifest, but it is not under <c>/admin/profile</c> and is not one of <see cref="All"/>.</summary>
+    public const string Sections = "sections";
+
+    public const int SectionLabelMax = 40;
 
     // Limits of the text blocks (the profile stores them as JSON, so no column length applies).
     public const int HeroMax = 300;

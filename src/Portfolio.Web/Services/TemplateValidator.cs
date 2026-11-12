@@ -139,7 +139,7 @@ public static partial class TemplateValidator
     /// a label, or an attempt to hide a field the entry cannot exist without would otherwise be silently ignored or break the form.</summary>
     private static void ValidateEditor(TemplateDefinition t, List<string> errors)
     {
-        foreach (var section in EditorFields.Sections.Concat(ProfileParts.All))
+        foreach (var section in EditorFields.Sections.Concat(ProfileParts.All).Append(ProfileParts.Sections))
         {
             var settings = t.Editor.For(section)!;
             var known = EditorFields.For(section);
@@ -178,6 +178,7 @@ public static partial class TemplateValidator
         {
             if (!SectionRegistry.IsKnown(s.Key)) { errors.Add($"section key '{s.Key}' is not one of: {string.Join(", ", SectionRegistry.Keys)}."); continue; }
             if (!seen.Add(s.Key)) errors.Add($"section '{s.Key}' is listed twice.");
+            if (s.Required && !s.Enabled) errors.Add($"section '{s.Key}' cannot be both required and enabled: false.");
             if (string.IsNullOrWhiteSpace(s.Label)) errors.Add($"section '{s.Key}' needs a label.");
             if (HasMarkup(s.Label) || HasMarkup(s.ShortLabel) || HasMarkup(s.ItemLabel)) errors.Add($"section '{s.Key}' labels must be plain text.");
             if (s.Key is SectionRegistry.Projects or SectionRegistry.Blog && string.IsNullOrWhiteSpace(s.ItemLabel))

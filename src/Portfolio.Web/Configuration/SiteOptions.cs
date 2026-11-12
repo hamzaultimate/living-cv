@@ -139,5 +139,6 @@ public class SectionOption
     public string Key { get; set; } = "";
     public string? Label { get; set; }
     public bool Enabled { get; set; } = true;
+    public bool? Shown { get; set; }
     public int SortOrder { get; set; }
 }

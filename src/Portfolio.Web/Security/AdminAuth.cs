@@ -22,6 +22,7 @@ public static class AdminAuth
     public const string WelcomeReviewPath = "/admin/welcome/review";
     public const string ContentPath = "/admin/content";
     public const string ProfilePath = "/admin/profile";
+    public const string SectionsPath = "/admin/sections";
 
     public static IServiceCollection AddOwnerAuth(this IServiceCollection services, IWebHostEnvironment env)
     {
@@ -179,12 +180,13 @@ public static class AdminAuth
         });
 
     /// <summary>Only the edit forms load a script: a first-party file that warns about unsaved changes. These are <c>/admin/content/{section}/edit[/{id}]</c>,
-    /// <c>/admin/content/projects/images/{id}</c> and the profile's block editors <c>/admin/profile/hero</c>, <c>/metrics</c> and <c>/about</c>.</summary>
+    /// <c>/admin/content/projects/images/{id}</c> and the profile's block editors <c>/admin/profile/hero</c>, <c>/metrics</c> and <c>/about</c>, and the sections page <c>/admin/sections</c>.</summary>
     internal static bool AllowsScript(PathString path)
     {
         if (path.StartsWithSegments(ContentPath, StringComparison.OrdinalIgnoreCase))
             return path.Value!.Split('/', StringSplitOptions.RemoveEmptyEntries).Skip(3).FirstOrDefault() is { } page
                    && (page.Equals("edit", StringComparison.OrdinalIgnoreCase) || page.Equals("images", StringComparison.OrdinalIgnoreCase));
+        if (path.StartsWithSegments(SectionsPath, StringComparison.OrdinalIgnoreCase)) return true;
         return path.StartsWithSegments(ProfilePath, StringComparison.OrdinalIgnoreCase)
                && path.Value!.Split('/', StringSplitOptions.RemoveEmptyEntries).Skip(2).FirstOrDefault() is { } part
                && ProfileEditorParts.Any(x => part.Equals(x, StringComparison.OrdinalIgnoreCase));

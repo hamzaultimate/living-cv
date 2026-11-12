@@ -177,6 +177,14 @@
         "label": { "label": "What it measures" }
       }
     },
+    "sections": {
+      "itemLabel": "Page",
+      "fields": {
+        "heading": { "label": "Pages of your site", "hint": "Choose which pages the site has, what the menu calls them and in which order. Articles and presentations are off until you switch them on. Hiding a page never deletes it. Saves apply at once." },
+        "label": { "label": "Menu name" },
+        "defaultOff": { "label": "Off until you switch it on", "hint": "Not shown by default for this profession. Think about what you would publish there first." }
+      }
+    },
     "about": {
       "itemLabel": "Highlight",
       "fields": {

@@ -6,7 +6,7 @@ using Portfolio.Web.Services;
 namespace Portfolio.Web.Pages.Admin.Profile;
 
 /// <summary>The buttons of one row of a list on a profile editor (Move up, Move down, Remove): where the row is and what it is called for a screen reader.</summary>
-public sealed record RowButtonsVm(int Index, int Count, string Name, string? FocusId);
+public sealed record RowButtonsVm(int Index, int Count, string Name, string? FocusId, bool CanRemove = true);
 
 /// <summary>
 /// Shared by the editors of the profile's own blocks (hero, metrics, About). They read and write the profile row through <see cref="ProfileEditor"/>: a save names the
@@ -27,10 +27,10 @@ public abstract class ProfilePartModel : AdminPageModel
     /// <summary>The key of the block (<see cref="ProfileParts"/>), which is also the last segment of the address.</summary>
     public abstract string Part { get; }
 
-    public EditorView View { get; private set; } = null!;
+    public EditorView View { get; protected set; } = null!;
 
     /// <summary>The page's address, and where Cancel goes back to.</summary>
-    public string Route => "/admin/profile/" + Part;
+    public virtual string Route => "/admin/profile/" + Part;
 
     /// <summary>Said after a row was added, moved or removed. The change is only on the page until Save: nothing was written.</summary>
     public string? Status { get; protected set; }

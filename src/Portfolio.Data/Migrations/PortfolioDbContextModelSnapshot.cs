@@ -777,6 +777,8 @@ namespace Portfolio.Data.Migrations
 
                             b1.Property<string>("Label");
 
+                            b1.Property<bool?>("Shown");
+
                             b1.Property<int>("SortOrder");
 
                             b1.HasKey("SiteProfileId", "__synthesizedOrdinal");

@@ -83,6 +83,13 @@
         "unit": { "hint": "For example rps or %." }
       }
     },
+    "sections": {
+      "itemLabel": "Section",
+      "fields": {
+        "heading": { "label": "Site sections", "hint": "Choose which pages the site has, what the menu calls them and in which order. Hiding a page never deletes its content. Changes apply as soon as you save." },
+        "label": { "label": "Menu name" }
+      }
+    },
     "about": {
       "itemLabel": "Card",
       "fields": {

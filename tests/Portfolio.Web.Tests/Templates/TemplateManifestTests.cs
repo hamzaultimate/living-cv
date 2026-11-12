@@ -297,7 +297,7 @@ public class TemplateManifestTests
 
         var editor = props["editor"]!["properties"]!.AsObject();
         Assert.Equal(Names(typeof(TemplateEditor)), editor.Select(p => p.Key).OrderBy(x => x).ToArray());
-        foreach (var section in EditorFields.Sections.Concat(ProfileParts.All))
+        foreach (var section in EditorFields.Sections.Concat(ProfileParts.All).Append(ProfileParts.Sections))
         {
             var node = editor[section]!;
             Assert.Equal(Names(typeof(TemplateEditorSection)), node["properties"]!.AsObject().Select(p => p.Key).OrderBy(x => x).ToArray());
@@ -388,6 +388,14 @@ public class TemplateManifestTests
     [InlineData("""{ "metrics": { "itemLabel": "<i>Metric</i>" } }""", "plain text")]
     [InlineData("""{ "about": { "itemLabel": "" } }""", "itemLabel")]
     [InlineData("""{ "about": { "fields": { "focus": { "label": "" } } } }""", "label")]
+    [InlineData("""{ "sections": { "fields": { "shown": { "hidden": true } } } }""", "cannot be hidden")]
+    [InlineData("""{ "sections": { "fields": { "heading": { "hidden": true } } } }""", "only carries wording")]
+    [InlineData("""{ "sections": { "fields": { "locked": { "hidden": true } } } }""", "only carries wording")]
+    [InlineData("""{ "sections": { "fields": { "defaultOff": { "hidden": true } } } }""", "only carries wording")]
+    [InlineData("""{ "sections": { "fields": { "order": { "label": "x" } } } }""", "not a field of the sections editor")]
+    [InlineData("""{ "sections": { "fields": { "label": { "label": "<b>Name</b>" } } } }""", "plain text")]
+    [InlineData("""{ "sections": { "itemLabel": "<i>Page</i>" } }""", "plain text")]
+    [InlineData("""{ "sections": { "itemLabel": "" } }""", "itemLabel")]
     public void AnInvalidEditorBlock_IsRejectedByTheValidator(string editor, string expected)
     {
         var template = Load("healthcare");
@@ -425,5 +433,17 @@ public class TemplateManifestTests
         Assert.True(healthcare.Hero.Fields["headlineAccent"].Hidden);
         Assert.True(healthcare.Metrics.Fields["unit"].Hidden);
         Assert.All(new[] { software, healthcare }, e => Assert.All(new[] { e.Hero, e.Metrics, e.About }, part => Assert.DoesNotContain(part.Fields, f => f.Value.Hidden && (f.Key is "headline" or "value" or "heading"))));
+    }
+
+    [Fact]
+    public void ASectionCannotBeBothRequiredAndOff_AndOnlyRequiredIsNewInTheSectionList()
+    {
+        var template = Load("healthcare");
+        template.Sections.First(x => x.Key == "blog").Required = true; // healthcare lists blog as enabled: false
+
+        var errors = TemplateValidator.Validate(template, "healthcare");
+
+        Assert.Contains(errors, e => e.Contains("cannot be both required and enabled: false", StringComparison.Ordinal));
+        Assert.All(new[] { Load("software"), Load("healthcare") }, t => Assert.DoesNotContain(t.Sections, x => x.Required)); // no shipped template forces a section on
     }
 }

@@ -53,6 +53,7 @@ public sealed class EditorView
         ProfileParts.Hero => "Introduction",
         ProfileParts.Metrics => "Metric",
         ProfileParts.About => "Card",
+        ProfileParts.Sections => "Section",
         _ => "Entry",
     };
 

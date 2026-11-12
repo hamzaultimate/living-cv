@@ -130,6 +130,13 @@ public class SectionSetting
 {
     public required string Key { get; set; }
     public string? Label { get; set; }
+    /// <summary>Older meaning, still honoured: false hides the section. True means "no opinion" and never switches on a section the template has off.</summary>
     public bool Enabled { get; set; } = true;
+
+    /// <summary>The owner's explicit choice from the sections page: true shows the section (even one the template lists as off), false hides it, null follows the template.
+    /// Only written when it differs from what the template does by default. A section the template does not list is never shown, whatever this says.</summary>
+    public bool? Shown { get; set; }
+
+    /// <summary>The section's 1-based position in the owner's order, or 0 for "no opinion" (the template's order). The sections page writes all positions together or none.</summary>
     public int SortOrder { get; set; }
 }

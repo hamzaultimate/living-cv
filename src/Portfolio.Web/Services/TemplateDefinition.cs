@@ -126,6 +126,10 @@ public class TemplateSection
     public string? ItemLabel { get; set; }
 
     public bool Enabled { get; set; } = true;
+
+    /// <summary>True for a section the owner cannot switch off on the sections page (the page would be pointless without it). Nothing in the engine needs any
+    /// particular section, so shipped templates leave this off; a template that wants one always shown says so here.</summary>
+    public bool Required { get; set; }
 }
 
 /// <summary>SEO copy patterns. Placeholders: {name}, {title}, {summary}.</summary>
@@ -179,6 +183,9 @@ public class TemplateEditor
     public TemplateEditorSection Metrics { get; set; } = new();
     public TemplateEditorSection About { get; set; } = new();
 
+    /// <summary>The sections page: wording for the list of sections, and which of its optional fields a template leaves out.</summary>
+    public TemplateEditorSection Sections { get; set; } = new();
+
     /// <summary>The editor settings for a section key (<see cref="SectionRegistry"/>), or null for a section that has no editor.</summary>
     public TemplateEditorSection? For(string section) => section switch
     {
@@ -192,6 +199,7 @@ public class TemplateEditor
         ProfileParts.Hero => Hero,
         ProfileParts.Metrics => Metrics,
         ProfileParts.About => About,
+        ProfileParts.Sections => Sections,
         _ => null,
     };
 }

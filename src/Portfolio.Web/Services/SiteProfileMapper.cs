@@ -45,7 +45,7 @@ public static class SiteProfileMapper
         TemplateKey = p.TemplateKey,
         ThemeKey = p.ThemeKey,
         AccentColor = p.AccentColor,
-        Sections = p.Sections.Select(s => new SectionOption { Key = s.Key, Label = s.Label, Enabled = s.Enabled, SortOrder = s.SortOrder }).ToList(),
+        Sections = p.Sections.Select(s => new SectionOption { Key = s.Key, Label = s.Label, Enabled = s.Enabled, Shown = s.Shown, SortOrder = s.SortOrder }).ToList(),
     };
 
     public static SiteProfile ToEntity(SiteOptions o)
@@ -119,6 +119,6 @@ public static class SiteProfileMapper
         p.TemplateKey = o.TemplateKey;
         p.ThemeKey = o.ThemeKey;
         p.AccentColor = o.AccentColor;
-        p.Sections = o.Sections.Select(s => new SectionSetting { Key = s.Key, Label = s.Label, Enabled = s.Enabled, SortOrder = s.SortOrder }).ToList();
+        p.Sections = o.Sections.Select(s => new SectionSetting { Key = s.Key, Label = s.Label, Enabled = s.Enabled, Shown = s.Shown, SortOrder = s.SortOrder }).ToList();
     }
 }

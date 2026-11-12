@@ -4,7 +4,7 @@ using Portfolio.Web.Configuration;
 namespace Portfolio.Web.Services;
 
 /// <summary>A template section after the owner's overrides are applied: what the navigation, sitemap and routes use.</summary>
-public sealed record ResolvedSection(string Key, string Label, string ShortLabel, string? ItemLabel, bool Enabled)
+public sealed record ResolvedSection(string Key, string Label, string ShortLabel, string? ItemLabel, bool Enabled, bool Required = false)
 {
     public string? Path => SectionRegistry.PathFor(Key);
 }
@@ -117,16 +117,18 @@ public class TemplateResolver
         var preview = previewKey is not null && _catalog.TryGet(previewKey, out _);
         var definition = preview ? _catalog.Get(previewKey) : _catalog.Get(site.TemplateKey);
 
-        // The owner's per-section settings sit on top of the template: a custom label, or switching a section off.
-        // They cannot enable a section the template does not have, so a stale setting never revives hidden content.
+        // The owner's per-section settings sit on top of the template: a custom label, an explicit show or hide, and an order. They only ever apply to sections
+        // the template lists, so a stale or invented key never adds a section. A section the template lists as off stays off unless the owner explicitly switched it
+        // on (Shown); the older Enabled flag can only hide. A required section is always on. Without an order the template's own order stands.
         var overrides = site.Sections.GroupBy(s => s.Key, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.Last(), StringComparer.OrdinalIgnoreCase);
-        var sections = definition.Sections.Select(s =>
+        var sections = definition.Sections.Select((s, index) =>
         {
             overrides.TryGetValue(s.Key, out var custom);
             var label = string.IsNullOrWhiteSpace(custom?.Label) ? s.Label : custom!.Label!.Trim();
             var shortLabel = string.IsNullOrWhiteSpace(custom?.Label) ? s.ShortLabel ?? s.Label : label;
-            return new ResolvedSection(s.Key, label, shortLabel, s.ItemLabel, s.Enabled && custom?.Enabled != false);
-        }).ToList();
+            var enabled = s.Required || (custom?.Shown ?? (s.Enabled && custom?.Enabled != false));
+            return (Section: new ResolvedSection(s.Key, label, shortLabel, s.ItemLabel, enabled, s.Required), Index: index, Order: custom is { SortOrder: > 0 } ? custom.SortOrder : int.MaxValue);
+        }).OrderBy(x => x.Order).ThenBy(x => x.Index).Select(x => x.Section).ToList();
 
         return new TemplateView(site, definition, sections, preview);
     }

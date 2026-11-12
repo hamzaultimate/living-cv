@@ -21,6 +21,9 @@ public class IndexModel : AdminPageModel
     /// <summary>The profile's own editors (home page introduction, metrics, About) with their names in the template's words.</summary>
     public IReadOnlyList<(string Url, string Heading)> Parts { get; private set; } = [];
 
+    /// <summary>The sections page's name in the template's words.</summary>
+    public string SectionsHeading { get; private set; } = "Sections";
+
     /// <summary>True until the onboarding wizard has been published or skipped. Only a prompt: nothing is forced and no admin page is blocked.</summary>
     public bool SetupPending { get; private set; }
 
@@ -33,6 +36,7 @@ public class IndexModel : AdminPageModel
         {
             var template = await _template.GetAsync();
             Parts = EditorView.ProfileLinks(template);
+            SectionsHeading = new EditorView(template, ProfileParts.Sections).Heading;
             var labels = EditorFields.Sections.Select(s => template.Section(s).Label.ToLowerInvariant()).ToList();
             ContentLabels = labels.Count > 1 ? string.Join(", ", labels.Take(labels.Count - 1)) + " and " + labels[^1] : labels.FirstOrDefault() ?? "content";
             var state = await _onboarding.GetStateAsync(ct);
