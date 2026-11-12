@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Portfolio.Data.Entities;
@@ -667,6 +668,43 @@ public class SectionSettingsTests
         var step = await WizardFlow.PickTemplateAsync(owner, "healthcare");
         Assert.Equal(HttpStatusCode.OK, step.StatusCode); // the step itself refuses too, and says why
         Assert.Contains("would leave no &quot;Page&quot;", await step.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task ThePreviewNote_SaysWhatTheSwitchWouldReallyDo_KeptOn_OrCannotBeSwitchedTo_AndTheTabsShowTheMenuItWouldLeave()
+    {
+        // "dormant" lists only about and contact, both off by default and neither of them the blog: nothing that is on can be kept there.
+        var dir = TemplateDirs.WithExtra("dormant", node =>
+        {
+            node["name"] = "Dormant";
+            node["sections"] = JsonNode.Parse("""[ { "key": "about", "label": "about", "enabled": false }, { "key": "contact", "label": "contact", "enabled": false } ]""");
+        });
+        using var app = AdminApp.WithTemplates(dir);
+        var owner = await ContentFlow.BlankSiteAsync(app, "software");
+        await owner.GetAsync("/admin");
+        await SectionsFlow.SaveAsync(owner, r => r.Select(x => x with { Enabled = x.Key == "blog" }).ToList()); // the blog is the only section on
+
+        var refused = await owner.GetStringAsync("/admin/template?show=dormant");
+        Assert.Contains("<strong>Cannot be switched to yet:</strong>", refused);
+        Assert.DoesNotContain("<strong>Kept on:</strong>", refused);
+        Assert.DoesNotContain("stay on if you switch", refused);
+        Assert.Equal(HttpStatusCode.Redirect, (await ContentFlow.PostAsync(owner, "/admin/template", new Dictionary<string, string> { ["Key"] = "dormant" })).StatusCode);
+        Assert.Equal("software", (await ProfileFlow.ProfileAsync(app)).TemplateKey); // the preview told the truth: the switch is refused
+    }
+
+    [Fact]
+    public async Task ThePreviewNote_NamesTheKeptSections_AndThePreviewTabsListThem()
+    {
+        var (app, owner, _, _) = await SiteAsync("software");
+        using var _a = app;
+        await SectionsFlow.SaveAsync(owner, r => r.Select(x => x with { Enabled = x.Key == "blog" }).ToList());
+
+        var preview = await owner.GetStringAsync("/admin/template?show=healthcare");
+
+        Assert.Contains("<strong>Kept on:</strong> Articles.", preview);
+        Assert.DoesNotContain("Cannot be switched to yet", preview);
+        // Healthcare has the blog off by default; the tabs are built from the menu the switch would leave, so the articles page is in them.
+        Assert.Contains("tab=%2Fblog", preview);
     }
 
     // ---------------------------------------------------------------- concurrency

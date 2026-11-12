@@ -58,16 +58,20 @@ public class TemplateModel : AdminPageModel
         Selected = _catalog.TryGet(Show, out var chosen) ? chosen : _catalog.Get(CurrentKey);
 
         var view = _resolver.Resolve(SiteProfileMapper.ToOptions(profile), Selected.Key);
-        PreviewPages = [("/", "Home"), .. view.NavLinks(mobile: true).Select(l => (l.Path, l.Path == "/cv" ? "CV" : Cap(l.Label)))];
-        PreviewPath = PreviewPages.Select(p => p.Path).FirstOrDefault(p => p == Tab) ?? "/";
-        HiddenContent = await HiddenContentAsync(view, ct);
-        LeavesNoMenuSection = !HasMenuSection(view);
         if (Selected.Key != CurrentKey)
         {
+            // What a switch would do, decided exactly as the POST decides it but on a detached copy (nothing is written): sections kept on, or a refusal.
+            var plan = SectionSettings.PlanSwitch(_resolver, SiteProfileMapper.ToEntity(SiteProfileMapper.ToOptions(profile)), Selected);
+            SwitchKeeps = plan.Kept;
+            SwitchRefused = !plan.Allowed;
+            view = plan.Target; // the preview shows the menu the switch would leave
             // Sections the switch would bring back: on under the selected template, off under the current one (their content was kept all along).
             var now = _resolver.Resolve(SiteProfileMapper.ToOptions(profile), CurrentKey);
             Reappearing = view.Sections.Where(s => s.Enabled && !now.IsEnabled(s.Key)).Select(s => Cap(s.Label)).ToList();
         }
+        PreviewPages = [("/", "Home"), .. view.NavLinks(mobile: true).Select(l => (l.Path, l.Path == "/cv" ? "CV" : Cap(l.Label)))];
+        PreviewPath = PreviewPages.Select(p => p.Path).FirstOrDefault(p => p == Tab) ?? "/";
+        HiddenContent = await HiddenContentAsync(view, ct);
     }
 
     public async Task<IActionResult> OnPostAsync(CancellationToken ct)
@@ -112,8 +116,11 @@ public class TemplateModel : AdminPageModel
     /// <summary>Sections that are off now and would be on after switching to the selected template.</summary>
     public IReadOnlyList<string> Reappearing { get; private set; } = [];
 
-    /// <summary>True when switching to the selected template would leave the site without a section in the menu (the switch is then refused).</summary>
-    public bool LeavesNoMenuSection { get; private set; }
+    /// <summary>Menu sections that stay on, as saved choices, if the selected template is switched to (the new template's defaults would otherwise empty the menu).</summary>
+    public IReadOnlyList<string> SwitchKeeps { get; private set; } = [];
+
+    /// <summary>True when the selected template cannot be switched to: its defaults would leave no menu section and nothing that is on now can be kept.</summary>
+    public bool SwitchRefused { get; private set; }
 
     private async Task<IReadOnlyList<(string Label, int Count)>> HiddenContentAsync(TemplateView view, CancellationToken ct)
     {
