@@ -40,7 +40,7 @@ public static class SectionSettings
 
     /// <summary>
     /// True when a name contains something invisible that should not be there: a Unicode format character (category Cf: zero-width, bidi controls, soft hyphen, byte order mark), or a blank-looking
-    /// filler (Hangul filler, braille blank and the like), or when nothing visible is left once those and white space are removed. The one exception is a zero-width non-joiner or joiner
+    /// filler (Hangul filler, braille blank and the like). A name with nothing but white space never gets here (it trims to empty and counts as no name); one made of fillers or format characters is refused by the rule itself. The one exception is a zero-width non-joiner or joiner
     /// (U+200C, U+200D) between two letters, marks or symbols, which names in Persian, Urdu and other scripts, and emoji sequences, need.
     /// </summary>
     public static bool HasInvisibleCharacters(string text)
@@ -51,16 +51,14 @@ public static class SectionSettings
             or System.Globalization.UnicodeCategory.ModifierLetter or System.Globalization.UnicodeCategory.OtherLetter
             or System.Globalization.UnicodeCategory.NonSpacingMark or System.Globalization.UnicodeCategory.SpacingCombiningMark or System.Globalization.UnicodeCategory.EnclosingMark
             or System.Globalization.UnicodeCategory.OtherSymbol or System.Globalization.UnicodeCategory.ModifierSymbol;
-        var anyVisible = false;
         for (var i = 0; i < runes.Count; i++)
         {
             var r = runes[i];
             var format = Rune.GetUnicodeCategory(r) == System.Globalization.UnicodeCategory.Format;
             if (format && r.Value is 0x200C or 0x200D && i > 0 && i < runes.Count - 1 && Joinable(runes[i - 1]) && Joinable(runes[i + 1])) continue;
             if (format || Fillers.Contains(r.Value)) return true;
-            if (!Rune.IsWhiteSpace(r)) anyVisible = true;
         }
-        return !anyVisible;
+        return false;
     }
 
     /// <summary>
