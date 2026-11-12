@@ -1,3 +1,4 @@
+using System.Text;
 using Portfolio.Data.Entities;
 using Portfolio.Web.Configuration;
 
@@ -34,6 +35,34 @@ public static class SectionSettings
 
     public static TemplateSection? Find(TemplateDefinition definition, string? key) => definition.Sections.FirstOrDefault(s => s.Key == key);
 
+    // Characters that draw nothing but are not Unicode format characters: fillers and blanks that make a name look empty or spoof a neighbour.
+    private static readonly HashSet<int> Fillers = [0x115F, 0x1160, 0x17B4, 0x17B5, 0x3164, 0xFFA0, 0x2800];
+
+    /// <summary>
+    /// True when a name contains something invisible that should not be there: a Unicode format character (category Cf: zero-width, bidi controls, soft hyphen, byte order mark), or a blank-looking
+    /// filler (Hangul filler, braille blank and the like), or when nothing visible is left once those and white space are removed. The one exception is a zero-width non-joiner or joiner
+    /// (U+200C, U+200D) between two letters, marks or symbols, which names in Persian, Urdu and other scripts, and emoji sequences, need.
+    /// </summary>
+    public static bool HasInvisibleCharacters(string text)
+    {
+        var runes = text.EnumerateRunes().ToList();
+        static bool Joinable(Rune r) => Rune.GetUnicodeCategory(r) is
+            System.Globalization.UnicodeCategory.UppercaseLetter or System.Globalization.UnicodeCategory.LowercaseLetter or System.Globalization.UnicodeCategory.TitlecaseLetter
+            or System.Globalization.UnicodeCategory.ModifierLetter or System.Globalization.UnicodeCategory.OtherLetter
+            or System.Globalization.UnicodeCategory.NonSpacingMark or System.Globalization.UnicodeCategory.SpacingCombiningMark or System.Globalization.UnicodeCategory.EnclosingMark
+            or System.Globalization.UnicodeCategory.OtherSymbol or System.Globalization.UnicodeCategory.ModifierSymbol;
+        var anyVisible = false;
+        for (var i = 0; i < runes.Count; i++)
+        {
+            var r = runes[i];
+            var format = Rune.GetUnicodeCategory(r) == System.Globalization.UnicodeCategory.Format;
+            if (format && r.Value is 0x200C or 0x200D && i > 0 && i < runes.Count - 1 && Joinable(runes[i - 1]) && Joinable(runes[i + 1])) continue;
+            if (format || Fillers.Contains(r.Value)) return true;
+            if (!Rune.IsWhiteSpace(r)) anyVisible = true;
+        }
+        return !anyVisible;
+    }
+
     /// <summary>
     /// Checks <paramref name="rows"/> against the template and records what is wrong on <paramref name="check"/>. <paramref name="labelShown"/> is false when the template leaves the name
     /// out of the form (the posted text is then ignored). Returns true when the list may be saved.
@@ -59,7 +88,7 @@ public static class SectionSettings
             var text = labelShown ? check.Text(property, "label", rows[i].Label, ProfileParts.SectionLabelMax, context: name) : null;
             // Zero-width and direction-control characters (Unicode category Cf) are invisible: a name made of them looks empty, and bidi overrides can make a menu entry read
             // as another. Kept local to the sections page so no other editor's behaviour changes.
-            if (text is not null && check.IsValid(property) && text.Any(c => char.GetUnicodeCategory(c) == System.Globalization.UnicodeCategory.Format))
+            if (text is not null && check.IsValid(property) && HasInvisibleCharacters(text))
                 check.Error(property, $"{name}: \"{view.Label("label")}\" contains characters that are not allowed.");
             typed.Add(text);
         }

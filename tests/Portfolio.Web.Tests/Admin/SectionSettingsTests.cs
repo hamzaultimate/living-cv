@@ -354,7 +354,8 @@ public class SectionSettingsTests
         foreach (var payload in new[] { "bell\u0007x", "esc\u001bx", "del\u007fx", "next\u0085x" }) yield return [payload, "characters that are not allowed"];
         yield return [new string('n', 41), "at most 40 characters"];
         // Invisible format characters: zero-width space and joiners, a byte order mark, bidi overrides and isolates, and a name made only of them.
-        foreach (var payload in new[] { "Wo\u200Brk", "Wo\u200Drk", "\uFEFFWork", "Work\u202E", "\u2066Work\u2069", "\u200B", "\u202E\u200B" }) yield return [payload, "characters that are not allowed"];
+        foreach (var payload in new[] { "Wo\u200Brk", "\uFEFFWork", "Work\u202E", "\u2066Work\u2069", "\u200B", "\u202E\u200B",
+                      "Wo\u00ADrk", "\u3164", "Work\u3164", "\u2800", "Wo\u2800rk", "\u115F\u1160", "\u200C", "\u200DWork", "Work\u200C", "Wo \u200Drk", "1\u200C2" }) yield return [payload, "characters that are not allowed"];
     }
 
     [Theory]
@@ -374,6 +375,35 @@ public class SectionSettingsTests
         Assert.Matches(@"id=""Form_Rows_2__Label""[^>]*aria-invalid=""true""", html);
         Assert.False(html.Contains("<script>x</script>"), "the markup was echoed raw");
         Assert.Equal(before, ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app)));
+    }
+
+    [Theory]
+    [InlineData("\u0645\u06CC\u200C\u062E\u0648\u0627\u0647\u0645")] // a Persian word with a zero-width non-joiner between letters
+    [InlineData("\u0634\u0628\u200C\u06A9\u0627\u0631")]
+    [InlineData("Team \U0001F468\u200D\U0001F469\u200D\U0001F467")] // an emoji family sequence joined with zero-width joiners
+    public async Task AJoinerBetweenLetters_OrInAnEmojiSequence_IsAccepted(string name)
+    {
+        var (app, owner, visitor, _) = await SiteAsync("software");
+        using var _a = app;
+
+        var response = await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("projects", label: name));
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal(name, (await SectionsFlow.StoredAsync(app)).Single(s => s.Key == "projects").Label);
+    }
+
+    [Fact]
+    public async Task ANameOfInvisibleCharactersOnly_ReadsAsEmpty_AndIsRefused()
+    {
+        var (app, owner, _, _) = await SiteAsync("software");
+        using var _a = app;
+
+        foreach (var name in new[] { "\u3164\u3164", "\u2800\u200B \u00AD" })
+        {
+            var html = await (await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("projects", label: name))).Content.ReadAsStringAsync();
+            Assert.Contains("contains characters that are not allowed", html);
+        }
+        Assert.Empty(await SectionsFlow.StoredAsync(app));
     }
 
     [Fact]
