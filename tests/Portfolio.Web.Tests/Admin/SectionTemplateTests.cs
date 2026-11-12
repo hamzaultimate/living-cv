@@ -115,6 +115,28 @@ public class SectionTemplateTests
     }
 
     [Fact]
+    public async Task AHideStoredForASectionTheTemplateRequires_SurvivesASave_SoItDoesNotComeBackAfterATemplateRoundTrip()
+    {
+        using var app = AdminApp.WithTemplates(Quirky(lockContact: true));
+        var owner = await ContentFlow.BlankSiteAsync(app, "quirky");
+        using (var db = app.CreateDbContext())
+        {
+            var p = await db.SiteProfiles.SingleAsync();
+            p.Sections = [new SectionSetting { Key = "contact", Enabled = false, Shown = false }, new SectionSetting { Key = "about", Enabled = false }];
+            await db.SaveChangesAsync();
+        }
+        app.Services.GetRequiredService<Portfolio.Web.Services.ISiteProfileProvider>().Invalidate();
+
+        Assert.Equal(HttpStatusCode.Redirect, (await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("skills", label: "Abilities"))).StatusCode);
+
+        var stored = await SectionsFlow.StoredAsync(app);
+        Assert.Equal(false, stored.Single(s => s.Key == "contact").Shown); // carried over unchanged; still inert while the template requires contact
+        Assert.False(stored.Single(s => s.Key == "contact").Enabled);
+        Assert.Equal(HttpStatusCode.OK, (await app.NewClient().GetAsync("/contact")).StatusCode);
+        Assert.Equal(false, stored.Single(s => s.Key == "about").Shown); // and an older hide on an ordinary section is kept as an explicit one
+    }
+
+    [Fact]
     public async Task AHiddenNameField_IsNotDrawn_NotValidated_NotReadFromThePost_AndTheStoredNamesSurviveASave()
     {
         using var app = AdminApp.WithTemplates(Quirky(labelHidden: ", \"hidden\": true"));

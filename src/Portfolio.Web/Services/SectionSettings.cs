@@ -111,10 +111,13 @@ public static class SectionSettings
             // A choice is stored when it differs from the template's default, and an earlier explicit choice (Shown, or the older Enabled: false) is never dropped by a later
             // save, even when it now equals the default: otherwise a switch of template would bring back a section the owner hid.
             var touched = old is { Shown: not null } or { Enabled: false };
-            bool? shown = !template.Required && (rows[i].Enabled != template.Enabled || touched) ? rows[i].Enabled : null;
+            // A required section has no switch, so the page has no opinion about it: whatever was stored (a hide from before the template made it required, say) is carried over
+            // unchanged and stays inert while the template requires it, instead of being lost and coming back after a switch of template.
+            bool? shown = template.Required ? old?.Shown : (rows[i].Enabled != template.Enabled || touched) ? rows[i].Enabled : null;
+            var legacyEnabled = template.Required ? old?.Enabled ?? true : shown != false;
             var order = orderChanged ? i + 1 : 0;
-            if (label is null && shown is null && order == 0) continue;
-            result.Add(new SectionSetting { Key = template.Key, Label = label, Enabled = shown != false, Shown = shown, SortOrder = order });
+            if (label is null && shown is null && order == 0 && legacyEnabled) continue;
+            result.Add(new SectionSetting { Key = template.Key, Label = label, Enabled = legacyEnabled, Shown = shown, SortOrder = order });
         }
         // Copies, not the stored objects: the profile tracks those, and a list may not hold an object it already owns in another place.
         result.AddRange(stored.Where(s => !listed.Contains(s.Key)).Select(s => new SectionSetting { Key = s.Key, Label = s.Label, Enabled = s.Enabled, Shown = s.Shown, SortOrder = s.SortOrder }));
