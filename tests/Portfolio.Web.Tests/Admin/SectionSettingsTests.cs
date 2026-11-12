@@ -503,7 +503,7 @@ public class SectionSettingsTests
 
         Assert.Contains("LinkedIn Posts &amp; NHS Skills", dashboard); // not "linkedin posts & nhs skills"
         Assert.DoesNotContain("linkedin posts", dashboard);
-        Assert.Contains("Show, hide, rename and reorder each "Page".", dashboard); // the template's word for a section
+        Assert.Contains("Show, hide, rename and reorder each \"Page\".", dashboard); // the template's word for a section
 
         var html = await owner.GetStringAsync(SectionsFlow.Path);
         Assert.Matches(@"id=""Form_Rows_5__Enabled""[^>]*aria-describedby=""Form_Rows_5__Enabled-default""|aria-describedby=""Form_Rows_5__Enabled-default""[^>]*id=""Form_Rows_5__Enabled""", html);
