@@ -250,6 +250,7 @@ public class ProfilePartEditorTests
         var (app, owner, _) = await BlankAsync();
         using var _a = app;
 
+        await ProfileFlow.SeedTextAsync(app);
         async Task<string> Post(Dictionary<string, string> f) => await (await ProfileFlow.PostAsync(owner, ProfileFlow.About, f)).Content.ReadAsStringAsync();
 
         Assert.Contains("at most 2000 characters", await Post(ProfileFlow.AboutFields(paragraphs: new string('p', 2001))));
@@ -418,5 +419,25 @@ public class ProfilePartEditorTests
 
         Assert.Contains("Nothing was saved.", await response.Content.ReadAsStringAsync());
         Assert.NotEqual("From the old form", (await ProfileFlow.ProfileAsync(app)).Hero.Headline);
+    }
+
+    [Fact]
+    public async Task TheAboutHeadline_IsRequiredOnlyOnceThePageHasOne_SoAFreshlyPublishedSiteCanSaveItsParagraphs()
+    {
+        var (app, owner, visitor) = await BlankAsync();
+        using var _ = app;
+        Assert.Null((await ProfileFlow.ProfileAsync(app)).About.Headline); // what the wizard publishes
+
+        var form = await owner.GetStringAsync(ProfileFlow.About);
+        Assert.Matches(@"<label for=""Form_Headline"">Headline<span class=""adm-optional""> \(optional\)</span>", form); // not marked required while there is none
+        Assert.Equal(HttpStatusCode.Redirect, (await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(headline: "", paragraphs: "Only paragraphs."))).StatusCode);
+        Assert.Equal(["Only paragraphs."], (await ProfileFlow.ProfileAsync(app)).About.Paragraphs);
+
+        // Once a headline exists it is required, and emptying it is refused.
+        Assert.Equal(HttpStatusCode.Redirect, (await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(headline: "Now there is one"))).StatusCode);
+        Assert.DoesNotMatch(@"<label for=""Form_Headline"">Headline<span", await owner.GetStringAsync(ProfileFlow.About));
+        var refused = await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(headline: " "));
+        Assert.Contains("Headline is required.", await refused.Content.ReadAsStringAsync());
+        Assert.Equal("Now there is one", (await ProfileFlow.ProfileAsync(app)).About.Headline);
     }
 }

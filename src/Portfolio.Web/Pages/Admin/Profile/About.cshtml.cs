@@ -36,10 +36,14 @@ public class AboutModel : ProfilePartModel
 
     public bool CanAdd => Form.Cards.Count < ProfileParts.CardRows;
 
+    /// <summary>The headline is required once the page has one: a site the wizard published has none yet, and must still be able to save its paragraphs. Emptying a headline that exists is refused.</summary>
+    public bool HeadlineRequired { get; private set; }
+
     public async Task OnGetAsync(CancellationToken ct)
     {
         await LoadViewAsync();
         var p = await Writer.LoadAsync(ct);
+        HeadlineRequired = !string.IsNullOrWhiteSpace(p.About.Headline);
         Form = new AboutForm
         {
             Headline = p.About.Headline,
@@ -55,7 +59,8 @@ public class AboutModel : ProfilePartModel
     {
         await LoadViewAsync();
         var c = new FormCheck(ModelState, View);
-        var headline = c.Text(nameof(Form.Headline), "headline", Form.Headline, ProfileParts.HeroMax, required: true);
+        HeadlineRequired = !string.IsNullOrWhiteSpace((await Writer.LoadAsync(ct)).About.Headline);
+        var headline = c.Text(nameof(Form.Headline), "headline", Form.Headline, ProfileParts.HeroMax, required: HeadlineRequired);
         var paragraphs = View.Visible("paragraphs") ? c.Paragraphs(nameof(Form.ParagraphsText), "paragraphs", Form.ParagraphsText, ProfileParts.MaxParagraphs, ProfileParts.ParagraphMax) : [];
         var note = View.Visible("currentlyNote") ? c.Text(nameof(Form.CurrentlyNote), "currentlyNote", Form.CurrentlyNote, ProfileParts.HeroMax) : null;
         var focus = View.Visible("focus") ? c.Lines(nameof(Form.FocusText), "focus", Form.FocusText, ProfileParts.MaxFocus, ProfileParts.FocusMax) : [];

@@ -42,6 +42,7 @@ public class ProfileAccessibilityTests
         Assert.DoesNotMatch(@"id=""Form_Rows_0__Value""[^>]*aria-invalid", html); // the row that was fine is not marked
         Assert.Contains("value=\"orphan\"", html);
 
+        await ProfileFlow.SeedTextAsync(app); // the About page has a headline, so emptying it is refused
         var about = await (await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(headline: "", cards: [("t", "")]))).Content.ReadAsStringAsync();
         Assert.Contains("<a href=\"#Form_Headline\">Headline is required.</a>", about);
         Assert.Contains("<a href=\"#Form_Cards_0__Body\">Card 1 text is required.</a>", about);

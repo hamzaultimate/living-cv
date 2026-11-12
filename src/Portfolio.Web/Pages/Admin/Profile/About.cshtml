@@ -29,7 +29,7 @@
     </div>
     <fieldset class="adm-fieldset">
         <legend>@v.Heading</legend>
-        <partial name="_Field" model="@(Model.Field("headline", nameof(f.Headline), f.Headline, maxLength: ProfileParts.HeroMax))" />
+        <partial name="_Field" model="@(Model.Field("headline", nameof(f.Headline), f.Headline, maxLength: ProfileParts.HeroMax, required: Model.HeadlineRequired))" />
         <partial name="_Field" model="@(Model.Field("paragraphs", nameof(f.ParagraphsText), f.ParagraphsText, FieldKind.Textarea, ProfileParts.MaxParagraphs * (ProfileParts.ParagraphMax + 4), rows: 12))" />
         <partial name="_Field" model="@(Model.Field("currentlyNote", nameof(f.CurrentlyNote), f.CurrentlyNote, maxLength: ProfileParts.HeroMax))" />
         <partial name="_Field" model="@(Model.Field("focus", nameof(f.FocusText), f.FocusText, FieldKind.Textarea, ProfileParts.MaxFocus * (ProfileParts.FocusMax + 2), rows: 5))" />
