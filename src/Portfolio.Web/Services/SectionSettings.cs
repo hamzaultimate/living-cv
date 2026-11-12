@@ -55,7 +55,13 @@ public static class SectionSettings
         {
             var template = Find(definition, rows[i].Key)!;
             var name = TemplateView.Cap(template.Label);
-            typed.Add(labelShown ? check.Text($"Rows[{i}].{nameof(SectionRowForm.Label)}", "label", rows[i].Label, ProfileParts.SectionLabelMax, context: name) : null);
+            var property = $"Rows[{i}].{nameof(SectionRowForm.Label)}";
+            var text = labelShown ? check.Text(property, "label", rows[i].Label, ProfileParts.SectionLabelMax, context: name) : null;
+            // Zero-width and direction-control characters (Unicode category Cf) are invisible: a name made of them looks empty, and bidi overrides can make a menu entry read
+            // as another. Kept local to the sections page so no other editor's behaviour changes.
+            if (text is not null && check.IsValid(property) && text.Any(c => char.GetUnicodeCategory(c) == System.Globalization.UnicodeCategory.Format))
+                check.Error(property, $"{name}: \"{view.Label("label")}\" contains characters that are not allowed.");
+            typed.Add(text);
         }
 
         // Two sections with one name in the menu would be indistinguishable. Compared case-insensitively over the names the owner would end up with, switched off or not.

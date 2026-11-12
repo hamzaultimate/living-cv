@@ -353,6 +353,8 @@ public class SectionSettingsTests
         foreach (var payload in new[] { "<script>x</script>", "<b>x</b>", "<!-- x -->", "</p><p>", "<?x?>", "a <i>b</i>" }) yield return [payload, "plain text"];
         foreach (var payload in new[] { "bell\u0007x", "esc\u001bx", "del\u007fx", "next\u0085x" }) yield return [payload, "characters that are not allowed"];
         yield return [new string('n', 41), "at most 40 characters"];
+        // Invisible format characters: zero-width space and joiners, a byte order mark, bidi overrides and isolates, and a name made only of them.
+        foreach (var payload in new[] { "Wo\u200Brk", "Wo\u200Drk", "\uFEFFWork", "Work\u202E", "\u2066Work\u2069", "\u200B", "\u202E\u200B" }) yield return [payload, "characters that are not allowed"];
     }
 
     [Theory]
