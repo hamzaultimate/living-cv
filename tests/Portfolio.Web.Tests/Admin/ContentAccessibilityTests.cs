@@ -17,7 +17,7 @@ public class ContentAccessibilityTests
     }
 
     /// <summary>Asserts the structural rules that apply to any content editor page.</summary>
-    private static void AssertAccessible(string path, string html)
+    internal static void AssertAccessible(string path, string html)
     {
         var ids = Regex.Matches(html, @"\sid=""([^""]+)""").Select(m => m.Groups[1].Value).ToList();
         Assert.True(ids.Count == ids.Distinct().Count(), $"{path}: duplicate ids {string.Join(", ", ids.GroupBy(i => i).Where(g => g.Count() > 1).Select(g => g.Key))}");

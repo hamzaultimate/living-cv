@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Portfolio.Data.Entities;
 using Portfolio.Web.Services;
 
@@ -22,6 +23,12 @@ public static class ProfileFlow
         var all = fields.ToDictionary(f => f.Key, f => f.Value);
         all["Form.Stamp"] = stamp ?? await StampAsync(client, tokenFrom ?? path.Split('?')[0]);
         return await ContentFlow.PostAsync(client, path, all, tokenFrom);
+    }
+
+    public static Dictionary<string, string> WithStamp(this Dictionary<string, string> fields, string stamp)
+    {
+        fields["Form.Stamp"] = stamp;
+        return fields;
     }
 
     public static Dictionary<string, string> HeroFields(string eyebrow = "Eyebrow text", string headline = "A new headline", string accent = "and its accent", string lede = "A new introduction.") =>
@@ -73,6 +80,8 @@ public static class ProfileFlow
         };
         p.ConcurrencyStamp = ProfileEditor.NewStamp();
         await db.SaveChangesAsync();
+        // The write bypassed the editor, so the profile the pages cached is stale until it is dropped.
+        app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
     }
 
     /// <summary>Every profile column the editors can change, as one string, to prove a request left the profile alone.</summary>

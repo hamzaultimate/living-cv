@@ -6,11 +6,20 @@ using Xunit;
 
 namespace Portfolio.Web.Tests.Admin;
 
-/// <summary>The content editors are owner-only, every change is a POST with an antiforgery token, and a GET never changes anything.</summary>
+/// <summary>The content editors and the profile editors (identity, hero, metrics, About) are owner-only, every change is a POST with an antiforgery token, and a GET never changes anything.</summary>
 public class ContentSecurityTests
 {
+    /// <summary>Two rows in every content table and a profile with two metrics, two cards and two paragraphs, so a request that touched "one of them" would show.</summary>
+    private static async Task<(ContentFlow.Seeded Rows, string Stamp)> SeedAsync(AdminApp app)
+    {
+        var rows = await ContentFlow.SeedRowsAsync(app, pairs: true);
+        await ProfileFlow.SeedTextAsync(app);
+        return (rows, (await ProfileFlow.ProfileAsync(app)).ConcurrencyStamp!);
+    }
+
     private static string[] Gets(ContentFlow.Seeded s) =>
     [
+        ProfileFlow.Identity, ProfileFlow.Hero, ProfileFlow.Metrics, ProfileFlow.About,
         "/admin/content",
         ContentFlow.Experience, ContentFlow.Experience + "/edit", $"{ContentFlow.Experience}/edit/{s.ExperienceId}", $"{ContentFlow.Experience}/delete/{s.ExperienceId}",
         ContentFlow.Skills, ContentFlow.Skills + "/edit", $"{ContentFlow.Skills}/edit/{s.SkillId}", $"{ContentFlow.Skills}/delete/{s.SkillId}",
@@ -22,8 +31,18 @@ public class ContentSecurityTests
     ];
 
     /// <summary>Every state-changing request the editors accept, with fields that would succeed for the signed-in owner.</summary>
-    private static (string Path, Dictionary<string, string> Fields)[] Posts(ContentFlow.Seeded s) =>
+    private static (string Path, Dictionary<string, string> Fields)[] Posts(ContentFlow.Seeded s, string stamp) =>
     [
+        (ProfileFlow.Identity, new() { ["Form.OwnerName"] = "Changed Name", ["Form.BrandName"] = "Changed", ["Form.Url"] = "https://changed.example", ["Form.Stamp"] = stamp }),
+        (ProfileFlow.Hero, ProfileFlow.HeroFields(headline: "Changed headline").WithStamp(stamp)),
+        (ProfileFlow.Metrics, ProfileFlow.MetricsFields(("1", "x", "changed")).WithStamp(stamp)),
+        (ProfileFlow.Metrics + "?handler=Add", ProfileFlow.MetricsFields(("1", "x", "changed")).WithStamp(stamp)),
+        (ProfileFlow.Metrics + "?handler=Remove&index=0", ProfileFlow.MetricsFields(("1", "x", "changed")).WithStamp(stamp)),
+        (ProfileFlow.Metrics + "?handler=Move&index=1&direction=up", ProfileFlow.MetricsFields(("1", "x", "a"), ("2", "y", "b")).WithStamp(stamp)),
+        (ProfileFlow.About, ProfileFlow.AboutFields(headline: "Changed about").WithStamp(stamp)),
+        (ProfileFlow.About + "?handler=Add", ProfileFlow.AboutFields().WithStamp(stamp)),
+        (ProfileFlow.About + "?handler=Remove&index=0", ProfileFlow.AboutFields(cards: [("T", "B")]).WithStamp(stamp)),
+        (ProfileFlow.About + "?handler=Move&index=1&direction=up", ProfileFlow.AboutFields(cards: [("T", "B"), ("U", "C")]).WithStamp(stamp)),
         ($"{ContentFlow.Experience}/edit", ContentFlow.RoleFields("New Co", "New Role")),
         ($"{ContentFlow.Experience}/edit/{s.ExperienceId}", ContentFlow.RoleFields("Seed Co", "Renamed Role")),
         ($"{ContentFlow.Experience}?handler=Move&id={s.ExperienceId}", new() { ["direction"] = "down" }),
@@ -63,7 +82,7 @@ public class ContentSecurityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
+        var (seeded, stamp) = await SeedAsync(app);
         var before = await ContentFlow.SnapshotAsync(app);
         var anonymous = app.NewClient();
 
@@ -73,7 +92,7 @@ public class ContentSecurityTests
             Assert.Equal(HttpStatusCode.Redirect, get.StatusCode);
             Assert.Contains("/admin/login", get.Headers.Location!.OriginalString);
         }
-        foreach (var (path, fields) in Posts(seeded))
+        foreach (var (path, fields) in Posts(seeded, stamp))
         {
             var post = await anonymous.PostAsync(path, new FormUrlEncodedContent(fields));
             Assert.Equal(HttpStatusCode.Redirect, post.StatusCode);
@@ -88,10 +107,10 @@ public class ContentSecurityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
+        var (seeded, stamp) = await SeedAsync(app);
         var before = await ContentFlow.SnapshotAsync(app);
 
-        foreach (var (path, fields) in Posts(seeded))
+        foreach (var (path, fields) in Posts(seeded, stamp))
         {
             var response = await owner.PostAsync(path, new FormUrlEncodedContent(fields));
             Assert.True(response.StatusCode == HttpStatusCode.BadRequest, $"POST {path} returned {(int)response.StatusCode}");
@@ -120,7 +139,7 @@ public class ContentSecurityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
+        var (seeded, stamp) = await SeedAsync(app);
         var token = await AdminApp.GetTokenAsync(owner, $"{ContentFlow.Experience}/edit"); // fetched while the session was good
         using (var db = app.CreateDbContext())
         {
@@ -135,7 +154,7 @@ public class ContentSecurityTests
             Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
             Assert.Contains("/admin/login", response.Headers.Location!.OriginalString);
         }
-        foreach (var (path, fields) in Posts(seeded))
+        foreach (var (path, fields) in Posts(seeded, stamp))
         {
             var response = await AdminApp.PostFormAsync(owner, path, token, fields);
             Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
@@ -150,7 +169,7 @@ public class ContentSecurityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
+        var (seeded, stamp) = await SeedAsync(app);
         var before = await ContentFlow.SnapshotAsync(app);
 
         foreach (var path in Gets(seeded))
@@ -180,6 +199,17 @@ public class ContentSecurityTests
             $"{ContentFlow.Blog}/edit/{seeded.BlogId}?handler=Preview&Form.Body=Hacked",
             $"{ContentFlow.Blog}?handler=Move&id={seeded.BlogId}&direction=down",
             $"{ContentFlow.Blog}?handler=Publish&id={seeded.DraftId}",
+            $"{ProfileFlow.Hero}?Form.Headline=Hacked&Form.Stamp={stamp}",
+            $"{ProfileFlow.Hero}?handler=Post&Form.Headline=Hacked&Form.Stamp={stamp}",
+            $"{ProfileFlow.Metrics}?handler=Add",
+            $"{ProfileFlow.Metrics}?handler=Remove&index=0",
+            $"{ProfileFlow.Metrics}?handler=Move&index=1&direction=up",
+            $"{ProfileFlow.Metrics}?Form.Rows[0].Value=Hacked&Form.Stamp={stamp}",
+            $"{ProfileFlow.About}?handler=Add",
+            $"{ProfileFlow.About}?handler=Remove&index=0",
+            $"{ProfileFlow.About}?handler=Move&index=1&direction=up",
+            $"{ProfileFlow.About}?Form.Headline=Hacked&Form.Stamp={stamp}",
+            $"{ProfileFlow.Identity}?Form.OwnerName=Hacked&Form.BrandName=Hacked&Form.Url=https://hacked.example&Form.Stamp={stamp}",
         };
         foreach (var path in attempts)
             Assert.True((await owner.GetAsync(path)).StatusCode < HttpStatusCode.InternalServerError, path);
@@ -192,13 +222,13 @@ public class ContentSecurityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
+        var (seeded, stamp) = await SeedAsync(app);
 
         foreach (var path in Gets(seeded))
         {
             var response = await owner.GetAsync(path);
             var csp = string.Join(";", response.Headers.GetValues("Content-Security-Policy"));
-            var isEdit = path.Contains("/edit") || path.Contains("/images/"); // the forms that carry the unsaved changes warning
+            var isEdit = path.Contains("/edit") || path.Contains("/images/") || ProfileFlow.Parts.Contains(path); // the forms that carry the unsaved changes warning
             Assert.Equal(isEdit, csp.Contains("script-src 'self'"));
             Assert.DoesNotContain("unsafe-inline", csp);
             Assert.DoesNotContain("unsafe-eval", csp);
@@ -253,7 +283,7 @@ public class ContentSecurityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
+        var (seeded, stamp) = await SeedAsync(app);
         var before = await ContentFlow.SnapshotAsync(app);
         var big = new Dictionary<string, string> { ["direction"] = "down", ["Stamp"] = new string('x', 100 * 1024) };
 
@@ -275,5 +305,47 @@ public class ContentSecurityTests
             Assert.True(response.StatusCode == HttpStatusCode.RequestEntityTooLarge, $"POST {path} returned {(int)response.StatusCode}");
         }
         Assert.Equal(before, await ContentFlow.SnapshotAsync(app));
+    }
+
+    [Fact]
+    public async Task EveryProfileEditor_CapsItsPostBody_RowButtonsIncluded()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        var (_, stamp) = await SeedAsync(app);
+        var before = await ContentFlow.SnapshotAsync(app);
+        var big = new Dictionary<string, string> { ["Form.Stamp"] = stamp, ["Form.Headline"] = new string('x', 300 * 1024) };
+
+        foreach (var path in new[]
+                 {
+                     ProfileFlow.Identity, ProfileFlow.Hero, ProfileFlow.Metrics, ProfileFlow.About,
+                     ProfileFlow.Metrics + "?handler=Add", ProfileFlow.Metrics + "?handler=Move&index=1&direction=up", ProfileFlow.Metrics + "?handler=Remove&index=0",
+                     ProfileFlow.About + "?handler=Add", ProfileFlow.About + "?handler=Move&index=1&direction=up", ProfileFlow.About + "?handler=Remove&index=0",
+                 })
+        {
+            var response = await ContentFlow.PostAsync(owner, path, big, path.Split('?')[0]);
+            Assert.True(response.StatusCode == HttpStatusCode.RequestEntityTooLarge, $"POST {path} returned {(int)response.StatusCode}");
+        }
+        Assert.Equal(before, await ContentFlow.SnapshotAsync(app));
+    }
+
+    [Fact]
+    public async Task EveryProfilePost_WithTheRealStamp_ReallyWouldHaveSucceeded_SoTheRefusalsAboveAreTheGuardsThemselves()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        var (seeded, _) = await SeedAsync(app);
+
+        // Each save with its real stamp is accepted and writes (the stamp moves), so a refusal in the replays above can only come from the owner check, the token or the stale session.
+        foreach (var path in new[] { ProfileFlow.Hero, ProfileFlow.Metrics, ProfileFlow.About, ProfileFlow.Identity })
+        {
+            var stamp = (await ProfileFlow.ProfileAsync(app)).ConcurrencyStamp!;
+            var fields = Posts(seeded, stamp).First(p => p.Path == path).Fields;
+            var response = await ContentFlow.PostAsync(owner, path, fields);
+
+            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal(path, response.Headers.Location!.OriginalString);
+            Assert.NotEqual(stamp, (await ProfileFlow.ProfileAsync(app)).ConcurrencyStamp);
+        }
     }
 }
