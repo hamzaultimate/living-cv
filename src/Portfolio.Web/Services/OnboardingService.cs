@@ -25,8 +25,26 @@ public enum PublishOutcome
     /// <summary>An earlier step is missing or no longer valid; <see cref="PublishResult.Step"/> says which to go back to.</summary>
     Incomplete,
 
-    /// <summary>Another publish won the race. Nothing from this one was applied.</summary>
+    /// <summary>Another publish won the race: the wizard is finished. Nothing from this one was applied.</summary>
     Conflict,
+
+    /// <summary>The profile was written by something else while this publish ran, twice in a row, and the wizard is still not finished. Nothing was applied and the draft is kept; pressing Publish again is safe.</summary>
+    Changed,
+}
+
+public enum SkipOutcome
+{
+    /// <summary>A first run was skipped: the placeholder profile stays and the demo content was loaded into empty tables.</summary>
+    Skipped,
+
+    /// <summary>A re-run: only the draft was discarded.</summary>
+    DraftDiscarded,
+
+    /// <summary>The wizard was already finished (published or skipped in another tab), so this request recorded nothing.</summary>
+    AlreadyFinished,
+
+    /// <summary>The profile was written by something else while the skip ran, twice in a row, and the wizard is still not finished. Nothing was recorded; skipping again is safe.</summary>
+    Changed,
 }
 
 public sealed record PublishResult(PublishOutcome Outcome, int Step = 0, IReadOnlyList<StarterTable>? Sample = null);
@@ -187,6 +205,9 @@ public class OnboardingService
         PublishResult? early = null;
 
         var strategy = _db.Database.CreateExecutionStrategy();
+        // A profile write that lands between the read and the write moves the stamp and fails the save. The publish depends on no form, so when the wizard is still
+        // unfinished it starts again once from the stored row; only a second loss, or a finished wizard, is reported (and says which).
+        for (var attempt = 1; ; attempt++)
         try
         {
             await strategy.ExecuteAsync(async () =>
@@ -231,12 +252,16 @@ public class OnboardingService
                 await tx.CommitAsync(ct);
                 published = profile;
             });
+            break;
         }
         catch (DbUpdateConcurrencyException)
         {
             _store.TryDelete(promoted);
+            promoted = null;
             _db.ChangeTracker.Clear();
-            return new PublishResult(PublishOutcome.Conflict);
+            var unfinished = await IsUnfinishedAsync();
+            if (unfinished && attempt < 2) continue;
+            return new PublishResult(unfinished ? PublishOutcome.Changed : PublishOutcome.Conflict);
         }
         catch
         {
@@ -264,43 +289,56 @@ public class OnboardingService
     /// the Site config stays and the demo persona is loaded into any empty table (what start-up did before the wizard deferred it). On a
     /// re-run it only discards the draft. Either way no existing row is changed or removed.
     /// </summary>
-    public async Task SkipAsync(CancellationToken ct = default)
+    public async Task<SkipOutcome> SkipAsync(CancellationToken ct = default)
     {
-        string? photo = null;
-        SiteProfile? skipped = null;
-        var strategy = _db.Database.CreateExecutionStrategy();
-        try
+        for (var attempt = 1; ; attempt++)
         {
-            await strategy.ExecuteAsync(async () =>
+            string? photo = null;
+            SiteProfile? skipped = null;
+            var firstRun = false;
+            var strategy = _db.Database.CreateExecutionStrategy();
+            try
             {
-                _db.ChangeTracker.Clear();
-                skipped = null;
-                await using var tx = await _db.Database.BeginTransactionAsync(ct);
-                var profile = await _editor.LoadAsync(ct);
-                photo = OnboardingDraft.Parse(profile.OnboardingDraft)?.PhotoDraft;
-                var firstRun = profile.OnboardingCompletedAt is null;
-                if (firstRun)
+                await strategy.ExecuteAsync(async () =>
                 {
-                    profile.OnboardingDraft = null;
-                    profile.OnboardingCompletedAt = _time.GetUtcNow();
-                    profile.OnboardingOutcome = "skipped";
-                    await _db.SaveChangesAsync(ct);
-                    await PortfolioSeeder.SeedAsync(_db, _seedDir, SeedMode.IfEmpty, _logger, ct);
-                    skipped = profile;
-                }
-                else await WriteDraftAsync(profile, null, ct);
-                await tx.CommitAsync(ct);
-            });
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            _db.ChangeTracker.Clear();
-            return; // published or skipped in another tab; nothing more to do
-        }
+                    _db.ChangeTracker.Clear();
+                    skipped = null;
+                    await using var tx = await _db.Database.BeginTransactionAsync(ct);
+                    var profile = await _editor.LoadAsync(ct);
+                    photo = OnboardingDraft.Parse(profile.OnboardingDraft)?.PhotoDraft;
+                    firstRun = profile.OnboardingCompletedAt is null;
+                    if (firstRun)
+                    {
+                        profile.OnboardingDraft = null;
+                        profile.OnboardingCompletedAt = _time.GetUtcNow();
+                        profile.OnboardingOutcome = "skipped";
+                        await _db.SaveChangesAsync(ct);
+                        await PortfolioSeeder.SeedAsync(_db, _seedDir, SeedMode.IfEmpty, _logger, ct);
+                        skipped = profile;
+                    }
+                    else await WriteDraftAsync(profile, null, ct);
+                    await tx.CommitAsync(ct);
+                });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // A profile write landed between the read and the write (or another tab finished the wizard). Like a publish, a skip depends on no form: start again once while
+                // the wizard is unfinished, and otherwise say what is true instead of claiming a skip that was not recorded.
+                _db.ChangeTracker.Clear();
+                var unfinished = await IsUnfinishedAsync();
+                if (unfinished && attempt < 2) continue;
+                return unfinished ? SkipOutcome.Changed : SkipOutcome.AlreadyFinished;
+            }
 
-        if (skipped is not null) await _editor.AfterCommitAsync(skipped);
-        _store.TryDeleteDraft(photo);
+            if (skipped is not null) await _editor.AfterCommitAsync(skipped);
+            _store.TryDeleteDraft(photo);
+            return firstRun ? SkipOutcome.Skipped : SkipOutcome.DraftDiscarded;
+        }
     }
+
+    /// <summary>True while the wizard has been neither published nor skipped. Read fresh from the database, whatever the context has tracked.</summary>
+    private async Task<bool> IsUnfinishedAsync() =>
+        await _db.SiteProfiles.AsNoTracking().AnyAsync(p => p.Id == SiteProfile.SingletonId && p.OnboardingCompletedAt == null, CancellationToken.None);
 
     // ---------------------------------------------------------------- preview
 
@@ -405,6 +443,7 @@ public class OnboardingService
     /// The draft is not part of what the public site shows, so it leaves the profile's concurrency stamp alone, and the update does not name that stamp: an
     /// answer saved while the owner edits the profile elsewhere must not be lost to a stamp that moved for an unrelated reason.
     /// </summary>
+    // Callers must not read the draft back from the tracked entity afterwards: the update goes straight to the database and leaves the tracked copy as it was.
     private async Task WriteDraftAsync(SiteProfile profile, string? json, CancellationToken ct)
     {
         if (_db.Entry(profile).State == EntityState.Added)
