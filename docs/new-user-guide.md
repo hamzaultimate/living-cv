@@ -237,11 +237,12 @@ For each you can switch it on or off, give it your own name in the menu (leave t
 - **The order** is the order of the menu (and of the pages in the sitemap). Blocks on the home page keep their fixed positions; they only follow whether their section is on.
 - **What is stored.** Only what differs from your template, plus every choice you have already made: an unchanged page stores nothing on a fresh site, a name equal to the template's is dropped,
   and a section you switched on or off stays recorded as your choice (even when it later equals the template's default), so it is never forgotten by a later save. Sections you never touched
-  follow whichever template is in use. A switch of template rewrites nothing, so your choices stay; the template page lists the sections a switch would show again, and refuses a switch that would leave
-  no section in the menu. Saving this page under another template stores what differs from *that* template.
+  follow whichever template is in use. A switch of template keeps your choices; the template page lists the sections a switch would show again. If the new template's defaults would leave no section in the menu
+  (for example your site shows only a section the new template has off by default), the menu sections that are on now stay on and are saved as your choice, and the page says so; the same applies when the setup wizard changes the template.
+  A switch is refused only when nothing is on even now. **Once you have made a choice for a section it cannot be reset to "follow the template"**: it stays as you set it (you can switch it either way). Saving this page under another template stores what differs from *that* template.
 - **Limits to know.** Moving Contact or Testimonials has no effect on the menu (Contact is a fixed button, last in the mobile menu, and Testimonials is a block on the home page); those rows say so.
   Renaming a section changes its name in the menu and in the links back to it, not the headings, page titles or breadcrumbs of the page itself, which come from the template.
-  A name may not match another section's name or short menu name, or the fixed "CV" entry, and may not contain invisible characters.
+  A name may not match another section's name or short menu name, or the fixed "CV" entry, and may not contain invisible characters (a zero-width joiner or non-joiner between letters, as in Persian or Urdu names and emoji, is fine).
 - As on the other editors, a save from a page that was open before something else changed the profile is refused with a message that says nothing was saved.
 
 ### Forgot the password
