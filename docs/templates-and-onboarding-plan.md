@@ -273,7 +273,7 @@ Split so users are never left with content they cannot edit:
 - **4a (release gate for the wizard):** Experience, Skills, Projects/Work, Certifications.
   List with reorder, create/edit/delete, slug generation, image upload for hero and
   screenshots, validation, unsaved-change warning. **Status: done** (pending independent review); notes below.
-- **4b (split in two PRs):** **4b-1 done, pending review** = Talks, Testimonials and Blog (Markdown with safe server-side preview, drafts); **4b-2 in progress** = hero / metrics / About editing and
+- **4b (split in two PRs):** **4b-1 merged (#43)** = Talks, Testimonials and Blog (Markdown with safe server-side preview, drafts); **4b-2 in progress** = hero / metrics / About editing and
   section on/off and ordering: **stage A (hero, metrics, About and the profile stamp) done, pending review; stage B (section settings) done, pending review**. Status, notes and the 4b-2 brief are in "Phase 4b: status and hand-over" below.
 - **4c:** JSON export/import of all content. This replaces hand-editing seed files and gives
   backup and portability.
@@ -340,7 +340,7 @@ Implementation notes for 4a (decisions worth reviewing):
   pages, `ContentEditor`, `FormCheck`, the `editor` manifest block and the stamp pattern are reusable for those. 4c (JSON export and import) should
   export `ConcurrencyStamp`-free rows and decide how imported rows interact with the unique name and slug rules above.
 
-### Phase 4b: status and hand-over (4b-1 done, pending review; 4b-2 stages A and B done, pending review)
+### Phase 4b: status and hand-over (4b-1 merged in #43; 4b-2 stages A and B done, pending review)
 **Split.** 4b-1 = Talks, Testimonials and the Blog editors (this PR). 4b-2 = hero / metrics / About editing and section on/off + ordering (a later PR; **stages A and B done**). 4c (JSON
 export / import) is untouched. Everything follows the 4a pattern: `ContentPageModel` / `ContentListModel` / `ContentDeleteModel`, `FormCheck`, `ContentEditor` (row stamp, list stamp,
 `CommitAsync` -> `ProfileEditor.AfterContentCommitAsync`), the manifest `editor` block, `admin-unsaved.js`.
