@@ -1,0 +1,87 @@
+@page "/admin/content/blog/edit/{id:int?}"
+@model Portfolio.Web.Pages.Admin.Content.Blog.EditModel
+@using Portfolio.Data.Entities
+@using Portfolio.Web.Services
+@{
+    ViewData["Title"] = (Model.IsNew ? "Add " : "Edit ") + Model.View.ItemLabelLower;
+    var f = Model.Form;
+    var v = Model.View;
+    string Id(string name) => "Form_" + name;
+    string? Err(string key) => ViewData.ModelState.TryGetValue("Form." + key, out var e) && e.Errors.Count > 0 ? e.Errors[0].ErrorMessage : null;
+}
+<h1 id="page-heading">@(Model.IsNew ? "Add" : "Edit") @v.ItemLabelLower</h1>
+<p class="adm-lede">Appears on your @v.SectionLabel.ToLowerInvariant() page unless it is kept as a draft. Changes apply as soon as you save.</p>
+<partial name="_Guidance" model="v" />
+
+<form method="post" enctype="multipart/form-data" asp-page="/Admin/Content/Blog/Edit" asp-route-id="@Model.Id" novalidate data-unsaved-warning data-has-errors="@(ViewData.ModelState.IsValid ? "false" : "true")">
+    <partial name="_ErrorSummary" />
+    <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
+
+    <fieldset class="adm-fieldset">
+        <legend>@v.ItemLabel</legend>
+        <partial name="_Field" model="@(Model.Field("title", nameof(f.Title), f.Title, maxLength: BlogPost.MaxLength.Title))" />
+        <partial name="_Field" model="@(Model.Field("slug", nameof(f.Slug), f.Slug, maxLength: Slugs.MaxLength, required: false))" />
+        <partial name="_Field" model="@(Model.Field("description", nameof(f.Description), f.Description, FieldKind.Textarea, EditModel.DescriptionMax, rows: 3))" />
+        <partial name="_Field" model="@(Model.Field("date", nameof(f.Date), f.Date, maxLength: 10))" />
+        <partial name="_Field" model="@(Model.Field("tags", nameof(f.Tags), f.Tags, maxLength: 400))" />
+        <partial name="_Field" model="@(Model.Field("draft", nameof(f.Draft), null, FieldKind.Checkbox, isChecked: f.Draft))" />
+    </fieldset>
+
+    <fieldset class="adm-fieldset">
+        <legend>@v.Label("body")</legend>
+        <partial name="_Field" model="@(Model.Field("body", nameof(f.Body), f.Body, FieldKind.Textarea, EditModel.BodyMax, rows: 20))" />
+        <div class="adm-actions">
+            <button type="submit" class="adm-btn" formaction="@Model.PreviewUrl" formnovalidate>Preview</button>
+        </div>
+    </fieldset>
+
+    @if (Model.PreviewHtml is not null)
+    {
+        <section class="adm-card" id="preview" aria-labelledby="preview-heading">
+            <h2 id="preview-heading" tabindex="-1" autofocus>Preview</h2>
+            <p class="adm-hint">This is how the text will look when it is published. Nothing has been saved. Pictures from other sites are not loaded in the admin area but are shown on your site.</p>
+            <div class="adm-post-preview">@Html.Raw(Model.PreviewHtml)</div>
+        </section>
+    }
+
+    @if (v.Visible("cover"))
+    {
+        var coverError = Err("CoverFile");
+        var altError = Err("CoverAlt");
+        <fieldset class="adm-fieldset">
+            <legend>@v.Label("cover")</legend>
+            @if (!string.IsNullOrWhiteSpace(Model.CurrentCover))
+            {
+                <img class="adm-cover" src="@Model.CurrentCover" alt="Current @v.Label("cover").ToLowerInvariant()" width="320" height="180" />
+            }
+            <div class="adm-field">
+                <label for="@Id("CoverFile")">@(string.IsNullOrWhiteSpace(Model.CurrentCover) ? "Choose an image" : "Replace the image") <span class="adm-optional">(optional)</span></label>
+                <input type="file" id="@Id("CoverFile")" name="Form.CoverFile" accept="image/jpeg,image/png,image/webp" aria-describedby="@Id("CoverFile")-hint" aria-invalid="@(coverError is null ? null : "true")" />
+                <span id="@Id("CoverFile")-hint" class="adm-hint">@v.Hint("cover") Up to @Model.MaxSize. It is re-encoded on upload: location and camera details are removed and large images are scaled down. If the form shows an error or a preview, choose the file again.</span>
+                @if (coverError is not null) { <span class="field-validation-error">@coverError</span> }
+            </div>
+            <div class="adm-field">
+                <label for="@Id("CoverAlt")">Describe the @v.Label("cover").ToLowerInvariant() (alt text)</label>
+                <input type="text" id="@Id("CoverAlt")" name="Form.CoverAlt" value="@f.CoverAlt" maxlength="@BlogPost.MaxLength.CoverAlt" aria-describedby="@Id("CoverAlt")-hint" aria-invalid="@(altError is null ? null : "true")" />
+                <span id="@Id("CoverAlt")-hint" class="adm-hint">Required for an image you upload. A short description for people who cannot see it.</span>
+                @if (altError is not null) { <span class="field-validation-error">@altError</span> }
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.CurrentCover))
+            {
+                <div class="adm-field adm-check">
+                    <input type="checkbox" id="@Id("RemoveCover")" name="Form.RemoveCover" value="true" checked="@f.RemoveCover" />
+                    <input type="hidden" name="Form.RemoveCover" value="false" />
+                    <label for="@Id("RemoveCover")">Remove the current @v.Label("cover").ToLowerInvariant()</label>
+                </div>
+            }
+        </fieldset>
+    }
+
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @v.ItemLabelLower</button>
+        <a class="adm-btn" href="@Model.ListUrl">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+    <script src="~/js/admin-unsaved.js" defer asp-append-version="true"></script>
+}

@@ -16,6 +16,7 @@ public class PortfolioDbContext : DbContext
     public DbSet<Testimonial> Testimonials => Set<Testimonial>();
     public DbSet<SiteProfile> SiteProfiles => Set<SiteProfile>();
     public DbSet<OwnerAccount> OwnerAccounts => Set<OwnerAccount>();
+    public DbSet<ListStamp> ListStamps => Set<ListStamp>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -46,6 +47,13 @@ public class PortfolioDbContext : DbContext
                 o.OwnsMany(a => a.ValueProps);
             });
             e.OwnsMany(x => x.Sections, o => o.ToJson());
+        });
+
+        b.Entity<ListStamp>(e =>
+        {
+            e.HasKey(x => x.Section);
+            e.Property(x => x.Section).HasMaxLength(ListStamp.SectionLength).ValueGeneratedNever();
+            e.Property(x => x.Stamp).HasMaxLength(IOrderedContent.StampLength).IsConcurrencyToken();
         });
 
         b.Entity<OwnerAccount>(e =>
@@ -99,6 +107,8 @@ public class PortfolioDbContext : DbContext
 
         b.Entity<BlogPost>(e =>
         {
+            e.Property(x => x.ConcurrencyStamp).HasMaxLength(IStampedContent.StampLength).IsConcurrencyToken();
+            e.Property(x => x.CoverAlt).HasMaxLength(BlogPost.MaxLength.CoverAlt);
             e.HasIndex(x => x.Slug).IsUnique();
             e.Property(x => x.Title).HasMaxLength(200);
             e.Property(x => x.Slug).HasMaxLength(120);
@@ -106,12 +116,14 @@ public class PortfolioDbContext : DbContext
 
         b.Entity<Talk>(e =>
         {
+            e.Property(x => x.ConcurrencyStamp).HasMaxLength(IOrderedContent.StampLength).IsConcurrencyToken();
             e.Property(x => x.Title).HasMaxLength(200);
             e.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
         });
 
         b.Entity<Testimonial>(e =>
         {
+            e.Property(x => x.ConcurrencyStamp).HasMaxLength(IOrderedContent.StampLength).IsConcurrencyToken();
             e.Property(x => x.Author).HasMaxLength(120);
             e.Property(x => x.AuthorTitle).HasMaxLength(200);
             e.Property(x => x.Quote).HasMaxLength(2000);

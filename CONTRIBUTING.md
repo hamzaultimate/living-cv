@@ -57,7 +57,9 @@ describe what you changed and why.
   `FormCheck`, writes through `ContentEditor` (it stamps the row, refuses a stale form and, after the commit, refreshes the profile version
   and the "Generated" output cache), and a confirmation page for every removal. Labels, hints and the name of an entry come from the
   manifest's `editor` block (`EditorFields` holds the neutral defaults); never decide wording or visibility by template key. A new editable
-  entity needs a `ConcurrencyStamp` (`IOrderedContent`) and an additive migration. Admin pages run no inline script: the one exception is the
+  entity needs a `ConcurrencyStamp` (`IOrderedContent`) and an additive migration. Any write that can change the positions in a list (a move, a new
+  entry, a change of group) must also take the section's list stamp: call `ContentEditor.BeginOrderChangeAsync(section)` before reading the positions
+  the write is computed from (or `MoveAsync`, which checks the stamp the page posted); a new section only needs its key, no schema change. Admin pages run no inline script: the one exception is the
   first-party `wwwroot/js/admin-unsaved.js` on the edit forms (the admin CSP allows `script-src 'self'` there only, see `AdminAuth.AllowsScript`).
 - Never trust an upload: go through `ImageProcessor` and `UploadStore`, which sniff the bytes, re-encode,
   and generate the file name. The owner account is created only by `/setup` and reset only by

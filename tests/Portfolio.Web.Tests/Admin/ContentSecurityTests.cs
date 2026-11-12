@@ -16,6 +16,9 @@ public class ContentSecurityTests
         ContentFlow.Skills, ContentFlow.Skills + "/edit", $"{ContentFlow.Skills}/edit/{s.SkillId}", $"{ContentFlow.Skills}/delete/{s.SkillId}",
         ContentFlow.Projects, ContentFlow.Projects + "/edit", $"{ContentFlow.Projects}/edit/{s.ProjectId}", $"{ContentFlow.Projects}/delete/{s.ProjectId}", $"{ContentFlow.Projects}/images/{s.ProjectId}",
         ContentFlow.Certifications, ContentFlow.Certifications + "/edit", $"{ContentFlow.Certifications}/edit/{s.CertificationId}", $"{ContentFlow.Certifications}/delete/{s.CertificationId}",
+        ContentFlow.Talks, ContentFlow.Talks + "/edit", $"{ContentFlow.Talks}/edit/{s.TalkId}", $"{ContentFlow.Talks}/delete/{s.TalkId}",
+        ContentFlow.Testimonials, ContentFlow.Testimonials + "/edit", $"{ContentFlow.Testimonials}/edit/{s.TestimonialId}", $"{ContentFlow.Testimonials}/delete/{s.TestimonialId}",
+        ContentFlow.Blog, ContentFlow.Blog + "/edit", $"{ContentFlow.Blog}/edit/{s.BlogId}", $"{ContentFlow.Blog}/delete/{s.BlogId}",
     ];
 
     /// <summary>Every state-changing request the editors accept, with fields that would succeed for the signed-in owner.</summary>
@@ -40,6 +43,19 @@ public class ContentSecurityTests
         ($"{ContentFlow.Certifications}/edit/{s.CertificationId}", ContentFlow.Fields(("Name", "Renamed cert"), ("Issuer", "Board"), ("Status", "Earned"))),
         ($"{ContentFlow.Certifications}?handler=Move&id={s.CertificationId}", new() { ["direction"] = "down" }),
         ($"{ContentFlow.Certifications}/delete/{s.CertificationId}", new()),
+        ($"{ContentFlow.Talks}/edit", ContentFlow.Fields(("Title", "New talk"))),
+        ($"{ContentFlow.Talks}/edit/{s.TalkId}", ContentFlow.Fields(("Title", "Renamed talk"))),
+        ($"{ContentFlow.Talks}?handler=Move&id={s.TalkId}", new() { ["direction"] = "down" }),
+        ($"{ContentFlow.Talks}/delete/{s.TalkId}", new()),
+        ($"{ContentFlow.Testimonials}/edit", ContentFlow.Fields(("Quote", "A new quote that is long enough."), ("Author", "New Person"))),
+        ($"{ContentFlow.Testimonials}/edit/{s.TestimonialId}", ContentFlow.Fields(("Quote", "A changed quote that is long enough."), ("Author", "Seed Person"))),
+        ($"{ContentFlow.Testimonials}?handler=Move&id={s.TestimonialId}", new() { ["direction"] = "down" }),
+        ($"{ContentFlow.Testimonials}/delete/{s.TestimonialId}", new()),
+        ($"{ContentFlow.Blog}/edit", ContentFlow.Fields(("Title", "New post"), ("Date", "2025-01-01"), ("Body", "A body."))),
+        ($"{ContentFlow.Blog}/edit/{s.BlogId}", ContentFlow.Fields(("Title", "Renamed post"), ("Date", "2025-01-01"), ("Body", "A body."), ("Stamp", "x"))),
+        ($"{ContentFlow.Blog}/edit/{s.BlogId}?handler=Preview", ContentFlow.Fields(("Body", "# Preview"))),
+        ($"{ContentFlow.Blog}/edit?handler=Preview", ContentFlow.Fields(("Body", "# Preview"))),
+        ($"{ContentFlow.Blog}/delete/{s.BlogId}", new()),
     ];
 
     [Fact]
@@ -152,6 +168,18 @@ public class ContentSecurityTests
             $"{ContentFlow.Certifications}?handler=Move&id={seeded.CertificationId}&direction=down",
             $"{ContentFlow.Certifications}/delete/{seeded.CertificationId}?confirm=1",
             $"{ContentFlow.Certifications}/edit/{seeded.CertificationId}?Form.Name=Hacked&Form.Issuer=Hacked",
+            $"{ContentFlow.Talks}?handler=Move&id={seeded.TalkId}&direction=down",
+            $"{ContentFlow.Talks}/delete/{seeded.TalkId}?confirm=1",
+            $"{ContentFlow.Talks}/edit/{seeded.TalkId}?Form.Title=Hacked",
+            $"{ContentFlow.Testimonials}?handler=Move&id={seeded.TestimonialId}&direction=down",
+            $"{ContentFlow.Testimonials}/delete/{seeded.TestimonialId}?confirm=1",
+            $"{ContentFlow.Testimonials}/edit/{seeded.TestimonialId}?Form.Author=Hacked&Form.Quote=Hacked",
+            $"{ContentFlow.Blog}/delete/{seeded.BlogId}?confirm=1",
+            $"{ContentFlow.Blog}/delete/{seeded.DraftId}?handler=Post",
+            $"{ContentFlow.Blog}/edit/{seeded.DraftId}?Form.Title=Hacked&Form.Draft=false&Form.Body=Hacked",
+            $"{ContentFlow.Blog}/edit/{seeded.BlogId}?handler=Preview&Form.Body=Hacked",
+            $"{ContentFlow.Blog}?handler=Move&id={seeded.BlogId}&direction=down",
+            $"{ContentFlow.Blog}?handler=Publish&id={seeded.DraftId}",
         };
         foreach (var path in attempts)
             Assert.True((await owner.GetAsync(path)).StatusCode < HttpStatusCode.InternalServerError, path);
@@ -235,6 +263,10 @@ public class ContentSecurityTests
                      ($"{ContentFlow.Skills}?handler=Move&id={seeded.SkillId}", ContentFlow.Skills),
                      ($"{ContentFlow.Projects}?handler=Move&id={seeded.ProjectId}", ContentFlow.Projects),
                      ($"{ContentFlow.Certifications}?handler=Move&id={seeded.CertificationId}", ContentFlow.Certifications),
+                     ($"{ContentFlow.Testimonials}?handler=Move&id={seeded.TestimonialId}", ContentFlow.Testimonials),
+                     ($"{ContentFlow.Talks}/delete/{seeded.TalkId}", $"{ContentFlow.Talks}/delete/{seeded.TalkId}"),
+                     ($"{ContentFlow.Blog}/delete/{seeded.BlogId}", $"{ContentFlow.Blog}/delete/{seeded.BlogId}"),
+                     ($"{ContentFlow.Testimonials}/delete/{seeded.TestimonialId}", $"{ContentFlow.Testimonials}/delete/{seeded.TestimonialId}"),
                      ($"{ContentFlow.Experience}/delete/{seeded.ExperienceId}", $"{ContentFlow.Experience}/delete/{seeded.ExperienceId}"),
                      ($"{ContentFlow.Projects}/delete/{seeded.ProjectId}", $"{ContentFlow.Projects}/delete/{seeded.ProjectId}"),
                  })

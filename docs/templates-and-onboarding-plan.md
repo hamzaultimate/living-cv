@@ -235,7 +235,7 @@ Implementation notes (decisions worth reviewing):
   otherwise the first start would already have loaded the demo persona and "blank" could not be honest. It also **never runs again on a site the wizard
   finished**: a second additive migration column, `OnboardingOutcome` ("published" or "skipped"), is set by publish and skip and left empty by the backfill, so
   a restart cannot refill a blank site (review finding). Sites that existed before the wizard, unclaimable legacy installs and `Seed:Mode=Authoritative`
-  seed as before. Skipping the wizard on a first run loads the demo content into empty tables, which restores what a new install showed before the wizard.
+  seed as before on the first pass; legacy sites are pinned afterwards by the seeding marker (see "Seeding" in the Phase 4a notes). Skipping the wizard on a first run loads the demo content into empty tables, which restores what a new install showed before the wizard.
   The start-up step is `FirstRun.SeedAtStartupAsync`, tested by replaying it after blank, sample and skipped completions.
 - **First-run publish replaces the placeholder persona** from the `Site` config (hero, metrics, About, links, phone, light photo) with a plain hero built
   from the owner's answers (title as eyebrow, name as headline, summary as lede) and the summary as the first About paragraph. A re-run changes only
@@ -272,8 +272,8 @@ Split so users are never left with content they cannot edit:
 - **4a (release gate for the wizard):** Experience, Skills, Projects/Work, Certifications.
   List with reorder, create/edit/delete, slug generation, image upload for hero and
   screenshots, validation, unsaved-change warning. **Status: done** (pending independent review); notes below.
-- **4b:** Blog (Markdown editor with preview, drafts), Talks, Testimonials, hero/metrics/about
-  editing, section on/off and ordering.
+- **4b (split in two PRs):** **4b-1 done, pending review** = Talks, Testimonials and Blog (Markdown with safe server-side preview, drafts); **4b-2 not started** = hero / metrics / About editing and
+  section on/off and ordering. Status, notes and the 4b-2 brief are in "Phase 4b: status and hand-over" below.
 - **4c:** JSON export/import of all content. This replaces hand-editing seed files and gives
   backup and portability.
 Wizard and 4a ship together; 4b and 4c follow.
@@ -296,9 +296,8 @@ Implementation notes for 4a (decisions worth reviewing):
   (validated). A hidden `screenshots` setting removes the Images link and makes the Images page and its posts refuse. A template that hides `current` can still end a role: saving an end date clears a stored current flag, otherwise the flag is kept. A hidden field is not drawn, not validated and not read from the post, and its stored value is untouched by every save (tested with a
   template carrying unique wording, in all four sections). Sensitive templates show `guidance` on the hub and every editor. A section the template does
   not use stays editable, with a note that the public site does not show it.
-- **Ordering.** The existing `SortOrder` columns, no new column. Move up / Move down are POST buttons (named after their row, disabled at the ends,
-  keyboard operable); a move renumbers the scope consecutively and writes only rows whose position changed, without restamping them (a form open for another row stays valid, while the update still checks the stamp it loaded, so a move over a concurrent edit of the same rows is refused; the trade-off is that two overlapping moves, or a move racing a skill group change, can leave a duplicate `SortOrder`: the display breaks ties by `Id` and the next move renumbers), so rows that shared a position are
-  separated. Skills order within their group, like the public page and the CV. New entries are appended (Skills: end of their group). **No drag and
+- **Ordering.** The existing `SortOrder` columns for positions (the list stamp below is the only new storage). Move up / Move down are POST buttons (named after their row, disabled at the ends,
+  keyboard operable); a move renumbers the scope consecutively and writes only rows whose position changed, without restamping them (a form open for another row stays valid, while the update still checks the stamp it loaded, so a move over a concurrent edit of the same rows is refused). **List stamp** (replaces the earlier trade-off that two overlapping moves, or a move racing a skill group change, could leave a duplicate `SortOrder`): a small additive table `ListStamps(Section PK nvarchar(40), Stamp nvarchar(32) concurrency token)`, one row per section list, created on the section's first order change (a GET only reads it and shows `0` when there is no row). Every write that can change positions names the stamp it saw and replaces it in the same `SaveChanges`, so the update only matches that stamp (same mechanism as the row `ConcurrencyStamp`, works on SQL Server and SQLite) and an overlapping writer gets `DbUpdateConcurrencyException`, which `CommitAsync` turns into `SaveOutcome.Conflict`. Moves post the stamp the list page was loaded with (hidden `listStamp` field, read before the rows on GET) and are refused with the existing "The list was changed somewhere else, so it was not reordered. It is shown again as it is now." message if it is stale or missing. Creates (Experience insert-at-top; Projects, Certifications and Skills appends) and a Skill group change take the current stamp with `ContentEditor.BeginOrderChangeAsync(section)` **before** they read the positions: their result does not depend on what the editor saw, so a create form opened before a move stays valid, but any order change committed between that read and the commit makes the save a conflict (a new entry is shown its form again with its input and "The list changed while saving, so nothing was saved. Press Save again."; a skill group change shows the generic "nothing was saved" message). Ordinary edits that do not change the order (including a skill edit that keeps its group) and deletes do not touch the list stamp: a delete leaves a gap and renumbers nothing, so it cannot create a shared position, and a move that names a deleted row fails on that row's own stamp only if it has to rewrite that row; either way no two rows can end up in one position. Start-up seeding in `Seed:Mode=Authoritative` and the wizard's sample loading (empty tables only) also do not replace the list stamp: they run when no editor is in the middle of a write to those tables, they renumber from the seed files, and a move made from an older page then still applies to the new rows, which cannot create a shared position (harmless). One stamp per section list is deliberate (Skills order within a group, but a single stamp per section is simpler and only costs a refused move when two groups are reordered at the same moment). Order of calls matters: `GuardOrderAsync` throws if other changes are already staged, because creating the section's stamp row is its own save. 4b reuses this for Talks, Testimonials, Blog and section ordering by naming a section key (no schema change); tests: `ListOrderConcurrencyTests` runs real overlapping requests (a test hook runs a complete second request right before the first saves) and two `ContentEditor`s over one database, for two moves, move vs skill group change (both ways), move vs insert-at-top (both ways), two inserts, two group changes and two appends. Rows that shared a position before this existed are separated by the next move. Skills order within their group, like the public page and the CV. New entries are appended (Skills: end of their group), except Experience, where a new entry is **inserted at the top**: the admin list, the public page, the home page and the CV all order by `SortOrder` ascending, so the new row takes `min(SortOrder) - 1` (1 in an empty list) and no other row is written (their positions, stamps and the demo persona's order stay as they were, which keeps the Software output identical). Positions below 1 are tidied by the next move. Chosen over shifting every row up by one because that would rewrite every row (and race the row stamps) for no visible difference. **No drag and
   drop**: it needs script, the admin CSP allows none, and the buttons are the mandatory fallback; left out on purpose.
 - **Unsaved-change warning** is `wwwroot/js/admin-unsaved.js`, loaded only by the edit forms. The admin CSP gains `script-src 'self'` on
   `/admin/content/{section}/edit` only (`AdminAuth.AllowsScript`); tests assert every other admin page still has no `script-src`, no
@@ -319,8 +318,19 @@ Implementation notes for 4a (decisions worth reviewing):
   points at it, and addresses that are not generated `/uploads/...` names (the bundled images) are never touched. Alt text is required for any image
   the owner uploads (the cover's is `HeroImageAlt`, a gallery image's is its caption). Project and certification **proofs** are kept but not editable yet.
 - **Seeding.** Nothing in the editors seeds. Because wizard-finished sites never seed at start-up, emptying every table stays empty across restarts
-  (`ContentSeedingTests` replays `FirstRun.SeedAtStartupAsync` for blank, sample and skipped sites). A site that existed before the wizard keeps
-  the old behaviour: an emptied table is refilled from the seed files at the next start. That is documented in the user guide and left as an owner decision.
+  (`ContentSeedingTests` replays `FirstRun.SeedAtStartupAsync` for blank, sample and skipped sites). A site that existed before the wizard is pinned by a
+  nullable `SiteProfile.ContentSeededAt` (migration `AddContentSeededMarker`, additive, no backfill). Start-up records it with one conditional UPDATE only
+  after the seeder has run over every table (`FirstRun.MarkContentSeededAsync`), and `ShouldDeferContentSeedAsync` defers once it is set (except
+  `Seed:Mode=Authoritative`, which still seeds as configured). Why this marker and not "first admin content write": the first start-up pass is the event
+  that defines "this site has been seeded", it needs no change in the editors (4b's new tables are covered automatically), and a legacy site whose owner
+  never writes content needs no marker to behave as before. Ordering: the first pass behaves exactly as before for partly empty tables (IfEmpty fills only
+  the empty ones); the marker is written after the pass, so a crash part-way, or a seed folder that is missing or a seed file that is present but cannot be read (the seeder reports whether every present file was read; a deleted individual file is an intentionally empty table and does not block the pin), leaves it null and the next start finishes the job; the migration does not
+  backfill, so a site that never completed a pass is not pinned. A new install with no profile row yet (a development checkout, no `Setup:Key`) is marked
+  by a second call in `Program` once the profile exists; a missing seed folder is not recorded as a pass. Unclaimable legacy installs go through the same
+  path. Limits: a legacy site that emptied a table on the old version is refilled once at the first start after this upgrade (it cannot be told from
+  one never seeded) and then stays empty; do not roll `AddContentSeededMarker` back on a live site (Down then Up clears the marker and the next start
+  would refill emptied tables once). `LegacySeedPinTests` replays the start-up step after delete-all for legacy, published, skipped and Authoritative
+  sites over every content table (add new tables to its list).
 - **Known gaps.** The CV PDF of a project that has impact lines cannot be rendered on a host without the fonts it names (the "▸" glyph; the same limit the
   earlier tests note), so the end-to-end test builds a project without impact lines for the PDF check. The editors have not been run against a real SQL
   Server (tests and the browser check use SQLite). Parallel requests from one client against the test host's single shared in-memory SQLite connection ended
@@ -328,6 +338,87 @@ Implementation notes for 4a (decisions worth reviewing):
 - **For 4b / 4c.** 4b adds editors for blog posts, talks and testimonials, hero / metrics / About editing, and section on/off and ordering; the content
   pages, `ContentEditor`, `FormCheck`, the `editor` manifest block and the stamp pattern are reusable for those. 4c (JSON export and import) should
   export `ConcurrencyStamp`-free rows and decide how imported rows interact with the unique name and slug rules above.
+
+### Phase 4b: status and hand-over (4b-1 done, pending review; 4b-2 not started)
+**Split.** 4b-1 = Talks, Testimonials and the Blog editors (this PR). 4b-2 = hero / metrics / About editing and section on/off + ordering (a later PR, **not started**). 4c (JSON
+export / import) is untouched. Everything follows the 4a pattern: `ContentPageModel` / `ContentListModel` / `ContentDeleteModel`, `FormCheck`, `ContentEditor` (row stamp, list stamp,
+`CommitAsync` -> `ProfileEditor.AfterContentCommitAsync`), the manifest `editor` block, `admin-unsaved.js`.
+
+**Entity and field inventory (as it was before 4b).**
+
+| Section | Entity | Fields | Public order | Notes |
+|---|---|---|---|---|
+| Talks | `Talk` | Title, Type (`Video`/`Talk`), YoutubeId, Event, Date (`DateOnly?`), Url, SortOrder | `Date` descending, then `SortOrder`, then `Id` | No image. YoutubeId goes into an iframe address. Seeder key: `Title`. |
+| Testimonials | `Testimonial` | Quote, Author, AuthorTitle, SourceUrl, Relation, Featured, SortOrder | `SortOrder`, then `Id` | No image. Quote is escaped plain text. `Relation` and `Featured` are stored but shown nowhere. Seeder key: `Author` + first 40 characters of `Quote`. |
+| Blog | `BlogPost` | Title, Slug, Description, Date, Tags, Draft, Cover, BodyMarkdown | `Date` descending, then `Id`; drafts hidden | Unique `Slug` index; no position column. Seeder key: `Slug`. |
+| Hero / metrics / About | `SiteProfile` JSON columns | Hero (4 text), Metrics (value, unit, label), About (headline, paragraphs, value props, currently note, focus) | n/a | 4b-2 |
+| Sections | `SiteProfile.Sections` JSON | Key, Label, Enabled, SortOrder | nav and home order | 4b-2 |
+
+**Public surfaces each type feeds.** Talks: `/talks` only. Testimonials: the home page block (`Blocks/_Testimonials`). Blog: `/blog`, `/blog/{slug}`, `/sitemap.xml` (posts, with the date as
+`lastmod`), `BlogPosting` + breadcrumb JSON-LD on the post page, the post's cover as its share image. Nothing else reads posts (no feed, no search, no tag pages, no related posts, no
+home-page block, no per-post share image, not the CV); the repository filters drafts (`GetBlogPostsAsync`, `GetBlogPostAsync`), so every surface above is covered by two queries.
+
+**Implementation notes for 4b-1.**
+- **Routes.** `/admin/content/{talks|testimonials|blog}` (list), `/edit/{id?}`, `/delete/{id}`. Blog preview is `POST /admin/content/blog/edit/{id?}?handler=Preview` on the edit page (no new route, no script,
+  nothing read from the database but the current cover, nothing written; the response is the edit page, so it carries the usual `no-store` / `noindex` headers and the form keeps what was typed).
+- **Migrations (all additive, nullable, read in the generated SQL):** `AddTalkTestimonialStamps` (`ConcurrencyStamp` on `Talks` and `Testimonials`) and `AddBlogEditing` (`ConcurrencyStamp`
+  and `CoverAlt nvarchar(300)` on `BlogPosts`). `IStampedContent` (Id + stamp) was split out of `IOrderedContent` so the blog, which has no position, can use the shared list / delete models.
+- **Ordering.** Talks and Blog are ordered by date on the public pages, so their lists show that order and have **no Move buttons** (`CanReorder` false; a posted Move is refused and writes nothing; new
+  talks append a tie-break position and take no list stamp). Testimonials append and move with the list stamp (section key `testimonials`). `Id` tie-breaks were added to the three public queries (ties were
+  undefined before); the Testimonials one cannot be proven by a test on SQLite, which returns insertion order anyway.
+- **Talks.** Title required (200); type from the enum allow-list with manifest wording (`typeVideo`, `typeTalk`); event 200; date as `yyyy-MM-dd`, month or year; YouTube field takes an 11 character id or a
+  watch / youtu.be / embed / shorts link and stores the bare id (the public page only embeds a stored id of that shape); link http(s) only. Unique title, compared in memory with `OrdinalIgnoreCase` like the seeder.
+- **Testimonials.** Quote required, plain text, 2000 (the column length); author 120; role 200; source link http(s). Unique author + first 40 characters of the quote (the seeder key).
+- **Blog.** Title (200; **a duplicate title is not refused**, unlike Talks, because the seeder keys posts by slug: the slug gets a numeric suffix), slug (built from the title with `Slugs.From(title, "post")`, unique case-insensitively, reserved words and path tricks refused, an unchanged legacy slug never re-validated, an emptied
+  box keeps it, a unique-index race shows the friendly message), description (plain, 300), date (`yyyy-MM-dd`, 1990 to 2100; a future date is allowed because the public page already shows it),
+  tags (comma or line separated, up to 8, 30 characters, letters / digits / space and `. + # & _ -`), cover (image pipeline only, alt text required for an upload, replaced / removed / deleted files are removed
+  only when no project, profile photo, post cover or post text still points at them), text (Markdown, 60 000 characters, no control characters), **Draft** (a new post starts as a draft; a post saved without
+  the field stays a draft). Publishing is the Draft checkbox on the edit form; there is no list button (kept out on purpose: one path to publish).
+- **Safe Markdown (`SafeMd`).** `Md.ToHtml` (raw HTML allowed) is gone; `SafeMd.ToHtml` is the only renderer and is used by the public post page **and** the preview. Markdig with `DisableHtml`, pipe tables, auto
+  identifiers, auto links, emphasis extras, list extras, smarty pants and referral links (`rel="noopener nofollow ugc"`); no generic attributes, media links, math, diagrams, custom containers or footnotes. After parsing, every
+  link, image and `<scheme:...>` autolink address is decided on the decoded value (control characters and whitespace removed, scheme lower-cased): relative, `http`, `https` (and `mailto` for links) pass; anything else is
+  rendered as its text. **It changed no byte of the Software parity snapshots** (and none of the shipped posts' output): `SafeMdTests` renders every shipped post body with the old trusted pipeline and the safe one and requires identical HTML, and the parity
+  snapshots pass untouched. That holds for the shipped posts only: an operator's own `blog.json` with links (now carrying `rel`) or raw HTML (now escaped) renders differently. Automatic heading ids are not prefixed, because that would change the bytes
+  of the shipped posts (`<h2 id="the-symptom">`); a generated id can therefore equal a layout id (`main-content`, `theme-btn`): accepted, documented.
+  `SafeMd` never throws (nested text and more than 200 headings fall back to the encoded text in a `<pre>`; the editor and preview refuse such text) and keeps renders by the hash of the text. `Seed:Mode=Authoritative` now copies `CoverAlt` too, and deletes browser-written posts that are not in `blog.json`, leaving their uploaded covers orphaned in storage. Known cost: a post cannot contain raw HTML, footnotes, definition lists or task lists any more (the shipped posts use none); say so to owners who ask.
+- **Template wording.** `editor.talks`, `editor.testimonials`, `editor.blog` in the schema, `TemplateEditor`, `EditorFields`, the validator (required fields cannot be hidden: `title`; `quote`, `author`; `title`, `slug`, `date`,
+  `body`, `draft`), both shipped manifests and the authoring guide. Healthcare keeps Talks and Blog off in the public template: the editors stay reachable with the "not shown" note and the guidance.
+- **Tests.** `TalkEditorTests`, `TestimonialEditorTests`, `BlogEditorTests` (drafts on every surface, transitions with the cached sitemap, slug rules, covers and orphan cleanup, preview, XSS corpus on preview
+  and public page, JSON-LD encoding, stamps), `TalkTestimonialTemplateTests`, `BlogTemplateTests`, `ContentSuiteEndToEndTests` (both templates, create -> public -> unpublish / delete), `SafeMdTests`,
+  `BodyLimitCoverageTests` (reflection: every admin page model with a POST handler has `[BodyLimit]`), and the new routes in `AdminAccessTests`, `ContentSecurityTests`, `ContentAccessibilityTests`, `ContentSeedingTests`.
+  The test host's save hook (`AdminApp.BeforeOrderedSave`) replays real overlapping requests for any stamped row.
+
+**Known gaps / owner decisions.** `Testimonial.Relation` / `Featured` have no field (shown nowhere). No list-level publish button. Preview does not load external pictures (the admin CSP is `img-src 'self'`). The
+preview and the public page are rendered by the same function but the preview sits in admin styles, not the site's Tailwind article styles. Raw HTML in posts is deliberately unsupported. Nothing has been run against a
+real SQL Server (tests use SQLite; the SQL scripts were read). No browser check of the new pages was done.
+
+#### 4b-2 brief (not started; self-contained)
+**Goal.** Let the owner edit the hero, metrics and About text, and switch sections on / off and reorder them, from the admin, in the template's words.
+**Start from.** `Pages/Admin/Profile.cshtml(.cs)`, `Services/ProfileEditor.cs` and `ProfileForm.cs` (identity editing, `AfterCommitAsync` refreshes caches), `Data/Entities/SiteProfile.cs` (`Hero`, `Metrics`,
+`About`, `Sections` are JSON-mapped owned types), `Services/SiteProfileMapper.cs`, `Services/SectionRegistry.cs`, `Services/TemplateDefinition.cs` + `TemplateView.cs` (how a template's sections, labels and `enabled` combine
+with the profile's `Sections` overrides), `Services/TemplateCatalog.cs`/`TemplateValidator.cs`, the wizard (`OnboardingService`, `Pages/Admin/Welcome/*`, which already writes hero suggestions), and the 4a / 4b-1 editors as the
+pattern (`Pages/Admin/Content/*`, `ContentEditor`, `FormCheck`, `EditorFields`, `admin-unsaved.js`, `AdminAuth.AllowsScript`).
+**Requirements carried from the owner.**
+- Public pages for the default Software template stay **byte-identical** (parity snapshots untouched); if a change would alter them, stop and report.
+- **No migration unless proven necessary**: hero / metrics / about / sections already live in `SiteProfile` JSON columns. Profile edits today have no per-write stamp (`ProfileEditor` is last write wins);
+  `OnboardingCompletedAt` is a concurrency token but only moves when the wizard publishes, so it cannot guard these edits. Recommended: one additive nullable `ConcurrencyStamp` column on `SiteProfiles`
+  (replaced on every profile write, checked from the form like the content stamps; D3: no renames), justified because two tabs would otherwise overwrite each other. If the owner prefers no migration, keep last write wins and say so.
+- **Hiding a section never deletes rows.** Turning a section off only hides its page, nav entry and home block; the entries stay and show again when it is turned on.
+- Nav, `/sitemap.xml`, JSON-LD, the CV, routes (`[SectionPage]` 404s) and the home page blocks must all follow a save immediately (`ProfileEditor.AfterCommitAsync` already invalidates the provider version and the
+  "Generated" output cache). Sections a template lists as `enabled: false` (Healthcare: Blog and Talks) default off; the owner may turn them on.
+- Labels, hints and visibility come from the manifest (extend `editor` with `hero`, `metrics`, `about`, and the section settings page wording); never `if (templateKey == ...)`; no hardcoded nouns in messages.
+- Everything admin: under `Pages/Admin`, `AdminPageModel`, POST + antiforgery + `[BodyLimit]` (the reflection test will fail otherwise), GET never mutates, concurrency (a stamp on the profile row; section order uses
+  the list-stamp pattern with a section key such as `sections`, or the profile token), friendly conflict, plain-text validation (`FormCheck`), URL allow-lists, no inline script, first-party script only on edit routes via
+  `AllowsScript`.
+- Section rules to decide and test: required sections that cannot be turned off (e.g. About / Contact: check what the home page and nav need), at least one section on, order only among enabled / known keys
+  (`SectionRegistry.IsKnown`), unknown keys in stored JSON tolerated.
+**Tests to write.** Persist and public follow (nav, home, sitemap, JSON-LD, CV) for each edit; validation / injection corpus on every text field; row / profile stamp conflicts with real overlapping requests (the
+`AdminApp.BeforeOrderedSave` hook); every new route in `AdminAccessTests` + `ContentSecurityTests` (anonymous, no token, stale session, GET-never-mutates, body caps); template-driven labels via a test manifest with
+unique words including messages; hiding keeps rows; Healthcare defaults; Software snapshots unchanged; accessibility; CSP scoping.
+**Mutations to prove (scratch copy only).** owner check, antiforgery, section disable not filtering a surface (nav, sitemap, home, route), reorder ignored, stamp check, hidden-field data loss, URL scheme allow-list,
+cache invalidation.
+**4c pointer.** JSON export / import of all content (backup, portability): export `ConcurrencyStamp`-free rows (and the profile, sections and uploads manifest), decide how imported rows interact with the unique keys
+(talk title, testimonial author + quote start, blog slug, project slug, certification / skill name, role company + title) and with `Seed:Mode`; reuse `ContentEditor` for writes and `SafeMd` rules for imported posts.
 
 ### Phase 5: Remaining templates and archetypes
 Build one archetype per step, then the presets that use it:

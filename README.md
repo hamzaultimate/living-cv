@@ -33,8 +33,10 @@ testable the moment you run it. Swap in your own details to make it yours.
 - Optional **GA4 analytics** via `Site.GoogleAnalyticsId` — omitted entirely when unset, and
   auto-disabled on `dev.*` subdomains so local/dev traffic never reaches production analytics
 - **Seed-if-empty JSON seeder** — each table is filled from its seed file only when it has no
-  rows; existing rows are never updated or deleted. Set `Seed:Mode=Authoritative` to make the
-  seed files the source of truth instead (rows are added / updated / removed to match)
+  rows; existing rows are never updated or deleted. Seeding happens at the first start-up only:
+  once that first pass has finished (recorded in the database), a table you empty stays empty
+  across restarts. Set `Seed:Mode=Authoritative` to make the seed files the source of truth instead
+  (rows are added / updated / removed to match, at every start)
 - **Owner admin** at `/admin`: one-time `/setup` (gated by a `Setup:Key`) creates the single owner account;
   cookie sign-in with lockout, a profile editor, and photo upload (re-encoded, metadata stripped,
   stored outside `wwwroot`). See [docs/new-user-guide.md](docs/new-user-guide.md#3-claim-the-site-and-use-the-admin)
@@ -53,7 +55,7 @@ testable the moment you run it. Swap in your own details to make it yours.
   (no drag and drop needed), project cover and gallery images (re-encoded, with required alt text), validation, a warning
   before you leave unsaved changes, and a refusal (not a silent overwrite) when the same entry is saved from two tabs. Public
   pages, the sitemap, the CV and the share image follow every save at once, so a blank site can be built from the admin
-  alone. Blog posts, talks and testimonials are still seeded from JSON.
+  alone. Talks, testimonials and the blog (with drafts and a safe, server-side Markdown preview) have editors too.
 - Health checks at `/health` (liveness) and `/health/db` (DB readiness)
 - Zero front-end build dependencies to *run* it (Tailwind is compiled during build)
 
@@ -97,11 +99,11 @@ Everything personal lives in two places — **no code changes required**:
    (name, role, hero text, metrics, About narrative, contact links, `PhotoUrl`). These values are
    the defaults: on first run with a database they are copied into a profile row, which is read
    from then on (without a database the config values are used directly).
-2. **Content** → edit experience, skills, work and certifications in the browser at `/admin/content`. Blog posts,
-   talks and testimonials (and the demo persona a fresh database starts with) come from the JSON files in
+2. **Content** → edit experience, skills, work, certifications, talks, testimonials and blog posts in the browser at `/admin/content`.
+   The demo persona a fresh database starts with comes from the JSON files in
    `src/Portfolio.Data/Seed/` (`projects`, `experiences`, `skills`, `certifications`, `talks`, `blog`, `testimonials`).
    Each file has a header comment describing its shape. They seed an empty database; to re-apply
-   edited files to a populated one, set `Seed:Mode=Authoritative` (or clear the tables).
+   edited files to a populated one, set `Seed:Mode=Authoritative` (emptying the tables does not re-seed them).
 
 After the first run you can also edit the profile and upload your photo in the browser at `/admin`
 (see [Claim the site](docs/new-user-guide.md#3-claim-the-site-and-use-the-admin)); the database then

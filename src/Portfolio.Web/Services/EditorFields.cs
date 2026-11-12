@@ -59,6 +59,38 @@ public static class EditorFields
         new("badgeImageUrl", "Badge image link", "An image address (http or https).", false),
     ];
 
+    public static readonly IReadOnlyList<EditorFieldInfo> Talks =
+    [
+        new("title", "Title", null, true),
+        new("type", "Type", null, false),
+        new("typeVideo", "Video", "The word for the first choice of the type field. Wording only: the field itself is hidden or shown by type.", false),
+        new("typeTalk", "Talk", "The word for the second choice of the type field. Wording only.", false),
+        new("event", "Event", "Where it was given or published.", false),
+        new("date", "Date", "A date, or a month and year: 2025-05-14, 2025-05 or 2025. Entries are listed newest first by this date.", false),
+        new("youtubeId", "Video", "A YouTube link or the 11 character video id. Shown as an embedded video.", false),
+        new("url", "Link", "Where to watch or read more (http or https).", false),
+    ];
+
+    public static readonly IReadOnlyList<EditorFieldInfo> Testimonials =
+    [
+        new("quote", "Quote", "Plain text. Only with the permission of the person quoted.", true),
+        new("author", "Name", null, true),
+        new("authorTitle", "Role and organisation", "For example: Engineering Manager, Acme Corp.", false),
+        new("sourceUrl", "Source link", "Where the original can be read (http or https).", false),
+    ];
+
+    public static readonly IReadOnlyList<EditorFieldInfo> Blog =
+    [
+        new("title", "Title", null, true),
+        new("slug", "Web address name", "Lower-case letters, digits and hyphens. Leave empty to build it from the title. Changing it breaks links to the old address.", true),
+        new("description", "Description", "One or two sentences shown on the list and in search results. Plain text.", false),
+        new("date", "Date", "The publication date, as 2025-09-15. The list shows the newest first.", true),
+        new("tags", "Tags", "Separated by commas, up to 8. Letters, digits, spaces and . + # & _ - only.", false),
+        new("cover", "Cover image", "JPEG, PNG or WebP. Shown at the top of the post and as the share image.", false),
+        new("body", "Text", "Markdown. Raw HTML is shown as text, not run. Use Preview to see the result before you save.", true),
+        new("draft", "Keep as a draft", "A draft is saved but not shown anywhere on your site.", true),
+    ];
+
     /// <summary>The fields of a section, or an empty list for a section without an editor.</summary>
     public static IReadOnlyList<EditorFieldInfo> For(string section) => section switch
     {
@@ -66,10 +98,13 @@ public static class EditorFields
         SectionRegistry.Skills => Skills,
         SectionRegistry.Projects => Projects,
         SectionRegistry.Certifications => Certifications,
+        SectionRegistry.Talks => Talks,
+        SectionRegistry.Testimonials => Testimonials,
+        SectionRegistry.Blog => Blog,
         _ => [],
     };
 
     /// <summary>The sections that have a content editor, in the order the editors are listed.</summary>
     public static readonly IReadOnlyList<string> Sections =
-        [SectionRegistry.Experience, SectionRegistry.Skills, SectionRegistry.Projects, SectionRegistry.Certifications];
+        [SectionRegistry.Experience, SectionRegistry.Skills, SectionRegistry.Projects, SectionRegistry.Certifications, SectionRegistry.Talks, SectionRegistry.Testimonials, SectionRegistry.Blog];
 }

@@ -32,7 +32,10 @@ else
                 <tr>
                     <th scope="col">@v.ItemLabel</th>
                     <th scope="col">Details</th>
-                    <th scope="col">Order</th>
+                    @if (Model.CanReorder)
+                    {
+                        <th scope="col">Order</th>
+                    }
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
@@ -42,18 +45,23 @@ else
                     <tr id="row-@r.Id">
                         <th scope="row">@r.Title</th>
                         <td>@r.Detail @if (!string.IsNullOrEmpty(r.Meta)) { <span class="adm-hint">@r.Meta</span> }</td>
-                        <td>
-                            <div class="adm-order">
-                                <form method="post" asp-page="@pageName" asp-page-handler="Move" asp-route-id="@r.Id">
-                                    <input type="hidden" name="direction" value="up" />
-                                    <button type="submit" class="adm-btn" disabled="@(!r.CanMoveUp)" aria-label="Move up: @r.Title">Move up</button>
-                                </form>
-                                <form method="post" asp-page="@pageName" asp-page-handler="Move" asp-route-id="@r.Id">
-                                    <input type="hidden" name="direction" value="down" />
-                                    <button type="submit" class="adm-btn" disabled="@(!r.CanMoveDown)" aria-label="Move down: @r.Title">Move down</button>
-                                </form>
-                            </div>
-                        </td>
+                        @if (Model.CanReorder)
+                        {
+                            <td>
+                                <div class="adm-order">
+                                    <form method="post" asp-page="@pageName" asp-page-handler="Move" asp-route-id="@r.Id">
+                                        <input type="hidden" name="direction" value="up" />
+                                        <input type="hidden" name="listStamp" value="@Model.ListStamp" />
+                                        <button type="submit" class="adm-btn" disabled="@(!r.CanMoveUp)" aria-label="Move up: @r.Title">Move up</button>
+                                    </form>
+                                    <form method="post" asp-page="@pageName" asp-page-handler="Move" asp-route-id="@r.Id">
+                                        <input type="hidden" name="direction" value="down" />
+                                        <input type="hidden" name="listStamp" value="@Model.ListStamp" />
+                                        <button type="submit" class="adm-btn" disabled="@(!r.CanMoveDown)" aria-label="Move down: @r.Title">Move down</button>
+                                    </form>
+                                </div>
+                            </td>
+                        }
                         <td>
                             <div class="adm-order">
                                 <a class="adm-btn" href="@Model.ListUrl/edit/@r.Id" aria-label="Edit: @r.Title">Edit</a>

@@ -192,7 +192,7 @@ public class CertificationEditorTests
         await ContentFlow.PostAsync(owner, Edit, Cert("Two", "Issuer Two"));
         var ids = (await RowsAsync(app)).Select(r => r.Id).ToList();
 
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Certifications}?handler=Move&id={ids[1]}", new Dictionary<string, string> { ["direction"] = "up" }, ContentFlow.Certifications);
+        await ContentFlow.MoveAsync(owner, ContentFlow.Certifications, ids[1], "up");
 
         Assert.Equal(["Two", "One"], (await RowsAsync(app)).Select(r => r.Name));
         var page = await app.NewClient().GetStringAsync("/certifications");

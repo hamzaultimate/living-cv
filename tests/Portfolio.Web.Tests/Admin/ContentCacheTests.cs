@@ -34,8 +34,8 @@ public class ContentCacheTests
         await Changed("creating a role", () => ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields("A Co", "A")));
         await Changed("creating a second role", () => ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields("B Co", "B")));
         var ids = await ContentFlow.IdsAsync(app, db => db.Experiences.Select(e => e.Id));
-        await Changed("reordering", () => ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={ids[0]}", new Dictionary<string, string> { ["direction"] = "down" }, ContentFlow.Experience));
-        await Unchanged("moving past the end", () => ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={ids[0]}", new Dictionary<string, string> { ["direction"] = "down" }, ContentFlow.Experience));
+        await Changed("reordering", () => ContentFlow.MoveAsync(owner, ContentFlow.Experience, ids[0], "up"));
+        await Unchanged("moving past the end", () => ContentFlow.MoveAsync(owner, ContentFlow.Experience, ids[0], "up"));
         await Unchanged("an invalid role", () => ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields(company: "")));
         await Changed("editing a role", async () =>
         {

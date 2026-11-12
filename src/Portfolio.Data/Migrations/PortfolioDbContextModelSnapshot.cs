@@ -34,8 +34,17 @@ namespace Portfolio.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<string>("Cover")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CoverAlt")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
@@ -172,6 +181,23 @@ namespace Portfolio.Data.Migrations
                     b.ToTable("Experiences");
                 });
 
+            modelBuilder.Entity("Portfolio.Data.Entities.ListStamp", b =>
+                {
+                    b.Property<string>("Section")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("Stamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.HasKey("Section");
+
+                    b.ToTable("ListStamps");
+                });
+
             modelBuilder.Entity("Portfolio.Data.Entities.OwnerAccount", b =>
                 {
                     b.Property<int>("Id")
@@ -298,6 +324,9 @@ namespace Portfolio.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTimeOffset?>("ContentSeededAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
@@ -432,6 +461,11 @@ namespace Portfolio.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<DateOnly?>("Date")
                         .HasColumnType("date");
 
@@ -478,6 +512,11 @@ namespace Portfolio.Data.Migrations
                     b.Property<string>("AuthorTitle")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<bool>("Featured")
                         .HasColumnType("bit");

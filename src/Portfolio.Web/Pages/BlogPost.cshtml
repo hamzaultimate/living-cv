@@ -85,11 +85,11 @@ else
         </header>
         @if (!string.IsNullOrWhiteSpace(post.Cover))
         {
-            <img src="@post.Cover" alt="@post.Title" width="1200" height="630"
+            <img src="@post.Cover" alt="@(string.IsNullOrWhiteSpace(post.CoverAlt) ? post.Title : post.CoverAlt)" width="1200" height="630"
                  class="mt-8 aspect-video w-full max-w-2xl rounded-lg border border-border object-cover" />
         }
         <div class="article mt-10 max-w-2xl">
-            @Html.Raw(Md.ToHtml(post.BodyMarkdown))
+            @Html.Raw(SafeMd.ToHtml(post.BodyMarkdown))
         </div>
     </article>
 }

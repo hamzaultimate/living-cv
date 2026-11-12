@@ -314,8 +314,10 @@ static async Task MigrateAndSeedAsync(WebApplication app)
         await db.Database.MigrateAsync(cts.Token);
         var seedDir = Path.Combine(AppContext.BaseDirectory, "Seed");
         // The onboarding wizard owns the demo content of a new install and of a site it has finished (see FirstRun).
-        await FirstRun.SeedAtStartupAsync(db, seedDir, seedMode, scope.ServiceProvider.GetRequiredService<SetupKeyGate>().IsConfigured, app.Logger, cts.Token);
+        var seeded = await FirstRun.SeedAtStartupDetailedAsync(db, seedDir, seedMode, scope.ServiceProvider.GetRequiredService<SetupKeyGate>().IsConfigured, app.Logger, cts.Token);
         await scope.ServiceProvider.GetRequiredService<ISiteProfileProvider>().GetAsync(cts.Token);
+        // A new install has no profile row until the line above creates it, so the pass is recorded now.
+        if (seeded.Complete) await FirstRun.MarkContentSeededAsync(db, cts.Token);
         app.Logger.LogInformation("Database migrated and seeded.");
     }
     catch (Exception ex)

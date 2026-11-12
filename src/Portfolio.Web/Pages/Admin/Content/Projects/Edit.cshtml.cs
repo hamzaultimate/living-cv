@@ -123,6 +123,7 @@ public class EditModel : ContentPageModel
             Project row;
             if (id is null)
             {
+                await Writer.BeginOrderChangeAsync(Section, ct); // see Experiences/Edit: serialises with other order changes
                 row = new Project
                 {
                     Title = title!, Slug = slug!, Summary = summary!, ConcurrencyStamp = ContentEditor.NewStamp(),
@@ -168,7 +169,7 @@ public class EditModel : ContentPageModel
             {
                 Writer.DiscardUpload(newHeroUrl);
                 if (outcome == SaveOutcome.Duplicate) c.Error(nameof(Form.Slug), SlugTakenMessage(slug!));
-                else AddConflict();
+                else AddConflict(id is null);
                 return Page();
             }
 

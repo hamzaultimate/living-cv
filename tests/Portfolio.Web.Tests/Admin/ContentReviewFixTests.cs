@@ -65,16 +65,17 @@ public class ContentReviewFixTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        await ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields("A Co", "First"));
+        // New entries go to the top, so the list reads First, Second when they are created in the reverse order.
         await ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields("B Co", "Second"));
+        await ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields("A Co", "First"));
         List<Experience> Rows() { using var db = app.CreateDbContext(); return db.Experiences.AsNoTracking().OrderBy(x => x.SortOrder).ToList(); }
         var rows = Rows();
         var path = $"{ContentFlow.Experience}/edit/{rows[1].Id}";
         var openForm = await ContentFlow.StampAsync(owner, path);
 
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={rows[0].Id}", new Dictionary<string, string> { ["direction"] = "down" }, ContentFlow.Experience);
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, rows[0].Id, "down");
 
-        Assert.Equal(rows.Select(r => r.ConcurrencyStamp), Rows().OrderBy(r => r.Id).Select(r => r.ConcurrencyStamp)); // positions changed, stamps did not
+        Assert.Equal(rows.OrderBy(r => r.Id).Select(r => r.ConcurrencyStamp), Rows().OrderBy(r => r.Id).Select(r => r.ConcurrencyStamp)); // positions changed, stamps did not
         var fields = ContentFlow.RoleFields("B Co", "Second, edited");
         fields["Form.Stamp"] = openForm;
         Assert.Equal(HttpStatusCode.Redirect, (await ContentFlow.PostAsync(owner, path, fields)).StatusCode);
@@ -100,7 +101,8 @@ public class ContentReviewFixTests
         }
 
         // The real editor; a conflict returns before it touches the caches, so no profile editor is needed here.
-        var outcome = await new Portfolio.Web.Services.ContentEditor(db, null!, null!).MoveAsync(scope, ids[0], 1, default);
+        var editor = new Portfolio.Web.Services.ContentEditor(db, null!, null!);
+        var outcome = await editor.MoveAsync("experience", scope, ids[0], 1, await editor.ListStampAsync("experience", default), default);
 
         Assert.Equal(Portfolio.Web.Services.SaveOutcome.Conflict, outcome);
     }

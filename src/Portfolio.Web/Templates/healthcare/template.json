@@ -108,6 +108,58 @@
           "hidden": true
         }
       }
+    },
+    "talks": {
+      "itemLabel": "Presentation",
+      "fields": {
+        "title": {
+          "label": "Presentation title",
+          "hint": "Plain text. No patient information."
+        },
+        "event": {
+          "label": "Meeting or conference"
+        },
+        "typeVideo": {
+          "label": "Recording"
+        },
+        "typeTalk": {
+          "label": "Live presentation"
+        },
+        "youtubeId": {
+          "hidden": true
+        }
+      }
+    },
+    "testimonials": {
+      "itemLabel": "Reference",
+      "fields": {
+        "quote": {
+          "label": "Reference text",
+          "hint": "Plain text. Only with the referee's permission, and never any patient information."
+        },
+        "author": {
+          "label": "Referee"
+        },
+        "authorTitle": {
+          "label": "Referee's role and workplace"
+        }
+      }
+    },
+    "blog": {
+      "itemLabel": "Article",
+      "fields": {
+        "title": {
+          "label": "Article title",
+          "hint": "Plain text. No patient information."
+        },
+        "body": {
+          "label": "Article text",
+          "hint": "Markdown. Raw HTML is shown as text, not run. Describe cases only in aggregate or fully anonymised. Never include patient information."
+        },
+        "cover": {
+          "hint": "JPEG, PNG or WebP. Never use a photograph that could identify a patient, relative or colleague."
+        }
+      }
     }
   },
   "starter": { "file": "starter.json" },

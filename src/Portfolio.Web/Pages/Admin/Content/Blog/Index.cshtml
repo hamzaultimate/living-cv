@@ -1,0 +1,7 @@
+@page "/admin/content/blog"
+@model Portfolio.Web.Pages.Admin.Content.Blog.IndexModel
+@{
+    ViewData["Title"] = Model.View.SectionLabel;
+}
+<partial name="_List" model="Model" />
+<p class="adm-hint">@Model.Published published and @Model.Drafts @(Model.Drafts == 1 ? "draft" : "drafts"). The public page lists published entries newest first by their @Model.View.Label("date").ToLowerInvariant(), so there is no manual order. A draft is not shown anywhere on your site.</p>

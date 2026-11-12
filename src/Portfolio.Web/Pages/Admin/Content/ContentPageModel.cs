@@ -51,6 +51,12 @@ public interface IContentList
     EditorView View { get; }
     string ListUrl { get; }
     int Count { get; }
+
+    /// <summary>False for a section whose public order comes from the entries themselves (a date), so a manual order would change nothing: the list then has no Move buttons.</summary>
+    bool CanReorder { get; }
+
+    /// <summary>The stamp of the list as loaded; every Move button posts it back.</summary>
+    string ListStamp { get; }
     IReadOnlyList<ListGroup> Groups { get; }
 }
 
@@ -109,6 +115,9 @@ public abstract class ContentPageModel : AdminPageModel
         };
     }
 
+    /// <summary>Shown when a new entry was refused because another write changed the order of the list at the same moment (nothing was saved; the input is kept).</summary>
+    public const string OrderRaceMessage = "The list changed while saving, so nothing was saved. Press Save again.";
+
     protected IActionResult ListWithError(string message)
     {
         FlashError(message);
@@ -116,9 +125,10 @@ public abstract class ContentPageModel : AdminPageModel
     }
 
     /// <summary>The page the owner sees again after a refused save: the same form with their input and a message that says nothing was written.</summary>
-    protected void AddConflict()
+    protected void AddConflict(bool newEntry = false)
     {
-        ModelState.AddModelError(string.Empty, ConflictMessage);
+        // A new entry has no earlier copy to be stale against: it is refused only because the order of the list changed under it.
+        ModelState.AddModelError(string.Empty, newEntry ? OrderRaceMessage : ConflictMessage);
         ViewData["Conflict"] = true;
     }
 }
@@ -126,7 +136,7 @@ public abstract class ContentPageModel : AdminPageModel
 /// <summary>A list screen: the entries of one section in their public order, with Move up and Move down buttons.</summary>
 // The only post is a button press; anything much larger is not from this page.
 [BodyLimit(16 * 1024)]
-public abstract class ContentListModel<T> : ContentPageModel, IContentList where T : class, IOrderedContent
+public abstract class ContentListModel<T> : ContentPageModel, IContentList where T : class, IStampedContent
 {
     protected ContentListModel(PortfolioDbContext db, ContentEditor content, RequestTemplate template) : base(db, content, template) { }
 
@@ -135,18 +145,27 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
     protected virtual string? GroupOf(T row) => null;
     protected abstract string Describe(T row);
 
+    /// <summary>Override with false when the public page orders the entries itself (by date); there is then nothing for Move to do.</summary>
+    protected virtual bool Reorderable => true;
+
+    public bool CanReorder => Reorderable;
+
     public int Count { get; private set; }
+    public string ListStamp { get; private set; } = ContentEditor.InitialListStamp;
     public IReadOnlyList<ListGroup> Groups { get; private set; } = [];
 
-    public async Task OnGetAsync(CancellationToken ct)
+    public virtual async Task OnGetAsync(CancellationToken ct)
     {
         await LoadViewAsync();
+        // Read before the rows: if the order changes in between, the stamp is the older one and a move from this page is refused rather than applied to a list it did not show.
+        ListStamp = await Writer.ListStampAsync(Section, ct);
         await BuildAsync(ct);
     }
 
-    public async Task<IActionResult> OnPostMoveAsync(int id, string? direction, CancellationToken ct)
+    public async Task<IActionResult> OnPostMoveAsync(int id, string? direction, string? listStamp, CancellationToken ct)
     {
         await LoadViewAsync();
+        if (!Reorderable) return ListWithError($"The {View.SectionLabel.ToLowerInvariant()} list is ordered automatically, so it cannot be reordered by hand.");
         var delta = direction switch { "up" => -1, "down" => 1, _ => 0 };
         if (delta == 0) return ListWithError("Choose up or down.");
 
@@ -154,8 +173,8 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
         var row = rows.FirstOrDefault(r => r.Id == id);
         if (row is null) return ListWithError($"That {View.ItemLabelLower} no longer exists.");
 
-        var scope = rows.Where(r => GroupOf(r) == GroupOf(row)).ToList();
-        var outcome = await Writer.MoveAsync(scope, id, delta, ct);
+        var scope = rows.Where(r => GroupOf(r) == GroupOf(row)).Cast<IOrderedContent>().ToList();
+        var outcome = await Writer.MoveAsync(Section, scope, id, delta, listStamp, ct);
         if (outcome != SaveOutcome.Saved) return ListWithError("The list was changed somewhere else, so it was not reordered. It is shown again as it is now.");
 
         // The fragment keeps a keyboard user at the row they just moved (the browser starts tabbing from it) instead of at the top of the page.
@@ -170,7 +189,8 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
         var groups = new List<ListGroup>();
         foreach (var set in rows.GroupBy(GroupOf))
         {
-            var list = set.OrderBy(r => r.SortOrder).ThenBy(r => r.Id).ToList();
+            // A list with a manual order is sorted by position; one the public page orders itself keeps the order of its query.
+            var list = Reorderable ? set.Cast<IOrderedContent>().OrderBy(r => r.SortOrder).ThenBy(r => r.Id).Cast<T>().ToList() : set.ToList();
             groups.Add(new ListGroup(set.Key, list.Select((r, i) => ToRow(r, i > 0, i < list.Count - 1)).ToList()));
         }
         Groups = OrderGroups(groups);
@@ -181,7 +201,7 @@ public abstract class ContentListModel<T> : ContentPageModel, IContentList where
 
 /// <summary>A confirmation page: GET shows what will be removed, POST removes it.</summary>
 [BodyLimit(16 * 1024)]
-public abstract class ContentDeleteModel<T> : ContentPageModel, IContentDelete where T : class, IOrderedContent
+public abstract class ContentDeleteModel<T> : ContentPageModel, IContentDelete where T : class, IStampedContent
 {
     protected ContentDeleteModel(PortfolioDbContext db, ContentEditor content, RequestTemplate template) : base(db, content, template) { }
 

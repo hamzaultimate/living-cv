@@ -57,7 +57,7 @@ public class ContentWiringTests
     }
 
     [Fact]
-    public async Task TheHub_ListsFourEditors_WithCountsAndAddLinks()
+    public async Task TheHub_ListsSevenEditors_WithCountsAndAddLinks()
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
@@ -66,12 +66,12 @@ public class ContentWiringTests
 
         var hub = await owner.GetStringAsync("/admin/content");
 
-        foreach (var section in new[] { "experience", "skills", "projects", "certifications" })
+        foreach (var section in new[] { "experience", "skills", "projects", "certifications", "talks", "testimonials", "blog" })
         {
             Assert.Contains($"href=\"/admin/content/{section}\"", hub);
             Assert.Contains($"href=\"/admin/content/{section}/edit\"", hub);
         }
         Assert.Contains("2 entries", hub);
-        Assert.Equal(3, System.Text.RegularExpressions.Regex.Matches(hub, "1 entry").Count);
+        Assert.Equal(6, System.Text.RegularExpressions.Regex.Matches(hub, "1 entry").Count);
     }
 }

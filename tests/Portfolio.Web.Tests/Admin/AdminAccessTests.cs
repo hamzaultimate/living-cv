@@ -73,10 +73,13 @@ public class AdminAccessTests : IClassFixture<AdminApp>
 
         Assert.Equal(
             ["admin", "admin/content",
+             "admin/content/blog", "admin/content/blog/delete/{id:int}", "admin/content/blog/edit/{id:int?}",
              "admin/content/certifications", "admin/content/certifications/delete/{id:int}", "admin/content/certifications/edit/{id:int?}",
              "admin/content/experience", "admin/content/experience/delete/{id:int}", "admin/content/experience/edit/{id:int?}",
              "admin/content/projects", "admin/content/projects/delete/{id:int}", "admin/content/projects/edit/{id:int?}", "admin/content/projects/images/{id:int}",
              "admin/content/skills", "admin/content/skills/delete/{id:int}", "admin/content/skills/edit/{id:int?}",
+             "admin/content/talks", "admin/content/talks/delete/{id:int}", "admin/content/talks/edit/{id:int?}",
+             "admin/content/testimonials", "admin/content/testimonials/delete/{id:int}", "admin/content/testimonials/edit/{id:int?}",
              "admin/login", "admin/logout", "admin/photo", "admin/profile", "admin/template",
              "admin/welcome", "admin/welcome/basics", "admin/welcome/draft-photo", "admin/welcome/photo", "admin/welcome/review", "admin/welcome/thumb/{key}"],
             routes);

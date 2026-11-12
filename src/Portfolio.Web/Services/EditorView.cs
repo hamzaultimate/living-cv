@@ -46,6 +46,9 @@ public sealed class EditorView
         SectionRegistry.Skills => "Skill",
         SectionRegistry.Projects => "Entry",
         SectionRegistry.Certifications => "Credential",
+        SectionRegistry.Talks => "Talk",
+        SectionRegistry.Testimonials => "Testimonial",
+        SectionRegistry.Blog => "Post",
         _ => "Entry",
     };
 

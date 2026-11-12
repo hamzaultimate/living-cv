@@ -122,8 +122,8 @@ the button that opens an image; a caption is appended) and `imageAlt` (alt text 
 > error, and the site falls back to the default template for any profile that named it. Add the block (and ideally `theme.accents`
 > and a `preview.png`) before upgrading.
 
-`editor` is optional and shapes the admin content editors (`/admin/content`: experience, skills, projects, certifications). Anything it
-leaves out uses the neutral wording in `EditorFields`, so a template only needs to say what differs. For each of the four sections:
+`editor` is optional and shapes the admin content editors (`/admin/content`: experience, skills, projects, certifications, talks, testimonials, blog). Anything it
+leaves out uses the neutral wording in `EditorFields`, so a template only needs to say what differs. For each of the seven sections:
 
 | Setting | Effect |
 |---|---|
@@ -135,8 +135,10 @@ leaves out uses the neutral wording in `EditorFields`, so a template only needs 
 Field keys are a closed list (a typo or unknown key fails validation): `experience`: `company`, `title`, `start`, `end`, `current`,
 `summary`, `highlights`, `tech`; `skills`: `name`, `group`; `projects`: `title`, `slug`, `role`, `org`, `period`, `summary`, `category`, `problem`,
 `approach`, `impact`, `tech`, `links`, `featured`, `heroImage`, `screenshots`; `certifications`: `name`, `issuer`, `status`, `date`, `category`,
-`credentialUrl`, `certificateUrl`, `badgeImageUrl`. Fields an entry cannot exist without (`company`, `title`, `start`, `summary`; `name`, `group`;
-`title`, `slug`, `summary`; `name`, `issuer`, `status`) can be relabelled but not hidden. Some labels already come from `copy`: a project's
+`credentialUrl`, `certificateUrl`, `badgeImageUrl`; `talks`: `title`, `type`, `event`, `date`, `youtubeId`, `url`; `testimonials`: `quote`, `author`,
+`authorTitle`, `sourceUrl`; `blog`: `title`, `slug`, `description`, `date`, `tags`, `cover`, `body`, `draft`. Fields an entry cannot exist without (`company`, `title`, `start`, `summary`; `name`, `group`;
+`title`, `slug`, `summary`; `name`, `issuer`, `status`; `title`; `quote`, `author`; `title`, `slug`, `date`, `body`, `draft`) can be relabelled but not hidden. (`talks` also has the wording-only keys `typeVideo` and `typeTalk` for the two choices of its type field.) The talks list has no manual order (the public page
+lists talks newest first by `date`), the testimonials list does. Some labels already come from `copy`: a project's
 `problem`, `approach`, `tech`, `links` and `screenshots` fields default to `copy.projects` headings, and a certification's status options
 are `copy.certifications.statusEarned`, `statusInProgress` and `statusPlanned`, so a template that words those correctly needs no `editor`
 entry for them. Sensitive templates (`sensitive: true`) have their `guidance` shown on every editor. The section's label and

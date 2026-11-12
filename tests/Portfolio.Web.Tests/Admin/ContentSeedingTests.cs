@@ -17,7 +17,7 @@ public class ContentSeedingTests
         return await FirstRun.SeedAtStartupAsync(db, SeedDir, SeedMode.IfEmpty, keyConfigured);
     }
 
-    /// <summary>Removes every row of the four content tables through the confirmation pages, the way an owner would.</summary>
+    /// <summary>Removes every row of the content tables through the confirmation pages, the way an owner would.</summary>
     private static async Task RemoveEverythingAsync(AdminApp app, HttpClient owner)
     {
         using var db = app.CreateDbContext();
@@ -25,6 +25,9 @@ public class ContentSeedingTests
             .Concat((await db.Skills.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Skills}/delete/{i}"))
             .Concat((await db.Projects.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Projects}/delete/{i}"))
             .Concat((await db.Certifications.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Certifications}/delete/{i}"))
+            .Concat((await db.Talks.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Talks}/delete/{i}"))
+            .Concat((await db.Testimonials.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Testimonials}/delete/{i}"))
+            .Concat((await db.BlogPosts.Select(x => x.Id).ToListAsync()).Select(i => $"{ContentFlow.Blog}/delete/{i}"))
             .ToList();
         foreach (var path in targets)
         {
@@ -87,21 +90,28 @@ public class ContentSeedingTests
     }
 
     [Fact]
-    public async Task ASiteThatExistedBeforeTheWizard_KeepsTheOldStartUpBehaviour_AnEmptiedTableIsSeededAgain()
+    public async Task ASiteThatExistedBeforeTheWizard_SeedsItsFirstPassAsBefore_ThenKeepsWhatTheOwnerDeletes()
     {
-        // Documented limit: a site the wizard never finished (outcome empty) seeds an empty table at start-up, as it always did.
+        // A site the wizard never finished (outcome empty, no seeding marker yet) seeds an empty table at its first start-up pass, as it always did;
+        // once that pass has finished it is pinned like a wizard site (LegacySeedPinTests replays every table).
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
         using (var db = app.CreateDbContext())
         {
-            (await db.SiteProfiles.SingleAsync()).OnboardingOutcome = null; // what the migration leaves on an existing site
+            var profile = await db.SiteProfiles.SingleAsync();
+            profile.OnboardingOutcome = null; // what the migration leaves on an existing site
+            profile.ContentSeededAt = null;
             await db.SaveChangesAsync();
         }
         Assert.Equal(0, await ContentFlow.CountAsync(app));
 
         Assert.True(await RestartAsync(app, keyConfigured: false));
-
         Assert.True(await ContentFlow.CountAsync(app) > 0);
+
+        await RemoveEverythingAsync(app, owner);
+        Assert.False(await RestartAsync(app, keyConfigured: false));
+        Assert.False(await RestartAsync(app));
+        Assert.Equal(0, await ContentFlow.CountAsync(app));
     }
 
     [Fact]

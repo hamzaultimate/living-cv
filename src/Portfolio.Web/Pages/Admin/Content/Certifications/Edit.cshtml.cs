@@ -94,6 +94,7 @@ public class EditModel : ContentPageModel
         Certification row;
         if (id is null)
         {
+            await Writer.BeginOrderChangeAsync(Section, ct); // see Experiences/Edit: serialises with other order changes
             row = new Certification
             {
                 Name = name!, Issuer = issuer!, Status = status, ConcurrencyStamp = ContentEditor.NewStamp(),
@@ -121,7 +122,7 @@ public class EditModel : ContentPageModel
         var outcome = await Writer.CommitAsync(ct);
         if (outcome != SaveOutcome.Saved)
         {
-            AddConflict();
+            AddConflict(id is null);
             return Page();
         }
 

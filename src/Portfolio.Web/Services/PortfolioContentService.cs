@@ -68,16 +68,16 @@ public class PortfolioContentService
         QueryAsync(db => db.Certifications.OrderBy(c => c.SortOrder).ToListAsync(), new List<Certification>());
 
     public Task<List<BlogPost>> GetBlogPostsAsync() =>
-        QueryAsync(db => db.BlogPosts.Where(b => !b.Draft).OrderByDescending(b => b.Date).ToListAsync(), new List<BlogPost>());
+        QueryAsync(db => db.BlogPosts.Where(b => !b.Draft).OrderByDescending(b => b.Date).ThenBy(b => b.Id).ToListAsync(), new List<BlogPost>());
 
     public Task<BlogPost?> GetBlogPostAsync(string slug) =>
         QueryAsync(db => db.BlogPosts.FirstOrDefaultAsync(b => b.Slug == slug && !b.Draft), (BlogPost?)null);
 
     public Task<List<Talk>> GetTalksAsync() =>
-        QueryAsync(db => db.Talks.OrderByDescending(t => t.Date).ToListAsync(), new List<Talk>());
+        QueryAsync(db => db.Talks.OrderByDescending(t => t.Date).ThenBy(t => t.SortOrder).ThenBy(t => t.Id).ToListAsync(), new List<Talk>());
 
     public Task<List<Testimonial>> GetTestimonialsAsync() =>
-        QueryAsync(db => db.Testimonials.OrderBy(t => t.SortOrder).ToListAsync(), new List<Testimonial>());
+        QueryAsync(db => db.Testimonials.OrderBy(t => t.SortOrder).ThenBy(t => t.Id).ToListAsync(), new List<Testimonial>());
 
     /// <summary>The CV for <paramref name="site"/>: only the sections its template has enabled, in the template's wording.
     /// Pass <paramref name="view"/> to use a template other than the saved one (an owner preview).</summary>

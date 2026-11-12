@@ -2,6 +2,7 @@ using System.Net;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using Portfolio.Data.Entities;
+using Portfolio.Web.Services;
 using Portfolio.Web.Tests.Support;
 using Xunit;
 
@@ -64,11 +65,12 @@ public class ExperienceEditorTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("A Co", "First"));
+        // New entries go to the top, so the list reads First, Second when they are created in the reverse order.
         await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("B Co", "Second"));
+        await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("A Co", "First"));
         var first = (await RowsAsync(app)).First().Id;
 
-        var move = await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={first}", new Dictionary<string, string> { ["direction"] = "down" }, ContentFlow.Experience);
+        var move = await ContentFlow.MoveAsync(owner, ContentFlow.Experience, first, "down");
 
         Assert.Equal($"/admin/content/experience#row-{first}", move.Headers.Location!.OriginalString);
         Assert.Contains("Moved First at A Co down.", await owner.GetStringAsync(ContentFlow.Experience));
@@ -79,8 +81,9 @@ public class ExperienceEditorTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("A Co", "First"));
+        // New entries go to the top, so the list reads First, Second when they are created in the reverse order.
         await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("B Co", "Second"));
+        await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("A Co", "First"));
         var rows = await RowsAsync(app);
         var path = $"{Edit}/{rows[0].Id}";
         var stamp = await ContentFlow.StampAsync(owner, path);
@@ -116,16 +119,16 @@ public class ExperienceEditorTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        foreach (var name in new[] { "First", "Second", "Third" })
+        foreach (var name in new[] { "Third", "Second", "First" })
             await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields(name + " Co", name));
         var ids = (await RowsAsync(app)).Select(r => r.Id).ToList();
 
-        var down = await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={ids[0]}", new Dictionary<string, string> { ["direction"] = "down" }, ContentFlow.Experience);
+        var down = await ContentFlow.MoveAsync(owner, ContentFlow.Experience, ids[0], "down");
         Assert.Equal(HttpStatusCode.Redirect, down.StatusCode);
         Assert.Equal(["Second", "First", "Third"], (await RowsAsync(app)).Select(r => r.Title));
         Assert.Equal([1, 2, 3], (await RowsAsync(app)).Select(r => r.SortOrder));
 
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={ids[2]}", new Dictionary<string, string> { ["direction"] = "up" }, ContentFlow.Experience);
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, ids[2], "up");
         Assert.Equal(["Second", "Third", "First"], (await RowsAsync(app)).Select(r => r.Title));
 
         var page = await app.NewClient().GetStringAsync("/experience");
@@ -133,19 +136,110 @@ public class ExperienceEditorTests
         Assert.True(page.IndexOf("Third Co", StringComparison.Ordinal) < page.IndexOf("First Co", StringComparison.Ordinal));
     }
 
+    private static int At(string html, string text) { var i = html.IndexOf(text, StringComparison.Ordinal); Assert.True(i >= 0, $"{text} is not on the page"); return i; }
+
+    [Fact]
+    public async Task ANewRole_InAnEmptyList_TakesTheFirstPosition()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+
+        await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("Only Co", "Only"));
+
+        Assert.Equal(1, Assert.Single(await RowsAsync(app)).SortOrder);
+    }
+
+    [Fact]
+    public async Task ANewRole_IsInsertedAtTheTop_OfTheAdminList_ThePublicPage_AndTheCv_WithoutTouchingTheRowsAlreadyThere()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        using (var db = app.CreateDbContext())
+        {
+            // Rows as the seeder writes them (positions 1..3, no stamp) and one the editor wrote.
+            db.Experiences.AddRange(
+                new Experience { Company = "Old A", Title = "Oldest", Start = "2010", End = "2012", Summary = "s", SortOrder = 1 },
+                new Experience { Company = "Old B", Title = "Middle", Start = "2013", End = "2015", Summary = "s", SortOrder = 2 },
+                new Experience { Company = "Old C", Title = "Recent", Start = "2016", End = "2018", Summary = "s", SortOrder = 3, ConcurrencyStamp = ContentEditor.NewStamp() });
+            await db.SaveChangesAsync();
+        }
+        var before = (await ContentFlow.SnapshotAsync(app)).Split('\n').ToList();
+
+        var create = await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("New Co", "Newest", "2019", "2022"));
+
+        Assert.Equal(HttpStatusCode.Redirect, create.StatusCode);
+        var rows = await RowsAsync(app);
+        Assert.Equal(["Newest", "Oldest", "Middle", "Recent"], rows.Select(r => r.Title)); // admin order: the new role first, the others as they were
+        Assert.Equal([1, 2, 3], rows.Skip(1).Select(r => r.SortOrder));
+        Assert.True(rows[0].SortOrder < 1);
+        // Every row that was there is byte-for-byte unchanged (position and stamp included): only one row was added.
+        var after = (await ContentFlow.SnapshotAsync(app)).Split('\n').ToList();
+        Assert.Equal(before, after.Where(l => !l.Contains("|Newest|") && !l.StartsWith("L")).ToList()); // the list stamp row (L...) is the one other thing a write may add
+
+        var list = await owner.GetStringAsync(ContentFlow.Experience);
+        Assert.True(At(list, "Newest") < At(list, "Oldest"));
+        Assert.True(At(list, "Oldest") < At(list, "Middle") && At(list, "Middle") < At(list, "Recent"));
+        var client = app.NewClient();
+        foreach (var path in new[] { "/experience", "/cv" })
+        {
+            var page = await client.GetStringAsync(path);
+            Assert.True(At(page, "New Co") < At(page, "Old A"), $"{path}: the new role is not first");
+            Assert.True(At(page, "Old A") < At(page, "Old B") && At(page, "Old B") < At(page, "Old C"), $"{path}: the existing order changed");
+        }
+    }
+
+    [Fact]
+    public async Task EachNewRole_GoesAboveThePreviousOnes_AndTheDemoPersonaKeepsItsOrder()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        using (var db = app.CreateDbContext()) await Portfolio.Data.Seeding.PortfolioSeeder.SeedAsync(db, Path.Combine(AppContext.BaseDirectory, "Seed"));
+        var demo = await RowsAsync(app);
+        Assert.True(demo.Count >= 2);
+
+        await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("First Co", "First added"));
+        await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("Second Co", "Second added"));
+
+        var rows = await RowsAsync(app);
+        Assert.Equal(["Second added", "First added"], rows.Take(2).Select(r => r.Title));
+        Assert.Equal(demo.Select(r => r.Id), rows.Skip(2).Select(r => r.Id));
+        Assert.Equal(demo.Select(r => r.SortOrder), rows.Skip(2).Select(r => r.SortOrder));
+        var page = await app.NewClient().GetStringAsync("/experience");
+        Assert.True(At(page, "Second Co") < At(page, "First Co") && At(page, "First Co") < At(page, demo[0].Company));
+    }
+
+    [Fact]
+    public async Task AfterANewRoleIsInsertedAtTheTop_MovingStillSwapsNeighboursAndTidiesThePositions()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        foreach (var name in new[] { "Third", "Second", "First" })
+            await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields(name + " Co", name));
+        var ids = (await RowsAsync(app)).Select(r => r.Id).ToList();
+        Assert.Equal(["First", "Second", "Third"], (await RowsAsync(app)).Select(r => r.Title));
+
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, ids[0], "down");
+        Assert.Equal(["Second", "First", "Third"], (await RowsAsync(app)).Select(r => r.Title));
+        Assert.Equal([1, 2, 3], (await RowsAsync(app)).Select(r => r.SortOrder));
+
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, ids[0], "up");
+        Assert.Equal(["First", "Second", "Third"], (await RowsAsync(app)).Select(r => r.Title));
+    }
+
     [Fact]
     public async Task MovingTheFirstRowUp_OrTheLastDown_ChangesNothing()
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("A Co", "First"));
+        // New entries go to the top, so the list reads First, Second when they are created in the reverse order.
         await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("B Co", "Second"));
+        await ContentFlow.PostAsync(owner, Edit, ContentFlow.RoleFields("A Co", "First"));
         var rows = await RowsAsync(app);
         var before = await ContentFlow.SnapshotAsync(app);
 
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={rows[0].Id}", new Dictionary<string, string> { ["direction"] = "up" }, ContentFlow.Experience);
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={rows[1].Id}", new Dictionary<string, string> { ["direction"] = "down" }, ContentFlow.Experience);
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={rows[1].Id}", new Dictionary<string, string> { ["direction"] = "sideways" }, ContentFlow.Experience);
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, rows[0].Id, "up");
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, rows[1].Id, "down");
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, rows[1].Id, "sideways");
         await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id=99999", new Dictionary<string, string> { ["direction"] = "up" }, ContentFlow.Experience);
 
         Assert.Equal(before, await ContentFlow.SnapshotAsync(app));
@@ -166,7 +260,7 @@ public class ExperienceEditorTests
         }
         var ids = (await RowsAsync(app)).Select(r => r.Id).ToList();
 
-        await ContentFlow.PostAsync(owner, $"{ContentFlow.Experience}?handler=Move&id={ids[2]}", new Dictionary<string, string> { ["direction"] = "up" }, ContentFlow.Experience);
+        await ContentFlow.MoveAsync(owner, ContentFlow.Experience, ids[2], "up");
 
         Assert.Equal(["One", "Three", "Two"], (await RowsAsync(app)).Select(r => r.Title));
         Assert.Equal([1, 2, 3], (await RowsAsync(app)).Select(r => r.SortOrder));

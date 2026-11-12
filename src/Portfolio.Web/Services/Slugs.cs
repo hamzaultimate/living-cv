@@ -29,7 +29,7 @@ public static partial class Slugs
 
     /// <summary>A URL-safe name for <paramref name="title"/>: accents folded to plain letters, everything else that is not a letter or digit
     /// becomes a hyphen. Never empty and never reserved.</summary>
-    public static string From(string? title)
+    public static string From(string? title, string fallback = "project")
     {
         var sb = new StringBuilder();
         foreach (var c in (title ?? "").Normalize(NormalizationForm.FormD))
@@ -40,7 +40,7 @@ public static partial class Slugs
         }
         var slug = sb.ToString().Trim('-');
         if (slug.Length > GeneratedLength) slug = slug[..GeneratedLength].TrimEnd('-');
-        if (slug.Length == 0) slug = "project";
+        if (slug.Length == 0) slug = fallback;
         return IsReserved(slug) ? slug + "-1" : slug;
     }
 

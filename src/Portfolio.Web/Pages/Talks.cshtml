@@ -28,7 +28,7 @@
             @foreach (var t in talks)
             {
                 <article class="card">
-                    @if (!string.IsNullOrWhiteSpace(t.YoutubeId))
+                    @if (ContentRules.IsYoutubeId(t.YoutubeId))
                     {
                         <div class="aspect-video overflow-hidden rounded-md border border-border">
                             <iframe class="h-full w-full" src="https://www.youtube-nocookie.com/embed/@t.YoutubeId"

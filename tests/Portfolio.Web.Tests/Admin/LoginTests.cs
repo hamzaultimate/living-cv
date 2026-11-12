@@ -124,6 +124,33 @@ public class LoginTests
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    public static IEnumerable<object[]> IncompleteForms() => new[]
+    {
+        new Dictionary<string, string>(),
+        new Dictionary<string, string> { ["UserName"] = "" , ["Password"] = "" },
+        new Dictionary<string, string> { ["UserName"] = AdminApp.UserName },
+        new Dictionary<string, string> { ["Password"] = AdminApp.Password },
+    }.Select(d => new object[] { d });
+
+    [Theory]
+    [MemberData(nameof(IncompleteForms))]
+    public async Task Login_TreatsMissingOrEmptyFieldsAsAFailedSignIn_NotAServerError(Dictionary<string, string> fields)
+    {
+        var (app, client) = await OwnerWithoutSessionAsync();
+        using var _ = app;
+        var anonymous = app.NewClient();
+        var reference = await AdminApp.SignInAsync(anonymous, password: "not the right password");
+
+        var token = await AdminApp.GetTokenAsync(anonymous, "/admin/login");
+        var response = await AdminApp.PostFormAsync(anonymous, "/admin/login", token, fields);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(AlertText(await reference.Content.ReadAsStringAsync()), AlertText(await response.Content.ReadAsStringAsync()));
+        Assert.False(response.Headers.Contains("Set-Cookie") && response.Headers.GetValues("Set-Cookie").Any(c => c.Contains("lcv-admin")));
+        // Nothing was counted against the account: the owner can still sign in straight afterwards.
+        Assert.Equal(HttpStatusCode.Redirect, (await AdminApp.SignInAsync(app.NewClient())).StatusCode);
+    }
+
     [Fact]
     public async Task Login_RefusesAnOversizedPasswordWithoutLockingOrErroring()
     {

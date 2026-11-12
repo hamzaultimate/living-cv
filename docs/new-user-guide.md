@@ -24,7 +24,8 @@ dotnet run --project src/Portfolio.Web
 The first run will:
 
 - apply EF Core migrations
-- seed the demo content into any empty table (existing rows are never changed). The one exception is a new
+- seed the demo content into any empty table (existing rows are never changed) on the first start only; after that first
+  pass has finished, a table you empty stays empty. The one exception is a new
   install that can still be claimed (a `Setup:Key` is set and the setup wizard is not finished): there the demo
   content waits for the wizard, so "start blank" really is blank (see "First run" below)
 - launch over HTTPS by default at a local URL such as `https://localhost:7239`
@@ -98,8 +99,12 @@ stay. Delete them yourself, or start the install with the key set from the begin
 restart would refill a blank site with the demo content.
 
 **Restarts.** Once the wizard has been published or skipped, the app never again seeds demo content at start-up, so a
-blank site stays blank (only the choices above load demo content). Sites that existed before the wizard, installs with
-no `Setup:Key` and no owner, and `Seed:Mode=Authoritative` seed exactly as before.
+blank site stays blank (only the choices above load demo content). Sites that existed before the wizard and installs with
+no `Setup:Key` and no owner seed exactly as before on their first start-up pass, then record that the pass finished and are
+pinned the same way (an emptied table stays empty). `Seed:Mode=Authoritative` is the explicit opt-in that keeps seeding as
+configured at every start. One caveat for a site upgraded to this version: it cannot be told apart from one that has never
+been seeded, so if you had already emptied a section on the old version, the first start after the upgrade fills it once
+more; delete it again and it stays empty. A seed file you deleted on purpose is treated as an intentionally empty table and does not hold anything back. A seed file that is present but broken, or a missing seed folder, means the start does not count as finished (the site stays unpinned); fix it and the next start completes the job.
 
 The site address on the review step is prefilled from the address the request arrived at. Behind a reverse proxy that
 can be an internal host name: check it before publishing (or configure forwarded headers as described above).
@@ -141,9 +146,9 @@ applies to all visitors together.
 ### Managing your content
 
 Once the wizard has run (or you skipped it), everything the site shows besides your profile is edited in the
-browser under **Content** (`/admin/content`). There are four editors, named in your template's words (Software & IT says
-experience, skills, work and certifications; Healthcare says clinical experience, clinical skills, research & initiatives
-and licences & registrations):
+browser under **Content** (`/admin/content`). There are seven editors, named in your template's words (Software & IT says
+experience, skills, work, certifications, talks, testimonials and blog; Healthcare says clinical experience, clinical skills, research & initiatives,
+licences & registrations, presentations, references and articles):
 
 | Editor | Address | What an entry has |
 |---|---|---|
@@ -151,13 +156,17 @@ and licences & registrations):
 | Skills | `/admin/content/skills` | a name in a group (groups follow the template's order on the site and the CV) |
 | Work (projects) | `/admin/content/projects` | title, web address name, summary, write-up, impact lines, links, a cover image and gallery images |
 | Certifications | `/admin/content/certifications` | name, issuer, status, date, links to the credential, certificate and badge |
+| Talks | `/admin/content/talks` | title, type, event, date, a YouTube video (a link or the video id) and a link. The public page lists talks newest first by date, so this list has no Move buttons |
+| Testimonials | `/admin/content/testimonials` | the quote (plain text), the person, their role and organisation, and a source link. They appear in a block on the home page in the order shown |
+| Blog | `/admin/content/blog` | title, web address name, description, date, tags, a cover image (with alt text), the text in Markdown, and a **draft** box. Posts are listed newest first by date, so there are no Move buttons; each row says Draft or Published |
 
-Each editor lists its entries in the order the public page shows them. You can **add**, **edit**, **remove** and
+Each editor lists its entries in the order the public page shows them (talks: newest first by date). You can **add**, **edit**, **remove** and
 **reorder** them, and a blank site can be built from here alone:
 
 - **Reordering** uses **Move up** and **Move down** buttons beside each entry, so it works with a keyboard and a screen
-  reader. The order is saved as soon as you press one. New entries go to the end of the list (Skills: the end of their
-  group), so move a new role to the top if you list newest first. There is no drag and drop.
+  reader. The order is saved as soon as you press one. If the list was changed somewhere else (another tab, or a
+  save that happened at the same moment), the move is not applied and the list is shown again as it is now. If you add an entry at the very moment the order of the list changes elsewhere, the form stays filled in and asks you to press Save again. Loading sample content in the wizard, or seeding with `Seed:Mode=Authoritative`, does not interfere with this check and cannot leave two entries in one position. A new experience entry goes to the top of the list (so the newest role comes first on the
+  site and the CV); the other sections add new entries at the end of the list (Skills: the end of their group). There is no drag and drop.
 - **Removing** always goes through a confirmation page that says what goes with the entry: the page address of a project
   stops working (it answers "not found"), and the images you uploaded for it are deleted from storage. Removing an entry
   never touches any other entry or section.
@@ -187,11 +196,10 @@ Each editor lists its entries in the order the public page shows them. You can *
 Every save makes the public pages, `sitemap.xml`, the CV (HTML and PDF) and the share image follow at once; there is nothing
 to restart or clear.
 
-**Deleting everything.** Emptying a section really empties it. Once the wizard has been published or skipped the app never
-seeds demo content at start-up again, so a restart does not refill a table you emptied. The exception is a site that
-existed before the wizard: it keeps the older behaviour, so an emptied section is filled again from the seed files at the next
-start, while a section that still has at least one entry is never touched. Pinning those sites too is an open decision in
-the [plan](templates-and-onboarding-plan.md).
+**Deleting everything.** Emptying a section really empties it. Once the wizard has been published or skipped, or (on a site
+that never used the wizard) the first start-up seeding pass has finished, the app never seeds demo content at start-up again,
+so a restart does not refill a table you emptied. Only `Seed:Mode=Authoritative` still seeds as configured, because you asked
+for the seed files to be the source of truth.
 
 **Backups.** Your content is in the database and your uploaded images are in `Uploads:Path`; back up both (a database
 backup alone restores the entries but not the images they point at). A one-file export and import of all content is planned
@@ -290,9 +298,17 @@ address is `/?preview=<template key>` and is marked noindex.
 
 ### Content and pages
 
-Add, edit and reorder experience, skills, work and certifications in the browser at `/admin/content` (see "Managing your
-content" above). Blog posts, talks and testimonials are not editable in the browser yet; they come from the seed files below
-until their editors arrive.
+Add, edit and reorder experience, skills, work, certifications, talks, testimonials and blog posts in the browser at `/admin/content` (see "Managing your
+content" above).
+
+**Blog posts and drafts.** A new post starts as a draft and is dated today. A draft is saved but appears nowhere on your site: not in the list, not at its
+address (which answers "not found"), not in the sitemap, and nowhere else. Untick **Keep as a draft** to publish; tick it again to take the post
+down at once (it is kept). **Preview** shows the text exactly as it will be published and saves nothing (on a new post too). Unlike Talks, the blog does not refuse a second post with the same title: the address name gets a number suffix (`my-post-2`) instead, so give each post its own title if you want them told apart. The text is Markdown: headings, bold,
+italics, lists, quotes, tables, code and links work. **Raw HTML is shown as text, never run**, links must start with http, https or mailto (or be addresses
+on your own site), and pictures must be http, https or on your own site; anything else is shown as plain text. Every link in a post gets `rel="noopener nofollow ugc"` (links to your own pages too); an email address that is turned into a link automatically does not.
+A cover image is re-encoded on upload and needs alt text. The pictures a post uses stay in storage as long as any post still points at them.
+If you keep your own `blog.json` seed file and load it with `Seed:Mode=Authoritative`, the same rules apply when it is shown: raw HTML in it is now escaped as text and its links gain the `rel` above (the shipped posts contain neither, so they look exactly as before); Authoritative seeding also removes posts you wrote in the browser that are not in the file, and the pictures uploaded for them stay in storage unused.
+If your template does not show the blog (Healthcare keeps it off), the editor stays available with a note and nothing is published.
 
 The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed). Each table is seeded only when it is empty, so editing a seed file does not change a database that already has rows. To apply edited seed files to an existing database, set `Seed:Mode` to `Authoritative` (for example `Seed__Mode=Authoritative` as an environment variable): then rows are added, updated, and removed to match the files on every start. Update those JSON files to change:
 
@@ -300,7 +316,7 @@ The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed
 - experience entries
 - skills
 - certifications
-- blog posts
+- blog posts (the shipped ones; yours are edited in the browser)
 - talks
 - testimonials
 

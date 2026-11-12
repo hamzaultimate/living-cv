@@ -58,7 +58,10 @@ public class ContentAccessibilityTests
         var seeded = await ContentFlow.SeedRowsAsync(app);
         var pages = new[]
         {
-            "/admin/content", ContentFlow.Experience, ContentFlow.Skills, ContentFlow.Projects, ContentFlow.Certifications,
+            "/admin/content", ContentFlow.Experience, ContentFlow.Skills, ContentFlow.Projects, ContentFlow.Certifications, ContentFlow.Talks, ContentFlow.Testimonials, ContentFlow.Blog,
+            ContentFlow.Blog + "/edit", $"{ContentFlow.Blog}/edit/{seeded.BlogId}", $"{ContentFlow.Blog}/delete/{seeded.BlogId}",
+            ContentFlow.Talks + "/edit", $"{ContentFlow.Talks}/edit/{seeded.TalkId}", $"{ContentFlow.Talks}/delete/{seeded.TalkId}",
+            ContentFlow.Testimonials + "/edit", $"{ContentFlow.Testimonials}/edit/{seeded.TestimonialId}", $"{ContentFlow.Testimonials}/delete/{seeded.TestimonialId}",
             ContentFlow.Experience + "/edit", $"{ContentFlow.Experience}/edit/{seeded.ExperienceId}", $"{ContentFlow.Experience}/delete/{seeded.ExperienceId}",
             ContentFlow.Skills + "/edit", $"{ContentFlow.Skills}/edit/{seeded.SkillId}", $"{ContentFlow.Skills}/delete/{seeded.SkillId}",
             ContentFlow.Projects + "/edit", $"{ContentFlow.Projects}/edit/{seeded.ProjectId}", $"{ContentFlow.Projects}/delete/{seeded.ProjectId}", $"{ContentFlow.Projects}/images/{seeded.ProjectId}",
@@ -135,8 +138,9 @@ public class ContentAccessibilityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
-        await ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields("A Co", "First"));
+        // New entries go to the top, so the list reads First, Second when they are created in the reverse order.
         await ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields("B Co", "Second"));
+        await ContentFlow.PostAsync(owner, ContentFlow.Experience + "/edit", ContentFlow.RoleFields("A Co", "First"));
 
         var html = await owner.GetStringAsync(ContentFlow.Experience);
 
@@ -164,7 +168,7 @@ public class ContentAccessibilityTests
         Assert.Contains("<a href=\"/admin/content\" aria-current=\"page\">Content</a>", list);
         Assert.Contains("<a href=\"/admin/content\">Content</a>", dashboard);
         Assert.Contains("href=\"/admin/content\"", dashboard);
-        Assert.Contains("Add, edit, reorder and remove your experience, skills, work and certifications.", dashboard);
+        Assert.Contains("Add, edit, reorder and remove your experience, skills, work, certifications, talks, testimonials and blog.", dashboard);
     }
 
     [Fact]

@@ -14,7 +14,11 @@ public static class ContentFlow
     public const string Projects = "/admin/content/projects";
     public const string Certifications = "/admin/content/certifications";
 
-    public static readonly string[] Sections = [Experience, Skills, Projects, Certifications];
+    public const string Talks = "/admin/content/talks";
+    public const string Testimonials = "/admin/content/testimonials";
+    public const string Blog = "/admin/content/blog";
+
+    public static readonly string[] Sections = [Experience, Skills, Projects, Certifications, Talks, Testimonials, Blog];
 
     /// <summary>A site the wizard has published blank in the given template, with the owner signed in.</summary>
     public static async Task<HttpClient> BlankSiteAsync(AdminApp app, string template = "software")
@@ -57,6 +61,25 @@ public static class ContentFlow
         return WebUtility.HtmlDecode(match.Groups[1].Value); // a row written before stamps existed has no value attribute: the browser posts it empty
     }
 
+    private static readonly Regex ListStampPattern = new("name=\"listStamp\"[^>]*value=\"([^\"]*)\"", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>The list stamp the Move buttons of a list page carry, as a browser would post it back.</summary>
+    public static async Task<string> ListStampAsync(HttpClient client, string section)
+    {
+        var html = await client.GetStringAsync(section);
+        var match = ListStampPattern.Match(html);
+        Assert.True(match.Success, $"No list stamp on {section}: the page has no Move button");
+        return WebUtility.HtmlDecode(match.Groups[1].Value);
+    }
+
+    /// <summary>Presses a Move button: loads the list page for its stamp, then posts the move with it.</summary>
+    public static async Task<HttpResponseMessage> MoveAsync(HttpClient client, string section, int id, string direction) =>
+        await MoveWithStampAsync(client, section, id, direction, await ListStampAsync(client, section));
+
+    /// <summary>Posts a move with a stamp the caller already holds (a page that was opened earlier).</summary>
+    public static Task<HttpResponseMessage> MoveWithStampAsync(HttpClient client, string section, int id, string direction, string listStamp) =>
+        PostAsync(client, $"{section}?handler=Move&id={id}", new Dictionary<string, string> { ["direction"] = direction, ["listStamp"] = listStamp }, section);
+
     public static Dictionary<string, string> Fields(params (string Name, string Value)[] pairs) =>
         pairs.ToDictionary(p => p.Name.Contains('.') || p.Name == "Stamp" ? p.Name : "Form." + p.Name, p => p.Value);
 
@@ -75,7 +98,7 @@ public static class ContentFlow
         return await ids(db).OrderBy(x => x).ToListAsync();
     }
 
-    public sealed record Seeded(int ExperienceId, int SkillId, int ProjectId, int CertificationId, string ScreenshotUrl = "");
+    public sealed record Seeded(int ExperienceId, int SkillId, int ProjectId, int CertificationId, string ScreenshotUrl = "", int TalkId = 0, int TestimonialId = 0, int BlogId = 0, int DraftId = 0);
 
     /// <summary>One row in each table, written straight to the database (stamped, like rows the editors write).</summary>
     public static async Task<Seeded> SeedRowsAsync(AdminApp app, bool pairs = false)
@@ -85,6 +108,10 @@ public static class ContentFlow
         var k = new Skill { Name = "Seeding", Group = "Garden", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
         var p = new Project { Title = "Seed Project", Slug = "seed-project", Summary = "A seeded project.", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
         var c = new Certification { Name = "Seed Certificate", Issuer = "Seed Board", Status = CertificationStatus.Earned, Date = "2020", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
+        var draft = new BlogPost { Title = "Seed Draft", Slug = "seed-draft", Date = new DateOnly(2024, 5, 1), Draft = true, BodyMarkdown = "Draft body.", ConcurrencyStamp = ContentEditor.NewStamp() };
+        var talk = new Talk { Title = "Seed Talk", Type = TalkType.Talk, Event = "Seed Conf", Date = new DateOnly(2024, 5, 1), SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
+        var word = new Testimonial { Quote = "Seeded praise that is long enough to be a quote.", Author = "Seed Person", AuthorTitle = "Seed Role", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() };
+        var post = new BlogPost { Title = "Seed Post", Slug = "seed-post", Date = new DateOnly(2024, 4, 1), Description = "A seeded post.", Tags = ["Seed"], Draft = false, BodyMarkdown = "Seed body.", ConcurrencyStamp = ContentEditor.NewStamp() };
         var shot = "/uploads/" + new string('b', 32) + ".jpg";
         if (pairs)
         {
@@ -94,11 +121,14 @@ public static class ContentFlow
                 new Experience { Company = "Second Co", Title = "Second Role", Start = "2021", End = "2022", Summary = "More.", SortOrder = 2, ConcurrencyStamp = ContentEditor.NewStamp() },
                 new Skill { Name = "Second skill", Group = "Garden", SortOrder = 2, ConcurrencyStamp = ContentEditor.NewStamp() },
                 new Project { Title = "Second Project", Slug = "second-project", Summary = "Another.", SortOrder = 2, ConcurrencyStamp = ContentEditor.NewStamp() },
-                new Certification { Name = "Second Certificate", Issuer = "Seed Board", Status = CertificationStatus.Earned, Date = "2021", SortOrder = 2, ConcurrencyStamp = ContentEditor.NewStamp() });
+                new Certification { Name = "Second Certificate", Issuer = "Seed Board", Status = CertificationStatus.Earned, Date = "2021", SortOrder = 2, ConcurrencyStamp = ContentEditor.NewStamp() },
+                new Talk { Title = "Second Talk", Type = TalkType.Video, Event = "Other Conf", Date = new DateOnly(2023, 3, 1), SortOrder = 2, ConcurrencyStamp = ContentEditor.NewStamp() },
+                new Testimonial { Quote = "More seeded praise, also long enough.", Author = "Second Person", SortOrder = 2, ConcurrencyStamp = ContentEditor.NewStamp() });
+            db.Add(draft);
         }
-        db.AddRange(e, k, p, c);
+        db.AddRange(e, k, p, c, talk, word, post);
         await db.SaveChangesAsync();
-        return new Seeded(e.Id, k.Id, p.Id, c.Id, shot);
+        return new Seeded(e.Id, k.Id, p.Id, c.Id, shot, talk.Id, word.Id, post.Id, pairs ? draft.Id : 0);
     }
 
     /// <summary>Every column the editors can change, as one string, to prove a request left the content alone.</summary>
@@ -111,12 +141,16 @@ public static class ContentFlow
         parts.AddRange((await db.Projects.AsNoTracking().OrderBy(x => x.Id).ToListAsync()).Select(x =>
             $"P{x.Id}|{x.Title}|{x.Slug}|{x.Role}|{x.Org}|{x.Period}|{x.Summary}|{x.Category}|{x.Problem}|{x.Approach}|{x.HeroImage}|{x.HeroImageAlt}|{string.Join(",", x.Screenshots.Select(i => i.Url + "=" + i.Caption))}|{string.Join(",", x.Impact)}|{string.Join(",", x.Tech)}|{string.Join(",", x.Links.Select(l => l.Label + "=" + l.Url))}|{x.Featured}|{x.SortOrder}|{x.ConcurrencyStamp}"));
         parts.AddRange((await db.Certifications.AsNoTracking().OrderBy(x => x.Id).ToListAsync()).Select(x => $"C{x.Id}|{x.Name}|{x.Issuer}|{x.Status}|{x.Date}|{x.Category}|{x.CredentialUrl}|{x.CertificateUrl}|{x.BadgeImageUrl}|{x.SortOrder}|{x.ConcurrencyStamp}"));
+        parts.AddRange((await db.Talks.AsNoTracking().OrderBy(x => x.Id).ToListAsync()).Select(x => $"T{x.Id}|{x.Title}|{x.Type}|{x.Event}|{x.Date}|{x.YoutubeId}|{x.Url}|{x.SortOrder}|{x.ConcurrencyStamp}"));
+        parts.AddRange((await db.Testimonials.AsNoTracking().OrderBy(x => x.Id).ToListAsync()).Select(x => $"M{x.Id}|{x.Quote}|{x.Author}|{x.AuthorTitle}|{x.SourceUrl}|{x.Relation}|{x.Featured}|{x.SortOrder}|{x.ConcurrencyStamp}"));
+        parts.AddRange((await db.BlogPosts.AsNoTracking().OrderBy(x => x.Id).ToListAsync()).Select(x => $"B{x.Id}|{x.Title}|{x.Slug}|{x.Description}|{x.Date}|{string.Join(",", x.Tags)}|{x.Draft}|{x.Cover}|{x.CoverAlt}|{x.BodyMarkdown}|{x.ConcurrencyStamp}"));
+        parts.AddRange((await db.ListStamps.AsNoTracking().OrderBy(x => x.Section).ToListAsync()).Select(x => $"L{x.Section}|{x.Stamp}"));
         return string.Join("\n", parts);
     }
 
     public static async Task<int> CountAsync(AdminApp app)
     {
         using var db = app.CreateDbContext();
-        return await db.Experiences.CountAsync() + await db.Skills.CountAsync() + await db.Projects.CountAsync() + await db.Certifications.CountAsync();
+        return await db.Experiences.CountAsync() + await db.Skills.CountAsync() + await db.Projects.CountAsync() + await db.Certifications.CountAsync() + await db.Talks.CountAsync() + await db.Testimonials.CountAsync() + await db.BlogPosts.CountAsync();
     }
 }

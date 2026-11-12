@@ -27,6 +27,22 @@ public class PortfolioSeederTests
         new SeedFiles().Write("skills.json", skills).Write("projects.json", projects);
 
     [Fact]
+    public async Task Authoritative_UpdatesABlogPostsCoverAlt_AndRemovesPostsThatAreNotInTheFile()
+    {
+        using var database = new TestDatabase();
+        using var db = database.CreateContext();
+        db.BlogPosts.Add(new BlogPost { Title = "Written in the browser", Slug = "browser-post", Date = new DateOnly(2025, 1, 1), BodyMarkdown = "x" });
+        db.BlogPosts.Add(new BlogPost { Title = "Seeded", Slug = "seeded", Date = new DateOnly(2025, 1, 2), Cover = "/img/a.png", CoverAlt = "old alt", BodyMarkdown = "old" });
+        await db.SaveChangesAsync();
+        using var files = new SeedFiles().Write("blog.json", """[ { "title": "Seeded", "slug": "seeded", "date": "2025-01-02", "cover": "/img/a.png", "coverAlt": "new alt", "bodyMarkdown": "new" } ]""");
+
+        await PortfolioSeeder.SeedAsync(db, files.Path, SeedMode.Authoritative);
+
+        var post = await db.BlogPosts.AsNoTracking().SingleAsync(); // the browser-written post is gone: the file is the source of truth
+        Assert.Equal(("seeded", "new alt", "new"), (post.Slug, post.CoverAlt, post.BodyMarkdown));
+    }
+
+    [Fact]
     public async Task IfEmpty_SeedsEmptyTables()
     {
         using var database = new TestDatabase();
