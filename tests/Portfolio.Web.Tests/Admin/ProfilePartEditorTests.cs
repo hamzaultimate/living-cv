@@ -105,7 +105,7 @@ public class ProfilePartEditorTests
         var html = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("Metric 2 value is required.", html);
+        Assert.Contains("Metric 2: &quot;Value&quot; is required.", html);
         Assert.Contains("<a href=\"#Form_Rows_1__Value\">", html);
         Assert.Matches(@"id=""Form_Rows_1__Value""[^>]*aria-invalid=""true""", html);
         Assert.Contains("value=\"orphan unit\"", html); // what was typed stays
@@ -123,14 +123,14 @@ public class ProfilePartEditorTests
         Assert.Equal(HttpStatusCode.Redirect, (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics, ProfileFlow.MetricsFields(eight))).StatusCode);
         var tooMany = await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics, ProfileFlow.MetricsFields(nine));
         Assert.Equal(HttpStatusCode.OK, tooMany.StatusCode);
-        Assert.Contains("At most 8 metric rows.", await tooMany.Content.ReadAsStringAsync());
+        Assert.Contains("At most 8 rows in Headline metrics.", await tooMany.Content.ReadAsStringAsync());
         Assert.Equal(8, (await ProfileFlow.ProfileAsync(app)).Metrics.Count);
 
         var tooLong = new[]
         {
-            (Row: (new string('v', 21), "x", "x"), Message: "Metric 1 value can be at most 20"),
-            (Row: ("x", new string('u', 21), "x"), Message: "Metric 1 unit can be at most 20"),
-            (Row: ("x", "x", new string('l', 81)), Message: "Metric 1 label can be at most 80"),
+            (Row: (new string('v', 21), "x", "x"), Message: "Metric 1: &quot;Value&quot; can be at most 20"),
+            (Row: ("x", new string('u', 21), "x"), Message: "Metric 1: &quot;Unit&quot; can be at most 20"),
+            (Row: ("x", "x", new string('l', 81)), Message: "Metric 1: &quot;Label&quot; can be at most 80"),
         };
         foreach (var (row, message) in tooLong)
         {
@@ -184,7 +184,7 @@ public class ProfilePartEditorTests
         var before = ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app));
 
         var full = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics + "?handler=Add", eight, tokenFrom: ProfileFlow.Metrics)).Content.ReadAsStringAsync();
-        Assert.Contains("You can have at most 8 metric rows.", full);
+        Assert.Contains("You can have at most 8 rows in Headline metrics.", full);
         Assert.DoesNotContain("Form.Rows[8]", full);
         Assert.DoesNotContain("id=\"add-row\"", full);
         var top = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics + "?handler=Move&index=0&direction=up", one, tokenFrom: ProfileFlow.Metrics)).Content.ReadAsStringAsync();
@@ -228,9 +228,9 @@ public class ProfilePartEditorTests
         var before = ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app));
 
         var half = await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(cards: [("Only a title", "")]));
-        Assert.Contains("Card 1 text is required.", await half.Content.ReadAsStringAsync());
+        Assert.Contains("Card 1: &quot;Text&quot; is required.", await half.Content.ReadAsStringAsync());
         var seven = await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(cards: Enumerable.Range(1, 7).Select(i => ($"T{i}", $"B{i}")).ToArray()));
-        Assert.Contains("At most 6 card rows.", await seven.Content.ReadAsStringAsync());
+        Assert.Contains("At most 6 rows in About page.", await seven.Content.ReadAsStringAsync());
         Assert.Equal(before, ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app)));
 
         var two = ProfileFlow.AboutFields(cards: [("First", "one"), ("Second", "two")]);
@@ -259,8 +259,8 @@ public class ProfilePartEditorTests
         Assert.Contains("each line can be at most 120", await Post(ProfileFlow.AboutFields(focus: new string('f', 121))));
         Assert.Contains("can be at most 300", await Post(ProfileFlow.AboutFields(headline: new string('h', 301))));
         Assert.Contains("can be at most 300", await Post(ProfileFlow.AboutFields(note: new string('n', 301))));
-        Assert.Contains("Card 1 title can be at most 120", await Post(ProfileFlow.AboutFields(cards: [(new string('t', 121), "b")])));
-        Assert.Contains("Card 1 text can be at most 500", await Post(ProfileFlow.AboutFields(cards: [("t", new string('b', 501))])));
+        Assert.Contains("Card 1: &quot;Title&quot; can be at most 120", await Post(ProfileFlow.AboutFields(cards: [(new string('t', 121), "b")])));
+        Assert.Contains("Card 1: &quot;Text&quot; can be at most 500", await Post(ProfileFlow.AboutFields(cards: [("t", new string('b', 501))])));
         Assert.Contains("Headline is required.", await Post(ProfileFlow.AboutFields(headline: "")));
         // The limits themselves are accepted.
         Assert.Equal(HttpStatusCode.Redirect, (await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(headline: new string('h', 300), paragraphs: new string('p', 2000), note: new string('n', 300),

@@ -52,15 +52,15 @@ public class ProfilePartTemplateTests
         Assert.Contains("Zing intro hint.", hero);
         Assert.Contains("Zing banner", hero);
         Assert.Contains("Zing blurb", hero);
-        Assert.Contains("Save zing intro", hero);
+        Assert.Contains("Save Zing intro", hero);
         var metrics = await owner.GetStringAsync(ProfileFlow.Metrics);
         Assert.Contains("Zoink board hint.", metrics);
         Assert.Contains("Zoink amount", metrics);
         Assert.Contains("Zoink caption", metrics);
         Assert.Contains("<legend>Zoink 1</legend>", metrics);
         Assert.Contains("aria-label=\"Move up: Zoink 2\"", metrics);
-        Assert.Contains("Add zoink", metrics);
-        Assert.Contains("Save zoink board", metrics);
+        Assert.Contains("Add Zoink", metrics);
+        Assert.Contains("Save Zoink board", metrics);
         var about = await owner.GetStringAsync(ProfileFlow.About);
         Assert.Contains("<h1 id=\"page-heading\">Zonk page</h1>", about);
         Assert.Contains("Zonk title", about);
@@ -69,15 +69,15 @@ public class ProfilePartTemplateTests
         Assert.Contains("Zonk tile text", about);
         Assert.Contains("Zonk themes", about);
         Assert.Contains("<legend>Zonk 2</legend>", about);
-        Assert.Contains("Add zonk", about);
+        Assert.Contains("Add Zonk", about);
         seen.AddRange([dashboard, identity, hero, metrics, about]);
 
         // Messages: validation, the row buttons, the limits, the empty state, the save message and a refused stale save.
         var noValue = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics, ProfileFlow.MetricsFields(("1", "", "ok"), ("", "", "orphan caption")))).Content.ReadAsStringAsync();
-        Assert.Contains("Zoink 2 zoink amount is required.", noValue);
+        Assert.Contains("Zoink 2: &quot;Zoink amount&quot; is required.", noValue);
         var noTitle = await (await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(headline: "", cards: [("t", "")]))).Content.ReadAsStringAsync();
         Assert.Contains("Zonk title is required.", noTitle);
-        Assert.Contains("Zonk 1 zonk tile text is required.", noTitle);
+        Assert.Contains("Zonk 1: &quot;Zonk tile text&quot; is required.", noTitle);
         var noBanner = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Hero, ProfileFlow.HeroFields(headline: ""))).Content.ReadAsStringAsync();
         Assert.Contains("Zing banner is required.", noBanner);
         var rows = ProfileFlow.MetricsFields(("1", "", "a"));
@@ -85,14 +85,14 @@ public class ProfilePartTemplateTests
         Assert.Contains("Zoink 2 added. It is not saved until you save.", added);
         var removed = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics + "?handler=Remove&index=0", rows, tokenFrom: ProfileFlow.Metrics)).Content.ReadAsStringAsync();
         Assert.Contains("Zoink 1 removed.", removed);
-        Assert.Contains("There are no zoink rows yet", removed);
-        Assert.Contains("Add zoink", removed);
+        Assert.Contains("There are no rows in Zoink board yet", removed);
+        Assert.Contains("Add Zoink", removed);
         var full = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics + "?handler=Add", ProfileFlow.MetricsFields(Enumerable.Range(1, 8).Select(i => ($"{i}", "", "l")).ToArray()), tokenFrom: ProfileFlow.Metrics)).Content.ReadAsStringAsync();
-        Assert.Contains("You can have at most 8 zoink rows.", full);
+        Assert.Contains("You can have at most 8 rows in Zoink board.", full);
         var tooMany = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics, ProfileFlow.MetricsFields(Enumerable.Range(1, 9).Select(i => ($"{i}", "", "l")).ToArray()))).Content.ReadAsStringAsync();
-        Assert.Contains("At most 8 zoink rows.", tooMany);
+        Assert.Contains("At most 8 rows in Zoink board.", tooMany);
         var tooManyCards = await (await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(cards: Enumerable.Range(1, 7).Select(i => ($"t{i}", $"b{i}")).ToArray()))).Content.ReadAsStringAsync();
-        Assert.Contains("At most 6 zonk rows.", tooManyCards);
+        Assert.Contains("At most 6 rows in Zonk page.", tooManyCards);
         var stale = await ProfileFlow.StampAsync(owner, ProfileFlow.Hero);
         await ProfileFlow.PostAsync(owner, ProfileFlow.Hero, ProfileFlow.HeroFields());
         Assert.Contains("Zing intro saved. Your public pages now use it.", await owner.GetStringAsync(ProfileFlow.Hero));
@@ -238,5 +238,28 @@ public class ProfilePartTemplateTests
         Assert.Equal(HttpStatusCode.Redirect, (await ProfileFlow.PostAsync(nurse, ProfileFlow.Metrics, rows)).StatusCode);
         Assert.Equal(["11/ms/changed", "21/rps/changed too"], (await ProfileFlow.ProfileAsync(healthcare)).Metrics.Select(m => $"{m.Value}/{m.Unit}/{m.Label}"));
         Assert.Equal("seed accent", (await ProfileFlow.ProfileAsync(healthcare)).Hero.HeadlineAccent);
+    }
+
+    [Fact]
+    public async Task TemplateWords_AreUsedAsWritten_AcronymsAndProperNounsSurviveInButtonsAndMessages()
+    {
+        var dir = TemplateDirs.WithExtra("acro", node =>
+        {
+            node["editor"] = JsonNode.Parse("""
+            { "metrics": { "itemLabel": "NHS figure", "fields": { "heading": { "label": "CQC and NHS figures" }, "label": { "label": "What it measures" } } } }
+            """);
+        });
+        using var app = AdminApp.WithTemplates(dir);
+        var owner = await ContentFlow.BlankSiteAsync(app, "acro");
+
+        var page = await owner.GetStringAsync(ProfileFlow.Metrics);
+        Assert.Contains("Save CQC and NHS figures", page);
+        Assert.Contains("Add NHS figure", page);
+        Assert.Contains("There are no rows in CQC and NHS figures yet", page);
+        var bad = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics, ProfileFlow.MetricsFields(("1", "", "x"), ("", "", "orphan")))).Content.ReadAsStringAsync();
+        Assert.Contains("NHS figure 2: &quot;Value&quot; is required.", bad); // the label is quoted as written, never bent into the sentence
+        var tooLong = await (await ProfileFlow.PostAsync(owner, ProfileFlow.Metrics, ProfileFlow.MetricsFields(("1", "", new string('l', 81))))).Content.ReadAsStringAsync();
+        Assert.Contains("NHS figure 1: &quot;What it measures&quot; can be at most 80", tooLong);
+        foreach (var lowered in new[] { "Save cqc", "Add nhs", "nhs figure 1" }) Assert.DoesNotContain(lowered, page + bad + tooLong);
     }
 }

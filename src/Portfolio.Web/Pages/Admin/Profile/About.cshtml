@@ -24,7 +24,7 @@
     <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
     @* Pressing Enter in a text box sends the first button of the form, so Save comes first, before any row button. *@
     <div class="adm-actions">
-        <button type="submit" class="adm-btn adm-btn-primary">Save @v.HeadingLower</button>
+        <button type="submit" class="adm-btn adm-btn-primary">Save @v.Heading</button>
         <a class="adm-btn" href="/admin">Cancel</a>
     </div>
     <fieldset class="adm-fieldset">
@@ -55,7 +55,7 @@
             <div class="adm-actions">
                 @if (Model.CanAdd)
                 {
-                    <button type="submit" id="add-row" class="adm-btn" asp-page-handler="Add" autofocus="@Model.Autofocus("add-row")">Add @v.ItemLabelLower</button>
+                    <button type="submit" id="add-row" class="adm-btn" asp-page-handler="Add" autofocus="@Model.Autofocus("add-row")">Add @v.ItemLabel</button>
                 }
                 else
                 {
@@ -65,7 +65,7 @@
         </section>
     }
     <div class="adm-actions">
-        <button type="submit" class="adm-btn adm-btn-primary">Save @v.HeadingLower</button>
+        <button type="submit" class="adm-btn adm-btn-primary">Save @v.Heading</button>
         <a class="adm-btn" href="/admin">Cancel</a>
     </div>
 </form>

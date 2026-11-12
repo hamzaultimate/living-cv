@@ -42,15 +42,15 @@ public class SectionTemplateTests
         Assert.Contains("Zork tag", page);
         Assert.Contains("Zork visible", page);
         Assert.Contains("Zork asleep. Zork asleep hint.", page); // blog and talks are off by default in the derived template
-        Assert.Contains("Save zork map", page);
+        Assert.Contains("Save Zork map", page);
         seen.AddRange([dashboard, page]);
 
         var rows = await SectionsFlow.RowsAsync(owner);
         // Messages: a duplicate name, a list that does not match, the row button, a stale save and the save message.
         var dup = await (await SectionsFlow.SaveAsync(owner, r => SectionsFlow.Set("experience", label: "about")(r))).Content.ReadAsStringAsync();
-        Assert.Contains("Each zork needs its own name: &quot;about&quot; is already used by another.", dup);
+        Assert.Contains("Each &quot;Zork&quot; needs its own name: &quot;about&quot; is already used by another.", dup);
         var forged = await (await SectionsFlow.SaveAsync(owner, r => r.Where(x => x.Key != "talks").ToList())).Content.ReadAsStringAsync();
-        Assert.Contains("The list of zorks does not match your template any more", forged);
+        Assert.Contains("The list on this page does not match your template any more", forged);
         var moved = await (await ProfileFlow.PostAsync(owner, SectionsFlow.Path + "?handler=Move&index=2&direction=up", SectionsFlow.Fields(rows), tokenFrom: SectionsFlow.Path)).Content.ReadAsStringAsync();
         Assert.Contains("moved up to position 2. It is not saved until you save.", moved);
         var stale = await ProfileFlow.StampAsync(owner, SectionsFlow.Path);
@@ -73,7 +73,7 @@ public class SectionTemplateTests
 
         var html = await (await SectionsFlow.SaveAsync(owner, r => r.Select(x => x with { Enabled = x.Key == "testimonials" }).ToList())).Content.ReadAsStringAsync();
 
-        Assert.Contains("Keep at least one zork switched on that appears in the menu.", html);
+        Assert.Contains("Keep at least one &quot;Zork&quot; switched on that appears in the menu.", html);
     }
 
     [Fact]
@@ -159,6 +159,6 @@ public class SectionTemplateTests
         Assert.Contains("Not shown by default for this profession.", html);
         Assert.Contains("Before you publish", html); // the sensitive template's guidance
         var bad = await (await SectionsFlow.SaveAsync(nurse, r => r.Select(x => x with { Enabled = false }).ToList())).Content.ReadAsStringAsync();
-        Assert.Contains("Keep at least one page switched on that appears in the menu.", bad);
+        Assert.Contains("Keep at least one &quot;Page&quot; switched on that appears in the menu.", bad);
     }
 }

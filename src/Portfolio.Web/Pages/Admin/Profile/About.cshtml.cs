@@ -69,7 +69,7 @@ public class AboutModel : ProfilePartModel
         if (View.Visible("valueProps"))
         {
             var rows = Form.Cards.Select((r, i) => (Row: r, Number: i + 1)).Where(x => !(string.IsNullOrWhiteSpace(x.Row.Title) && string.IsNullOrWhiteSpace(x.Row.Body))).ToList();
-            if (rows.Count > ProfileParts.CardRows) ModelState.AddModelError(string.Empty, $"At most {ProfileParts.CardRows} {View.ItemLabelLower} rows.");
+            if (rows.Count > ProfileParts.CardRows) ModelState.AddModelError(string.Empty, $"At most {ProfileParts.CardRows} rows in {View.Heading}.");
             foreach (var (row, number) in rows.Take(ProfileParts.CardRows))
             {
                 var name = $"{View.ItemLabel} {number}";
@@ -105,7 +105,7 @@ public class AboutModel : ProfilePartModel
     public async Task<IActionResult> OnPostAddAsync()
     {
         await LoadViewAsync();
-        if (!CanAdd) return RowChanged($"You can have at most {ProfileParts.CardRows} {View.ItemLabelLower} rows.", null);
+        if (!CanAdd) return RowChanged($"You can have at most {ProfileParts.CardRows} rows in {View.Heading}.", null);
         Form.Cards.Add(new CardRowForm());
         var i = Form.Cards.Count - 1;
         return RowChanged($"{View.ItemLabel} {i + 1} added. It is not saved until you save.", $"Form_Cards_{i}__Title");
@@ -114,7 +114,7 @@ public class AboutModel : ProfilePartModel
     public async Task<IActionResult> OnPostRemoveAsync(int index)
     {
         await LoadViewAsync();
-        if (index < 0 || index >= Form.Cards.Count) return RowChanged($"That {View.ItemLabelLower} row is not on the page any more.", "add-row");
+        if (index < 0 || index >= Form.Cards.Count) return RowChanged("That row is not on the page any more.", "add-row");
         Form.Cards.RemoveAt(index);
         return RowChanged($"{View.ItemLabel} {index + 1} removed. It is not saved until you save.", CanAdd ? "add-row" : null);
     }

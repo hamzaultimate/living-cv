@@ -42,12 +42,12 @@ public static class SectionSettings
     {
         var typed = new List<string?>();
         labels = typed;
-        var item = view.ItemLabelLower;
+        var item = view.ItemLabel;
         var keys = rows.Select(r => r.Key).ToList();
         // The list must be exactly the template's sections, each once: a forged, missing, repeated or foreign key is refused whole, so it can neither add a section nor drop one.
         if (keys.Count != definition.Sections.Count || keys.Distinct(StringComparer.Ordinal).Count() != keys.Count || keys.Any(k => Find(definition, k) is null))
         {
-            check.Error(string.Empty, $"The list of {item}s does not match your template any more, so nothing was saved. Reload the page and try again.");
+            check.Error(string.Empty, "The list on this page does not match your template any more, so nothing was saved. Reload the page and try again.");
             return false;
         }
 
@@ -62,11 +62,11 @@ public static class SectionSettings
         var effective = rows.Select((r, i) => labelShown && !string.IsNullOrWhiteSpace(typed[i]) ? typed[i]! : Find(definition, r.Key)!.Label).ToList();
         for (var i = 0; i < rows.Count; i++)
             if (check.IsValid($"Rows[{i}].{nameof(SectionRowForm.Label)}") && effective.Take(i).Any(e => string.Equals(e, effective[i], StringComparison.OrdinalIgnoreCase)))
-                check.Error($"Rows[{i}].{nameof(SectionRowForm.Label)}", $"Each {item} needs its own name: \"{effective[i]}\" is already used by another.");
+                check.Error($"Rows[{i}].{nameof(SectionRowForm.Label)}", $"Each \"{item}\" needs its own name: \"{effective[i]}\" is already used by another.");
 
         // A site with no section that has its own page would have an empty menu.
         var anyPage = rows.Any((r, i) => (Find(definition, r.Key)!.Required || r.Enabled) && SectionRegistry.PathFor(r.Key!) is not null);
-        if (!anyPage) check.Error(string.Empty, $"Keep at least one {item} switched on that appears in the menu.");
+        if (!anyPage) check.Error(string.Empty, $"Keep at least one \"{item}\" switched on that appears in the menu.");
 
         return check.Ok;
     }

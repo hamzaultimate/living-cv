@@ -83,8 +83,6 @@ public sealed class EditorView
     /// <summary>What the page is called for the profile editors (the label of the wording-only <c>heading</c> key), for titles and messages ("Saved the home page introduction").</summary>
     public string Heading => Label("heading");
 
-    public string HeadingLower => Heading.ToLowerInvariant();
-
     public string Label(string key)
     {
         if (_settings.Fields.TryGetValue(key, out var f) && !string.IsNullOrWhiteSpace(f?.Label)) return f.Label!.Trim();

@@ -57,7 +57,7 @@ public class MetricsModel : ProfilePartModel
         var rows = Form.Rows.Select((r, i) => (Row: r, Number: i + 1))
             .Where(x => !(string.IsNullOrWhiteSpace(x.Row.Value) && (!showUnit || string.IsNullOrWhiteSpace(x.Row.Unit)) && (!showLabel || string.IsNullOrWhiteSpace(x.Row.Label))))
             .ToList();
-        if (rows.Count > ProfileParts.MetricRows) ModelState.AddModelError(string.Empty, $"At most {ProfileParts.MetricRows} {View.ItemLabelLower} rows.");
+        if (rows.Count > ProfileParts.MetricRows) ModelState.AddModelError(string.Empty, $"At most {ProfileParts.MetricRows} rows in {View.Heading}.");
 
         var kept = new List<(int? Source, string Value, string? Unit, string? Label)>();
         foreach (var (row, number) in rows.Take(ProfileParts.MetricRows))
@@ -93,7 +93,7 @@ public class MetricsModel : ProfilePartModel
     public async Task<IActionResult> OnPostAddAsync()
     {
         await LoadViewAsync();
-        if (!CanAdd) return RowChanged($"You can have at most {ProfileParts.MetricRows} {View.ItemLabelLower} rows.", null);
+        if (!CanAdd) return RowChanged($"You can have at most {ProfileParts.MetricRows} rows in {View.Heading}.", null);
         Form.Rows.Add(new MetricRowForm());
         var i = Form.Rows.Count - 1;
         return RowChanged($"{View.ItemLabel} {i + 1} added. It is not saved until you save.", $"Form_Rows_{i}__Value");
@@ -102,7 +102,7 @@ public class MetricsModel : ProfilePartModel
     public async Task<IActionResult> OnPostRemoveAsync(int index)
     {
         await LoadViewAsync();
-        if (index < 0 || index >= Form.Rows.Count) return RowChanged($"That {View.ItemLabelLower} row is not on the page any more.", "add-row");
+        if (index < 0 || index >= Form.Rows.Count) return RowChanged("That row is not on the page any more.", "add-row");
         Form.Rows.RemoveAt(index);
         return RowChanged($"{View.ItemLabel} {index + 1} removed. It is not saved until you save.", CanAdd ? "add-row" : null);
     }

@@ -288,7 +288,7 @@ public class SectionSettingsTests
         var html = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("Keep at least one section switched on that appears in the menu.", html);
+        Assert.Contains("Keep at least one &quot;Section&quot; switched on that appears in the menu.", html);
         Assert.Equal(before, ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app)));
         Assert.Equal(HttpStatusCode.Redirect, (await SectionsFlow.SaveAsync(owner, r => r.Select(x => x with { Enabled = x.Key == "contact" }).ToList())).StatusCode);
     }
@@ -368,7 +368,7 @@ public class SectionSettingsTests
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains(message, html);
-        Assert.Contains("<a href=\"#Form_Rows_2__Label\">Work menu name", html); // names the section by its template name
+        Assert.Contains("<a href=\"#Form_Rows_2__Label\">Work: &quot;Menu name&quot;", html); // names the section by its template name
         Assert.Matches(@"id=""Form_Rows_2__Label""[^>]*aria-invalid=""true""", html);
         Assert.False(html.Contains("<script>x</script>"), "the markup was echoed raw");
         Assert.Equal(before, ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app)));
@@ -396,7 +396,7 @@ public class SectionSettingsTests
         var before = ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app));
 
         var same = await (await SectionsFlow.SaveAsync(owner, r => SectionsFlow.Set("talks", label: "BLOG")(r))).Content.ReadAsStringAsync(); // the template's own name for blog, in other case
-        Assert.Contains("Each section needs its own name: &quot;BLOG&quot; is already used by another.", same);
+        Assert.Contains("Each &quot;Section&quot; needs its own name: &quot;BLOG&quot; is already used by another.", same);
         var twice = await (await SectionsFlow.SaveAsync(owner, r => SectionsFlow.Set("talks", label: "Dup")(SectionsFlow.Set("blog", false, "dup")(r)))).Content.ReadAsStringAsync();
         Assert.Contains("is already used by another.", twice);
         Assert.Equal(before, ProfileFlow.Fingerprint(await ProfileFlow.ProfileAsync(app)));

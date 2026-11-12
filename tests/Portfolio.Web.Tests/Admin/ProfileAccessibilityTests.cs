@@ -36,7 +36,7 @@ public class ProfileAccessibilityTests
 
         ContentAccessibilityTests.AssertAccessible("invalid metrics form", html);
         Assert.Contains("<div id=\"error-summary\" class=\"adm-flash adm-flash-error\" role=\"alert\" tabindex=\"-1\" autofocus>", html);
-        Assert.Contains("<a href=\"#Form_Rows_1__Value\">Metric 2 value is required.</a>", html);
+        Assert.Contains("<a href=\"#Form_Rows_1__Value\">Metric 2: &quot;Value&quot; is required.</a>", html);
         Assert.Matches(@"id=""Form_Rows_1__Value""[^>]*aria-invalid=""true""", html);
         Assert.Contains("id=\"Form_Rows_1__Value-error\"", html);
         Assert.DoesNotMatch(@"id=""Form_Rows_0__Value""[^>]*aria-invalid", html); // the row that was fine is not marked
@@ -45,7 +45,7 @@ public class ProfileAccessibilityTests
         await ProfileFlow.SeedTextAsync(app); // the About page has a headline, so emptying it is refused
         var about = await (await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(headline: "", cards: [("t", "")]))).Content.ReadAsStringAsync();
         Assert.Contains("<a href=\"#Form_Headline\">Headline is required.</a>", about);
-        Assert.Contains("<a href=\"#Form_Cards_0__Body\">Card 1 text is required.</a>", about);
+        Assert.Contains("<a href=\"#Form_Cards_0__Body\">Card 1: &quot;Text&quot; is required.</a>", about);
         Assert.Matches(@"id=""Form_Cards_0__Body""[^>]*aria-invalid=""true""", about);
     }
 

@@ -44,7 +44,9 @@ public sealed class FormCheck
         return text;
     }
 
-    private string Named(string key, string? context) => context is null ? _view.Label(key) : $"{context} {_view.Label(key).ToLowerInvariant()}";
+    // A message about a field in a row names the row first and quotes the field's label as the template wrote it ('Figure 2: "What it measures" is required.'),
+    // so no template word is bent into the middle of a sentence.
+    private string Named(string key, string? context) => context is null ? _view.Label(key) : $"{context}: \"{_view.Label(key)}\"";
 
     /// <summary>A multi-line plain-text value (paragraphs keep their line breaks).</summary>
     public string? Paragraph(string property, string key, string? value, int max, bool required = false)
