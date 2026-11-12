@@ -99,7 +99,9 @@ public static class SectionSettings
         {
             var property = $"Rows[{i}].{nameof(SectionRowForm.Label)}";
             if (!check.IsValid(property)) continue;
-            bool Same(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+            // Joiners and non-joiners are invisible, so "Pro\u200Djects" is the same menu entry as "Projects": names are compared with them removed.
+            static string Fold(string s) => new string(s.Where(c => c is not ('\u200C' or '\u200D')).ToArray());
+            bool Same(string a, string b) => string.Equals(Fold(a), Fold(b), StringComparison.OrdinalIgnoreCase);
             var typedName = labelShown && !string.IsNullOrWhiteSpace(typed[i]);
             if (effective.Take(i).Any(e => Same(e, effective[i])) || (typedName && Enumerable.Range(0, rows.Count).Any(j => j != i && (Same(shown[j], effective[i]) || Same(effective[j], effective[i])))))
                 check.Error(property, $"Each \"{item}\" needs its own name: \"{effective[i]}\" is already used by another menu entry.");

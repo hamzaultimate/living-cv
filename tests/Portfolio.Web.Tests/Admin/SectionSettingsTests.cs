@@ -545,6 +545,26 @@ public class SectionSettingsTests
     }
 
     [Fact]
+    public async Task AJoinerInsideAName_DoesNotLetItSlipPastTheDuplicateShortNameOrCvRules()
+    {
+        var (app, owner, _, _) = await SiteAsync("software");
+        using var _a = app;
+
+        foreach (var (name, expected) in new[]
+                 {
+                     ("Pro\u200Djects", "is already used by another menu entry."),
+                     ("Ce\u200Crts", "is already used by another menu entry."), // the short menu name of certifications
+                     ("C\u200DV", "is the name of the CV link"),
+                 })
+        {
+            await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("skills", label: "Projects")); // the name the first case imitates
+            var html = await (await SectionsFlow.SaveAsync(owner, rows => SectionsFlow.Set("talks", label: name)(rows))).Content.ReadAsStringAsync();
+            Assert.Contains(expected, html);
+        }
+        Assert.DoesNotContain(await SectionsFlow.StoredAsync(app), s => s.Key == "talks");
+    }
+
+    [Fact]
     public async Task ANameCannotMatchAnotherSectionsShortMenuName_OrTheFixedCvEntry()
     {
         var (app, owner, _, _) = await SiteAsync("software");
