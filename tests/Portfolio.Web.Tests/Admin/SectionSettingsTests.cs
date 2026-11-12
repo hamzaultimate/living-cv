@@ -105,11 +105,15 @@ public class SectionSettingsTests
         Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/cv.pdf")).StatusCode);
         Assert.Equal(contentBefore.Split('\n').Where(l => !l.StartsWith('R')).ToList(), (await ContentFlow.SnapshotAsync(app)).Split('\n').Where(l => !l.StartsWith('R')).ToList()); // no row of content was touched
         Assert.Equal(["certifications", "experience", "projects", "testimonials"], (await SectionsFlow.StoredAsync(app)).Select(s => s.Key).OrderBy(x => x));
-        Assert.All(await SectionsFlow.StoredAsync(app), s => Assert.Equal(false, s.Shown));
+        var off = await SectionsFlow.StoredAsync(app);
+        Assert.Equal(new[] { "certifications", "experience", "projects", "testimonials" }, off.Select(s => s.Key).OrderBy(x => x));
+        Assert.All(off, s => Assert.Equal(false, s.Shown));
 
         // Showing them again brings everything back, because nothing was deleted.
         Assert.Equal(HttpStatusCode.Redirect, (await SectionsFlow.SaveAsync(owner, r => r.Select(x => x with { Enabled = true }).ToList())).StatusCode);
-        Assert.All(await SectionsFlow.StoredAsync(app), s => Assert.Equal(true, s.Shown)); // the earlier explicit choices are kept, now as "shown"
+        var kept = await SectionsFlow.StoredAsync(app);
+        Assert.Equal(new[] { "certifications", "experience", "projects", "testimonials" }, kept.Select(s => s.Key).OrderBy(x => x));
+        Assert.All(kept, s => Assert.Equal(true, s.Shown)); // the earlier explicit choices are kept, now as "shown"
         home = await visitor.GetStringAsync("/");
         Assert.Contains("href=\"/certifications\"", home);
         Assert.Contains("Seed Project", home);
@@ -170,7 +174,9 @@ public class SectionSettingsTests
 
         // Switching them off again is an explicit choice now, kept as such (it is not forgotten and re-derived from the default).
         await SectionsFlow.SaveAsync(owner, r => SectionsFlow.Set("talks", false)(SectionsFlow.Set("blog", false)(r)));
-        Assert.All(await SectionsFlow.StoredAsync(app), s => Assert.Equal(false, s.Shown));
+        var off = await SectionsFlow.StoredAsync(app);
+        Assert.Equal(new[] { "blog", "talks" }, off.Select(s => s.Key).OrderBy(x => x));
+        Assert.All(off, s => Assert.Equal(false, s.Shown));
         Assert.Equal(HttpStatusCode.NotFound, (await visitor.GetAsync("/blog")).StatusCode);
         Assert.Equal(await ContentRowsAsync(app), await ContentRowsAsync(app));
         using var db = app.CreateDbContext();
