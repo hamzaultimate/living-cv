@@ -359,7 +359,7 @@ public class OnboardingService
     /// summary, site address, accent and (when there is one) the photo. On a first run the placeholder persona that came from the Site config
     /// (hero, metrics, About text, links, phone) is replaced by a plain hero built from the owner's own answers and empty lists, so no stranger's text
     /// survives under the owner's name; on a re-run those stay as the owner edited them. Rows in other tables are never touched here.
-    /// The hero, the metrics and the About text are replaced only while they are still the placeholder (equal to what the Site config supplied): once the owner has
+    /// The hero, the metrics, the About text and the identity extras (topics, phone, WhatsApp, links, other emails, light photo) are replaced only while they are still the placeholder (equal to what the Site config supplied): once the owner has
     /// edited one of them in the admin, publishing keeps their text. <paramref name="placeholder"/> null means every part counts as untouched.
     /// </summary>
     internal static void Apply(SiteProfile p, OnboardingDraft d, TemplateDefinition template, bool firstRun, string? photoUrl, SiteOptions? placeholder = null)
@@ -391,10 +391,15 @@ public class OnboardingService
             if (original is null || IsSame(p.Metrics, original.Metrics)) p.Metrics = [];
             if (original is null || IsSame(p.About, original.About))
                 p.About = new ProfileAbout { Headline = null, Paragraphs = string.IsNullOrWhiteSpace(p.Summary) ? [] : [p.Summary] };
-            p.KnowsAbout = [];
-            p.Phone = p.WhatsApp = p.LinkedIn = p.GitHub = p.YouTube = null;
-            p.SecondaryEmails = [];
-            p.PhotoUrlLight = null;
+            // The same rule for the identity extras: a value the owner already changed in the admin is kept, and only one that is still the placeholder is cleared.
+            if (original is null || p.KnowsAbout.SequenceEqual(original.KnowsAbout)) p.KnowsAbout = [];
+            if (original is null || (p.Phone ?? "") == (original.Phone ?? "")) p.Phone = null;
+            if (original is null || (p.WhatsApp ?? "") == (original.WhatsApp ?? "")) p.WhatsApp = null;
+            if (original is null || (p.LinkedIn ?? "") == (original.LinkedIn ?? "")) p.LinkedIn = null;
+            if (original is null || (p.GitHub ?? "") == (original.GitHub ?? "")) p.GitHub = null;
+            if (original is null || (p.YouTube ?? "") == (original.YouTube ?? "")) p.YouTube = null;
+            if (original is null || p.SecondaryEmails.SequenceEqual(original.SecondaryEmails)) p.SecondaryEmails = [];
+            if (original is null || (p.PhotoUrlLight ?? "") == (original.PhotoUrlLight ?? "")) p.PhotoUrlLight = null;
             // The placeholder avatar goes; a photo the owner already uploaded (before finishing the wizard) stays.
             if (photoUrl is null && !IsUpload(p.PhotoUrl)) p.PhotoUrl = null;
         }

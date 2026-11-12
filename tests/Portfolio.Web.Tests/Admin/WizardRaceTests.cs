@@ -108,4 +108,49 @@ public class WizardRaceTests
         Assert.Null(profile.OnboardingOutcome);
         Assert.Contains("Continue setup", page); // still open: the dashboard still offers it
     }
+
+    [Fact]
+    public async Task OnAFirstRun_PublishingKeepsTheIdentityExtrasTheOwnerEdited_AndClearsThePlaceholderOnes()
+    {
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+        await app.NewClient().GetAsync("/"); // the first public read creates the profile row from the Site config
+        var placeholder = await ProfileFlow.ProfileAsync(app);
+        Assert.False(string.IsNullOrEmpty(placeholder.GitHub));
+        Assert.NotEmpty(placeholder.SecondaryEmails.Concat(placeholder.KnowsAbout).Concat([placeholder.Phone ?? "", placeholder.YouTube ?? ""]));
+
+        // The owner changes the phone, the LinkedIn address and the topics; GitHub, YouTube and the other emails are posted back as they were.
+        var fields = new Dictionary<string, string>
+        {
+            ["Form.OwnerName"] = placeholder.OwnerName, ["Form.BrandName"] = placeholder.BrandName, ["Form.Url"] = placeholder.Url,
+            ["Form.Phone"] = "+44 20 7946 0000", ["Form.LinkedIn"] = "https://linkedin.example/in/mine", ["Form.KnowsAboutText"] = "My own topic\nAnother topic",
+            ["Form.GitHub"] = placeholder.GitHub ?? "", ["Form.YouTube"] = placeholder.YouTube ?? "", ["Form.SecondaryEmailsText"] = string.Join("\n", placeholder.SecondaryEmails),
+        };
+        Assert.Equal(HttpStatusCode.Redirect, (await ProfileFlow.PostAsync(owner, ProfileFlow.Identity, fields)).StatusCode);
+        Assert.Equal("/admin/welcome/basics", WizardFlow.Where(await WizardFlow.PickTemplateAsync(owner, "software")));
+        Assert.Equal("/admin/welcome/photo", WizardFlow.Where(await WizardFlow.SaveBasicsAsync(owner)));
+        Assert.Equal(HttpStatusCode.Redirect, (await WizardFlow.PublishAsync(owner)).StatusCode);
+
+        var p = await ProfileFlow.ProfileAsync(app);
+        Assert.Equal("+44 20 7946 0000", p.Phone); // edited: kept
+        Assert.Equal("https://linkedin.example/in/mine", p.LinkedIn);
+        Assert.Equal(["My own topic", "Another topic"], p.KnowsAbout);
+        Assert.Null(p.GitHub); // still the placeholder: cleared, as before
+        Assert.Null(p.YouTube);
+        Assert.Empty(p.SecondaryEmails);
+    }
+
+    [Fact]
+    public async Task OnAFirstRun_AnUntouchedSite_HasItsPlaceholderIdentityExtrasCleared_AsItAlwaysDid()
+    {
+        using var app = new AdminApp();
+        var owner = await ReadyToPublishAsync(app);
+
+        Assert.Equal(HttpStatusCode.Redirect, (await WizardFlow.PublishAsync(owner)).StatusCode);
+
+        var p = await ProfileFlow.ProfileAsync(app);
+        Assert.Empty(p.KnowsAbout);
+        Assert.Empty(p.SecondaryEmails);
+        Assert.All(new[] { p.Phone, p.WhatsApp, p.LinkedIn, p.GitHub, p.YouTube, p.PhotoUrlLight }, x => Assert.Null(x));
+    }
 }
