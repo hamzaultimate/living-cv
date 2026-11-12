@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Portfolio.Data.Entities;
 using Portfolio.Web.Configuration;
@@ -40,25 +41,37 @@ public static class SectionSettings
 
     /// <summary>
     /// True when a name contains something invisible that should not be there: a Unicode format character (category Cf: zero-width, bidi controls, soft hyphen, byte order mark), or a blank-looking
-    /// filler (Hangul filler, braille blank and the like). A name with nothing but white space never gets here (it trims to empty and counts as no name); one made of fillers or format characters is refused by the rule itself. The one exception is a zero-width non-joiner or joiner
+    /// filler (Hangul filler, braille blank and the like). A variation selector (U+FE00-FE0F, U+E0100-E01EF) is accepted only right after a symbol or digit (emoji and keycap presentation); the combining grapheme joiner U+034F and tag characters (the Cf range U+E0000-E007F, so flag tag sequences) are refused; a name with no visible base character (only combining marks, selectors, white space) is refused. White-space-only names trim to empty earlier and count as no name. The one exception is a zero-width non-joiner or joiner
     /// (U+200C, U+200D) between two letters, marks or symbols, which names in Persian, Urdu and other scripts, and emoji sequences, need.
     /// </summary>
     public static bool HasInvisibleCharacters(string text)
     {
         var runes = text.EnumerateRunes().ToList();
         static bool Joinable(Rune r) => Rune.GetUnicodeCategory(r) is
-            System.Globalization.UnicodeCategory.UppercaseLetter or System.Globalization.UnicodeCategory.LowercaseLetter or System.Globalization.UnicodeCategory.TitlecaseLetter
-            or System.Globalization.UnicodeCategory.ModifierLetter or System.Globalization.UnicodeCategory.OtherLetter
-            or System.Globalization.UnicodeCategory.NonSpacingMark or System.Globalization.UnicodeCategory.SpacingCombiningMark or System.Globalization.UnicodeCategory.EnclosingMark
-            or System.Globalization.UnicodeCategory.OtherSymbol or System.Globalization.UnicodeCategory.ModifierSymbol;
+            UnicodeCategory.UppercaseLetter or UnicodeCategory.LowercaseLetter or UnicodeCategory.TitlecaseLetter
+            or UnicodeCategory.ModifierLetter or UnicodeCategory.OtherLetter
+            or UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark or UnicodeCategory.EnclosingMark
+            or UnicodeCategory.OtherSymbol or UnicodeCategory.ModifierSymbol;
+        static bool IsMark(Rune r) => Rune.GetUnicodeCategory(r) is UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark or UnicodeCategory.EnclosingMark;
+        static bool IsVariationSelector(Rune r) => r.Value is >= 0xFE00 and <= 0xFE0F or >= 0xE0100 and <= 0xE01EF;
+        // A selector only makes sense on a symbol or a digit (a text or emoji presentation, a keycap); anywhere else it draws nothing and only changes how a neighbour compares.
+        static bool TakesSelector(Rune r) => Rune.GetUnicodeCategory(r) is UnicodeCategory.OtherSymbol or UnicodeCategory.ModifierSymbol or UnicodeCategory.MathSymbol or UnicodeCategory.DecimalDigitNumber;
+        var visibleBase = false;
         for (var i = 0; i < runes.Count; i++)
         {
             var r = runes[i];
-            var format = Rune.GetUnicodeCategory(r) == System.Globalization.UnicodeCategory.Format;
+            var format = Rune.GetUnicodeCategory(r) == UnicodeCategory.Format;
             if (format && r.Value is 0x200C or 0x200D && i > 0 && i < runes.Count - 1 && Joinable(runes[i - 1]) && Joinable(runes[i + 1])) continue;
-            if (format || Fillers.Contains(r.Value)) return true;
+            if (format || Fillers.Contains(r.Value) || r.Value == 0x034F) return true; // 0x034F: the combining grapheme joiner, invisible
+            if (IsVariationSelector(r))
+            {
+                if (i > 0 && TakesSelector(runes[i - 1])) continue;
+                return true;
+            }
+            // Something a reader can see: not white space, not a bare combining mark. A name made only of marks and selectors draws empty.
+            if (!Rune.IsWhiteSpace(r) && !IsMark(r)) visibleBase = true;
         }
-        return false;
+        return !visibleBase;
     }
 
     /// <summary>

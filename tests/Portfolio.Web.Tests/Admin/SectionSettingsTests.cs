@@ -361,7 +361,7 @@ public class SectionSettingsTests
         yield return [new string('n', 41), "at most 40 characters"];
         // Invisible format characters: zero-width space and joiners, a byte order mark, bidi overrides and isolates, and a name made only of them.
         foreach (var payload in new[] { "Wo\u200Brk", "\uFEFFWork", "Work\u202E", "\u2066Work\u2069", "\u200B", "\u202E\u200B",
-                      "Wo\u00ADrk", "\u3164", "Work\u3164", "\u2800", "Wo\u2800rk", "\u115F\u1160", "\u200C", "\u200DWork", "Work\u200C", "Wo \u200Drk", "1\u200C2" }) yield return [payload, "characters that are not allowed"];
+                      "Wo\u00ADrk", "\u034F", "Wo\u034Frk", "\u0301", "\u0301\u0302", "Work\uFE0F", "\uFE0F", "Wo\uFE0Frk", "\U000E0100", "Wo\U000E0100rk", "\U0001F3F4\U000E0067\U000E007F", "\u3164", "Work\u3164", "\u2800", "Wo\u2800rk", "\u115F\u1160", "\u200C", "\u200DWork", "Work\u200C", "Wo \u200Drk", "1\u200C2" }) yield return [payload, "characters that are not allowed"];
     }
 
     [Theory]
@@ -386,6 +386,8 @@ public class SectionSettingsTests
     [Theory]
     [InlineData("\u0645\u06CC\u200C\u062E\u0648\u0627\u0647\u0645")] // a Persian word with a zero-width non-joiner between letters
     [InlineData("\u0634\u0628\u200C\u06A9\u0627\u0631")]
+    [InlineData("Heart \u2764\uFE0F")] // a symbol with an emoji presentation selector
+    [InlineData("1\uFE0F\u20E3 Hour")] // a keycap sequence: digit, selector, enclosing keycap
     [InlineData("Team \U0001F468\u200D\U0001F469\u200D\U0001F467")] // an emoji family sequence joined with zero-width joiners
     public async Task AJoinerBetweenLetters_OrInAnEmojiSequence_IsAccepted(string name)
     {
