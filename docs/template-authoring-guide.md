@@ -75,7 +75,7 @@ load, the site renders the software template. See `Templates/healthcare/template
   "sections": [                      // order = navigation order; a section not listed, or enabled:false, is hidden
     { "key": "certifications", "label": "licences & registrations", "shortLabel": "registrations" },
     { "key": "projects", "label": "research & initiatives", "shortLabel": "initiatives", "itemLabel": "Initiative" },
-    { "key": "blog", "label": "articles", "itemLabel": "Article", "enabled": false }
+    { "key": "blog", "label": "articles", "itemLabel": "Article", "enabled": false }   // optional: "required": true makes a section always on
   ],
   "skillGroups": ["Clinical", "Procedures", "Documentation", "Languages"],
   "seo": {
@@ -154,6 +154,8 @@ About text stored on the profile, so a template can name them and leave out what
 keys can be relabelled but never hidden (the validator refuses `hidden: true` on them). The fields a block cannot do without (`hero.headline`, `metrics.value`, `about.headline`) can be relabelled but not hidden. `itemLabel`
 names one row ("Add metric", "Metric 2", "Add card") on `metrics` and `about`; the hero has no rows, so it is accepted and unused there. A hidden field is not drawn, not validated and not read from the post, and what is stored
 in it is kept by every save (for a hidden metric column the stored value follows its row when rows are moved or removed). About is a section: when the template does not enable it, its editor says the public site does not show it and keeps the text. The hero and the metrics are blocks of the home page, which every template shows.
+**The sections page** (`editor.sections`, at `/admin/sections`) has the keys `heading`, `label` (the owner's name for a section in the menu; may be hidden, in which case stored names are kept untouched), `shown` (the switch; cannot be hidden), and the wording-only `locked` (the note on a section that cannot be switched off) and `defaultOff` (the note on a section the template lists as `enabled: false`). `itemLabel` is what one section is called in messages ("Each zork needs its own name"). A template section may carry `"required": true` to be always on (the owner gets no switch and a stored hide is ignored); it cannot be combined with `enabled: false`. The owner's settings only ever apply to sections the template lists: a section listed as `enabled: false` stays off until the owner explicitly switches it on, an unlisted key is never shown, and the order is the owner's when they saved one and the template's otherwise.
+
 Only plain text is accepted in all of these fields (no `<` followed by a letter, `/`, `!` or `?`), whatever a template says. Messages that name the block or a row, including errors and the "saved" and "not saved" notices, are built from these words:
 a test adds a template with unique wording and checks that none of the neutral wording appears.
 

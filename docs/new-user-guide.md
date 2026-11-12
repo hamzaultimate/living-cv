@@ -225,6 +225,20 @@ already stored in a field you cannot see is kept, never erased by a save. If the
 while you are editing, the second save is refused with a message that says nothing was saved, and your typing stays on the page so you can reload
 and apply it again. The wizard's first publish replaces only the placeholder parts: a hero, metrics or About text you have already edited is kept.
 
+### Choosing which sections your site shows
+
+`/admin/sections` (named "Site sections" in Software & IT and "Pages of your site" in Healthcare) lists the sections your template has, in the order the menu shows them.
+For each you can switch it on or off, give it your own name in the menu (leave the box empty for the template's name) and move it up or down; **Save** writes everything at once.
+
+- **Hiding never deletes anything.** A hidden section disappears from the menu, the home page, the sitemap, the search-engine markup and the CV, and its page answers "not found",
+  but every entry stays and comes back when you switch it on. Healthcare starts with Articles and Presentations off; you can switch them on here.
+- **Only your template's sections.** You cannot add a section the template does not have, and a template can mark a section as always on (none of the shipped ones does).
+  At least one section that has its own page must stay on, and two sections cannot share a name (compared without regard to case). Names are plain text, at most 40 characters.
+- **The order** is the order of the menu (and of the pages in the sitemap). Blocks on the home page keep their fixed positions; they only follow whether their section is on.
+- **What is stored.** Only what differs from your template: an unchanged page stores nothing, a name equal to the template's is dropped, and a section you switch back to the template's default is no longer stored.
+  So a choice you made stays when you switch template (a switch rewrites nothing); saving this page under another template stores what differs from *that* template.
+- As on the other editors, a save from a page that was open before something else changed the profile is refused with a message that says nothing was saved.
+
 ### Forgot the password
 
 There is no email reset. Whoever can run commands on the server resets it from the app folder:

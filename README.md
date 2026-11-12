@@ -39,7 +39,8 @@ testable the moment you run it. Swap in your own details to make it yours.
   (rows are added / updated / removed to match, at every start)
 - **Owner admin** at `/admin`: one-time `/setup` (gated by a `Setup:Key`) creates the single owner account;
   cookie sign-in with lockout, a profile editor, editors for the home page introduction, the headline metrics and the About page
-  (in your template's wording, refusing a stale tab instead of overwriting it), and photo upload (re-encoded, metadata stripped,
+  (in your template's wording, refusing a stale tab instead of overwriting it), a sections page (`/admin/sections`) to show, hide, rename and reorder
+  the sections your template has, and photo upload (re-encoded, metadata stripped,
   stored outside `wwwroot`). See [docs/new-user-guide.md](docs/new-user-guide.md#3-claim-the-site-and-use-the-admin)
 - **Profession templates** with a live preview switcher at `/admin/template`. Two ship today:
   **Software & IT** (case-study showcase, the original look) and **Healthcare** (credentials-first
@@ -140,7 +141,7 @@ side only) and open `/setup` once. Keep `Uploads:Path` on a persistent folder. D
 ```
 src/Portfolio.Web/                ASP.NET Core Razor Pages app
   Configuration/SiteOptions.cs    Bound identity/content config ("Site" section)
-  Pages/                          Razor Pages (Pages/Admin is the owner area, Pages/Admin/Welcome the setup wizard, Pages/Admin/Profile the hero / metrics / About editors, Pages/Setup.cshtml the one-time setup)
+  Pages/                          Razor Pages (Pages/Admin is the owner area, Pages/Admin/Welcome the setup wizard, Pages/Admin/Profile the hero / metrics / About editors, Pages/Admin/Sections the section settings, Pages/Setup.cshtml the one-time setup)
   Templates/<key>/template.json   Profession templates (manifest, optional starter.json, preview.png thumbnail); template.schema.json documents the shape
   Styles/themes/<key>.css         Per-template theme variables, compiled into app.css
   Security/                       Owner account, cookie sign-in, setup key gate, reset-owner command
