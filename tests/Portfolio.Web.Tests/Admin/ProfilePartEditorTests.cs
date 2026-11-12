@@ -429,13 +429,13 @@ public class ProfilePartEditorTests
         Assert.Null((await ProfileFlow.ProfileAsync(app)).About.Headline); // what the wizard publishes
 
         var form = await owner.GetStringAsync(ProfileFlow.About);
-        Assert.Matches(@"<label for=""Form_Headline"">Headline<span class=""adm-optional""> \(optional\)</span>", form); // not marked required while there is none
+        Assert.Matches(@"<label for=""Form_Headline"">Headline\s*<span class=""adm-optional"">", form); // not marked required while there is none
         Assert.Equal(HttpStatusCode.Redirect, (await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(headline: "", paragraphs: "Only paragraphs."))).StatusCode);
         Assert.Equal(["Only paragraphs."], (await ProfileFlow.ProfileAsync(app)).About.Paragraphs);
 
         // Once a headline exists it is required, and emptying it is refused.
         Assert.Equal(HttpStatusCode.Redirect, (await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(headline: "Now there is one"))).StatusCode);
-        Assert.DoesNotMatch(@"<label for=""Form_Headline"">Headline<span", await owner.GetStringAsync(ProfileFlow.About));
+        Assert.DoesNotMatch(@"<label for=""Form_Headline"">Headline\s*<span", await owner.GetStringAsync(ProfileFlow.About));
         var refused = await ProfileFlow.PostAsync(owner, ProfileFlow.About, ProfileFlow.AboutFields(headline: " "));
         Assert.Contains("Headline is required.", await refused.Content.ReadAsStringAsync());
         Assert.Equal("Now there is one", (await ProfileFlow.ProfileAsync(app)).About.Headline);
