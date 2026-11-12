@@ -55,9 +55,10 @@ A fresh deployment has no owner. The first person with the **setup key** claims 
    even the right key, for 15 minutes. That count is kept in the app's memory, shared by all visitors, so
    restarting the app clears it; it is a brake on guessing, not a permanent lock.
 3. You are sent to the sign-in page and, once signed in, straight into the **setup wizard** (see below).
-   Afterwards, from `/admin` you can edit the profile (`/admin/profile`) and the
-   photo (`/admin/photo`). Saving a profile takes effect immediately, including the CV PDF, the
-   share image and the sitemap.
+   Afterwards, from `/admin` you can edit the profile (`/admin/profile`: name, title, summary, contact links), the
+   home page introduction (`/admin/profile/hero`), the headline metrics (`/admin/profile/metrics`), the About page
+   (`/admin/profile/about`) and the photo (`/admin/photo`). The three text editors use your template's own words for their
+   headings and fields. Saving takes effect immediately, including the CV PDF, the share image and the sitemap.
 4. Remove `Setup__Key` from the server when you are done; it has no further use.
 
 ### The setup wizard
@@ -82,8 +83,9 @@ Publishing applies everything in one transaction and refreshes the sitemap, CV a
 twice, or replaying the request, changes nothing the second time.
 
 On the first run, publishing replaces the placeholder profile that came from the `Site` section of
-`appsettings.json` (hero text, metrics, About text, links, phone) with your answers: those parts stay empty until you
-fill them in `/admin/profile`. If you edited the `Site` section before the first run and want to keep those values,
+`appsettings.json` (hero text, metrics, About text, links, phone) with your answers: the metrics and the About page start
+with your summary only, and you fill in the rest at `/admin/profile/metrics` and `/admin/profile/about`. A part you have
+already edited there before you publish is kept as you wrote it: only the parts that are still the placeholder are replaced. If you edited the `Site` section before the first run and want to keep those values,
 choose **Skip setup** instead. Skipping keeps the placeholder profile exactly as it is and loads the demo content into
 any empty table, which is what a new install did before the wizard existed.
 
@@ -112,7 +114,7 @@ can be an internal host name: check it before publishing (or configure forwarded
 Run the wizard again any time from the dashboard (**Setup wizard**). A re-run starts from what the site says now,
 changes only the template, your basics, address, accent colour and photo, and never touches your hero, About text,
 metrics or content rows. If you change your name on a re-run the short name (header wordmark) follows it, but the home
-page headline built on the first run does not: edit it in `/admin/profile`. An unchanged name leaves an edited short name alone. A site that existed before the wizard was added counts as already set up and is not sent
+page headline built on the first run does not: edit it in `/admin/profile/hero`. An unchanged name leaves an edited short name alone. A site that existed before the wizard was added counts as already set up and is not sent
 into it; an unfinished wizard only shows a prompt on the dashboard and never blocks any other admin page.
 
 Sign-in locks for 15 minutes after 5 consecutive failures (any user name counts, because there is
@@ -205,6 +207,24 @@ for the seed files to be the source of truth.
 backup alone restores the entries but not the images they point at). A one-file export and import of all content is planned
 as the next step of this work.
 
+### Your home page introduction, metrics and About page
+
+Three more editors sit next to the profile page and are named in your template's words (Software & IT says "Home page hero",
+"Headline metrics" and "About page"; Healthcare says "Home page introduction", "Key figures" and "About you"). They are linked from the
+dashboard and from `/admin/profile`.
+
+| Editor | Address | What you set |
+|---|---|---|
+| Home page introduction | `/admin/profile/hero` | the headline (required), a short line above it, a highlighted part of the headline and an introduction |
+| Headline metrics | `/admin/profile/metrics` | up to 8 figures, each a value (required), a unit and a label. Move up / Move down / Remove / Add buttons change the rows on the page; nothing is saved until you press Save |
+| About page | `/admin/profile/about` | the page headline (required), paragraphs (blank line between them, up to 10), up to 6 value cards (title and text), a "currently" note and up to 30 focus areas, one per line |
+
+All of it is plain text: anything that looks like a tag (`<b>`, `<script>`) is refused, never run, and the public pages print what you
+type as text. A template can leave a field off the form (Healthcare has no unit on its figures and no highlighted headline part): whatever is
+already stored in a field you cannot see is kept, never erased by a save. If the same page is open in two tabs, or the setup wizard publishes
+while you are editing, the second save is refused with a message that says nothing was saved, and your typing stays on the page so you can reload
+and apply it again. The wizard's first publish replaces only the placeholder parts: a hero, metrics or About text you have already edited is kept.
+
 ### Forgot the password
 
 There is no email reset. Whoever can run commands on the server resets it from the app folder:
@@ -280,7 +300,7 @@ Edit the `Site` section in [src/Portfolio.Web/appsettings.json](../src/Portfolio
 - links such as GitHub, LinkedIn, and email
 - the profile photo URL
 
-These values are the defaults for the site profile. With a database, they are copied into a profile row on first run and that row is used afterwards; edit the `Site` section before the first run, or set `Seed:Mode=Authoritative` to re-apply it on every start. Be careful with that second option once you use `/admin`: Authoritative overwrites the stored profile from the config on the first read after each start, which discards edits made in `/admin/profile`, and it replaces the photo URL, leaving an uploaded photo file in the uploads folder with nothing pointing at it. Once you have an owner account you can change all of these in the browser at `/admin/profile` instead.
+These values are the defaults for the site profile. With a database, they are copied into a profile row on first run and that row is used afterwards; edit the `Site` section before the first run, or set `Seed:Mode=Authoritative` to re-apply it on every start. Be careful with that second option once you use `/admin`: Authoritative overwrites the stored profile from the config on the first read after each start, which discards edits made in `/admin/profile` and its hero, metrics and About pages, and it replaces the photo URL, leaving an uploaded photo file in the uploads folder with nothing pointing at it. Once you have an owner account you can change all of these in the browser at `/admin/profile` instead.
 
 ### Template
 
