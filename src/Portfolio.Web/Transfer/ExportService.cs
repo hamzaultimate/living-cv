@@ -46,16 +46,9 @@ public sealed partial class ExportService
         var posts = (await _db.BlogPosts.AsNoTracking().ToListAsync(ct)).OrderByDescending(x => x.Date).ThenBy(x => x.Id).ToList();
 
         var content = new ExportContent(
-            experience.Select(e => new ExportRole(e.Company, e.Title, e.Start, e.End, e.Current, e.Summary, e.Highlights.ToList(), e.Tech.ToList())).ToList(),
-            skills.Select(s => new ExportSkill(s.Name, s.Group)).ToList(),
-            projects.Select(p => new ExportProject(p.Title, p.Slug, p.Role, p.Org, p.Period, p.Summary, p.Category, p.Problem, p.Approach, p.Impact.ToList(), p.Tech.ToList(),
-                p.Links.Select(l => new ExportLink(l.Label, l.Url)).ToList(), p.HeroImage, p.HeroImageAlt, p.Screenshots.Select(i => new ExportImage(i.Url, i.Caption)).ToList(),
-                p.Proofs.Select(x => new ExportProof(x.Label, x.Url, x.Kind)).ToList(), p.Featured)).ToList(),
-            certifications.Select(c => new ExportCertification(c.Name, c.Issuer, c.Status, c.Date, c.Category, c.CredentialUrl, c.CertificateUrl, c.BadgeImageUrl,
-                c.Proofs.Select(x => new ExportProof(x.Label, x.Url, x.Kind)).ToList())).ToList(),
-            talks.Select(t => new ExportTalk(t.Title, t.Type, t.Event, t.Date, t.YoutubeId, t.Url)).ToList(),
-            testimonials.Select(t => new ExportTestimonial(t.Quote, t.Author, t.AuthorTitle, t.SourceUrl, t.Relation, t.Featured)).ToList(),
-            posts.Select(b => new ExportPost(b.Title, b.Slug, b.Description, b.Date, b.Tags.ToList(), b.Draft, b.Cover, b.CoverAlt, b.BodyMarkdown)).ToList());
+            experience.Select(ExportMap.Role).ToList(), skills.Select(ExportMap.Skill).ToList(), projects.Select(ExportMap.Project).ToList(),
+            certifications.Select(ExportMap.Certification).ToList(), talks.Select(ExportMap.Talk).ToList(), testimonials.Select(ExportMap.Testimonial).ToList(),
+            posts.Select(ExportMap.Post).ToList());
 
         var exported = new ExportProfile(
             profile.OwnerName, profile.BrandName, profile.Role, profile.JobTitle, profile.Url, profile.GoogleAnalyticsId, profile.Summary, profile.Location, profile.KnowsAbout.ToList(),
@@ -94,4 +87,25 @@ public sealed partial class ExportService
         return uses.GroupBy(u => u.Path, StringComparer.Ordinal).OrderBy(g => g.Key, StringComparer.Ordinal)
             .Select(g => new ExportUpload(g.Key, _uploads.TryResolve(g.Key, out var full) && File.Exists(full), g.Select(u => u.Use).ToList())).ToList();
     }
+}
+
+/// <summary>Row to file shape. Shared by the export and by the import, which compares a row with what the file would make of it.</summary>
+public static class ExportMap
+{
+    public static ExportRole Role(Experience e) => new(e.Company, e.Title, e.Start, e.End, e.Current, e.Summary, e.Highlights.ToList(), e.Tech.ToList());
+
+    public static ExportSkill Skill(Skill s) => new(s.Name, s.Group);
+
+    private static List<ExportProof> Proofs(IEnumerable<Proof> proofs) => proofs.Select(x => new ExportProof(x.Label, x.Url, x.Kind)).ToList();
+
+    public static ExportProject Project(Project p) => new(p.Title, p.Slug, p.Role, p.Org, p.Period, p.Summary, p.Category, p.Problem, p.Approach, p.Impact.ToList(), p.Tech.ToList(),
+        p.Links.Select(l => new ExportLink(l.Label, l.Url)).ToList(), p.HeroImage, p.HeroImageAlt, p.Screenshots.Select(i => new ExportImage(i.Url, i.Caption)).ToList(), Proofs(p.Proofs), p.Featured);
+
+    public static ExportCertification Certification(Certification c) => new(c.Name, c.Issuer, c.Status, c.Date, c.Category, c.CredentialUrl, c.CertificateUrl, c.BadgeImageUrl, Proofs(c.Proofs));
+
+    public static ExportTalk Talk(Talk t) => new(t.Title, t.Type, t.Event, t.Date, t.YoutubeId, t.Url);
+
+    public static ExportTestimonial Testimonial(Testimonial t) => new(t.Quote, t.Author, t.AuthorTitle, t.SourceUrl, t.Relation, t.Featured);
+
+    public static ExportPost Post(BlogPost b) => new(b.Title, b.Slug, b.Description, b.Date, b.Tags.ToList(), b.Draft, b.Cover, b.CoverAlt, b.BodyMarkdown);
 }

@@ -136,10 +136,10 @@ public class ExportTests
 
         using var doc = JsonDocument.Parse(first);
         var content = doc.RootElement.GetProperty("content");
-        Assert.Equal(["Seed Co", "Second Co"], content.GetProperty("experience").EnumerateArray().Select(r => r.GetProperty("company").GetString()).ToArray());
-        Assert.Equal(["Seed Project", "Second Project"], content.GetProperty("projects").EnumerateArray().Select(r => r.GetProperty("title").GetString()).ToArray());
-        Assert.Equal(["Seed Talk", "Second Talk"], content.GetProperty("talks").EnumerateArray().Select(r => r.GetProperty("title").GetString()).ToArray()); // newest first
-        Assert.Equal(["seed-draft", "seed-post"], content.GetProperty("blog").EnumerateArray().Select(r => r.GetProperty("slug").GetString()).ToArray()); // newest first, drafts included
+        Assert.Equal(["Seed Co", "Second Co"], content.GetProperty("experience").EnumerateArray().Select(r => r.GetProperty("company").GetString()!).ToArray());
+        Assert.Equal(["Seed Project", "Second Project"], content.GetProperty("projects").EnumerateArray().Select(r => r.GetProperty("title").GetString()!).ToArray());
+        Assert.Equal(["Seed Talk", "Second Talk"], content.GetProperty("talks").EnumerateArray().Select(r => r.GetProperty("title").GetString()!).ToArray()); // newest first
+        Assert.Equal(["seed-draft", "seed-post"], content.GetProperty("blog").EnumerateArray().Select(r => r.GetProperty("slug").GetString()!).ToArray()); // newest first, drafts included
     }
 
     [Fact]
