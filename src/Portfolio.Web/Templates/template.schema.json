@@ -1163,6 +1163,60 @@
               }
             }
           }
+        },
+        "transfer": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The wording of the export and import page (/admin/transfer). Every field only carries words, so none can be hidden.",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one entry is called in messages of the page. Optional: the other editors' words are used for the entries themselves."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Every key is wording only: heading (page title and intro), exportHeading, exportButton, importHeading, fileLabel, applyProfile, previewButton, confirmButton, discardButton, profile (what messages call the owner's profile) and authoritative (the notice when start-up seeding would overwrite an import).",
+              "propertyNames": {
+                "enum": [
+                  "heading",
+                  "exportHeading",
+                  "exportButton",
+                  "importHeading",
+                  "fileLabel",
+                  "applyProfile",
+                  "previewButton",
+                  "confirmButton",
+                  "discardButton",
+                  "profile",
+                  "authoritative"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },

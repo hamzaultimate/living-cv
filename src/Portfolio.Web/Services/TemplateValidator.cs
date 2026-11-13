@@ -139,7 +139,7 @@ public static partial class TemplateValidator
     /// a label, or an attempt to hide a field the entry cannot exist without would otherwise be silently ignored or break the form.</summary>
     private static void ValidateEditor(TemplateDefinition t, List<string> errors)
     {
-        foreach (var section in EditorFields.Sections.Concat(ProfileParts.All).Append(ProfileParts.Sections))
+        foreach (var section in EditorFields.Sections.Concat(ProfileParts.All).Append(ProfileParts.Sections).Append(ProfileParts.Transfer))
         {
             var settings = t.Editor.For(section)!;
             var known = EditorFields.For(section);

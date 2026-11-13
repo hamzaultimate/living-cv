@@ -297,7 +297,7 @@ public class TemplateManifestTests
 
         var editor = props["editor"]!["properties"]!.AsObject();
         Assert.Equal(Names(typeof(TemplateEditor)), editor.Select(p => p.Key).OrderBy(x => x).ToArray());
-        foreach (var section in EditorFields.Sections.Concat(ProfileParts.All).Append(ProfileParts.Sections))
+        foreach (var section in EditorFields.Sections.Concat(ProfileParts.All).Append(ProfileParts.Sections).Append(ProfileParts.Transfer))
         {
             var node = editor[section]!;
             Assert.Equal(Names(typeof(TemplateEditorSection)), node["properties"]!.AsObject().Select(p => p.Key).OrderBy(x => x).ToArray());

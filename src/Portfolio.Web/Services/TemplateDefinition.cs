@@ -186,6 +186,9 @@ public class TemplateEditor
     /// <summary>The sections page: wording for the list of sections, and which of its optional fields a template leaves out.</summary>
     public TemplateEditorSection Sections { get; set; } = new();
 
+    /// <summary>The export and import page: its wording (every field only carries words).</summary>
+    public TemplateEditorSection Transfer { get; set; } = new();
+
     /// <summary>The editor settings for a section key (<see cref="SectionRegistry"/>), or null for a section that has no editor.</summary>
     public TemplateEditorSection? For(string section) => section switch
     {
@@ -200,6 +203,7 @@ public class TemplateEditor
         ProfileParts.Metrics => Metrics,
         ProfileParts.About => About,
         ProfileParts.Sections => Sections,
+        ProfileParts.Transfer => Transfer,
         _ => null,
     };
 }
