@@ -58,6 +58,17 @@ public class TemplateModel : AdminPageModel
         Selected = _catalog.TryGet(Show, out var chosen) ? chosen : _catalog.Get(CurrentKey);
 
         var view = _resolver.Resolve(SiteProfileMapper.ToOptions(profile), Selected.Key);
+        if (Selected.Key != CurrentKey)
+        {
+            // What a switch would do, decided exactly as the POST decides it but on a detached copy (nothing is written): sections kept on, or a refusal.
+            var plan = SectionSettings.PlanSwitch(_resolver, SiteProfileMapper.ToEntity(SiteProfileMapper.ToOptions(profile)), Selected);
+            SwitchKeeps = plan.Kept;
+            SwitchRefused = !plan.Allowed;
+            view = plan.Target; // the preview shows the menu the switch would leave
+            // Sections the switch would bring back: on under the selected template, off under the current one (their content was kept all along).
+            var now = _resolver.Resolve(SiteProfileMapper.ToOptions(profile), CurrentKey);
+            Reappearing = view.Sections.Where(s => s.Enabled && !now.IsEnabled(s.Key)).Select(s => Cap(s.Label)).ToList();
+        }
         PreviewPages = [("/", "Home"), .. view.NavLinks(mobile: true).Select(l => (l.Path, l.Path == "/cv" ? "CV" : Cap(l.Label)))];
         PreviewPath = PreviewPages.Select(p => p.Path).FirstOrDefault(p => p == Tab) ?? "/";
         HiddenContent = await HiddenContentAsync(view, ct);
@@ -71,10 +82,45 @@ public class TemplateModel : AdminPageModel
             return RedirectToPage();
         }
 
-        await _editor.SetTemplateAsync(template, ct);
+        // The sections page never leaves a site without a menu section; a switch must not either. The rule runs inside the write, on the row as it is then, so a sections save
+        // that lands in the middle cannot defeat it. When the new template's defaults would empty the menu, the menu sections that are on now stay on.
+        var kept = new List<string>();
+        SectionSettings.SwitchPlan? plan = null;
+        var outcome = await _editor.SetTemplateAsync(template, profile =>
+        {
+            plan = SectionSettings.PlanSwitch(_resolver, profile, template);
+            kept = plan.Kept.ToList();
+            return plan.Allowed;
+        }, ct);
+        if (outcome == SaveOutcome.Refused)
+        {
+            FlashError(SectionSettings.NoMenuMessage(template.Name, plan!.Target));
+            return RedirectToPage();
+        }
+        if (outcome != SaveOutcome.Saved)
+        {
+            FlashError("Your profile was changed at the same moment, so the template was not switched. Please try again.");
+            return RedirectToPage();
+        }
+        if (kept.Count > 0)
+        {
+            Flash($"Switched to the {template.Name} template. {string.Join(", ", kept)} stay on, although {template.Name} shows them off by default, so your menu is not left empty. Nothing was deleted.");
+            return RedirectToPage();
+        }
         Flash($"Switched to the {template.Name} template. Nothing was deleted: sections it does not use are hidden, and come back if you switch again.");
         return RedirectToPage();
     }
+
+    private static bool HasMenuSection(TemplateView view) => SectionSettings.HasMenuSection(view);
+
+    /// <summary>Sections that are off now and would be on after switching to the selected template.</summary>
+    public IReadOnlyList<string> Reappearing { get; private set; } = [];
+
+    /// <summary>Menu sections that stay on, as saved choices, if the selected template is switched to (the new template's defaults would otherwise empty the menu).</summary>
+    public IReadOnlyList<string> SwitchKeeps { get; private set; } = [];
+
+    /// <summary>True when the selected template cannot be switched to: its defaults would leave no menu section and nothing that is on now can be kept.</summary>
+    public bool SwitchRefused { get; private set; }
 
     private async Task<IReadOnlyList<(string Label, int Count)>> HiddenContentAsync(TemplateView view, CancellationToken ct)
     {

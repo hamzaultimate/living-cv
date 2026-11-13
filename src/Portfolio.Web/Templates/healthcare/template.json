@@ -160,6 +160,39 @@
           "hint": "JPEG, PNG or WebP. Never use a photograph that could identify a patient, relative or colleague."
         }
       }
+    },
+    "hero": {
+      "fields": {
+        "heading": { "label": "Home page introduction", "hint": "The first thing visitors read. Write about your practice in general terms. Never include patient information. Changes apply as soon as you save." },
+        "eyebrow": { "label": "Role line", "hint": "For example your registration and specialty. Plain text." },
+        "headlineAccent": { "hidden": true },
+        "lede": { "label": "Professional summary" }
+      }
+    },
+    "metrics": {
+      "itemLabel": "Figure",
+      "fields": {
+        "heading": { "label": "Key figures", "hint": "Aggregate figures about your practice, such as years of experience. Never patient numbers or anything that could identify a person. Changes apply as soon as you save." },
+        "unit": { "hidden": true },
+        "label": { "label": "What it measures" }
+      }
+    },
+    "sections": {
+      "itemLabel": "Page",
+      "fields": {
+        "heading": { "label": "Pages of your site", "hint": "Choose which pages the site has, what the menu calls them and in which order. Articles and presentations are off until you switch them on. Hiding a page never deletes it. Saves apply at once." },
+        "label": { "label": "Menu name" },
+        "defaultOff": { "label": "Off until you switch it on", "hint": "Not shown by default for this profession. Think about what you would publish there first." }
+      }
+    },
+    "about": {
+      "itemLabel": "Highlight",
+      "fields": {
+        "heading": { "label": "About you", "hint": "Describe your practice and values. Never include patient information. Changes apply as soon as you save." },
+        "valueProps": { "label": "Highlights", "hint": "Short statements about how you practise, shown above the text." },
+        "currentlyNote": { "label": "Current role or interest" },
+        "focus": { "label": "Clinical focus", "hint": "One area per line." }
+      }
     }
   },
   "starter": { "file": "starter.json" },

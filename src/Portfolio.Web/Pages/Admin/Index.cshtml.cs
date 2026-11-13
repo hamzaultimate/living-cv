@@ -18,6 +18,15 @@ public class IndexModel : AdminPageModel
     /// <summary>The names of the editable sections in the template's words ("experience, skills, work and credentials"), for the Content tile.</summary>
     public string ContentLabels { get; private set; } = "content";
 
+    /// <summary>The profile's own editors (home page introduction, metrics, About) with their names in the template's words.</summary>
+    public IReadOnlyList<(string Url, string Heading)> Parts { get; private set; } = [];
+
+    /// <summary>What one section is called in the template's words, for the sections tile.</summary>
+    public string SectionsItem { get; private set; } = "Section";
+
+    /// <summary>The sections page's name in the template's words.</summary>
+    public string SectionsHeading { get; private set; } = "Sections";
+
     /// <summary>True until the onboarding wizard has been published or skipped. Only a prompt: nothing is forced and no admin page is blocked.</summary>
     public bool SetupPending { get; private set; }
 
@@ -29,7 +38,11 @@ public class IndexModel : AdminPageModel
         try
         {
             var template = await _template.GetAsync();
-            var labels = EditorFields.Sections.Select(s => template.Section(s).Label.ToLowerInvariant()).ToList();
+            Parts = EditorView.ProfileLinks(template);
+            var sections = new EditorView(template, ProfileParts.Sections);
+            SectionsHeading = sections.Heading;
+            SectionsItem = sections.ItemLabel;
+            var labels = EditorFields.Sections.Select(s => template.Section(s).Label).ToList();
             ContentLabels = labels.Count > 1 ? string.Join(", ", labels.Take(labels.Count - 1)) + " and " + labels[^1] : labels.FirstOrDefault() ?? "content";
             var state = await _onboarding.GetStateAsync(ct);
             SetupPending = state.FirstRun;

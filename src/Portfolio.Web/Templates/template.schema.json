@@ -142,6 +142,10 @@
           "enabled": {
             "type": "boolean",
             "default": true
+          },
+          "required": {
+            "type": "boolean",
+            "description": "True for a section the owner cannot switch off on the sections page. Cannot be combined with enabled: false. Shipped templates leave it off."
           }
         }
       }
@@ -938,6 +942,201 @@
                   "cover",
                   "body",
                   "draft"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "hero": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The editor for the home page introduction (/admin/profile/hero).",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "Not used by this editor; accepted so every block has the same shape."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Required fields can be relabelled but not hidden. The wording-only keys (heading, valuePropTitle, valuePropBody) carry words, not controls: 'heading' is the page title (label) and the line under it (hint).",
+              "propertyNames": {
+                "enum": [
+                  "heading",
+                  "eyebrow",
+                  "headline",
+                  "headlineAccent",
+                  "lede"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The editor for the headline metrics (/admin/profile/metrics).",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one metric row is called in buttons and headings (\"Add metric\")."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Required fields can be relabelled but not hidden. The wording-only keys (heading, valuePropTitle, valuePropBody) carry words, not controls: 'heading' is the page title (label) and the line under it (hint).",
+              "propertyNames": {
+                "enum": [
+                  "heading",
+                  "value",
+                  "unit",
+                  "label"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "about": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The editor for the About page (/admin/profile/about).",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one value card is called in buttons and headings (\"Add card\")."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Required fields can be relabelled but not hidden. The wording-only keys (heading, valuePropTitle, valuePropBody) carry words, not controls: 'heading' is the page title (label) and the line under it (hint).",
+              "propertyNames": {
+                "enum": [
+                  "heading",
+                  "headline",
+                  "paragraphs",
+                  "valueProps",
+                  "valuePropTitle",
+                  "valuePropBody",
+                  "currentlyNote",
+                  "focus"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sections": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The editor for the sections page (/admin/sections): which sections show, their names and their order.",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one section is called in messages (\"Keep at least one section that has its own page switched on\")."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. 'shown' cannot be hidden. The wording-only keys (heading, locked, defaultOff, noOrder) carry words: 'heading' is the page title (label) and the line under it (hint); 'locked' and 'defaultOff' are the notes on a section that cannot be switched off and on one the template has off by default.",
+              "propertyNames": {
+                "enum": [
+                  "heading",
+                  "label",
+                  "shown",
+                  "locked",
+                  "defaultOff",
+                  "noOrder"
                 ]
               },
               "additionalProperties": {

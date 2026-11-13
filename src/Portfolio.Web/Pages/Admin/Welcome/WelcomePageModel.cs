@@ -61,11 +61,21 @@ public abstract class WelcomePageModel : AdminPageModel
     /// <summary>Leaves the wizard without publishing (see <see cref="OnboardingService.SkipAsync"/>).</summary>
     public async Task<IActionResult> OnPostSkipAsync(CancellationToken ct)
     {
-        var first = (await Onboarding.GetStateAsync(ct)).FirstRun;
-        await Onboarding.SkipAsync(ct);
-        Flash(first
-            ? "Setup skipped. The site keeps its placeholder profile and demo content; run the wizard again from the dashboard whenever you like. You can add your own content under Content at any time."
-            : "Nothing was published. Your draft was discarded and the site is unchanged.");
+        switch (await Onboarding.SkipAsync(ct))
+        {
+            case SkipOutcome.Skipped:
+                Flash("Setup skipped. The site keeps its placeholder profile and demo content; run the wizard again from the dashboard whenever you like. You can add your own content under Content at any time.");
+                break;
+            case SkipOutcome.DraftDiscarded:
+                Flash("Nothing was published. Your draft was discarded and the site is unchanged.");
+                break;
+            case SkipOutcome.AlreadyFinished:
+                Flash("Setup was already finished in another tab, so nothing changed.");
+                break;
+            default:
+                FlashError("Your profile was changed while setup was being skipped, so nothing was recorded. Setup is still open: choose Skip setup again, or continue it.");
+                break;
+        }
         return Redirect("/admin");
     }
 

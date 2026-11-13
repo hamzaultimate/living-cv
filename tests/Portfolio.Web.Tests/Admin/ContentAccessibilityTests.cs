@@ -17,7 +17,7 @@ public class ContentAccessibilityTests
     }
 
     /// <summary>Asserts the structural rules that apply to any content editor page.</summary>
-    private static void AssertAccessible(string path, string html)
+    internal static void AssertAccessible(string path, string html)
     {
         var ids = Regex.Matches(html, @"\sid=""([^""]+)""").Select(m => m.Groups[1].Value).ToList();
         Assert.True(ids.Count == ids.Distinct().Count(), $"{path}: duplicate ids {string.Join(", ", ids.GroupBy(i => i).Where(g => g.Count() > 1).Select(g => g.Key))}");
@@ -200,5 +200,28 @@ public class ContentAccessibilityTests
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         using var db = app.CreateDbContext();
         Assert.True(db.Experiences.Single(e => e.Company == "Tick Co").Current);
+    }
+
+    [Fact]
+    public async Task ThePreviewScrollArea_IsAKeyboardReachableNamedRegion_WithTheManifestsWording()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+
+        var html = await (await ContentFlow.PostAsync(owner, ContentFlow.Blog + "/edit?handler=Preview", ContentFlow.Fields(("Body", "## A heading\n\nSome text")), ContentFlow.Blog + "/edit")).Content.ReadAsStringAsync();
+
+        // The area scrolls (admin.css caps its height), so it must take focus from the keyboard and say what it is; the noun is the template's word for the body field.
+        Assert.Matches(@"<div class=""adm-post-preview"" tabindex=""0"" role=""region"" aria-label=""Post text preview"">", html);
+        AssertAccessible("blog preview", html);
+    }
+
+    [Fact]
+    public void ThePreviewScrollArea_HasPadding_AndTheSameFocusRingAsTheOtherAdminControls()
+    {
+        var css = File.ReadAllText(Path.Combine(Support.TemplateDirs.Web, "wwwroot", "css", "admin.css"));
+
+        Assert.Matches(@"\.adm-post-preview\s*\{[^}]*padding:\s*\.75rem 1rem", css);
+        Assert.Matches(@"\.adm-post-preview:focus-visible\s*\{\s*outline:\s*3px solid var\(--adm-accent\);\s*outline-offset:\s*2px;", css);
+        Assert.Contains(".adm-btn:focus-visible", css); // the ring it must match
     }
 }

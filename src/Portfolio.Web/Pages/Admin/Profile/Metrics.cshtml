@@ -1,0 +1,62 @@
+@page "/admin/profile/metrics"
+@model Portfolio.Web.Pages.Admin.Profile.MetricsModel
+@using Portfolio.Web.Pages.Admin.Content
+@using Portfolio.Web.Pages.Admin.Profile
+@{
+    var v = Model.View;
+    var f = Model.Form;
+    ViewData["Title"] = v.Heading;
+}
+<h1 id="page-heading">@v.Heading</h1>
+<p class="adm-lede">@v.Hint("heading") Up to @ProfileParts.MetricRows. Rows you leave empty are not saved.</p>
+<partial name="_Guidance" model="v" />
+@if (Model.Status is not null)
+{
+    <div class="adm-flash adm-flash-ok" role="status" aria-live="polite">@Model.Status</div>
+}
+
+<form method="post" asp-page="/Admin/Profile/Metrics" novalidate data-unsaved-warning data-has-errors="@(Model.StartsDirty ? "true" : "false")">
+    <partial name="_ErrorSummary" />
+    <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
+    @* Pressing Enter in a text box sends the first button of the form, so Save comes first, before any row button. *@
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @v.Heading</button>
+        <a class="adm-btn" href="/admin">Cancel</a>
+    </div>
+    @if (f.Rows.Count == 0)
+    {
+        <p class="adm-callout" role="note">There are no rows in @v.Heading yet, so your home page shows none. Use "Add @v.ItemLabel" to start.</p>
+    }
+    @for (var i = 0; i < f.Rows.Count; i++)
+    {
+        var row = f.Rows[i];
+        var name = $"{v.ItemLabel} {i + 1}";
+        <fieldset class="adm-fieldset">
+            <legend>@name</legend>
+            <input type="hidden" name="Form.Rows[@i].Source" value="@row.Source" />
+            <div class="adm-row">
+                <partial name="_Field" model="@(Model.Field("value", $"Rows[{i}].Value", row.Value, maxLength: ProfileParts.MetricValueMax, withHint: i == 0))" />
+                <partial name="_Field" model="@(Model.Field("unit", $"Rows[{i}].Unit", row.Unit, maxLength: ProfileParts.MetricUnitMax, withHint: i == 0))" />
+                <partial name="_Field" model="@(Model.Field("label", $"Rows[{i}].Label", row.Label, maxLength: ProfileParts.MetricLabelMax, withHint: i == 0))" />
+            </div>
+            <partial name="_RowButtons" model="@(new RowButtonsVm(i, f.Rows.Count, name, Model.FocusId))" />
+        </fieldset>
+    }
+    <div class="adm-actions">
+        @if (Model.CanAdd)
+        {
+            <button type="submit" id="add-row" class="adm-btn" asp-page-handler="Add" autofocus="@Model.Autofocus("add-row")">Add @v.ItemLabel</button>
+        }
+        else
+        {
+            <p class="adm-hint">You have reached the limit of @ProfileParts.MetricRows.</p>
+        }
+    </div>
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @v.Heading</button>
+        <a class="adm-btn" href="/admin">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+    <script src="~/js/admin-unsaved.js" defer asp-append-version="true"></script>
+}

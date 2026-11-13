@@ -325,6 +325,11 @@ namespace Portfolio.Data.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
 
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<DateTimeOffset?>("ContentSeededAt")
                         .HasColumnType("datetimeoffset");
 
@@ -771,6 +776,8 @@ namespace Portfolio.Data.Migrations
                                 .IsRequired();
 
                             b1.Property<string>("Label");
+
+                            b1.Property<bool?>("Shown");
 
                             b1.Property<int>("SortOrder");
 

@@ -56,7 +56,7 @@ public class ProfileEditorTests
         using var db = test.CreateContext();
         var editor = new ProfileEditor(db, provider, store);
 
-        await editor.SaveAsync(ValidForm(f => f.OwnerName = "Renamed Person"));
+        Assert.Equal(SaveOutcome.Saved, await editor.SaveAsync(ValidForm(f => f.OwnerName = "Renamed Person"), null));
 
         using var check = test.CreateContext();
         Assert.Equal("Renamed Person", (await check.SiteProfiles.SingleAsync()).OwnerName);
@@ -73,7 +73,7 @@ public class ProfileEditorTests
         using var db = test.CreateContext();
         using var cts = new CancellationTokenSource();
 
-        await new ProfileEditor(db, new CountingProvider(), store).SaveAsync(ValidForm(), cts.Token);
+        await new ProfileEditor(db, new CountingProvider(), store).SaveAsync(ValidForm(), null, cts.Token);
 
         Assert.False(Assert.Single(store.EvictionTokens).CanBeCanceled);
     }
@@ -93,7 +93,7 @@ public class ProfileEditorTests
         }
         using var db = test.CreateContext();
 
-        await new ProfileEditor(db, new CountingProvider(), new RecordingStore()).SaveAsync(ValidForm());
+        await new ProfileEditor(db, new CountingProvider(), new RecordingStore()).SaveAsync(ValidForm(), null);
 
         using var check = test.CreateContext();
         var row = await check.SiteProfiles.SingleAsync();
@@ -112,8 +112,8 @@ public class ProfileEditorTests
         using var db = test.CreateContext();
         var editor = new ProfileEditor(db, provider, store);
 
-        Assert.Null(await editor.SetPhotoAsync("/uploads/a.jpg"));
-        Assert.Equal("/uploads/a.jpg", await editor.SetPhotoAsync(null));
+        Assert.Null((await editor.SetPhotoAsync("/uploads/a.jpg")).Previous);
+        Assert.Equal("/uploads/a.jpg", (await editor.SetPhotoAsync(null)).Previous);
 
         Assert.Equal(["/uploads/a.jpg", null], provider.Primed.Select(p => p.PhotoUrl));
         Assert.Equal(2, store.EvictedTags.Count);
@@ -181,7 +181,7 @@ public class ProfileEditorTests
             var editor = scope.ServiceProvider.GetRequiredService<ProfileEditor>();
             var form = ProfileForm.From(await editor.LoadAsync());
             form.Url = "https://edited.example";
-            await editor.SaveAsync(form);
+            Assert.Equal(SaveOutcome.Saved, await editor.SaveAsync(form, form.Stamp));
         }
 
         var sitemap = await client.GetStringAsync("/sitemap.xml");
@@ -198,7 +198,8 @@ public class ProfileEditorTests
         var html = await client.GetStringAsync("/admin/profile");
 
         Assert.Contains("value=\"Alex Rivera\"", html);
-        Assert.Contains("name=\"Form.Metrics[0].Value\"", html);
+        Assert.Contains("name=\"Form.Stamp\"", html);
+        Assert.DoesNotContain("Form.Metrics", html); // the metrics have their own page now
         Assert.Contains("name=\"__RequestVerificationToken\"", html);
     }
 
@@ -245,35 +246,6 @@ public class ProfileEditorTests
     }
 
     [Fact]
-    public async Task Metrics_NeedAValue_AndBlankRowsAreDropped()
-    {
-        using var app = new AdminApp();
-        var client = await app.SignedInClientAsync();
-        var token = await AdminApp.GetTokenAsync(client, "/admin/profile");
-
-        var bad = await AdminApp.PostFormAsync(client, "/admin/profile", token, Fields(f =>
-        {
-            f["Form.Metrics[0].Value"] = "";
-            f["Form.Metrics[0].Label"] = "orphan label";
-        }));
-        Assert.Equal(HttpStatusCode.OK, bad.StatusCode);
-        Assert.Contains("A metric needs a value", await bad.Content.ReadAsStringAsync());
-
-        token = await AdminApp.GetTokenAsync(client, "/admin/profile");
-        var ok = await AdminApp.PostFormAsync(client, "/admin/profile", token, Fields(f =>
-        {
-            f["Form.Metrics[0].Value"] = "42";
-            f["Form.Metrics[0].Unit"] = "ms";
-            f["Form.Metrics[0].Label"] = "latency";
-            f["Form.Metrics[1].Value"] = "";
-        }));
-        Assert.Equal(HttpStatusCode.Redirect, ok.StatusCode);
-        using var db = app.CreateDbContext();
-        var metric = Assert.Single((await db.SiteProfiles.SingleAsync()).Metrics);
-        Assert.Equal("42", metric.Value);
-    }
-
-    [Fact]
     public async Task Markup_IsStoredAsTextAndEncodedWhenRendered()
     {
         using var app = new AdminApp();
@@ -281,7 +253,7 @@ public class ProfileEditorTests
         var token = await AdminApp.GetTokenAsync(client, "/admin/profile");
 
         var response = await AdminApp.PostFormAsync(client, "/admin/profile", token, Fields(f =>
-            f["Form.HeroHeadline"] = "<script>alert('x')</script>"));
+            f["Form.OwnerName"] = "<script>alert('x')</script>"));
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         var home = await app.NewClient().GetStringAsync("/");
@@ -323,7 +295,6 @@ public class ProfileEditorTests
         {
             ["Form.OwnerName"] = "Alex Rivera", ["Form.BrandName"] = "Alex", ["Form.Role"] = "Engineer", ["Form.JobTitle"] = "Engineer",
             ["Form.Url"] = "https://owner.example", ["Form.Summary"] = "Summary text.",
-            ["Form.AboutParagraphsText"] = "One.\r\n\r\nTwo.",
         };
         edit(fields);
         return fields;

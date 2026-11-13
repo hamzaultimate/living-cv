@@ -67,6 +67,36 @@
         "body": { "label": "Post text" },
         "draft": { "label": "Keep as a draft (not public)" }
       }
+    },
+    "hero": {
+      "fields": {
+        "heading": { "label": "Home page hero", "hint": "The headline block at the top of your home page. Plain text. Changes apply as soon as you save." },
+        "eyebrow": { "hint": "A short line above the headline, such as your title and stack. Plain text." },
+        "lede": { "label": "Intro" }
+      }
+    },
+    "metrics": {
+      "itemLabel": "Metric",
+      "fields": {
+        "heading": { "label": "Headline metrics", "hint": "Numbers shown under the hero, such as throughput or uptime. Only publish figures you can defend. Changes apply as soon as you save." },
+        "value": { "hint": "For example 20k or 99.9." },
+        "unit": { "hint": "For example rps or %." }
+      }
+    },
+    "sections": {
+      "itemLabel": "Section",
+      "fields": {
+        "heading": { "label": "Site sections", "hint": "Choose which pages the site has, what the menu calls them and in which order. Hiding a page never deletes its content. Changes apply as soon as you save." },
+        "label": { "label": "Menu name" }
+      }
+    },
+    "about": {
+      "itemLabel": "Card",
+      "fields": {
+        "heading": { "label": "About page" },
+        "currentlyNote": { "label": "\"Currently\" note" },
+        "focus": { "label": "Focus areas", "hint": "One per line, for example the technologies you are working with now." }
+      }
     }
   },
   "starter": { "source": "seed" },

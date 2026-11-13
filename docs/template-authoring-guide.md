@@ -75,7 +75,7 @@ load, the site renders the software template. See `Templates/healthcare/template
   "sections": [                      // order = navigation order; a section not listed, or enabled:false, is hidden
     { "key": "certifications", "label": "licences & registrations", "shortLabel": "registrations" },
     { "key": "projects", "label": "research & initiatives", "shortLabel": "initiatives", "itemLabel": "Initiative" },
-    { "key": "blog", "label": "articles", "itemLabel": "Article", "enabled": false }
+    { "key": "blog", "label": "articles", "itemLabel": "Article", "enabled": false }   // optional: "required": true makes a section always on
   ],
   "skillGroups": ["Clinical", "Procedures", "Documentation", "Languages"],
   "seo": {
@@ -122,7 +122,8 @@ the button that opens an image; a caption is appended) and `imageAlt` (alt text 
 > error, and the site falls back to the default template for any profile that named it. Add the block (and ideally `theme.accents`
 > and a `preview.png`) before upgrading.
 
-`editor` is optional and shapes the admin content editors (`/admin/content`: experience, skills, projects, certifications, talks, testimonials, blog). Anything it
+`editor` is optional and shapes the admin content editors (`/admin/content`: experience, skills, projects, certifications, talks, testimonials, blog) and the three profile editors
+(`hero`, `metrics`, `about`, at `/admin/profile/hero`, `/metrics`, `/about`; described below). Anything it
 leaves out uses the neutral wording in `EditorFields`, so a template only needs to say what differs. For each of the seven sections:
 
 | Setting | Effect |
@@ -144,6 +145,19 @@ are `copy.certifications.statusEarned`, `statusInProgress` and `statusPlanned`, 
 entry for them. Sensitive templates (`sensitive: true`) have their `guidance` shown on every editor. The section's label and
 whether it is enabled also drive the editor headings and a "not shown by your template" note, and a test adds a template with
 unique wording to prove none of this is hardcoded.
+
+**The profile editors** (`editor.hero`, `editor.metrics`, `editor.about`) use the same `itemLabel` and `fields` settings. They edit the hero, the headline metrics and the
+About text stored on the profile, so a template can name them and leave out what its profession does not use. Keys:
+`hero`: `heading`, `eyebrow`, `headline`, `headlineAccent`, `lede`; `metrics`: `heading`, `value`, `unit`, `label`; `about`: `heading`, `headline`, `paragraphs`, `valueProps`,
+`valuePropTitle`, `valuePropBody`, `currentlyNote`, `focus`. `heading` is a **wording-only** key: its `label` is the page title (and what the dashboard tile, the save message and the
+"changed somewhere else" refusal call the block) and its `hint` is the line under the title. `valuePropTitle` and `valuePropBody` are the wording-only labels of the two boxes of one About card. Wording-only
+keys can be relabelled but never hidden (the validator refuses `hidden: true` on them). The fields a block cannot do without (`hero.headline`, `metrics.value`, `about.headline`) can be relabelled but not hidden. `itemLabel`
+names one row ("Add metric", "Metric 2", "Add card") on `metrics` and `about`; the hero has no rows, so it is accepted and unused there. A hidden field is not drawn, not validated and not read from the post, and what is stored
+in it is kept by every save (for a hidden metric column the stored value follows its row when rows are moved or removed). About is a section: when the template does not enable it, its editor says the public site does not show it and keeps the text. The hero and the metrics are blocks of the home page, which every template shows.
+**The sections page** (`editor.sections`, at `/admin/sections`) has the keys `heading`, `label` (the owner's name for a section in the menu; may be hidden, in which case stored names are kept untouched), `shown` (the switch; cannot be hidden), and the wording-only `locked` (the note on a section that cannot be switched off), `noOrder` (the note on a row whose position has no effect on the menu: contact and home-page blocks) and `defaultOff` (the note on a section the template lists as `enabled: false`). `itemLabel` is what one section is called in messages ("Each zork needs its own name"). A template section may carry `"required": true` to be always on (the owner gets no switch and a stored hide is ignored); it cannot be combined with `enabled: false`. The owner's settings only ever apply to sections the template lists: a section listed as `enabled: false` stays off until the owner explicitly switches it on, an unlisted key is never shown, and the order is the owner's when they saved one and the template's otherwise.
+
+Only plain text is accepted in all of these fields (no `<` followed by a letter, `/`, `!` or `?`), whatever a template says. Messages that name the block or a row, including errors and the "saved" and "not saved" notices, are built from these words:
+a test adds a template with unique wording and checks that none of the neutral wording appears.
 
 `heroSuggestions` is required. `title` (at most 120 characters) and `summary` (at most 400) are plain text offered in the
 wizard's Basics step, which pre-fills them; the owner edits them and **whatever stays is published as written**, so write

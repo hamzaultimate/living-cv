@@ -20,6 +20,8 @@ public class BodyLimitCoverageTests
         Assert.Contains(withPost, t => t.FullName!.EndsWith("Talks.EditModel"));
         Assert.Contains(withPost, t => t.FullName!.EndsWith("Testimonials.EditModel"));
         Assert.Contains(withPost, t => t.FullName!.EndsWith("Blog.EditModel"));
+        foreach (var name in new[] { "Admin.ProfileModel", "Profile.HeroModel", "Profile.MetricsModel", "Profile.AboutModel", "Admin.SectionsModel" })
+            Assert.Contains(withPost, t => t.FullName!.EndsWith(name));
         var missing = withPost.Where(t => t.GetCustomAttribute<BodyLimitAttribute>(inherit: true) is null).Select(t => t.FullName).ToList();
 
         Assert.Empty(missing);

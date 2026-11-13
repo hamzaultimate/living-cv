@@ -52,13 +52,7 @@ public class ListOrderConcurrencyTests
     }
 
     /// <summary>Runs <paramref name="outer"/>; right before it saves, <paramref name="inner"/> runs to completion as another request.</summary>
-    private static async Task<T> OverlapAsync<T>(AdminApp app, Func<Task<T>> outer, Func<Task> inner)
-    {
-        app.BeforeOrderedSave = inner;
-        var result = await outer();
-        Assert.Null(app.BeforeOrderedSave); // the other request really ran in the middle of this one
-        return result;
-    }
+    private static Task<T> OverlapAsync<T>(AdminApp app, Func<Task<T>> outer, Func<Task> inner) => app.OverlapAsync(outer, inner);
 
     private static void AssertRefusedMove(HttpResponseMessage response)
     {

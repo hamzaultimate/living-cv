@@ -21,7 +21,8 @@ public sealed class EditorView
         _settings = template.Definition.Editor.For(section) ?? new TemplateEditorSection();
         _fields = EditorFields.For(section);
         SectionLabel = TemplateView.Cap(resolved.Label);
-        SectionEnabled = resolved.Enabled;
+        // The hero and the metrics are blocks of the home page, not sections the template can switch off.
+        SectionEnabled = !SectionRegistry.IsKnown(section) || resolved.Enabled;
         var item = !string.IsNullOrWhiteSpace(_settings.ItemLabel) ? _settings.ItemLabel!.Trim()
             : !string.IsNullOrWhiteSpace(resolved.ItemLabel) ? resolved.ItemLabel!.Trim()
             : DefaultItemLabel(section);
@@ -49,8 +50,16 @@ public sealed class EditorView
         SectionRegistry.Talks => "Talk",
         SectionRegistry.Testimonials => "Testimonial",
         SectionRegistry.Blog => "Post",
+        ProfileParts.Hero => "Introduction",
+        ProfileParts.Metrics => "Metric",
+        ProfileParts.About => "Card",
+        ProfileParts.Sections => "Section",
         _ => "Entry",
     };
+
+    /// <summary>The addresses of the profile's own editors (hero, metrics, About) with their names in the template's words, for the links on the dashboard and the identity page.</summary>
+    public static IReadOnlyList<(string Url, string Heading)> ProfileLinks(TemplateView template) =>
+        ProfileParts.All.Select(part => ("/admin/profile/" + part, new EditorView(template, part).Heading)).ToList();
 
     public string Section { get; }
     public TemplateView Template { get; }
@@ -70,6 +79,9 @@ public sealed class EditorView
     public string? Guidance { get; }
 
     public IReadOnlyList<string> SkillGroups { get; }
+
+    /// <summary>What the page is called for the profile editors (the label of the wording-only <c>heading</c> key), for titles and messages ("Saved the home page introduction").</summary>
+    public string Heading => Label("heading");
 
     public string Label(string key)
     {

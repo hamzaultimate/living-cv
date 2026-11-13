@@ -38,6 +38,11 @@ public static partial class ContentRules
         return string.IsNullOrEmpty(t) ? null : t;
     }
 
+    /// <summary>The paragraphs of a text area: blocks separated by one or more blank lines, each trimmed, with line breaks normalised. Empty blocks are dropped.</summary>
+    public static List<string> Paragraphs(string? text) =>
+        Regex.Split((text ?? "").Replace("\r\n", "\n").Replace('\r', '\n'), @"\n[ \t]*\n", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1))
+            .Select(p => p.Trim()).Where(p => p.Length > 0).ToList();
+
     /// <summary>An absolute http or https address with a host and no embedded credentials. Everything else (javascript:, data:, relative, empty) is false.</summary>
     public static bool IsHttpUrl(string? value) =>
         !string.IsNullOrWhiteSpace(value)

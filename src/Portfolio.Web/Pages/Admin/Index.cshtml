@@ -21,11 +21,22 @@
 <div class="adm-grid">
     <a class="adm-card adm-tile" href="/admin/profile">
         <h2>Profile</h2>
-        <p>Name, headline, summary, contact links, metrics and the About page.</p>
+        <p>Name, title, summary and contact links.</p>
     </a>
+    @foreach (var (url, heading) in Model.Parts)
+    {
+        <a class="adm-card adm-tile" href="@url">
+            <h2>@heading</h2>
+            <p>Changes apply to your public site as soon as you save.</p>
+        </a>
+    }
     <a class="adm-card adm-tile" href="/admin/content">
         <h2>Content</h2>
         <p>Add, edit, reorder and remove your @Model.ContentLabels.</p>
+    </a>
+    <a class="adm-card adm-tile" href="/admin/sections">
+        <h2>@Model.SectionsHeading</h2>
+        <p>Show, hide, rename and reorder each "@Model.SectionsItem". Hiding never deletes what is in it.</p>
     </a>
     <a class="adm-card adm-tile" href="/admin/photo">
         <h2>Photo</h2>

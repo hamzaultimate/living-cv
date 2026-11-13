@@ -145,6 +145,7 @@ public static class ContentFlow
         parts.AddRange((await db.Testimonials.AsNoTracking().OrderBy(x => x.Id).ToListAsync()).Select(x => $"M{x.Id}|{x.Quote}|{x.Author}|{x.AuthorTitle}|{x.SourceUrl}|{x.Relation}|{x.Featured}|{x.SortOrder}|{x.ConcurrencyStamp}"));
         parts.AddRange((await db.BlogPosts.AsNoTracking().OrderBy(x => x.Id).ToListAsync()).Select(x => $"B{x.Id}|{x.Title}|{x.Slug}|{x.Description}|{x.Date}|{string.Join(",", x.Tags)}|{x.Draft}|{x.Cover}|{x.CoverAlt}|{x.BodyMarkdown}|{x.ConcurrencyStamp}"));
         parts.AddRange((await db.ListStamps.AsNoTracking().OrderBy(x => x.Section).ToListAsync()).Select(x => $"L{x.Section}|{x.Stamp}"));
+        parts.AddRange((await db.SiteProfiles.AsNoTracking().ToListAsync()).Select(x => "R" + ProfileFlow.Fingerprint(x)));
         return string.Join("\n", parts);
     }
 

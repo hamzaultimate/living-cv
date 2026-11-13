@@ -22,6 +22,7 @@ public class SiteProfile
         public const int AccentColor = 40;
         public const int Location = 120;
         public const int OnboardingOutcome = 20;
+        public const int ConcurrencyStamp = 32;
     }
 
     public const int SingletonId = 1;
@@ -82,6 +83,14 @@ public class SiteProfile
     /// </summary>
     public DateTimeOffset? ContentSeededAt { get; set; }
 
+    /// <summary>
+    /// Replaced (a new 32 character GUID) by every write to the profile that can change what the public site shows: identity, hero, metrics, About, sections,
+    /// photo, template and the wizard's publish. An editor posts the stamp it loaded the form with and the update only matches that stamp, so a form that is out of date
+    /// (another tab, another session) is refused instead of overwriting. Null on a row that has not been written since the column was added.
+    /// The wizard's unpublished draft does not replace it: nothing public reads the draft.
+    /// </summary>
+    public string? ConcurrencyStamp { get; set; }
+
     /// <summary>The wizard's unpublished answers as JSON (see the web project's OnboardingDraft). Never read by the public site.</summary>
     public string? OnboardingDraft { get; set; }
 }
@@ -121,6 +130,13 @@ public class SectionSetting
 {
     public required string Key { get; set; }
     public string? Label { get; set; }
+    /// <summary>Older meaning, still honoured: false hides the section. True means "no opinion" and never switches on a section the template has off.</summary>
     public bool Enabled { get; set; } = true;
+
+    /// <summary>The owner's explicit choice from the sections page: true shows the section (even one the template lists as off), false hides it, null follows the template.
+    /// Only written when it differs from what the template does by default. A section the template does not list is never shown, whatever this says.</summary>
+    public bool? Shown { get; set; }
+
+    /// <summary>The section's 1-based position in the owner's order, or 0 for "no opinion" (the template's order). The sections page writes all positions together or none.</summary>
     public int SortOrder { get; set; }
 }
