@@ -1,0 +1,97 @@
+using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
+using Portfolio.Data;
+using Portfolio.Data.Entities;
+using Portfolio.Web.Services;
+using Portfolio.Web.Uploads;
+
+namespace Portfolio.Web.Transfer;
+
+/// <summary>
+/// Reads the profile and every content table into an <see cref="ExportFile"/>. It only reads: nothing is tracked, no row is created (a profile that was never
+/// stored is taken from the provider), so a GET that exports never changes the site. Rows come out in a fixed order (the public order of each list, ties by
+/// id), so two exports of the same data are the same file apart from its timestamp.
+/// </summary>
+public sealed partial class ExportService
+{
+    [GeneratedRegex(@"/uploads/[0-9a-f]{32}\.(?:jpg|png|webp)", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex UploadInText();
+
+    private readonly PortfolioDbContext _db;
+    private readonly ISiteProfileProvider _provider;
+    private readonly UploadStore _uploads;
+    private readonly TimeProvider _clock;
+
+    public ExportService(PortfolioDbContext db, ISiteProfileProvider provider, UploadStore uploads, TimeProvider clock)
+    {
+        _db = db;
+        _provider = provider;
+        _uploads = uploads;
+        _clock = clock;
+    }
+
+    public async Task<ExportFile> BuildAsync(CancellationToken ct)
+    {
+        var profile = await _db.SiteProfiles.AsNoTracking().FirstOrDefaultAsync(p => p.Id == SiteProfile.SingletonId, ct)
+                      ?? SiteProfileMapper.ToEntity(await _provider.GetAsync(ct));
+
+        var experience = await _db.Experiences.AsNoTracking().OrderBy(x => x.SortOrder).ThenBy(x => x.Id).ToListAsync(ct);
+        // Skills are ordered within their group; the groups themselves have no stored order, so they are listed alphabetically (ordinal, whatever the database collation).
+        var skills = (await _db.Skills.AsNoTracking().ToListAsync(ct)).OrderBy(x => x.Group, StringComparer.Ordinal).ThenBy(x => x.SortOrder).ThenBy(x => x.Id).ToList();
+        var projects = await _db.Projects.AsNoTracking().OrderBy(x => x.SortOrder).ThenBy(x => x.Id).ToListAsync(ct);
+        var certifications = await _db.Certifications.AsNoTracking().OrderBy(x => x.SortOrder).ThenBy(x => x.Id).ToListAsync(ct);
+        // The public pages list talks and posts newest first; the date is the order.
+        var talks = (await _db.Talks.AsNoTracking().ToListAsync(ct)).OrderByDescending(x => x.Date ?? DateOnly.MinValue).ThenBy(x => x.SortOrder).ThenBy(x => x.Id).ToList();
+        var testimonials = await _db.Testimonials.AsNoTracking().OrderBy(x => x.SortOrder).ThenBy(x => x.Id).ToListAsync(ct);
+        var posts = (await _db.BlogPosts.AsNoTracking().ToListAsync(ct)).OrderByDescending(x => x.Date).ThenBy(x => x.Id).ToList();
+
+        var content = new ExportContent(
+            experience.Select(e => new ExportRole(e.Company, e.Title, e.Start, e.End, e.Current, e.Summary, e.Highlights.ToList(), e.Tech.ToList())).ToList(),
+            skills.Select(s => new ExportSkill(s.Name, s.Group)).ToList(),
+            projects.Select(p => new ExportProject(p.Title, p.Slug, p.Role, p.Org, p.Period, p.Summary, p.Category, p.Problem, p.Approach, p.Impact.ToList(), p.Tech.ToList(),
+                p.Links.Select(l => new ExportLink(l.Label, l.Url)).ToList(), p.HeroImage, p.HeroImageAlt, p.Screenshots.Select(i => new ExportImage(i.Url, i.Caption)).ToList(),
+                p.Proofs.Select(x => new ExportProof(x.Label, x.Url, x.Kind)).ToList(), p.Featured)).ToList(),
+            certifications.Select(c => new ExportCertification(c.Name, c.Issuer, c.Status, c.Date, c.Category, c.CredentialUrl, c.CertificateUrl, c.BadgeImageUrl,
+                c.Proofs.Select(x => new ExportProof(x.Label, x.Url, x.Kind)).ToList())).ToList(),
+            talks.Select(t => new ExportTalk(t.Title, t.Type, t.Event, t.Date, t.YoutubeId, t.Url)).ToList(),
+            testimonials.Select(t => new ExportTestimonial(t.Quote, t.Author, t.AuthorTitle, t.SourceUrl, t.Relation, t.Featured)).ToList(),
+            posts.Select(b => new ExportPost(b.Title, b.Slug, b.Description, b.Date, b.Tags.ToList(), b.Draft, b.Cover, b.CoverAlt, b.BodyMarkdown)).ToList());
+
+        var exported = new ExportProfile(
+            profile.OwnerName, profile.BrandName, profile.Role, profile.JobTitle, profile.Url, profile.GoogleAnalyticsId, profile.Summary, profile.Location, profile.KnowsAbout.ToList(),
+            profile.PhotoUrl, profile.PhotoUrlLight, profile.Phone, profile.WhatsApp, profile.Email, profile.SecondaryEmails.ToList(), profile.LinkedIn, profile.GitHub, profile.YouTube,
+            profile.TemplateKey, profile.AccentColor,
+            new ExportHero(profile.Hero.Eyebrow, profile.Hero.Headline, profile.Hero.HeadlineAccent, profile.Hero.Lede),
+            profile.Metrics.Select(m => new ExportMetric(m.Value, m.Unit, m.Label)).ToList(),
+            new ExportAbout(profile.About.Headline, profile.About.Paragraphs.ToList(), profile.About.ValueProps.Select(v => new ExportCard(v.Title, v.Body)).ToList(), profile.About.CurrentlyNote, profile.About.Focus.ToList()),
+            // Every stored setting is written, the ones for keys the template does not list included: they are inert, and an import keeps them that way.
+            profile.Sections.Select(s => new ExportSection(s.Key, s.Label, s.Enabled, s.Shown, s.SortOrder)).ToList());
+
+        return new ExportFile(TransferLimits.SchemaVersion, TransferLimits.Format, _clock.GetUtcNow(), exported, content, Manifest(profile, projects, posts));
+    }
+
+    /// <summary>The uploaded files the data points at (ordered by path, with where each is used), and whether each is in the uploads folder now.</summary>
+    private IReadOnlyList<ExportUpload> Manifest(SiteProfile profile, IEnumerable<Project> projects, IEnumerable<BlogPost> posts)
+    {
+        var uses = new List<(string Path, ExportUse Use)>();
+        void Add(string? url, string table, string? entry, string field)
+        {
+            if (url is not null && _uploads.TryResolve(url, out _)) uses.Add((url, new ExportUse(table, entry, field)));
+        }
+        Add(profile.PhotoUrl, "profile", null, "photoUrl");
+        Add(profile.PhotoUrlLight, "profile", null, "photoUrlLight");
+        foreach (var p in projects)
+        {
+            Add(p.HeroImage, "projects", p.Slug, "heroImage");
+            foreach (var (shot, i) in p.Screenshots.Select((s, i) => (s, i))) Add(shot.Url, "projects", p.Slug, $"screenshots[{i}]");
+        }
+        foreach (var b in posts)
+        {
+            Add(b.Cover, "blog", b.Slug, "cover");
+            foreach (var match in UploadInText().Matches(b.BodyMarkdown).Select(m => m.Value).Distinct()) Add(match, "blog", b.Slug, "body");
+        }
+
+        return uses.GroupBy(u => u.Path, StringComparer.Ordinal).OrderBy(g => g.Key, StringComparer.Ordinal)
+            .Select(g => new ExportUpload(g.Key, _uploads.TryResolve(g.Key, out var full) && File.Exists(full), g.Select(u => u.Use).ToList())).ToList();
+    }
+}

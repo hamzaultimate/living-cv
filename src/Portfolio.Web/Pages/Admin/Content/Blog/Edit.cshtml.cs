@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Portfolio.Data;
@@ -27,7 +26,7 @@ public class PostForm
 
 // Applies the upload cap before the antiforgery check reads the body (see BodyLimitAttribute); the cover image is the only file.
 [BodyLimit]
-public partial class EditModel : ContentPageModel
+public class EditModel : ContentPageModel
 {
     public const int DescriptionMax = 300;
     public const int BodyMax = 60_000;
@@ -35,9 +34,6 @@ public partial class EditModel : ContentPageModel
     public const int TagMax = 30;
     private static readonly DateOnly EarliestDate = new(1990, 1, 1);
     private static readonly DateOnly LatestDate = new(2100, 12, 31);
-
-    [GeneratedRegex(@"^[\p{L}\p{N}.+#][\p{L}\p{N} .+#&_-]*\z", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
-    private static partial Regex TagPattern();
 
     private readonly ImageProcessor _processor;
     private readonly UploadStore _uploads;
@@ -244,7 +240,7 @@ public partial class EditModel : ContentPageModel
             var tag = ContentRules.Trim(raw);
             if (tag is null || tags.Contains(tag, StringComparer.OrdinalIgnoreCase)) continue;
             if (tag.Length > TagMax) c.Error(nameof(Form.Tags), $"{label}: each can be at most {TagMax} characters.");
-            else if (!TagPattern().IsMatch(tag)) c.Error(nameof(Form.Tags), $"{label}: use letters, digits, spaces and . + # & _ - only (\"{tag}\" has something else).");
+            else if (!ContentRules.IsTag(tag)) c.Error(nameof(Form.Tags), $"{label}: use letters, digits, spaces and . + # & _ - only (\"{tag}\" has something else).");
             tags.Add(tag);
         }
         if (tags.Count > MaxTags) c.Error(nameof(Form.Tags), $"{label}: at most {MaxTags}.");

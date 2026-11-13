@@ -10,13 +10,18 @@ namespace Portfolio.Web.Services;
 public sealed class FormCheck
 {
     private readonly ModelStateDictionary _state;
-    private readonly EditorView _view;
+    private readonly Func<string, string> _label;
     private readonly string _prefix;
 
-    public FormCheck(ModelStateDictionary state, EditorView view, string prefix = "Form")
+    public FormCheck(ModelStateDictionary state, EditorView view, string prefix = "Form") : this(state, view.Label, prefix)
+    {
+    }
+
+    /// <summary>For values that have no editor view of their own: <paramref name="label"/> gives the name of a field as a message should say it.</summary>
+    public FormCheck(ModelStateDictionary state, Func<string, string> label, string prefix = "Form")
     {
         _state = state;
-        _view = view;
+        _label = label;
         _prefix = prefix;
     }
 
@@ -46,12 +51,12 @@ public sealed class FormCheck
 
     // A message about a field in a row names the row first and quotes the field's label as the template wrote it ('Figure 2: "What it measures" is required.'),
     // so no template word is bent into the middle of a sentence.
-    private string Named(string key, string? context) => context is null ? _view.Label(key) : $"{context}: \"{_view.Label(key)}\"";
+    private string Named(string key, string? context) => context is null ? _label(key) : $"{context}: \"{_label(key)}\"";
 
     /// <summary>A multi-line plain-text value (paragraphs keep their line breaks).</summary>
     public string? Paragraph(string property, string key, string? value, int max, bool required = false)
     {
-        var label = _view.Label(key);
+        var label = _label(key);
         var text = ContentRules.Paragraph(value);
         if (text is null)
         {
@@ -67,7 +72,7 @@ public sealed class FormCheck
     /// <summary>Paragraphs separated by blank lines, each plain text, at most <paramref name="maxCount"/> of at most <paramref name="maxLength"/> characters.</summary>
     public List<string> Paragraphs(string property, string key, string? value, int maxCount, int maxLength)
     {
-        var label = _view.Label(key);
+        var label = _label(key);
         var paragraphs = ContentRules.Paragraphs(value);
         if (paragraphs.Count > maxCount) Error(property, $"{label}: at most {maxCount} paragraphs.");
         else if (paragraphs.Any(p => p.Length > maxLength)) Error(property, $"{label}: each paragraph can be at most {maxLength} characters.");
@@ -79,7 +84,7 @@ public sealed class FormCheck
     /// <summary>One entry per line of a text area, each plain text.</summary>
     public List<string> Lines(string property, string key, string? value, int maxLines, int maxLength)
     {
-        var label = _view.Label(key);
+        var label = _label(key);
         var lines = ContentRules.Lines(value);
         if (lines.Count > maxLines) Error(property, $"{label}: at most {maxLines} lines.");
         else if (lines.Any(l => l.Length > maxLength)) Error(property, $"{label}: each line can be at most {maxLength} characters.");
@@ -88,10 +93,22 @@ public sealed class FormCheck
         return lines;
     }
 
+    /// <summary>A list of single-line plain-text entries (the items of a JSON array, not the lines of a text area). Empty entries are dropped; an entry with a line break is refused, not split.</summary>
+    public List<string> Items(string property, string key, IEnumerable<string?> values, int maxItems, int maxLength)
+    {
+        var label = _label(key);
+        var items = values.Select(ContentRules.Trim).Where(v => v is not null).Select(v => v!).ToList();
+        if (items.Count > maxItems) Error(property, $"{label}: at most {maxItems} entries.");
+        else if (items.Any(l => l.Length > maxLength)) Error(property, $"{label}: each entry can be at most {maxLength} characters.");
+        else if (items.Any(l => ContentRules.HasControlCharacters(l))) Error(property, $"{label} contains characters that are not allowed.");
+        else if (items.Any(ContentRules.HasMarkup)) Error(property, $"{label} is plain text: remove anything that looks like a tag, such as <b>.");
+        return items;
+    }
+
     /// <summary>An optional web address. A site-relative value is accepted only when it is the one already <paramref name="stored"/>.</summary>
     public string? Url(string property, string key, string? value, int max, string? stored = null)
     {
-        var label = _view.Label(key);
+        var label = _label(key);
         var text = ContentRules.Trim(value);
         if (text is null) return null;
         if (text.Length > max) Error(property, $"{label} can be at most {max} characters.");
@@ -105,10 +122,10 @@ public sealed class FormCheck
         var text = ContentRules.Trim(value);
         if (text is null)
         {
-            if (required) Error(property, $"{_view.Label(key)} is required.");
+            if (required) Error(property, $"{_label(key)} is required.");
             return null;
         }
-        if (!allowed.Contains(text, StringComparer.Ordinal)) Error(property, $"Choose one of the listed values for {_view.Label(key).ToLowerInvariant()}.");
+        if (!allowed.Contains(text, StringComparer.Ordinal)) Error(property, $"Choose one of the listed values for {_label(key).ToLowerInvariant()}.");
         return text;
     }
 }

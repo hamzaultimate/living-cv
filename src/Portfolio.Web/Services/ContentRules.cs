@@ -13,6 +13,12 @@ public static partial class ContentRules
     [GeneratedRegex(@"<[A-Za-z/!?]", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
     private static partial Regex TagStart();
 
+    [GeneratedRegex(@"^[\p{L}\p{N}.+#][\p{L}\p{N} .+#&_-]*\z", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex TagPattern();
+
+    /// <summary>True for a blog tag: letters, digits, spaces and <c>. + # &amp; _ -</c>, not starting with a space or a symbol other than <c>. + #</c>.</summary>
+    public static bool IsTag(string tag) => TagPattern().IsMatch(tag);
+
     /// <summary>True when the text contains something a browser could take for markup.</summary>
     public static bool HasMarkup(string? value) => value is not null && TagStart().IsMatch(value);
 
