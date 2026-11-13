@@ -1,5 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Portfolio.Web.Configuration;
 using Portfolio.Data;
 using Portfolio.Data.Entities;
 using Portfolio.Web.Services;
@@ -24,17 +26,17 @@ public sealed class ImportPlanner
     private readonly PortfolioDbContext _db;
     private readonly TemplateResolver _resolver;
     private readonly ITemplateCatalog _catalog;
-    private readonly ISiteProfileProvider _provider;
+    private readonly IOptions<SiteOptions> _site;
     private readonly ProfilePlanner _profiles;
     private readonly UploadStore _uploads;
     private readonly TimeProvider _clock;
 
-    public ImportPlanner(PortfolioDbContext db, TemplateResolver resolver, ITemplateCatalog catalog, ISiteProfileProvider provider, UploadStore uploads, TimeProvider clock)
+    public ImportPlanner(PortfolioDbContext db, TemplateResolver resolver, ITemplateCatalog catalog, IOptions<SiteOptions> site, UploadStore uploads, TimeProvider clock)
     {
         _db = db;
         _resolver = resolver;
         _catalog = catalog;
-        _provider = provider;
+        _site = site;
         _profiles = new ProfilePlanner(catalog, resolver);
         _uploads = uploads;
         _clock = clock;
@@ -64,7 +66,7 @@ public sealed class ImportPlanner
             }
 
         var profile = await _db.SiteProfiles.AsNoTracking().FirstOrDefaultAsync(p => p.Id == SiteProfile.SingletonId, ct)
-                      ?? SiteProfileMapper.ToEntity(await _provider.GetAsync(ct));
+                      ?? SiteProfileMapper.ToEntity(_site.Value); // never stored yet: nothing is created by a preview
         var options = SiteProfileMapper.ToOptions(profile);
         var current = _resolver.Resolve(options);
 
@@ -206,7 +208,7 @@ public sealed class ImportPlanner
     /// <summary>A name from the file, as short and plain as a preview needs it.</summary>
     private static string Display(string name)
     {
-        var t = new string(name.Select(c => char.IsControl(c) ? ' ' : c).ToArray()).Trim();
+        var t = ImportRules.Plain(name).Trim();
         return t.Length <= 80 ? t : t[..79] + "…";
     }
 }

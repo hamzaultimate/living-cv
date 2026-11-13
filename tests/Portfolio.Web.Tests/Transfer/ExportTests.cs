@@ -228,4 +228,24 @@ public class ExportTests
         Assert.Equal(HttpStatusCode.MethodNotAllowed, post.StatusCode);
         Assert.Equal(before, await ContentFlow.SnapshotAsync(app));
     }
+
+    [Fact]
+    public async Task AnExportOrAPreview_OfASiteWithNoStoredProfile_SavesNothing_NotEvenTheProfileRow()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        using (var db = app.CreateDbContext())
+        {
+            db.SiteProfiles.RemoveRange(db.SiteProfiles);
+            await db.SaveChangesAsync();
+        }
+
+        var export = await owner.GetAsync(TransferFlow.Export);
+        var preview = await TransferFlow.PreviewAsync(owner, ImportHarness.File(profile: new { ownerName = "X" }), applyProfile: true);
+
+        Assert.Equal(HttpStatusCode.OK, export.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, preview.StatusCode);
+        using var check = app.CreateDbContext();
+        Assert.Equal(0, await check.SiteProfiles.CountAsync());
+    }
 }

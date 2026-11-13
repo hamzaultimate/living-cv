@@ -54,7 +54,7 @@ public sealed class ImportService
     public static string FileNameOf(string? name)
     {
         var last = (name ?? "").Replace('\\', '/').Split('/').LastOrDefault() ?? "";
-        var plain = new string(last.Where(c => !char.IsControl(c)).ToArray()).Trim();
+        var plain = ImportRules.Plain(last).Trim();
         return plain.Length == 0 ? "the file" : plain.Length <= 80 ? plain : plain[..79] + "…";
     }
 }

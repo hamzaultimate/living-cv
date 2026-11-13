@@ -91,6 +91,7 @@ public sealed class ProfilePlanner
         var form = ProfileForm.From(current);
         var identity = Read(r, form);
 
+        // A photo that cannot be kept (a web address, an upload that is not here) is dropped with a warning and leaves the stored photo alone; only a JSON null clears it.
         var photo = r.Image("photoUrl", "photoUrl", SiteProfile.MaxLength.PhotoUrl);
         var photoLight = r.Image("photoUrlLight", "photoUrlLight", SiteProfile.MaxLength.PhotoUrlLight);
 

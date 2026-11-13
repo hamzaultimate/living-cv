@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Portfolio.Data;
 using Portfolio.Data.Entities;
 using Portfolio.Web.Services;
@@ -18,8 +19,11 @@ public sealed class ImportApplier
     private readonly ContentEditor _content;
     private readonly ProfileEditor _profile;
 
-    public ImportApplier(PortfolioDbContext db, ContentEditor content, ProfileEditor profile)
+    private readonly ILogger<ImportApplier>? _log;
+
+    public ImportApplier(PortfolioDbContext db, ContentEditor content, ProfileEditor profile, ILogger<ImportApplier>? log = null)
     {
+        _log = log;
         _db = db;
         _content = content;
         _profile = profile;
@@ -37,24 +41,60 @@ public sealed class ImportApplier
         profile.InertSections.AddRange(plan.Profile.InertSections);
 
         var applied = false;
-        if (plan.ProfileChange is { } change)
+        var sections = new List<SectionReport>();
+        var notes = new List<string>();
+        var stopped = false;
+        try
         {
-            var outcome = await _profile.UpdateAsync(change.Apply, change.SeenStamp, ct);
-            if (outcome == SaveOutcome.Saved) applied = true;
-            else
+            if (plan.ProfileChange is { } change)
             {
-                profile.Status = RowStatus.Refused;
-                profile.Changes.Clear();
-                profile.Reasons.Add($"The {plan.Profile.Label.ToLowerInvariant()} was changed after the preview was made, so none of it was applied and nothing was overwritten. Preview the file again to see what would change now.");
+                var outcome = await _profile.UpdateAsync(change.Apply, change.SeenStamp, ct);
+                if (outcome == SaveOutcome.Saved) applied = true;
+                else
+                {
+                    profile.Status = RowStatus.Refused;
+                    profile.Changes.Clear();
+                    profile.Reasons.Add($"The {plan.Profile.Label.ToLowerInvariant()} was changed after the preview was made, so none of it was applied and nothing was overwritten. Preview the file again to see what would change now.");
+                }
+            }
+
+            foreach (var table in plan.Tables)
+            {
+                if (stopped) { sections.Add(NotAttempted(table.Report)); continue; }
+                var report = await table.ApplyAsync(this, ct);
+                sections.Add(report);
+                stopped = report.Stopped;
             }
         }
-
-        var sections = new List<SectionReport>();
-        foreach (var table in plan.Tables) sections.Add(await table.ApplyAsync(this, ct));
+        catch (Exception ex)
+        {
+            // Whatever was written stays written (each row is its own commit), so the report says exactly how far it got instead of failing the page or claiming success.
+            _log?.LogError(ex, "The import stopped after an unexpected error.");
+            stopped = true;
+            foreach (var table in plan.Tables.Skip(sections.Count)) sections.Add(NotAttempted(table.Report));
+        }
+        finally
+        {
+            // The caches must follow every row that was committed, even when the apply stopped part way.
+            if (sections.Any(s => s.Count(RowStatus.Create) + s.Count(RowStatus.Update) > 0 || s.Reordered)) await _profile.AfterContentCommitAsync();
+        }
 
         var result = new ImportResult { Profile = profile, Sections = sections, ProfileApplied = applied };
-        if (sections.Sum(s => s.Count(RowStatus.Create) + s.Count(RowStatus.Update)) > 0 || sections.Any(s => s.Reordered)) await _profile.AfterContentCommitAsync();
+        if (stopped)
+        {
+            var written = result.Created + result.Updated + (applied ? 1 : 0);
+            result.Notes.Add($"The import stopped after {written} {(written == 1 ? "change" : "changes")} because of an unexpected error. What was written stays; the rest was not attempted. Preview the file again to apply what is left.");
+        }
         return result;
+    }
+
+    /// <summary>The report of a table the apply never reached: every row that would have been written is marked as not imported, with the reason.</summary>
+    private static SectionReport NotAttempted(SectionReport planned)
+    {
+        var report = new SectionReport { Section = planned.Section, Label = planned.Label, ItemLabel = planned.ItemLabel, Stopped = true };
+        foreach (var row in planned.Rows)
+            report.Rows.Add(row.Status is RowStatus.Create or RowStatus.Update ? row.With(RowStatus.Refused, "Not attempted: the import stopped before it reached this entry.") : row);
+        return report;
     }
 
     public async Task<SectionReport> ApplyTableAsync<T>(TablePlan<T> plan, CancellationToken ct) where T : class, IStampedContent
@@ -70,6 +110,9 @@ public sealed class ImportApplier
         }
 
         var itemLower = plan.Report.ItemLabel.ToLowerInvariant();
+        // New rows are placed after the positions as they are now, so the list stamp is taken before they are read: an order change committed after this point makes the first commit a conflict
+        // instead of leaving two rows in one position.
+        if (spec.FollowsFileOrder && typeof(IOrderedContent).IsAssignableFrom(typeof(T)) && plan.Rows.Any(r => r.Status == RowStatus.Create)) await _content.BeginOrderChangeAsync(plan.Report.Section, ct);
         var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var next = 0;
         foreach (var row in await spec.Stored(_db).ToListAsync(ct))
@@ -78,8 +121,14 @@ public sealed class ImportApplier
             if (row is IOrderedContent ordered) next = Math.Max(next, ordered.SortOrder);
         }
 
+        var attempted = new HashSet<int>();
+        var inFlight = 0;
+        try
+        {
         foreach (var planned in plan.Rows)
         {
+            inFlight = planned.Position;
+            attempted.Add(planned.Position);
             var current = results[planned.Position];
             if (planned.Status == RowStatus.Update)
             {
@@ -121,7 +170,23 @@ public sealed class ImportApplier
             }
         }
 
-        if (spec.FollowsFileOrder && plan.FileOrder.Count > 1 && results.Values.Any(r => r.Status is RowStatus.Create or RowStatus.Update or RowStatus.Unchanged))
+        }
+        catch (Exception ex)
+        {
+            _log?.LogError(ex, "The import stopped in {Section} after an unexpected error.", plan.Report.Section);
+            _db.ChangeTracker.Clear();
+            report.Stopped = true;
+            foreach (var planned in plan.Rows.Where(r => !attempted.Contains(r.Position) || r.Position == inFlight))
+                results[planned.Position] = results[planned.Position].With(RowStatus.Refused, planned.Position == inFlight
+                    ? "This entry was not written: an unexpected error stopped the import here."
+                    : "Not attempted: the import stopped before it reached this entry.");
+            report.Rows.AddRange(results.Values.OrderBy(r => r.Position));
+            return report;
+        }
+
+        // The order step runs whenever a row was written (a new row, or a skill that changed group, may share a position with a row already there), and when the file names several unchanged rows.
+        var wrote = results.Values.Any(r => r.Status is RowStatus.Create or RowStatus.Update);
+        if (spec.FollowsFileOrder && ((plan.FileOrder.Count >= 1 && wrote) || (plan.FileOrder.Count > 1 && results.Values.Any(r => r.Status == RowStatus.Unchanged))))
         {
             var ordered = await OrderAsync(plan, ct);
             report.Notes.Clear();

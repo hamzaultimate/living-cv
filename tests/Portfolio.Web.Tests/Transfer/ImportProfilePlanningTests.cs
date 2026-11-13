@@ -190,17 +190,39 @@ public class ImportProfilePlanningTests
     }
 
     [Fact]
-    public async Task Photos_AreKeptOnlyIfTheFileIsHere_AnUploadThatIsMissingIsClearedWithAWarning()
+    public async Task Photos_AreKeptOnlyIfTheFileIsHere_AnythingElseIsDroppedAndNeverClearsTheStoredPhoto()
     {
         var kept = await PlanAsync(new { photoUrl = PlanningSite.RealUpload });
         Assert.Equal(RowStatus.Update, kept.Profile.Status);
         Assert.Empty(kept.Profile.Warnings);
 
-        var missing = await PlanAsync(new { photoUrl = PlanningSite.MissingUpload });
-        Assert.Contains(missing.Profile.Warnings, w => w.Contains("not on this site"));
-        Assert.Contains("must be a web address", Why(await PlanAsync(new { photoUrl = "javascript:alert(1)" })));
-        Assert.Contains("must be a web address", Why(await PlanAsync(new { photoUrlLight = "/etc/passwd" })));
-        Assert.Equal(RowStatus.Update, (await PlanAsync(new { photoUrl = "https://example.com/me.jpg" })).Profile.Status);
+        using (var db = App.CreateDbContext())
+        {
+            var p = db.SiteProfiles.Single();
+            p.PhotoUrl = PlanningSite.RealUpload;
+            p.PhotoUrlLight = PlanningSite.RealUpload;
+            await db.SaveChangesAsync();
+        }
+        try
+        {
+            foreach (var dropped in new[] { PlanningSite.MissingUpload, "https://example.com/me.jpg", "javascript:alert(1)", "/etc/passwd" })
+            {
+                var plan = await PlanAsync(new { photoUrl = dropped, photoUrlLight = dropped });
+                Assert.Equal(RowStatus.Unchanged, plan.Profile.Status); // the stored photos stay
+                Assert.Equal(2, plan.Profile.Warnings.Count(w => w.Contains("the image that is stored was kept")));
+                Assert.Empty(plan.Profile.Reasons);
+            }
+            var cleared = await PlanAsync(new { photoUrl = (string?)null });
+            Assert.Equal(RowStatus.Update, cleared.Profile.Status); // only the file saying null clears it
+        }
+        finally
+        {
+            using var db = App.CreateDbContext();
+            var p = db.SiteProfiles.Single();
+            p.PhotoUrl = null;
+            p.PhotoUrlLight = null;
+            await db.SaveChangesAsync();
+        }
     }
 
     [Fact]
@@ -283,9 +305,9 @@ public class ImportProfilePlanningTests
 
         Assert.Equal(RowStatus.Unchanged, plan.Profile.Status);
         Assert.False(plan.Count(RowStatus.Refused) > 0, string.Join("\n", plan.Reports.SelectMany(r => r.Rows).Where(r => r.Status == RowStatus.Refused).Select(r => r.Name + ": " + ImportHarness.Why(r))));
-        // The seeded gallery images name upload files that were never stored, so that one project changes (its two missing images are dropped); nothing else does.
-        var changed = plan.Reports.SelectMany(r => r.Rows).Where(r => r.Status is RowStatus.Create or RowStatus.Update).ToList();
-        var project = Assert.Single(changed);
-        Assert.Equal(2, project.Warnings.Count);
+        // The seeded gallery images name upload files that were never stored: the file's gallery cannot be kept, so the stored list stays and the row says so. Nothing changes.
+        Assert.Empty(plan.Reports.SelectMany(r => r.Rows).Where(r => r.Status is RowStatus.Create or RowStatus.Update));
+        var project = plan.Reports.SelectMany(r => r.Rows).Single(r => r.Warnings.Count > 0);
+        Assert.Contains(project.Warnings, w => w.Contains("the stored list was kept as it is"));
     }
 }

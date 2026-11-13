@@ -193,9 +193,11 @@ public sealed class ProjectSpec : TableSpec<Project>
             }
         }
 
-        // The cover image: a web address, a bundled picture, or an upload that is already here. A reference that cannot be kept is dropped, and its description with it.
-        var hero = r.Image("heroImage", "heroImage", Project.MaxLength.HeroImage);
+        // The cover image: an upload that is already here or a bundled picture. A reference that cannot be kept is dropped and never clears the stored image: the stored cover and its
+        // description stay as they are (only a JSON null clears them).
+        var hero = r.Image("heroImage", "heroImage", Project.MaxLength.HeroImage, out var heroDropped);
         var heroAlt = r.Text("heroImageAlt", "heroImage", Project.MaxLength.HeroImageAlt);
+        if (heroDropped) heroAlt = Got<string?>.Absent;
         p.Set(hero, (row, v) => row.HeroImage = v);
         p.Set(heroAlt, (row, v) => row.HeroImageAlt = v);
         if (hero.Present || heroAlt.Present) p.Add(row => { if (string.IsNullOrWhiteSpace(row.HeroImage)) row.HeroImageAlt = null; });
@@ -206,15 +208,20 @@ public sealed class ProjectSpec : TableSpec<Project>
             else
             {
                 var images = new List<ProjectImage>();
+                var anyDropped = false;
                 for (var i = 0; i < shots.Count; i++)
                 {
                     var row = r.Nested(shots[i], $"screenshots[{i}]", $"Image {i + 1}", ["url", "caption"]);
-                    var url = row.Image("url", "screenshots", 400);
+                    var url = row.Image("url", "screenshots", 400, out var dropped);
+                    anyDropped |= dropped;
                     var caption = row.Text("caption", "screenshots", ImagesEditor.CaptionMax);
                     if (caption.Value is null && c.IsValid($"screenshots[{i}].caption")) c.Error($"screenshots[{i}].caption", $"Image {i + 1} needs a description in a few words (alt text).");
                     if (url.Value is not null && caption.Value is not null) images.Add(new ProjectImage { Url = url.Value, Caption = caption.Value });
                 }
-                p.Add(row => row.Screenshots = images);
+                // Least destructive: when an existing project's list names a picture that cannot be kept, the whole stored gallery stays as it is (replacing it would remove pictures);
+                // a new project gets the pictures that can be kept.
+                if (anyDropped && r.KeepsStored) r.Warnings.Add($"{view.Label("screenshots")}: the stored list was kept as it is, because the file's list names a picture that cannot be kept.");
+                else p.Add(row => row.Screenshots = images);
             }
         }
 
@@ -225,6 +232,7 @@ public sealed class ProjectSpec : TableSpec<Project>
     private static string? Slug(RowReader r, Project? stored, string? title)
     {
         var typedRaw = r.Has("slug") && r.Raw("slug") is { ValueKind: JsonValueKind.String } e ? ContentRules.Trim(e.GetString()) : null;
+        if (r.Raw("slug") is { } any && any.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)) { r.Check.Error("slug", $"{r.View.Label("slug")} must be text."); return null; }
         if (stored is not null && typedRaw == stored.Slug) return stored.Slug;
         var typed = typedRaw?.ToLowerInvariant();
         if (typed is null) return stored?.Slug ?? (title is null ? null : Slugs.From(title));
@@ -363,7 +371,7 @@ public sealed class TestimonialSpec : TableSpec<Testimonial>
 
     public override string? KeyOf(JsonElement row) =>
         Peek(row, "author") is { } a && row.TryGetProperty("quote", out var q) && q.ValueKind == JsonValueKind.String && ContentRules.Paragraph(q.GetString()) is { } quote ? Key(a, quote) : null;
-    public override string KeyOf(Testimonial t) => Key(t.Author.Trim(), t.Quote);
+    public override string KeyOf(Testimonial t) => Key(t.Author.Trim(), ContentRules.Paragraph(t.Quote) ?? t.Quote); // normalised like a file's quote (line breaks, surrounding space), so a re-import matches
     public override string? NameOf(JsonElement row) => Peek(row, "author");
     public override string KeyWords(EditorView view) => $"{view.Label("author").ToLowerInvariant()} and the start of the {view.Label("quote").ToLowerInvariant()}";
     public override Testimonial NewRow() => new() { Quote = "", Author = "" };
@@ -408,6 +416,7 @@ public sealed class PostSpec : TableSpec<BlogPost>
         p.Set(title, (row, v) => row.Title = v!);
 
         var typedRaw = r.Raw("slug") is { ValueKind: JsonValueKind.String } e ? ContentRules.Trim(e.GetString()) : null;
+        if (r.Raw("slug") is { } anySlug && anySlug.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)) c.Error("slug", $"{view.Label("slug")} must be text.");
         string? slug;
         if (stored is not null && typedRaw == stored.Slug) slug = stored.Slug;
         else
@@ -454,8 +463,9 @@ public sealed class PostSpec : TableSpec<BlogPost>
         if (draft.Present) p.Add(row => row.Draft = draft.Value);
         else if (r.Create) p.Add(row => row.Draft = true);
 
-        var cover = r.Image("cover", "cover", 400);
+        var cover = r.Image("cover", "cover", 400, out var coverDropped);
         var coverAlt = r.Text("coverAlt", "cover", BlogPost.MaxLength.CoverAlt);
+        if (coverDropped) coverAlt = Got<string?>.Absent;
         p.Set(cover, (row, v) => row.Cover = v);
         p.Set(coverAlt, (row, v) => row.CoverAlt = v);
         if (cover.Present || coverAlt.Present) p.Add(row => { if (string.IsNullOrWhiteSpace(row.Cover)) row.CoverAlt = null; });
@@ -486,7 +496,13 @@ public sealed class PostSpec : TableSpec<BlogPost>
         {
             var problem = SafeMd.TryRender(body, out _, remember: false);
             if (problem != SafeMd.Problem.None) r.Check.Error("body", Problem(label, problem));
-            else p.Add(row => { row.BodyMarkdown = body; });
+            else
+            {
+                p.Add(row => { row.BodyMarkdown = body; });
+                // A picture in the text that points at an upload that is not here would show as broken. It is a warning, not a refusal: the text itself is fine.
+                var missing = ImportRules.UploadReferences(body).Count(u => !(r.Context.Uploads.TryResolve(u, out var file) && File.Exists(file)));
+                if (missing > 0) r.Warnings.Add($"{label} refers to {missing} uploaded image {(missing == 1 ? "file" : "files")} that {(missing == 1 ? "is" : "are")} not on this site, so {(missing == 1 ? "it" : "they")} will show as broken until the files are put back.");
+            }
         }
     }
 

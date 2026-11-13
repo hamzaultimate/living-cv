@@ -57,6 +57,7 @@ public sealed class RowReader
         View = view;
         Label = ImportRules.Labels(view);
         Create = create;
+        KeepsStored = !create;
         Context = context;
         foreach (var property in obj.EnumerateObject())
             if (!known.Contains(property.Name, StringComparer.Ordinal)) context.UnknownProperties++;
@@ -69,6 +70,9 @@ public sealed class RowReader
     public FormCheck Check { get; }
     public EditorView View { get; }
     public PlanContext Context { get; }
+
+    /// <summary>True when the row being read already exists, so a value that is dropped leaves the stored one alone (a nested entry takes this from its row).</summary>
+    public bool KeepsStored { get; init; }
 
     /// <summary>True for a row that does not exist yet: its required fields must all be in the file. An entry nested in a row (a link, an image) always needs all of its fields.</summary>
     public bool Create { get; }
@@ -178,7 +182,7 @@ public sealed class RowReader
 
     /// <summary>Reads an object nested in this one (a link, a gallery image, a metric) with the same checks: its fields are recorded under <paramref name="path"/> and its messages name <paramref name="rowLabel"/>.</summary>
     public RowReader Nested(JsonElement obj, string path, string rowLabel, IReadOnlyCollection<string> known) =>
-        new(obj, State, Check, View, true, Context, known) { Path = path + ".", RowLabel = rowLabel, Warnings = Warnings, Label = Label };
+        new(obj, State, Check, View, true, Context, known) { Path = path + ".", RowLabel = rowLabel, Warnings = Warnings, Label = Label, KeepsStored = KeepsStored };
 
     /// <summary>The prefix of the property names this reader records errors under (empty for a row).</summary>
     public string Path { get; init; } = "";
@@ -189,10 +193,15 @@ public sealed class RowReader
     private string P(string name) => Path + name;
 
     /// <summary>A one-line image or file reference, held to the image rules (see <see cref="ImportRules.Image"/>).</summary>
-    public Got<string?> Image(string name, string key, int max)
+    public Got<string?> Image(string name, string key, int max) => Image(name, key, max, out _);
+
+    /// <summary>An image field. A reference that cannot be kept (see <see cref="ImportRules.Image"/>) reads as absent, <paramref name="dropped"/> true: it never clears a stored image, only a JSON null does.</summary>
+    public Got<string?> Image(string name, string key, int max, out bool dropped)
     {
+        dropped = false;
         if (!TryString(name, key, out var raw)) return Got<string?>.Absent;
-        return new Got<string?>(true, ImportRules.Image(this, name, key, raw, max));
+        var value = ImportRules.Image(this, P(name), key, raw, max, out dropped);
+        return dropped ? Got<string?>.Absent : new Got<string?>(true, value);
     }
 
     /// <summary>The value of <paramref name="name"/> as it should be compared as a key: trimmed text, or null when absent, not text or empty.</summary>

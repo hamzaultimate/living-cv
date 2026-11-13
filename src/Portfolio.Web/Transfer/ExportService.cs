@@ -1,5 +1,6 @@
-using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Portfolio.Web.Configuration;
 using Portfolio.Data;
 using Portfolio.Data.Entities;
 using Portfolio.Web.Services;
@@ -12,20 +13,17 @@ namespace Portfolio.Web.Transfer;
 /// stored is taken from the provider), so a GET that exports never changes the site. Rows come out in a fixed order (the public order of each list, ties by
 /// id), so two exports of the same data are the same file apart from its timestamp.
 /// </summary>
-public sealed partial class ExportService
+public sealed class ExportService
 {
-    [GeneratedRegex(@"/uploads/[0-9a-f]{32}\.(?:jpg|png|webp)", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
-    private static partial Regex UploadInText();
-
     private readonly PortfolioDbContext _db;
-    private readonly ISiteProfileProvider _provider;
+    private readonly IOptions<SiteOptions> _site;
     private readonly UploadStore _uploads;
     private readonly TimeProvider _clock;
 
-    public ExportService(PortfolioDbContext db, ISiteProfileProvider provider, UploadStore uploads, TimeProvider clock)
+    public ExportService(PortfolioDbContext db, IOptions<SiteOptions> site, UploadStore uploads, TimeProvider clock)
     {
         _db = db;
-        _provider = provider;
+        _site = site;
         _uploads = uploads;
         _clock = clock;
     }
@@ -33,7 +31,8 @@ public sealed partial class ExportService
     public async Task<ExportFile> BuildAsync(CancellationToken ct)
     {
         var profile = await _db.SiteProfiles.AsNoTracking().FirstOrDefaultAsync(p => p.Id == SiteProfile.SingletonId, ct)
-                      ?? SiteProfileMapper.ToEntity(await _provider.GetAsync(ct));
+                      // A profile that was never stored comes from the Site config it would start from. Nothing is created: the provider would save the row, and an export saves nothing.
+                      ?? SiteProfileMapper.ToEntity(_site.Value);
 
         var experience = await _db.Experiences.AsNoTracking().OrderBy(x => x.SortOrder).ThenBy(x => x.Id).ToListAsync(ct);
         // Skills are ordered within their group; the groups themselves have no stored order, so they are listed alphabetically (ordinal, whatever the database collation).
@@ -81,7 +80,7 @@ public sealed partial class ExportService
         foreach (var b in posts)
         {
             Add(b.Cover, "blog", b.Slug, "cover");
-            foreach (var match in UploadInText().Matches(b.BodyMarkdown).Select(m => m.Value).Distinct()) Add(match, "blog", b.Slug, "body");
+            foreach (var match in ImportRules.UploadReferences(b.BodyMarkdown)) Add(match, "blog", b.Slug, "body");
         }
 
         return uses.GroupBy(u => u.Path, StringComparer.Ordinal).OrderBy(g => g.Key, StringComparer.Ordinal)

@@ -72,6 +72,7 @@
                                 @foreach (var reason in row.Reasons.Take(8)) { <li>@reason</li> }
                                 @if (row.Reasons.Count > 8) { <li>and @(row.Reasons.Count - 8) more.</li> }
                                 @foreach (var warning in row.Warnings.Take(4)) { <li>Note: @warning</li> }
+                                @if (row.Warnings.Count > 4) { <li>and @(row.Warnings.Count - 4) more notes.</li> }
                             </ul>
                         }
                     </td>

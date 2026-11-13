@@ -24,6 +24,10 @@
             @if (applied == 0) { <text>Nothing was changed.</text> }
             Nothing was deleted.
         </p>
+        @foreach (var note in result.Notes)
+        {
+            <div class="adm-flash adm-flash-error" role="alert">@note</div>
+        }
         <partial name="_Report" model="@(new ReportVm(result.Sections, result.Profile, true))" />
     </section>
 }

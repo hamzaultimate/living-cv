@@ -44,6 +44,9 @@ public sealed class SectionReport
     /// <summary>True when the apply changed the order of rows (the positions are written apart from the rows' own fields).</summary>
     public bool Reordered { get; set; }
 
+    /// <summary>True when an unexpected error ended the apply of this table part way: the rows after it were not attempted.</summary>
+    public bool Stopped { get; set; }
+
     public int Count(RowStatus status) => Rows.Count(r => r.Status == status);
 }
 

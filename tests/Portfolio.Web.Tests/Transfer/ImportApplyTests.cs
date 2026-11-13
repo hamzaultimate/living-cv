@@ -586,6 +586,113 @@ public class ImportApplyTests
         Assert.Equal(["Two", "One", "Three"], await check.Skills.OrderBy(x => x.SortOrder).Select(x => x.Name).ToListAsync()); // the move won; the import's order was not applied
     }
 
+    // ---- review fixes ----
+
+    [Fact]
+    public async Task AnImportThatCannotKeepAnImage_NeverClearsTheStoredOne_OnApply()
+    {
+        var (app, owner) = await SiteAsync();
+        using var _ = app;
+        var name = new string('a', 32) + ".png";
+        await File.WriteAllBytesAsync(Path.Combine(app.UploadsPath, name), TestImages.Split(SkiaSharp.SKEncodedImageFormat.Png, 8, 8));
+        await TransferFlow.ImportAsync(owner, ImportHarness.File(
+            profile: new { photoUrl = "/uploads/" + name },
+            content: new { projects = new object[] { new { title = "Pic", slug = "pic", summary = "Old.", heroImage = "/uploads/" + name, heroImageAlt = "Stored alt", screenshots = new[] { new { url = "/uploads/" + name, caption = "Kept shot" } } } } }), applyProfile: true);
+
+        var page = await TransferFlow.ImportAsync(owner, ImportHarness.File(
+            profile: new { photoUrl = "https://example.com/new.png" },
+            content: new { projects = new object[] { new { slug = "pic", summary = "New.", heroImage = "https://example.com/new.png", heroImageAlt = "New alt", screenshots = new[] { new { url = "/uploads/" + new string('e', 32) + ".png", caption = "Gone" } } } } }), applyProfile: true);
+
+        Assert.Contains("the image that is stored was kept", page);
+        using var db = app.CreateDbContext();
+        var project = await db.Projects.SingleAsync();
+        Assert.Equal("New.", project.Summary); // the rest of the row was applied
+        Assert.Equal("/uploads/" + name, project.HeroImage);
+        Assert.Equal("Stored alt", project.HeroImageAlt);
+        Assert.Equal("Kept shot", project.Screenshots.Single().Caption);
+        Assert.Equal("/uploads/" + name, (await ProfileFlow.ProfileAsync(app)).PhotoUrl);
+    }
+
+    [Fact]
+    public async Task ASkillThatChangesGroup_NeverSharesAPositionWithARowAlreadyThere()
+    {
+        var (app, owner) = await SiteAsync();
+        using var _ = app;
+        await TransferFlow.ImportAsync(owner, ImportHarness.Table("skills", new { name = "A", group = "G" }, new { name = "B", group = "G" }, new { name = "C", group = "H" }));
+
+        await TransferFlow.ImportAsync(owner, ImportHarness.Table("skills", new { name = "C", group = "G" })); // one row, in the group of two others
+
+        using var db = app.CreateDbContext();
+        var group = await db.Skills.Where(x => x.Group == "G").OrderBy(x => x.SortOrder).ToListAsync();
+        Assert.Equal(["C", "A", "B"], group.Select(x => x.Name).ToArray());
+        Assert.Equal(group.Count, group.Select(x => x.SortOrder).Distinct().Count());
+    }
+
+    [Fact]
+    public async Task ANewRowFromASingleRowFile_IsPlacedFirst_AsTheExperienceEditorDoes_WithNoSharedPosition()
+    {
+        var (app, owner) = await SiteAsync();
+        using var _ = app;
+        await TransferFlow.ImportAsync(owner, ImportHarness.File(content: new { experience = new object[] { new { company = "Old A", title = "T", start = "2018", end = "2019", summary = "S." }, new { company = "Old B", title = "T", start = "2016", end = "2017", summary = "S." } } }));
+
+        await TransferFlow.ImportAsync(owner, ImportHarness.File(content: new { experience = new object[] { new { company = "Newest", title = "T", start = "2021", end = "2022", summary = "S." } } }));
+
+        using var db = app.CreateDbContext();
+        var rows = await db.Experiences.OrderBy(x => x.SortOrder).ToListAsync();
+        Assert.Equal(["Newest", "Old A", "Old B"], rows.Select(x => x.Company).ToArray());
+        Assert.Equal(3, rows.Select(x => x.SortOrder).Distinct().Count());
+    }
+
+    [Fact]
+    public async Task ANewRowIsPositionedUnderTheListStamp_AnOrderChangeInTheMiddleMakesItAConflict_NotASharedPosition()
+    {
+        var (app, owner) = await SiteAsync();
+        using var _ = app;
+        await TransferFlow.ImportAsync(owner, ImportHarness.Table("skills", new { name = "One", group = "G" }));
+        var token = await TransferFlow.HoldAsync(owner, ImportHarness.Table("skills", new { name = "Imported", group = "G" }));
+
+        var page = await app.OverlapAsync(
+            async () => await (await TransferFlow.ConfirmAsync(owner, token)).Content.ReadAsStringAsync(),
+            async () => Assert.Equal(HttpStatusCode.Redirect, (await ContentFlow.PostAsync(owner, ContentFlow.Skills + "/edit", new Dictionary<string, string> { ["Form.Name"] = "Editor row", ["Form.Group"] = "G" })).StatusCode));
+
+        Assert.Contains("the list changed while the import was running", page);
+        using var db = app.CreateDbContext();
+        Assert.DoesNotContain(await db.Skills.Select(s => s.Name).ToListAsync(), n => n == "Imported");
+        var positions = await db.Skills.Select(x => x.SortOrder).ToListAsync();
+        Assert.Equal(positions.Distinct().Count(), positions.Count);
+    }
+
+    [Fact]
+    public async Task AnUnexpectedError_StopsTheImportTruthfully_TheCachesStillFollow_AndThePageIsNotAnError()
+    {
+        var (app, owner) = await SiteAsync();
+        using var _ = app;
+        var anyone = app.NewClient();
+        var sitemapBefore = await anyone.GetStringAsync("/sitemap.xml"); // cached now
+        using var scope = app.Services.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<Portfolio.Web.Transfer.ImportService>();
+        var preview = await service.PreviewAsync(TransferFlow.Utf8(ImportHarness.Table("blog",
+            new { title = "First post", slug = "first-post", date = "2025-01-01", draft = false, body = "One." },
+            new { title = "Second post", slug = "second-post", date = "2025-01-02", draft = false, body = "Two." },
+            new { title = "Third post", slug = "third-post", date = "2025-01-03", draft = false, body = "Three." })), "x.json", false, "s", CancellationToken.None);
+        var table = (Portfolio.Web.Transfer.TablePlan<BlogPost>)preview.Plan!.Tables.Single(t => t.Report.Section == "blog");
+        ((List<Action<BlogPost>>)table.Rows[1].Steps).Add(_ => throw new InvalidOperationException("boom"));
+
+        var result = await service.ApplyAsync(preview.Plan, CancellationToken.None);
+
+        var rows = result.Sections.Single(s => s.Section == "blog").Rows;
+        Assert.Equal([Portfolio.Web.Transfer.RowStatus.Create, Portfolio.Web.Transfer.RowStatus.Refused, Portfolio.Web.Transfer.RowStatus.Refused], rows.Select(r => r.Status).ToArray());
+        Assert.Contains("an unexpected error stopped the import here", Portfolio.Web.Tests.Support.ImportHarness.Why(rows[1]));
+        Assert.Contains("Not attempted", Portfolio.Web.Tests.Support.ImportHarness.Why(rows[2]));
+        Assert.Contains("stopped after 1 change because of an unexpected error", Assert.Single(result.Notes));
+        using var db = app.CreateDbContext();
+        Assert.Equal(["first-post"], await db.BlogPosts.Select(b => b.Slug).ToListAsync());
+        // The row that was written reached the cached sitemap: the caches were refreshed although the apply did not finish.
+        var sitemap = await anyone.GetStringAsync("/sitemap.xml");
+        Assert.NotEqual(sitemapBefore, sitemap);
+        Assert.Contains("/blog/first-post", sitemap);
+    }
+
     // ---- the token ----
 
     [Fact]

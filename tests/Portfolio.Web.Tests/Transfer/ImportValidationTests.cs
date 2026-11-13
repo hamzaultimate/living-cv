@@ -243,18 +243,148 @@ public class ImportValidationTests
 
     [Theory]
     [MemberData(nameof(ImageFields))]
-    public async Task ImageAddresses_AreWebAddressesBundledFilesOrHereUploads_NothingElse(string table, string field)
+    public async Task ImageAddresses_AreUploadsThatAreHereOrBundledFiles_EverythingElseIsDroppedWithAWarning(string table, string field)
     {
-        foreach (var bad in BadAddresses.Where(a => a.Length > 0))
+        // Web addresses and every other value are dropped, never stored: the row still imports, without the image, and says so.
+        foreach (var bad in BadAddresses.Where(a => a.Length > 0).Append("https://example.com/p.png").Append("http://example.com/p.jpg"))
         {
             var row = await PlanRowAsync(table, r => r[field] = bad);
-            Assert.True(row.Status == RowStatus.Refused, $"{table}.{field} accepted {bad}");
+            Assert.True(row.Status == RowStatus.Create, $"{table}.{field} {bad}: {ImportHarness.Why(row)}");
+            var warning = Assert.Single(row.Warnings);
+            Assert.Contains("the image was left out", warning); // a new row has nothing to keep
         }
-        foreach (var good in new[] { "https://example.com/p.png", "/img/projects/telemetry.svg" })
+        foreach (var good in new[] { "/img/projects/telemetry.svg", PlanningSite.RealUpload })
         {
             var row = await PlanRowAsync(table, r => r[field] = good);
             Assert.True(row.Status == RowStatus.Create && row.Warnings.Count == 0, $"{good}: {ImportHarness.Why(row)}");
         }
+    }
+
+    [Fact]
+    public async Task AnImageThatIsDropped_NeverClearsAStoredOne_OnAnUpdate_AndThePreviewSaysTheStoredImageIsKept()
+    {
+        using (var db = _site.App.CreateDbContext())
+        {
+            var p = db.Projects.First(x => x.Slug == "seed-project");
+            p.HeroImage = PlanningSite.RealUpload;
+            p.HeroImageAlt = "Stored picture";
+            db.BlogPosts.First(x => x.Slug == "seed-post").Cover = PlanningSite.RealUpload;
+            await db.SaveChangesAsync();
+        }
+        try
+        {
+            foreach (var dropped in new[] { PlanningSite.MissingUpload, "https://example.com/new.png", "javascript:alert(1)" })
+            {
+                var project = ImportHarness.OneRow(await ImportHarness.PlanOkAsync(App, ImportHarness.Table("projects", new { slug = "seed-project", heroImage = dropped, heroImageAlt = "New alt" })), "projects");
+                var post = ImportHarness.OneRow(await ImportHarness.PlanOkAsync(App, ImportHarness.Table("blog", new { slug = "seed-post", cover = dropped, coverAlt = "New alt" })), "blog");
+
+                // Nothing changes: not the image, and not its description either.
+                Assert.Equal(RowStatus.Unchanged, project.Status);
+                Assert.Equal(RowStatus.Unchanged, post.Status);
+                Assert.Contains("the image that is stored was kept", Assert.Single(project.Warnings));
+                Assert.Contains("the image that is stored was kept", Assert.Single(post.Warnings));
+            }
+            // Only the file saying null clears it.
+            Assert.Equal(RowStatus.Update, ImportHarness.OneRow(await ImportHarness.PlanOkAsync(App, ImportHarness.Table("projects", new { slug = "seed-project", heroImage = (string?)null })), "projects").Status);
+            // A picture that can be kept does replace it.
+            Assert.Equal(RowStatus.Update, ImportHarness.OneRow(await ImportHarness.PlanOkAsync(App, ImportHarness.Table("projects", new { slug = "seed-project", heroImage = "/img/projects/telemetry.svg", heroImageAlt = "Bundled" })), "projects").Status);
+        }
+        finally
+        {
+            using var db = _site.App.CreateDbContext();
+            var p = db.Projects.First(x => x.Slug == "seed-project");
+            p.HeroImage = null;
+            p.HeroImageAlt = null;
+            db.BlogPosts.First(x => x.Slug == "seed-post").Cover = null;
+            await db.SaveChangesAsync();
+        }
+    }
+
+    [Fact]
+    public async Task AGalleryThatNamesAPictureThatCannotBeKept_LeavesTheStoredGalleryAlone_ANewProjectGetsTheOnesThatCan()
+    {
+        // The stored seed project has two gallery pictures (uploads that are not on disk): a file whose list differs but names a missing picture must not replace them.
+        var update = ImportHarness.OneRow(await ImportHarness.PlanOkAsync(App, ImportHarness.Table("projects", new
+        {
+            slug = "seed-project", screenshots = new object[] { new { url = "/img/projects/telemetry-1.svg", caption = "Bundled" }, new { url = "https://example.com/x.png", caption = "Web" } },
+        })), "projects");
+        Assert.Equal(RowStatus.Unchanged, update.Status);
+        Assert.Contains("the stored list was kept as it is", Assert.Single(update.Warnings.Where(w => w.Contains("stored list"))));
+
+        var allKept = ImportHarness.OneRow(await ImportHarness.PlanOkAsync(App, ImportHarness.Table("projects", new
+        {
+            slug = "seed-project", screenshots = new object[] { new { url = "/img/projects/telemetry-1.svg", caption = "Bundled" } },
+        })), "projects");
+        Assert.Equal(RowStatus.Update, allKept.Status);
+    }
+
+    [Fact]
+    public async Task ARowWithManyNotes_ListsAFewAndSaysHowManyMore()
+    {
+        var shots = Enumerable.Range(0, 7).Select(i => new { url = PlanningSite.MissingUpload, caption = "Gone " + i }).ToArray();
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+
+        var page = await (await TransferFlow.PreviewAsync(owner, ImportHarness.Table("projects", new { title = "Many notes", summary = "S.", screenshots = shots }))).Content.ReadAsStringAsync();
+
+        Assert.Contains("and 3 more notes.", page);
+    }
+
+    [Fact]
+    public async Task ABodyThatPointsAtAMissingUpload_IsWarnedAbout_NotRefused()
+    {
+        var body = $"Text ![a]({PlanningSite.MissingUpload}) and ![b]({PlanningSite.RealUpload}) and ![c]({PlanningSite.MissingUpload})";
+        var row = await PlanRowAsync("blog", r => r["body"] = body);
+
+        Assert.Equal(RowStatus.Create, row.Status);
+        Assert.Contains("refers to 1 uploaded image file that is not on this site", Assert.Single(row.Warnings));
+    }
+
+    [Fact]
+    public async Task ASlugThatIsNotText_IsRefused_NotSilentlyIgnored()
+    {
+        foreach (var table in new[] { "projects", "blog" })
+            foreach (var bad in new object[] { 5, true, new[] { "a" } })
+            {
+                var row = await PlanRowAsync(table, r => r["slug"] = bad);
+                Assert.Equal(RowStatus.Refused, row.Status);
+                Assert.Contains("must be text", ImportHarness.Why(row));
+            }
+    }
+
+    [Fact]
+    public async Task ATestimonialStoredWithLineBreaksAndSpaces_IsMatchedByItsNormalisedKey_SoAReimportUpdatesRatherThanDuplicates()
+    {
+        using (var db = _site.App.CreateDbContext())
+        {
+            db.Testimonials.Add(new Portfolio.Data.Entities.Testimonial { Author = "  Stored Author ", Quote = "  First line\r\nsecond line of a stored quote.  ", SortOrder = 50, ConcurrencyStamp = Portfolio.Web.Services.ContentEditor.NewStamp() });
+            await db.SaveChangesAsync();
+        }
+        try
+        {
+            var row = ImportHarness.OneRow(await ImportHarness.PlanOkAsync(App, ImportHarness.Table("testimonials", new { author = "Stored Author", quote = "First line\nsecond line of a stored quote." })), "testimonials");
+
+            Assert.NotEqual(RowStatus.Create, row.Status);
+        }
+        finally
+        {
+            using var db = _site.App.CreateDbContext();
+            db.Testimonials.RemoveRange(db.Testimonials.Where(t => t.SortOrder == 50));
+            await db.SaveChangesAsync();
+        }
+    }
+
+    [Fact]
+    public async Task ControlAndBidiCharacters_AreStrippedFromNamesShownInThePreview()
+    {
+        var plan = await ImportHarness.PlanOkAsync(App, ImportHarness.Table("skills", new { name = "Safe\u202Egnp.exe\u200B\u0007 name", group = "G" }));
+
+        var name = ImportHarness.OneRow(plan, "skills").Name;
+
+        Assert.DoesNotContain('\u202E', name);
+        Assert.DoesNotContain('\u200B', name);
+        Assert.DoesNotContain('\u0007', name);
+        Assert.Contains("Safegnp.exe", name);
     }
 
     [Fact]

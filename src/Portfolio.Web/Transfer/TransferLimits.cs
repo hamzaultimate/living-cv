@@ -39,9 +39,6 @@ public static class TransferLimits
     /// <summary>Most settings the profile's section list may carry (the template's own sections are fewer; the rest are inert).</summary>
     public const int MaxSectionSettings = 40;
 
-    /// <summary>How many warnings and per-row notes a preview lists before it says how many more there are.</summary>
-    public const int MaxListedNotes = 200;
-
     /// <summary>How long a preview can be confirmed.</summary>
     public static readonly TimeSpan PreviewLifetime = TimeSpan.FromMinutes(10);
 
