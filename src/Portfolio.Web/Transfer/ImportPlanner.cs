@@ -114,6 +114,7 @@ public sealed class ImportPlanner
         var plan = new TablePlan<T>
         {
             Spec = spec,
+            View = view,
             Report = new SectionReport { Section = spec.Section, Label = view.SectionLabel, ItemLabel = view.ItemLabel },
         };
         if (!lists.TryGetValue(spec.Section, out var list)) return plan;
@@ -166,6 +167,7 @@ public sealed class ImportPlanner
                 status = spec.Fingerprint(match) == before ? RowStatus.Unchanged : RowStatus.Update;
             }
             plan.Report.Rows.Add(new RowReport(position, name, status, [], reader.Warnings));
+            if (key is not null) plan.FileOrder.Add((key, patch.Group));
             if (status == RowStatus.Unchanged) continue;
             plan.Rows.Add(new PlannedRow<T>
             {

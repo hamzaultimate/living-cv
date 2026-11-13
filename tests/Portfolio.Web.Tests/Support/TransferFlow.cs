@@ -23,6 +23,40 @@ public static class TransferFlow
     public static async Task<JsonDocument> ExportJsonAsync(HttpClient client) => JsonDocument.Parse(await ExportTextAsync(client));
 
     public static byte[] Utf8(string text) => new UTF8Encoding(false).GetBytes(text);
+
+    private static readonly System.Text.RegularExpressions.Regex TokenPattern = new("name=\"Token\" value=\"([0-9a-f]{32})\"", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    /// <summary>The preview of a file as a browser asks for it: the multipart post of the import form.</summary>
+    public static Task<HttpResponseMessage> PreviewAsync(HttpClient client, byte[] file, bool applyProfile = false, string fileName = "export.json") =>
+        ContentFlow.PostMultipartAsync(client, Page + "?handler=Preview", new Dictionary<string, string> { ["ApplyProfile"] = applyProfile ? "true" : "false" },
+            ("Upload", file, fileName, "application/json"), Page);
+
+    public static Task<HttpResponseMessage> PreviewAsync(HttpClient client, string json, bool applyProfile = false) => PreviewAsync(client, Utf8(json), applyProfile);
+
+    /// <summary>The token the preview page carries for its Apply button, or null when the page has none.</summary>
+    public static string? TokenOf(string previewHtml) => TokenPattern.Match(previewHtml) is { Success: true } m ? m.Groups[1].Value : null;
+
+    /// <summary>Previews <paramref name="json"/> and returns the token to confirm it with.</summary>
+    public static async Task<string> HoldAsync(HttpClient client, string json, bool applyProfile = false)
+    {
+        var response = await PreviewAsync(client, json, applyProfile);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var token = TokenOf(await response.Content.ReadAsStringAsync());
+        Assert.True(token is not null, "the preview offered no way to apply it");
+        return token!;
+    }
+
+    public static Task<HttpResponseMessage> ConfirmAsync(HttpClient client, string? token) =>
+        ContentFlow.PostAsync(client, Page + "/confirm", new Dictionary<string, string> { ["Token"] = token ?? "" }, Page);
+
+    /// <summary>Preview then confirm, as one owner action. Returns the page the confirm answered with.</summary>
+    public static async Task<string> ImportAsync(HttpClient client, string json, bool applyProfile = false)
+    {
+        var token = await HoldAsync(client, json, applyProfile);
+        var response = await ConfirmAsync(client, token);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return await response.Content.ReadAsStringAsync();
+    }
 }
 
 /// <summary>Builds import files and runs the planner directly (no HTTP), so rules can be checked row by row.</summary>

@@ -80,7 +80,7 @@ public class AdminAccessTests : IClassFixture<AdminApp>
              "admin/content/skills", "admin/content/skills/delete/{id:int}", "admin/content/skills/edit/{id:int?}",
              "admin/content/talks", "admin/content/talks/delete/{id:int}", "admin/content/talks/edit/{id:int?}",
              "admin/content/testimonials", "admin/content/testimonials/delete/{id:int}", "admin/content/testimonials/edit/{id:int?}",
-             "admin/login", "admin/logout", "admin/photo", "admin/profile", "admin/profile/about", "admin/profile/hero", "admin/profile/metrics", "admin/sections", "admin/template", "admin/transfer/export",
+             "admin/login", "admin/logout", "admin/photo", "admin/profile", "admin/profile/about", "admin/profile/hero", "admin/profile/metrics", "admin/sections", "admin/template", "admin/transfer", "admin/transfer/confirm", "admin/transfer/export",
              "admin/welcome", "admin/welcome/basics", "admin/welcome/draft-photo", "admin/welcome/photo", "admin/welcome/review", "admin/welcome/thumb/{key}"],
             routes);
     }

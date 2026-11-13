@@ -102,7 +102,13 @@ public sealed class TablePlan<T> : ITablePlan where T : class, IStampedContent
 {
     public required SectionReport Report { get; init; }
     public required TableSpec<T> Spec { get; init; }
+
+    /// <summary>The words of the template the preview was made in, for messages written when the plan is applied.</summary>
+    public required EditorView View { get; init; }
     public List<PlannedRow<T>> Rows { get; } = [];
+
+    /// <summary>Every valid row of the file (changed or not) in the file's order, with the group it is ordered in: what sets the order on the site after the rows are written.</summary>
+    public List<(string Key, string? Group)> FileOrder { get; } = [];
 
     public Task<SectionReport> ApplyAsync(ImportApplier applier, CancellationToken ct) => applier.ApplyTableAsync(this, ct);
 }

@@ -1,0 +1,30 @@
+@page "/admin/transfer/confirm"
+@model Portfolio.Web.Pages.Admin.Transfer.ConfirmModel
+@using Portfolio.Web.Transfer
+@using Portfolio.Web.Pages.Admin.Transfer
+@{
+    var v = Model.View;
+    ViewData["Title"] = v.Label("heading");
+    var result = Model.Result;
+}
+<h1 id="page-heading">@v.Label("heading")</h1>
+@if (Model.Refusal is not null)
+{
+    <div id="import-refusal" class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus>
+        <strong>Nothing was written.</strong> @Model.Refusal
+    </div>
+}
+@if (result is not null)
+{
+    var applied = result.Created + result.Updated + (result.ProfileApplied ? 1 : 0);
+    <section id="result" class="adm-card" aria-labelledby="result-heading">
+        <h2 id="result-heading" tabindex="-1" autofocus>Import finished</h2>
+        <p role="status">
+            @result.Created added, @result.Updated updated, @result.Unchanged already matched and @result.Refused were not imported@(result.ProfileApplied ? $"; the {result.Profile.Label.ToLowerInvariant()} was applied" : "").
+            @if (applied == 0) { <text>Nothing was changed.</text> }
+            Nothing was deleted.
+        </p>
+        <partial name="_Report" model="@(new ReportVm(result.Sections, result.Profile, true))" />
+    </section>
+}
+<p><a class="adm-btn" href="/admin/transfer">Back to @v.Label("heading")</a></p>

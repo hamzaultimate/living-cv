@@ -1,0 +1,96 @@
+@page "/admin/transfer"
+@model Portfolio.Web.Pages.Admin.Transfer.IndexModel
+@using Portfolio.Web.Transfer
+@using Portfolio.Web.Pages.Admin.Transfer
+@{
+    var v = Model.View;
+    ViewData["Title"] = v.Label("heading");
+    var plan = Model.Plan;
+}
+<h1 id="page-heading">@v.Label("heading")</h1>
+<p class="adm-lede">@v.Hint("heading")</p>
+<partial name="_Guidance" model="v" />
+@if (Model.Authoritative)
+{
+    <div class="adm-flash adm-flash-error" role="note">
+        <strong>@v.Label("authoritative")</strong>
+        <p>@v.Hint("authoritative")</p>
+    </div>
+}
+@if (Model.Refusal is not null)
+{
+    <div id="import-refusal" class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus>
+        <strong>Nothing was read.</strong> @Model.Refusal
+    </div>
+}
+
+<section class="adm-card" aria-labelledby="export-heading">
+    <h2 id="export-heading">@v.Label("exportHeading")</h2>
+    <p>@v.Hint("exportHeading")</p>
+    <div class="adm-actions">
+        <a class="adm-btn adm-btn-primary" href="/admin/transfer/export" download>@v.Label("exportButton")</a>
+    </div>
+</section>
+
+<section class="adm-card" aria-labelledby="import-heading">
+    <h2 id="import-heading">@v.Label("importHeading")</h2>
+    <p>@v.Hint("importHeading")</p>
+    <form method="post" asp-page="/Admin/Transfer/Index" asp-page-handler="Preview" enctype="multipart/form-data" novalidate>
+        <div class="adm-field">
+            <label for="Upload">@v.Label("fileLabel")</label>
+            <input type="file" id="Upload" name="Upload" accept=".json,application/json" required aria-describedby="Upload-hint" />
+            <span id="Upload-hint" class="adm-hint">A .json file of up to @Model.MaxSize, made by an export.</span>
+        </div>
+        <div class="adm-field adm-check">
+            @* The box comes first: a ticked box posts "true,false" and the binder reads the first value; an unticked one posts only "false". *@
+            <input type="checkbox" id="ApplyProfile" name="ApplyProfile" value="true" checked="@Model.ApplyProfile" aria-describedby="ApplyProfile-hint" />
+            <input type="hidden" name="ApplyProfile" value="false" />
+            <label for="ApplyProfile">@v.Label("applyProfile")</label>
+            <span id="ApplyProfile-hint" class="adm-hint">@v.Hint("applyProfile")</span>
+        </div>
+        <div class="adm-actions">
+            <button type="submit" class="adm-btn adm-btn-primary">@v.Label("previewButton")</button>
+        </div>
+    </form>
+</section>
+
+@if (plan is not null)
+{
+    var created = plan.Count(RowStatus.Create);
+    var updated = plan.Count(RowStatus.Update);
+    var unchanged = plan.Count(RowStatus.Unchanged);
+    var refused = plan.Count(RowStatus.Refused);
+    <section id="preview" class="adm-card" aria-labelledby="preview-heading">
+        <h2 id="preview-heading" tabindex="-1" autofocus>Preview of @plan.FileName</h2>
+        <p role="status">
+            <strong>Nothing has been written yet.</strong>
+            @created will be added, @updated updated, @unchanged already match and @refused will not be imported.
+            Applying writes only the rows marked as added or updated; a row that is not imported never stops the others, and nothing is ever deleted.
+        </p>
+        @if (plan.FileNotes.Count > 0)
+        {
+            <ul>
+                @foreach (var note in plan.FileNotes) { <li>@note</li> }
+            </ul>
+        }
+        <partial name="_Report" model="@(new ReportVm(plan.Reports.ToList(), plan.Profile, false))" />
+        @if (plan.HasChanges)
+        {
+            <form method="post" asp-page="/Admin/Transfer/Confirm" novalidate>
+                <input type="hidden" name="Token" value="@plan.Token" />
+                <div class="adm-actions">
+                    <button type="submit" class="adm-btn adm-btn-primary">@v.Label("confirmButton")</button>
+                    <button type="submit" class="adm-btn" asp-page-handler="Discard">@v.Label("discardButton")</button>
+                </div>
+            </form>
+        }
+        else
+        {
+            <p>There is nothing to write, so there is nothing to apply. Change the file, or choose another.</p>
+            <form method="post" asp-page="/Admin/Transfer/Confirm" asp-page-handler="Discard" novalidate>
+                <input type="hidden" name="Token" value="@plan.Token" />
+                <button type="submit" class="adm-btn">@v.Label("discardButton")</button>
+            </form>
+        }
+    </section>
+}
