@@ -51,6 +51,8 @@ public static class ImportFileReader
     {
         var start = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF ? 3 : 0; // a UTF-8 byte order mark, which some editors add
         if (bytes.Length - start == 0) return ReadResult.Refused("That file is empty.");
+        // The parser reads a string's bytes lazily, so text that is not UTF-8 would only fail later, in the middle of a row. It is refused up front.
+        if (!System.Text.Unicode.Utf8.IsValid(bytes.AsSpan(start))) return ReadResult.Refused("That file is not valid UTF-8 text (it may be saved in another encoding; save it as UTF-8).");
 
         JsonDocument document;
         try
@@ -61,9 +63,14 @@ public static class ImportFileReader
         {
             return ReadResult.Refused(Describe(ex));
         }
+        catch (InvalidOperationException)
+        {
+            // The parser reads the names of a repeated-property check as text, so half of a character written as an escape in a name surfaces here.
+            return ReadResult.Refused(NotText);
+        }
 
         var root = document.RootElement;
-        var refusal = CheckHeader(root);
+        var refusal = CheckHeader(root) ?? CheckText(root);
         if (refusal is not null)
         {
             document.Dispose();
@@ -82,6 +89,46 @@ public static class ImportFileReader
             return "That file has the same property twice in one object, so it is ambiguous and was not read.";
         return $"That file is not valid JSON (it may be cut off, or saved in another text encoding; use UTF-8).{where}";
     }
+
+    /// <summary>
+    /// Every string and property name must be readable text. JSON can escape half of a surrogate pair on its own (<c>"\ud800"</c>), which is not text in any encoding and which the
+    /// parser only reports when the string is read, so a file that has one is refused here, once, instead of failing inside a row.
+    /// </summary>
+    private static string? CheckText(JsonElement root)
+    {
+        var pending = new Stack<JsonElement>();
+        pending.Push(root);
+        try
+        {
+            while (pending.Count > 0)
+            {
+                var element = pending.Pop();
+                switch (element.ValueKind)
+                {
+                    case JsonValueKind.String:
+                        _ = element.GetString();
+                        break;
+                    case JsonValueKind.Array:
+                        foreach (var item in element.EnumerateArray()) pending.Push(item);
+                        break;
+                    case JsonValueKind.Object:
+                        foreach (var property in element.EnumerateObject())
+                        {
+                            _ = property.Name;
+                            pending.Push(property.Value);
+                        }
+                        break;
+                }
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            return NotText;
+        }
+        return null;
+    }
+
+    private const string NotText = "That file has text that is not valid (for example half of a character written as an escape such as \\ud800), so it was not read.";
 
     private static string? CheckHeader(JsonElement root)
     {

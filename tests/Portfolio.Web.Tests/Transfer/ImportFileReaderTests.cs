@@ -13,6 +13,36 @@ public class ImportFileReaderTests
     private static ReadResult Parse(string text) => ImportFileReader.Parse(TransferFlow.Utf8(text));
 
     [Fact]
+    public void BytesThatAreNotUtf8_AreRefusedUpFront_NotInTheMiddleOfARow()
+    {
+        var latin1 = Encoding.Latin1.GetBytes("{ \"schemaVersion\": 1, \"content\": { \"skills\": [ { \"name\": \"caf\u00E9\" } ] } }");
+        using var read = ImportFileReader.Parse(latin1);
+
+        Assert.Contains("not valid UTF-8", read.Refusal);
+    }
+
+    [Theory]
+    [InlineData("{\"schemaVersion\":1,\"content\":{\"skills\":[{\"name\":\"\\ud800\"}]}}")]
+    [InlineData("{\"schemaVersion\":1,\"content\":{\"skills\":[{\"name\":\"a\\udc00b\"}]}}")]
+    [InlineData("{\"schemaVersion\":1,\"\\ud800\":1}")]
+    public void HalfOfACharacterWrittenAsAnEscape_IsRefusedWhole_NotAFailureInsideARow(string text)
+    {
+        using var read = Parse(text);
+
+        Assert.Contains("not valid", read.Refusal);
+        Assert.Contains("was not read", read.Refusal);
+    }
+
+    [Fact]
+    public void ValidEscapes_AndPairsAreText_AndAreRead()
+    {
+        using var read = Parse("{\"schemaVersion\":1,\"x\":\"\\u00e9 \\ud83d\\ude00 \\n\"}");
+
+        Assert.Null(read.Refusal);
+        Assert.Equal("\u00e9 \U0001F600 \n", read.Document!.RootElement.GetProperty("x").GetString());
+    }
+
+    [Fact]
     public void AValidFile_IsReadAndHoldsItsJson()
     {
         using var read = Parse(Minimal);
@@ -30,8 +60,8 @@ public class ImportFileReaderTests
 
         using var utf16 = ImportFileReader.Parse(Encoding.Unicode.GetPreamble().Concat(Encoding.Unicode.GetBytes(Minimal)).ToArray());
         Assert.NotNull(utf16.Refusal);
-        Assert.Contains("not valid JSON", utf16.Refusal);
-        Assert.Contains("UTF-8", utf16.Refusal);
+        Assert.Contains("not valid UTF-8", utf16.Refusal);
+        Assert.Contains("save it as UTF-8", utf16.Refusal);
     }
 
     [Theory]

@@ -51,14 +51,14 @@ public sealed partial class ExportService
             posts.Select(ExportMap.Post).ToList());
 
         var exported = new ExportProfile(
-            profile.OwnerName, profile.BrandName, profile.Role, profile.JobTitle, profile.Url, profile.GoogleAnalyticsId, profile.Summary, profile.Location, profile.KnowsAbout.ToList(),
-            profile.PhotoUrl, profile.PhotoUrlLight, profile.Phone, profile.WhatsApp, profile.Email, profile.SecondaryEmails.ToList(), profile.LinkedIn, profile.GitHub, profile.YouTube,
-            profile.TemplateKey, profile.AccentColor,
-            new ExportHero(profile.Hero.Eyebrow, profile.Hero.Headline, profile.Hero.HeadlineAccent, profile.Hero.Lede),
-            profile.Metrics.Select(m => new ExportMetric(m.Value, m.Unit, m.Label)).ToList(),
-            new ExportAbout(profile.About.Headline, profile.About.Paragraphs.ToList(), profile.About.ValueProps.Select(v => new ExportCard(v.Title, v.Body)).ToList(), profile.About.CurrentlyNote, profile.About.Focus.ToList()),
+            profile.OwnerName, profile.BrandName, profile.Role, profile.JobTitle, profile.Url, ExportMap.Opt(profile.GoogleAnalyticsId), profile.Summary, ExportMap.Opt(profile.Location), profile.KnowsAbout.ToList(),
+            ExportMap.Opt(profile.PhotoUrl), ExportMap.Opt(profile.PhotoUrlLight), ExportMap.Opt(profile.Phone), ExportMap.Opt(profile.WhatsApp), ExportMap.Opt(profile.Email), profile.SecondaryEmails.ToList(),
+            ExportMap.Opt(profile.LinkedIn), ExportMap.Opt(profile.GitHub), ExportMap.Opt(profile.YouTube), profile.TemplateKey, ExportMap.Opt(profile.AccentColor),
+            new ExportHero(ExportMap.Opt(profile.Hero.Eyebrow), ExportMap.Opt(profile.Hero.Headline), ExportMap.Opt(profile.Hero.HeadlineAccent), ExportMap.Opt(profile.Hero.Lede)),
+            profile.Metrics.Select(m => new ExportMetric(m.Value, ExportMap.Opt(m.Unit), ExportMap.Opt(m.Label))).ToList(),
+            new ExportAbout(ExportMap.Opt(profile.About.Headline), profile.About.Paragraphs.ToList(), profile.About.ValueProps.Select(v => new ExportCard(v.Title, v.Body)).ToList(), ExportMap.Opt(profile.About.CurrentlyNote), profile.About.Focus.ToList()),
             // Every stored setting is written, the ones for keys the template does not list included: they are inert, and an import keeps them that way.
-            profile.Sections.Select(s => new ExportSection(s.Key, s.Label, s.Enabled, s.Shown, s.SortOrder)).ToList());
+            profile.Sections.Select(s => new ExportSection(s.Key, ExportMap.Opt(s.Label), s.Enabled, s.Shown, s.SortOrder)).ToList());
 
         return new ExportFile(TransferLimits.SchemaVersion, TransferLimits.Format, _clock.GetUtcNow(), exported, content, Manifest(profile, projects, posts));
     }
@@ -92,20 +92,23 @@ public sealed partial class ExportService
 /// <summary>Row to file shape. Shared by the export and by the import, which compares a row with what the file would make of it.</summary>
 public static class ExportMap
 {
-    public static ExportRole Role(Experience e) => new(e.Company, e.Title, e.Start, e.End, e.Current, e.Summary, e.Highlights.ToList(), e.Tech.ToList());
+    /// <summary>Empty text and no text are the same thing to the editors (they store a field they clear as null), so an optional field is written as null when it is empty: the file says one thing, whichever way the row stores it.</summary>
+    public static string? Opt(string? value) => string.IsNullOrEmpty(value) ? null : value;
+
+    public static ExportRole Role(Experience e) => new(e.Company, e.Title, e.Start, Opt(e.End), e.Current, e.Summary, e.Highlights.ToList(), e.Tech.ToList());
 
     public static ExportSkill Skill(Skill s) => new(s.Name, s.Group);
 
     private static List<ExportProof> Proofs(IEnumerable<Proof> proofs) => proofs.Select(x => new ExportProof(x.Label, x.Url, x.Kind)).ToList();
 
-    public static ExportProject Project(Project p) => new(p.Title, p.Slug, p.Role, p.Org, p.Period, p.Summary, p.Category, p.Problem, p.Approach, p.Impact.ToList(), p.Tech.ToList(),
-        p.Links.Select(l => new ExportLink(l.Label, l.Url)).ToList(), p.HeroImage, p.HeroImageAlt, p.Screenshots.Select(i => new ExportImage(i.Url, i.Caption)).ToList(), Proofs(p.Proofs), p.Featured);
+    public static ExportProject Project(Project p) => new(p.Title, p.Slug, Opt(p.Role), Opt(p.Org), Opt(p.Period), p.Summary, Opt(p.Category), Opt(p.Problem), Opt(p.Approach), p.Impact.ToList(), p.Tech.ToList(),
+        p.Links.Select(l => new ExportLink(l.Label, l.Url)).ToList(), Opt(p.HeroImage), Opt(p.HeroImageAlt), p.Screenshots.Select(i => new ExportImage(i.Url, Opt(i.Caption))).ToList(), Proofs(p.Proofs), p.Featured);
 
-    public static ExportCertification Certification(Certification c) => new(c.Name, c.Issuer, c.Status, c.Date, c.Category, c.CredentialUrl, c.CertificateUrl, c.BadgeImageUrl, Proofs(c.Proofs));
+    public static ExportCertification Certification(Certification c) => new(c.Name, c.Issuer, c.Status, Opt(c.Date), Opt(c.Category), Opt(c.CredentialUrl), Opt(c.CertificateUrl), Opt(c.BadgeImageUrl), Proofs(c.Proofs));
 
-    public static ExportTalk Talk(Talk t) => new(t.Title, t.Type, t.Event, t.Date, t.YoutubeId, t.Url);
+    public static ExportTalk Talk(Talk t) => new(t.Title, t.Type, Opt(t.Event), t.Date, Opt(t.YoutubeId), Opt(t.Url));
 
-    public static ExportTestimonial Testimonial(Testimonial t) => new(t.Quote, t.Author, t.AuthorTitle, t.SourceUrl, t.Relation, t.Featured);
+    public static ExportTestimonial Testimonial(Testimonial t) => new(t.Quote, t.Author, Opt(t.AuthorTitle), Opt(t.SourceUrl), Opt(t.Relation), t.Featured);
 
-    public static ExportPost Post(BlogPost b) => new(b.Title, b.Slug, b.Description, b.Date, b.Tags.ToList(), b.Draft, b.Cover, b.CoverAlt, b.BodyMarkdown);
+    public static ExportPost Post(BlogPost b) => new(b.Title, b.Slug, Opt(b.Description), b.Date, b.Tags.ToList(), b.Draft, Opt(b.Cover), Opt(b.CoverAlt), b.BodyMarkdown);
 }

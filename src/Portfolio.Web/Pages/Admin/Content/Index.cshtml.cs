@@ -21,6 +21,9 @@ public class IndexModel : AdminPageModel
     public IReadOnlyList<Card> Cards { get; private set; } = [];
     public string? Guidance { get; private set; }
 
+    /// <summary>The export and import page's name in the template's words, for the link under the cards.</summary>
+    public string TransferHeading { get; private set; } = "Export and import";
+
     public async Task OnGetAsync(CancellationToken ct)
     {
         var template = await _template.GetAsync();
@@ -42,5 +45,6 @@ public class IndexModel : AdminPageModel
             return new Card(s, view.SectionLabel, view.ItemLabel, counts[s], view.SectionEnabled, detail);
         }).ToList();
         Guidance = new EditorView(template, SectionRegistry.Experience).Guidance;
+        TransferHeading = new EditorView(template, ProfileParts.Transfer).Label("heading");
     }
 }
