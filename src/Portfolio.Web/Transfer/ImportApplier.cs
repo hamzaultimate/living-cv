@@ -53,7 +53,7 @@ public sealed class ImportApplier
         foreach (var table in plan.Tables) sections.Add(await table.ApplyAsync(this, ct));
 
         var result = new ImportResult { Profile = profile, Sections = sections, ProfileApplied = applied };
-        if (sections.Sum(s => s.Count(RowStatus.Create) + s.Count(RowStatus.Update)) > 0) await _profile.AfterContentCommitAsync();
+        if (sections.Sum(s => s.Count(RowStatus.Create) + s.Count(RowStatus.Update)) > 0 || sections.Any(s => s.Reordered)) await _profile.AfterContentCommitAsync();
         return result;
     }
 
@@ -122,7 +122,12 @@ public sealed class ImportApplier
         }
 
         if (spec.FollowsFileOrder && plan.FileOrder.Count > 1 && results.Values.Any(r => r.Status is RowStatus.Create or RowStatus.Update or RowStatus.Unchanged))
-            if (!await OrderAsync(plan, ct)) report.Notes.Add($"The order of the {plan.Report.Label.ToLowerInvariant()} was not set, because the list was changed somewhere else while the import was running. The rows themselves were written; reorder them from their list.");
+        {
+            var ordered = await OrderAsync(plan, ct);
+            report.Notes.Clear();
+            if (ordered == OrderResult.Conflict) report.Notes.Add($"The order of the {plan.Report.Label.ToLowerInvariant()} was not set, because the list was changed somewhere else while the import was running. The rows themselves were written; reorder them from their list.");
+            else if (ordered == OrderResult.Set) { report.Reordered = true; report.Notes.Add($"The order of the {plan.Report.Label.ToLowerInvariant()} now follows the file; any not in the file come after them."); }
+        }
 
         report.Rows.AddRange(results.Values.OrderBy(r => r.Position));
         return report;
@@ -133,7 +138,9 @@ public sealed class ImportApplier
     /// order, the rest follow in the order they had. Only rows whose position changes are written, without a new row stamp (like a move), under the section's list stamp taken
     /// before the positions are read, so an order change made at the same moment makes this a conflict instead of leaving two rows in one position.
     /// </summary>
-    private async Task<bool> OrderAsync<T>(TablePlan<T> plan, CancellationToken ct) where T : class, IStampedContent
+    private enum OrderResult { Unchanged, Set, Conflict }
+
+    private async Task<OrderResult> OrderAsync<T>(TablePlan<T> plan, CancellationToken ct) where T : class, IStampedContent
     {
         var spec = plan.Spec;
         _db.ChangeTracker.Clear(); // everything is committed; read the positions as they are now, not as an earlier read of them was
@@ -161,8 +168,8 @@ public sealed class ImportApplier
         if (!_db.ChangeTracker.Entries<T>().Any(e => e.State == EntityState.Modified))
         {
             _db.ChangeTracker.Clear();
-            return true;
+            return OrderResult.Unchanged;
         }
-        return await _content.CommitAsync(ct, refreshCaches: false) == SaveOutcome.Saved;
+        return await _content.CommitAsync(ct, refreshCaches: false) == SaveOutcome.Saved ? OrderResult.Set : OrderResult.Conflict;
     }
 }

@@ -176,9 +176,31 @@ public sealed class ImportPlanner
             });
         }
 
-        if (spec.FollowsFileOrder && plan.Rows.Count > 0 && list.GetArrayLength() > 1)
-            plan.Report.Notes.Add($"The order of the {view.SectionLabel.ToLowerInvariant()} in the file sets their order on the site; any not in the file follow after them.");
+        if (spec.FollowsFileOrder && plan.FileOrder.Count > 1)
+        {
+            // New rows are placed by the file's order, so any new row means an order step. Without one, the step still writes when the rows that exist would end up in another order.
+            plan.ReordersOnly = plan.Rows.Count == 0 && WouldReorder(spec, stored, plan.FileOrder);
+            if (plan.Rows.Count > 0 || plan.ReordersOnly)
+                plan.Report.Notes.Add($"The order of the {view.SectionLabel.ToLowerInvariant()} in the file sets their order on the site; any not in the file follow after them.");
+        }
         return plan;
+    }
+
+    /// <summary>True when putting the rows the file names first, in its order, within each group, would change the order the stored rows have now.</summary>
+    private static bool WouldReorder<T>(TableSpec<T> spec, IReadOnlyList<T> stored, IReadOnlyList<(string Key, string? Group)> fileOrder) where T : class, IStampedContent
+    {
+        if (stored.Count == 0 || stored[0] is not IOrderedContent) return false;
+        var byKey = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in stored.OrderBy(r => r.Id)) byKey.TryAdd(spec.KeyOf(row), row);
+        foreach (var group in stored.GroupBy(r => spec.GroupOf(r)))
+        {
+            var current = group.Cast<IOrderedContent>().OrderBy(r => r.SortOrder).ThenBy(r => r.Id).Cast<T>().ToList();
+            var named = new List<T>();
+            foreach (var (key, _) in fileOrder)
+                if (byKey.TryGetValue(key, out var row) && spec.GroupOf(row) == group.Key && !named.Contains(row)) named.Add(row);
+            if (!current.SequenceEqual(named.Concat(current.Where(r => !named.Contains(r))))) return true;
+        }
+        return false;
     }
 
     /// <summary>A name from the file, as short and plain as a preview needs it.</summary>

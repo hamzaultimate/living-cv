@@ -16,7 +16,7 @@
 }
 @if (result is not null)
 {
-    var applied = result.Created + result.Updated + (result.ProfileApplied ? 1 : 0);
+    var applied = result.Created + result.Updated + (result.ProfileApplied ? 1 : 0) + (result.Sections.Any(s => s.Reordered) ? 1 : 0);
     <section id="result" class="adm-card" aria-labelledby="result-heading">
         <h2 id="result-heading" tabindex="-1" autofocus>Import finished</h2>
         <p role="status">

@@ -41,6 +41,9 @@ public sealed class SectionReport
     /// <summary>Notes about the table as a whole (too many rows, the order that will be set).</summary>
     public List<string> Notes { get; } = [];
 
+    /// <summary>True when the apply changed the order of rows (the positions are written apart from the rows' own fields).</summary>
+    public bool Reordered { get; set; }
+
     public int Count(RowStatus status) => Rows.Count(r => r.Status == status);
 }
 
@@ -95,6 +98,9 @@ public sealed class PlannedRow<T> where T : class
 public interface ITablePlan
 {
     SectionReport Report { get; }
+
+    /// <summary>True when the file's order would change the order of rows that already exist, even though none of their fields change.</summary>
+    bool ReordersOnly { get; }
     Task<SectionReport> ApplyAsync(ImportApplier applier, CancellationToken ct);
 }
 
@@ -109,6 +115,8 @@ public sealed class TablePlan<T> : ITablePlan where T : class, IStampedContent
 
     /// <summary>Every valid row of the file (changed or not) in the file's order, with the group it is ordered in: what sets the order on the site after the rows are written.</summary>
     public List<(string Key, string? Group)> FileOrder { get; } = [];
+
+    public bool ReordersOnly { get; set; }
 
     public Task<SectionReport> ApplyAsync(ImportApplier applier, CancellationToken ct) => applier.ApplyTableAsync(this, ct);
 }
@@ -153,7 +161,7 @@ public sealed class ImportPlan
     public int Count(RowStatus status) => Reports.Sum(r => r.Count(status)) + (Profile.Requested && Profile.InFile && Profile.Status == status ? 1 : 0);
 
     /// <summary>True when applying would write something.</summary>
-    public bool HasChanges => Count(RowStatus.Create) + Count(RowStatus.Update) > 0;
+    public bool HasChanges => Count(RowStatus.Create) + Count(RowStatus.Update) > 0 || Tables.Any(t => t.ReordersOnly);
 }
 
 /// <summary>What an apply did.</summary>

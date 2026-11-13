@@ -201,6 +201,28 @@ public class ImportApplyTests
     }
 
     [Fact]
+    public async Task AFileThatOnlyReordersRows_IsAChange_ThePreviewOffersItAndTheConfirmAppliesIt()
+    {
+        var (app, owner) = await SiteAsync();
+        using var _ = app;
+        await TransferFlow.ImportAsync(owner, ImportHarness.Table("skills", new { name = "A", group = "G" }, new { name = "B", group = "G" }, new { name = "C", group = "G" }));
+        var reversed = ImportHarness.Table("skills", new { name = "C", group = "G" }, new { name = "B", group = "G" }, new { name = "A", group = "G" });
+
+        var preview = await (await TransferFlow.PreviewAsync(owner, reversed)).Content.ReadAsStringAsync();
+        Assert.Contains("0 will be added, 0 updated, 3 already match", preview);
+        Assert.Contains("Apply the import", preview); // the rows are unchanged, but their order is not
+        Assert.Contains("sets their order on the site", preview);
+        using (var db = app.CreateDbContext()) Assert.Equal(["A", "B", "C"], await db.Skills.OrderBy(x => x.SortOrder).Select(x => x.Name).ToListAsync()); // a preview moves nothing
+
+        var page = await (await TransferFlow.ConfirmAsync(owner, TransferFlow.TokenOf(preview))).Content.ReadAsStringAsync();
+
+        Assert.Contains("now follows the file", page);
+        Assert.DoesNotContain("Nothing was changed.", page);
+        using var check = app.CreateDbContext();
+        Assert.Equal(["C", "B", "A"], await check.Skills.OrderBy(x => x.SortOrder).Select(x => x.Name).ToListAsync());
+    }
+
+    [Fact]
     public async Task AFileInTheOrderTheSiteAlreadyHas_LeavesTheListStampAlone_SoAnOpenListPageStaysValid()
     {
         var (app, owner) = await SiteAsync();
