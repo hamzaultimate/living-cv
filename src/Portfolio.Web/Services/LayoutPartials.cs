@@ -44,10 +44,12 @@ public readonly record struct ImpactLine(string Figure, string Rest)
 {
     /// <summary>A short run of digits (with an optional sign, currency mark, separators and unit) at the start of the line, then a space. Anything else, such as a line that starts with a word,
     /// or a number too long to set large, keeps no figure and is shown whole, so nothing is ever dropped. Three more shapes are not figures: a bare year (1900 to 2099), a list number or sentence that
-    /// starts "1." or "3,", and a figure whose unit is parted from it by a space ("38 % lift", where the "%" would otherwise open the rest of the line).</summary>
+    /// starts "1." or "3,", and a figure whose unit is parted from it by a space ("38 % lift", "3.2 x contract value", "38 pts lift", "$2.4 M in ARR": a unit word that opens the rest of the line would read as a separate fragment).</summary>
     private static readonly System.Text.RegularExpressions.Regex Lead = new(
         @"^(?<fig>[+\-−~≈<>]?[$£€]?\d[\d,.]{0,7}(?:%|[kKmMbB]|×|x|pp|pts)?\+?)(?:\s+(?<rest>\S.*))?$",
         System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.Singleline);
+
+    private static readonly System.Text.RegularExpressions.Regex UnitFirst = new(@"^(%|[kKmMbB]|×|x|pp|pts)(\s|$)", System.Text.RegularExpressions.RegexOptions.Compiled);
 
     private static readonly System.Text.RegularExpressions.Regex Year = new(@"^(19|20)\d{2}$", System.Text.RegularExpressions.RegexOptions.Compiled);
 
@@ -58,7 +60,7 @@ public readonly record struct ImpactLine(string Figure, string Rest)
         if (!m.Success) return new("", text);
         var fig = m.Groups["fig"].Value;
         var rest = m.Groups["rest"].Success ? m.Groups["rest"].Value : "";
-        if (fig.Length > 9 || Year.IsMatch(fig) || fig[^1] is '.' or ',' || rest.StartsWith('%')) return new("", text);
+        if (fig.Length > 9 || Year.IsMatch(fig) || fig[^1] is '.' or ',' || UnitFirst.IsMatch(rest)) return new("", text);
         return new(fig, rest);
     }
 

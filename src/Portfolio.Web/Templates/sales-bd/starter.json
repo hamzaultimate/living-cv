@@ -256,7 +256,7 @@
       "links": [
         {
           "label": "Read the announcement",
-          "url": "https://example.org/tessera-freight-announcement"
+          "url": "https://example.org/freight-contract-announcement"
         }
       ],
       "featured": true,
@@ -297,7 +297,7 @@
       "links": [
         {
           "label": "See the case study",
-          "url": "https://example.org/alderbrook-case-study"
+          "url": "https://example.org/hospital-group-case-study"
         }
       ],
       "featured": true,
@@ -334,7 +334,7 @@
       "links": [
         {
           "label": "Partner programme overview",
-          "url": "https://example.org/copperline-partners"
+          "url": "https://example.org/partner-programme-overview"
         }
       ],
       "featured": true,
@@ -394,7 +394,7 @@
       "links": [
         {
           "label": "Market entry story",
-          "url": "https://example.org/quillon-market-entry"
+          "url": "https://example.org/market-entry-story"
         }
       ],
       "featured": false,
@@ -424,7 +424,7 @@
       "links": [
         {
           "label": "How the programme works",
-          "url": "https://example.org/ostrava-referrals"
+          "url": "https://example.org/referral-programme-overview"
         }
       ],
       "featured": false,

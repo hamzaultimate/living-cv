@@ -339,11 +339,11 @@
       "links": [
         {
           "label": "See the campaign page",
-          "url": "https://example.org/fernhill-launch"
+          "url": "https://example.org/launch-campaign-page"
         },
         {
           "label": "Launch report summary",
-          "url": "https://example.org/fernhill-report"
+          "url": "https://example.org/launch-report-summary"
         }
       ],
       "featured": true,
