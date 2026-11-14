@@ -181,6 +181,27 @@ public class ResultsArchetypeTests
         Assert.Equal(images.Count, images.Distinct().Count());
     }
 
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public void TheStarter_HasNoTraceOfTheClientNamesItUsedBefore_InTextLinksOrPictureNames(string key)
+    {
+        string[] retired = ["brightline", "harbor", "fernhill", "tallow", "sample studio", "tessera", "alderbrook", "copperline", "marlow", "quillon", "ostrava"];
+        var dir = Path.Combine(G.TemplatesDir, key);
+        var text = File.ReadAllText(Path.Combine(dir, "starter.json")).ToLowerInvariant();
+        var starter = new TemplateCatalog(G.TemplatesDir).GetStarter(key)!;
+        var links = starter.Projects.SelectMany(p => p.Links.Concat<object>(p.Proofs)).Count();
+
+        Assert.True(links >= 3, "the starter has links to check");
+        foreach (var name in retired) Assert.DoesNotContain(name, text);
+        foreach (var file in Directory.EnumerateFiles(Path.Combine(G.Wwwroot, "img", "starter", key)))
+            foreach (var name in retired) Assert.DoesNotContain(name, Path.GetFileName(file).ToLowerInvariant());
+        foreach (var p in starter.Projects)
+        {
+            foreach (var l in p.Links) foreach (var name in retired) Assert.DoesNotContain(name, l.Url.ToLowerInvariant());
+            foreach (var name in retired) Assert.DoesNotContain(name, p.Slug);
+        }
+    }
+
     // ---------------------------------------------------------------- rendering: blank, sample and full content
 
     [Theory]
@@ -318,7 +339,10 @@ public class ResultsArchetypeTests
         var home = await G.GetAsync(client, "/");
         var band = Regex.Match(home, "<ul[^>]*data-results-band.*?</ul>", RegexOptions.Singleline).Value;
         Assert.Equal(3, Regex.Matches(band, "data-metric").Count);
-        Assert.Contains("class=\"break-words font-display", band);
+        Assert.Contains("class=\"break-words font-display text-[clamp(1.5rem,7.5vw,2.25rem)]", band); // a short value is sized to fit a narrow column instead of breaking mid-value
+        Assert.Contains("leading-none tracking-tight", band);
+        Assert.Contains("sm:text-4xl md:text-6xl", band);
+        Assert.Contains("<li class=\"min-w-0 rounded-lg border border-border bg-surface p-4 sm:p-6\" data-metric>", band);
         Assert.Contains("9.5<span class=\"text-xl font-medium text-muted\"> points</span>", band);
         Assert.Contains("Zeta &lt;b&gt;lift&lt;/b&gt;", band);
         Assert.Contains(new string('9', 40), band);
@@ -370,6 +394,15 @@ public class ResultsArchetypeTests
     [InlineData("1999", "", "1999")]
     [InlineData("1. Opened the region", "", "1. Opened the region")]            // a list number is not a figure
     [InlineData("3, then 4 more", "", "3, then 4 more")]
+    [InlineData("3.2 x contract value", "", "3.2 x contract value")]
+    [InlineData("38 pts lift", "", "38 pts lift")]
+    [InlineData("$2.4 M in ARR", "", "$2.4 M in ARR")]
+    [InlineData("12 k leads", "", "12 k leads")]
+    [InlineData("5 pp gain", "", "5 pp gain")]
+    [InlineData("3 × faster", "", "3 × faster")]
+    [InlineData("5 M&A deals", "5", "M&A deals")]                                   // a word that merely starts with a unit letter is still a figure
+    [InlineData("3 bedrooms sold", "3", "bedrooms sold")]
+    [InlineData("3.2x contract value", "3.2x", "contract value")]                  // the unit attached: a figure, as before
     [InlineData("+38 % lift", "", "+38 % lift")]                                  // a unit parted by a space would open the rest of the line
     [InlineData("", "", "")]
     [InlineData(null, "", "")]
