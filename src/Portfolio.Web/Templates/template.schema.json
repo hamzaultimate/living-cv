@@ -272,6 +272,18 @@
             "allWork": {
               "type": "string",
               "description": "Optional. Gallery home link to the full work page; {work} is the work section's label. Default: All {work} →."
+            },
+            "downloadCv": {
+              "type": "string",
+              "description": "Optional. Results hero button to the CV page. Default: Download CV."
+            },
+            "linkedIn": {
+              "type": "string",
+              "description": "Optional. Results hero button to the LinkedIn profile. Default: LinkedIn."
+            },
+            "clientsHeading": {
+              "type": "string",
+              "description": "Optional. Heading of the results home page's strip of client names. Default: Worked with."
             }
           }
         },
@@ -368,6 +380,10 @@
             "watchVideo": {
               "type": "string",
               "description": "Optional. Label of a link to a video file when the video has no caption. Default: Watch the video ↗."
+            },
+            "filterAll": {
+              "type": "string",
+              "description": "Optional. Label of the show-everything chip of the results work page's category filter. Default: All."
             }
           }
         },

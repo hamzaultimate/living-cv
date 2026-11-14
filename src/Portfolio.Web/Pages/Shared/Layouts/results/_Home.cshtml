@@ -1,0 +1,150 @@
+@model IndexModel
+@inject ISiteProfileProvider SiteProfile
+@inject RequestTemplate Template
+@{
+    var site = await SiteProfile.GetAsync();
+    var tpl = await Template.GetAsync();
+    var copy = tpl.Copy.Home;
+    var work = tpl.Section(SectionRegistry.Projects);
+    var order = tpl.Definition.SkillGroups;
+    var skillGroups = Model.Skills.GroupBy(s => s.Group)
+        .OrderBy(g => { var i = order.IndexOf(g.Key); return i < 0 ? int.MaxValue : i; })
+        .ToList();
+}
+<!-- HERO -->
+<section class="border-b border-border/60">
+    <div class="container-page py-16 md:py-24">
+        <div class="flex flex-col-reverse items-start gap-10 md:flex-row md:items-center md:justify-between">
+            <div class="min-w-0">
+                <p class="eyebrow">@site.Hero.Eyebrow</p>
+                <h1 class="mt-5 max-w-4xl break-words text-4xl font-semibold leading-[1.08] md:text-6xl">
+                    @site.Hero.Headline
+                    <span class="text-accent">@site.Hero.HeadlineAccent</span>
+                </h1>
+                <p class="mt-6 max-w-2xl break-words text-lg text-muted">@site.Hero.Lede</p>
+                <div class="mt-8 flex flex-wrap gap-3">
+                    @if (tpl.IsEnabled(SectionRegistry.Projects))
+                    {
+                        <a href="#work" class="btn btn-primary">@Text(copy.ViewWorkFor(work.Label))</a>
+                    }
+                    <a href="/cv" class="btn btn-ghost">@Text(copy.DownloadCvText())</a>
+                    @if (site.HasLinkedIn)
+                    {
+                        <a href="@site.LinkedIn" target="_blank" rel="me noopener" class="btn btn-ghost">@Text(copy.LinkedInText())</a>
+                    }
+                </div>
+            </div>
+            @if (site.HasPhoto)
+            {
+                <div class="shrink-0">
+                    <img src="@site.PhotoUrl" alt="@site.OwnerName"
+                         class="profile-photo profile-photo--dark h-40 w-40 rounded-lg border border-border object-cover md:h-56 md:w-56"
+                         width="224" height="224" fetchpriority="high" />
+                    @if (site.HasPhotoLight)
+                    {
+                        <img src="@site.PhotoUrlLight" alt="@site.OwnerName"
+                             class="profile-photo profile-photo--light h-40 w-40 rounded-lg border border-border object-cover md:h-56 md:w-56"
+                             width="224" height="224" loading="lazy" />
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="flex h-40 w-40 shrink-0 items-center justify-center rounded-lg border border-border bg-surface font-display text-5xl font-semibold text-accent md:h-56 md:w-56 md:text-7xl"
+                     role="img" aria-label="@site.OwnerName">@site.Initials</div>
+            }
+        </div>
+
+        @if (site.Metrics.Count > 0)
+        {
+            <!-- METRICS BAND: the key figures from the profile, set large as the hero's centrepiece -->
+            <ul class="mt-12 grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,var(--results-band-min,11rem)),1fr))]" data-results-band>
+                @foreach (var m in site.Metrics)
+                {
+                    <li class="min-w-0 rounded-lg border border-border bg-surface p-6" data-metric>
+                        <p class="break-words font-display text-4xl font-semibold leading-none text-accent md:text-6xl">@m.Value@if (!string.IsNullOrWhiteSpace(m.Unit)) {<span class="text-xl font-medium text-muted"> @m.Unit</span>}</p>
+                        <p class="mt-3 break-words text-sm text-muted">@m.Label</p>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</section>
+
+@if (Model.Clients.Count > 0)
+{
+    <!-- CLIENTS: plain text wordmarks of the clients named on the work -->
+    <section id="clients" class="border-b border-border/60">
+        <div class="container-page py-10">
+            <h2 class="eyebrow">@Text(copy.ClientsHeadingText())</h2>
+            <ul class="mt-5 flex flex-wrap gap-x-10 gap-y-4">
+                @foreach (var c in Model.Clients)
+                {
+                    <li class="min-w-0 max-w-full break-words font-display text-lg font-semibold uppercase tracking-[0.12em] text-muted"><span class="mr-2 inline-block h-2 w-2 rotate-45 bg-accent" aria-hidden="true"></span>@c</li>
+                }
+            </ul>
+        </div>
+    </section>
+}
+
+@if (tpl.IsEnabled(SectionRegistry.Projects))
+{
+    <!-- WORK -->
+    <section id="work" class="container-page py-16 md:py-20">
+        <div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+            <div>
+                <p class="eyebrow">@Text(copy.WorkEyebrow)</p>
+                <h2 class="mt-3 break-words text-2xl md:text-3xl">@Text(copy.WorkHeading)</h2>
+            </div>
+            @if (Model.FeaturedProjects.Count > 0)
+            {
+                <a href="/projects" class="font-mono text-xs text-muted hover:text-accent">@Text(copy.AllWorkFor(work.Label))</a>
+            }
+        </div>
+
+        @if (Model.FeaturedProjects.Count > 0)
+        {
+            <div class="mt-8 grid gap-x-6 gap-y-12 grid-cols-[repeat(auto-fit,minmax(min(100%,var(--results-card-min,20rem)),1fr))]">
+                @foreach (var p in Model.FeaturedProjects)
+                {
+                    @await Html.PartialAsync("Layouts/results/_ResultCard", new WorkCard(p))
+                }
+            </div>
+        }
+        else
+        {
+            <div class="mt-6 rounded-lg border border-border bg-surface-2/70 p-6 text-sm text-muted">
+                <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">@Text(copy.WorkEmptyTitle)</p>
+                <p class="mt-3 max-w-2xl">@Text(copy.WorkEmptyBody)</p>
+            </div>
+        }
+    </section>
+}
+
+@if (skillGroups.Count > 0)
+{
+    <!-- SKILLS -->
+    <section id="skills" class="border-t border-border/60">
+        <div class="container-page py-14 md:py-16">
+            <h2 class="text-2xl md:text-3xl">@Text(copy.SkillsHeading)</h2>
+            <div class="mt-8 divide-y divide-border/60 border-y border-border/60">
+                @foreach (var g in skillGroups)
+                {
+                    <div class="grid gap-3 py-5 md:grid-cols-[14rem_1fr] md:gap-8">
+                        <p class="eyebrow">@g.Key</p>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach (var s in g)
+                            {
+                                <span class="tag max-w-full break-words">@s.Name</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@await Html.PartialAsync("Blocks/_Testimonials", Model)
+
+@await Html.PartialAsync("Blocks/_ContactCta", Model)

@@ -38,3 +38,23 @@ public sealed record WorkCard(Project Project, bool ShowFeatured = false, int He
 
 /// <summary>A project's id, address and title, for links between case studies.</summary>
 public sealed record ProjectLink(int Id, string Slug, string Title);
+
+/// <summary>An impact line split into the figure it leads with (like "+38%" or "2.1M") and the words after it, for layouts that set the figure large.</summary>
+public readonly record struct ImpactLine(string Figure, string Rest)
+{
+    /// <summary>A short run of digits (with an optional sign, currency mark, separators and unit) at the start of the line, then a space. Anything else, such as a line that starts with a word,
+    /// or a number too long to set large, keeps no figure and is shown whole, so nothing is ever dropped.</summary>
+    private static readonly System.Text.RegularExpressions.Regex Lead = new(
+        @"^(?<fig>[+\-−~≈<>]?[$£€]?\d[\d,.]{0,7}(?:%|[kKmMbB]|×|x|pp|pts)?\+?)(?:\s+(?<rest>\S.*))?$",
+        System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.Singleline);
+
+    public static ImpactLine Split(string? line)
+    {
+        var text = (line ?? "").Trim();
+        var m = Lead.Match(text);
+        if (!m.Success || m.Groups["fig"].Value.Length > 9) return new("", text);
+        return new(m.Groups["fig"].Value, m.Groups["rest"].Success ? m.Groups["rest"].Value : "");
+    }
+
+    public bool HasFigure => !string.IsNullOrEmpty(Figure);
+}
