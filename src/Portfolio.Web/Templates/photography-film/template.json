@@ -1,0 +1,246 @@
+{
+  "$schema": "../template.schema.json",
+  "key": "photography-film",
+  "name": "Photography & Film",
+  "profession": "Photographer and filmmaker",
+  "description": "Full-bleed series and film pages for photographers, filmmakers and other visual creatives.",
+  "archetype": "gallery",
+  "guidance": "Only publish pictures and film you have the right to show. Get releases for identifiable people and permission for private property, credit collaborators, and check client agreements before showing commissioned or unreleased work.",
+  "theme": {
+    "default": "photography-film",
+    "themeColor": "#09090b",
+    "accents": [
+      { "key": "gold", "label": "Gold", "dark": { "accent": "#e2b76a", "strong": "#f0d096" }, "light": { "accent": "#85580a", "strong": "#6b4608" } },
+      { "key": "sky", "label": "Sky", "dark": { "accent": "#7cc0ff", "strong": "#a9d6ff" }, "light": { "accent": "#0b5cad", "strong": "#094a8c" } },
+      { "key": "rose", "label": "Rose", "dark": { "accent": "#f58fb0", "strong": "#f9b4cb" }, "light": { "accent": "#b0194f", "strong": "#8f1440" } },
+      { "key": "sage", "label": "Sage", "dark": { "accent": "#8fd19e", "strong": "#b2e2bb" }, "light": { "accent": "#2f6b3c", "strong": "#25562f" } }
+    ]
+  },
+  "heroSuggestions": {
+    "title": "Photographer and Filmmaker",
+    "summary": "Photographer and filmmaker telling quiet, human stories through stills and short films, available for editorial, documentary and commissioned work."
+  },
+  "sections": [
+    { "key": "projects", "label": "series", "itemLabel": "Series" },
+    { "key": "about", "label": "about" },
+    { "key": "experience", "label": "commissions & credits", "shortLabel": "credits" },
+    { "key": "skills", "label": "craft & kit", "shortLabel": "craft" },
+    { "key": "certifications", "label": "exhibitions & awards", "shortLabel": "exhibitions" },
+    { "key": "blog", "label": "journal", "itemLabel": "Entry" },
+    { "key": "talks", "label": "screenings & talks", "shortLabel": "screenings", "enabled": false },
+    { "key": "testimonials", "label": "client notes" },
+    { "key": "contact", "label": "enquiries" }
+  ],
+  "skillGroups": ["Photography", "Film", "Post-production", "Light and sound", "Business"],
+  "seo": {
+    "title": "{name} — {title}",
+    "description": "{name}, {title}. Selected series, films and commissions, with details on how to enquire.",
+    "aboutDescription": "About {name}, {title}: the work, the approach and the clients and publications worked with."
+  },
+  "editor": {
+    "experience": {
+      "itemLabel": "Commission or credit",
+      "fields": {
+        "company": { "label": "Client or production" },
+        "title": { "label": "Your role" },
+        "summary": { "hint": "What you were hired to make and where it appeared." },
+        "highlights": { "label": "Notable results", "hint": "One per line, up to 12." },
+        "tech": { "label": "Formats and equipment" }
+      }
+    },
+    "skills": {
+      "itemLabel": "Skill or kit",
+      "fields": {
+        "name": { "label": "Skill, technique or kit" }
+      }
+    },
+    "projects": {
+      "fields": {
+        "title": { "hint": "The name of the series or film." },
+        "role": { "hint": "For example Photographer, Director or Cinematographer." },
+        "org": { "label": "Client or publication", "hint": "Only name a client you have permission to name." },
+        "period": { "hint": "When it was made, for example 2023." },
+        "problem": { "label": "The idea", "hint": "What the series or film is about and why you made it. Plain text." },
+        "approach": { "label": "How it was made", "hint": "Where, with whom and on what. Plain text." },
+        "impact": { "label": "Where it went", "hint": "One line each, up to 8: publications, screenings, prizes." },
+        "tech": { "label": "Cameras, lenses and tools" },
+        "heroImage": { "label": "Cover picture", "hint": "Shown full-bleed on the series grid and at the top of the series page. JPEG, PNG or WebP." },
+        "screenshots": { "label": "Pictures in the series", "hint": "Add pictures one at a time on the Images page. Each needs a description for people who cannot see it." },
+        "links": { "label": "Films and links", "hint": "Link a film or a full set. Films are linked, never embedded: use the cover picture as the poster." },
+        "category": { "hint": "A kind of work such as Landscape, Portrait or Documentary. Used by the filter on the series page." }
+      }
+    },
+    "certifications": {
+      "itemLabel": "Exhibition or award",
+      "fields": {
+        "name": { "label": "Exhibition, prize or course" },
+        "issuer": { "label": "Gallery, festival or body" },
+        "credentialUrl": { "label": "Link to the show or prize" }
+      }
+    },
+    "talks": {
+      "itemLabel": "Screening or talk",
+      "fields": {
+        "title": { "label": "Title" },
+        "event": { "label": "Festival, venue or event" },
+        "typeVideo": { "label": "Recording" },
+        "typeTalk": { "label": "Live event" },
+        "url": { "label": "Link to the film or recording", "hint": "http or https. Films are linked, not embedded." },
+        "youtubeId": { "hidden": true }
+      }
+    },
+    "testimonials": {
+      "itemLabel": "Client note",
+      "fields": {
+        "quote": { "label": "What they said", "hint": "Plain text. Only with the person's permission." },
+        "author": { "label": "Who said it" },
+        "authorTitle": { "label": "Their role and publication or company" }
+      }
+    },
+    "blog": {
+      "itemLabel": "Entry",
+      "fields": {
+        "title": { "label": "Entry title" },
+        "body": { "label": "Entry text", "hint": "Markdown. Raw HTML is shown as text, not run." },
+        "cover": { "hint": "JPEG, PNG or WebP. Shown at the top of the entry and when it is shared." }
+      }
+    },
+    "hero": {
+      "fields": {
+        "heading": { "label": "Home page opening", "hint": "The first thing visitors read, above your selected series. Plain text. Changes apply as soon as you save." },
+        "eyebrow": { "label": "Role line", "hint": "For example your disciplines and where you work. Plain text." },
+        "lede": { "label": "Opening words" }
+      }
+    },
+    "metrics": {
+      "itemLabel": "Figure",
+      "fields": {
+        "heading": { "label": "Key figures", "hint": "Short facts such as years behind the camera or films screened. Only publish figures you can stand behind. Changes apply as soon as you save." },
+        "label": { "label": "What it counts" }
+      }
+    },
+    "sections": {
+      "itemLabel": "Page",
+      "fields": {
+        "heading": { "label": "Pages of your site", "hint": "Choose which pages the site has, what the menu calls them and in which order. Hiding a page never deletes it. Changes apply as soon as you save." },
+        "label": { "label": "Menu name" }
+      }
+    },
+    "about": {
+      "itemLabel": "Belief",
+      "fields": {
+        "heading": { "label": "About you", "hint": "Your story, how you work and what draws you to a subject. Changes apply as soon as you save." },
+        "valueProps": { "label": "Beliefs", "hint": "Short statements about how you work, shown above the text." },
+        "currentlyNote": { "label": "Right now" },
+        "focus": { "label": "Subjects", "hint": "One per line." }
+      }
+    },
+    "transfer": {
+      "itemLabel": "Entry",
+      "fields": {
+        "heading": { "label": "Back up and restore your portfolio", "hint": "Keep your portfolio in one file, or restore one. You see what would change first, and nothing is ever removed." },
+        "exportHeading": { "label": "Save a copy", "hint": "One file with your details and every entry, including unpublished ones. Pictures you uploaded are listed, not included." },
+        "importHeading": { "label": "Restore from a file", "hint": "Each entry in the file is matched to one of yours by its name or title: a match is updated, anything else is added." },
+        "profile": { "label": "Details" }
+      }
+    }
+  },
+  "starter": { "file": "starter.json" },
+  "copy": {
+    "layout": { "footerNote": "Photography and film portfolio. Pictures are shown with permission." },
+    "home": {
+      "workEyebrow": "Recent series",
+      "workHeading": "Stills and films",
+      "workEmptyTitle": "First series coming soon",
+      "workEmptyBody": "Add the series and films you are proudest of. Lead with a strong cover picture, then tell the story behind it.",
+      "testimonialsEyebrow": "Client notes",
+      "testimonialsHeading": "Words from clients",
+      "contactHeading": "Planning a shoot or a film? Let's talk.",
+      "experienceEyebrow": "Credits",
+      "experienceHeading": "Commissions and credits",
+      "credentialsEyebrow": "Shown and awarded",
+      "credentialsHeading": "Exhibitions & awards",
+      "skillsHeading": "Craft & kit"
+    },
+    "projects": {
+      "title": "Series",
+      "description": "Selected photographic series and films: the idea, how each was made and where it went.",
+      "eyebrow": "Recent series",
+      "heading": "Series and films",
+      "lead": "Selected series and short films: the idea behind each, how it was made and where it went.",
+      "emptyTitle": "No series yet",
+      "emptyBody": "Add your first series with a cover picture and the pictures that belong to it.",
+      "filterLabel": "Filter series by kind of work",
+      "featuredBadge": "selected",
+      "problemHeading": "The idea",
+      "approachHeading": "How it was made",
+      "noWriteup": "The story behind this series is on the way.",
+      "stackHeading": "Cameras & tools",
+      "linksHeading": "Watch and read",
+      "proofHeading": "Press and prizes",
+      "screenshotsHeading": "The series",
+      "imageAlt": "{title} photograph",
+      "galleryLabel": "Pictures in the series",
+      "openImageLabel": "View picture larger"
+    },
+    "experience": {
+      "title": "Commissions & credits",
+      "description": "{name}'s commissions and credits: clients, productions and publications, most recent first.",
+      "eyebrow": "Credits",
+      "heading": "Commissions and credits",
+      "lead": "Most recent first: who I have worked for, what I made and where it appeared.",
+      "empty": "No commissions have been added yet."
+    },
+    "skills": {
+      "title": "Craft & kit",
+      "description": "Photography and film skills and kit grouped by area: stills, film, post-production, light and sound, and business.",
+      "eyebrow": "Craft & kit",
+      "heading": "Craft and equipment",
+      "lead": "Grouped by area: what I shoot, how I finish it and what I shoot it on.",
+      "empty": "No skills have been added yet."
+    },
+    "certifications": {
+      "title": "Exhibitions & awards",
+      "description": "Exhibitions, festival selections, prizes and training: shown, in progress and planned.",
+      "eyebrow": "Shown and awarded",
+      "heading": "Exhibitions, awards & training",
+      "lead": "Where the work has been shown, what it has won and the training behind it.",
+      "emptyTitle": "Nothing listed yet",
+      "emptyBody": "Add exhibitions, festival selections, prizes or courses you would like to show.",
+      "filterLabel": "Filter by gallery or body",
+      "statusEarned": "Shown",
+      "statusInProgress": "In preparation",
+      "statusPlanned": "Coming up",
+      "viewCertificate": "View certificate",
+      "viewCredential": "See the show →"
+    },
+    "blog": {
+      "title": "Journal",
+      "description": "Journal entries on making pictures and films: field notes, process and kit.",
+      "eyebrow": "Journal",
+      "heading": "Field notes",
+      "lead": "Notes from the field: how pictures and films get made, and what went wrong on the way.",
+      "empty": "Journal entries coming soon."
+    },
+    "talks": {
+      "title": "Screenings & talks",
+      "description": "Screenings, talks and workshops.",
+      "eyebrow": "Screenings & talks",
+      "heading": "Screenings and talks",
+      "empty": "No screenings listed yet. Check back soon.",
+      "watch": "Watch the film →"
+    },
+    "contact": {
+      "description": "Enquire with {name}: email, phone or LinkedIn.",
+      "heading": "Planning a shoot or a film? Let's talk.",
+      "lead": "The best ways to reach me about commissions, collaborations or licensing a picture."
+    },
+    "cv": {
+      "description": "Curriculum vitae — {name}, {title}.",
+      "experienceHeading": "Commissions and credits",
+      "skillsHeading": "Craft & kit",
+      "projectsHeading": "Selected series and films",
+      "certificationsHeading": "Exhibitions & awards"
+    }
+  }
+}

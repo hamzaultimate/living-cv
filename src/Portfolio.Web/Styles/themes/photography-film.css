@@ -1,0 +1,37 @@
+/* Photography & Film theme: a darker gallery wall (near-black in dark mode, a warm paper white in light) with one soft gold accent, square corners and
+   wider, shallower cards so the pictures carry the page. Besides the colour tokens, fonts and radii it sets two gallery layout variables the gallery
+   layout reads: --gallery-card-aspect (the shape of a work card) and --gallery-card-min (the narrowest a card may get, so a smaller value fits more columns).
+   Only variables are set here, so the whole site switches look with the data-template attribute and no rebuild. Specificity beats the base :root tokens. */
+:root[data-template="photography-film"] {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+  --font-mono: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --radius-lg: 0.125rem;
+  --radius-md: 0.125rem;
+  --gallery-card-aspect: 3/2;
+  --gallery-card-min: 14rem;
+}
+
+/* Dark is the default look (the base tokens do the same on :root), so it also applies before the theme script has set data-theme or when it cannot run. */
+:root[data-template="photography-film"],
+:root[data-template="photography-film"][data-theme="dark"] {
+  --c-bg: 9 9 11;
+  --c-surface: 18 18 21;
+  --c-surface-2: 27 27 31;
+  --c-border: 46 46 52;
+  --c-text: 238 236 232;
+  --c-muted: 160 158 154;
+  --c-accent: 226 183 106;
+  --c-accent-strong: 240 208 150;
+}
+
+:root[data-template="photography-film"][data-theme="light"] {
+  --c-bg: 243 241 237;
+  --c-surface: 255 255 255;
+  --c-surface-2: 232 229 223;
+  --c-border: 211 207 199;
+  --c-text: 20 20 18;
+  --c-muted: 88 85 80;
+  --c-accent: 133 88 10;
+  --c-accent-strong: 107 70 8;
+}
