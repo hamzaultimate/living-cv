@@ -1,0 +1,506 @@
+// Fictional sample content for the Finance & Accounting template. Every person, employer, client, engagement and figure below is invented.
+// The pictures are simple generated placeholders bundled under wwwroot/img/starter/finance-accounting.
+{
+  "fictional": true,
+  "profile": {
+    "ownerName": "Rhea Ashcombe",
+    "brandName": "Rhea",
+    "role": "Finance & Accounting Manager · Reporting, FP&A and controls (sample profile)",
+    "jobTitle": "Finance and Accounting Manager",
+    "summary": "Sample profile (fictional). Finance and accounting manager with eleven years across audit, reporting and finance leadership, focused on accurate numbers, strong controls and forecasts the business can act on.",
+    "knowsAbout": [
+      "Financial reporting",
+      "Management accounting",
+      "Financial planning and analysis",
+      "Internal controls",
+      "Audit readiness",
+      "Tax compliance"
+    ],
+    "hero": {
+      "eyebrow": "Finance & Accounting · Reporting, FP&A and controls",
+      "headline": "Accurate books, clear forecasts,",
+      "headlineAccent": "decisions the business can trust.",
+      "lede": "Sample profile (fictional). Eleven years across audit, reporting and finance leadership, from the month-end close to the annual forecast, with the numbers to show for it."
+    },
+    "metrics": [
+      {
+        "value": "5",
+        "unit": "days",
+        "label": "to close the month, down from nine"
+      },
+      {
+        "value": "98%",
+        "unit": "",
+        "label": "forecast accuracy over four quarters"
+      },
+      {
+        "value": "$1.8M",
+        "unit": "",
+        "label": "annual savings found in a spend review"
+      },
+      {
+        "value": "0",
+        "unit": "",
+        "label": "significant findings in the last three audits"
+      }
+    ],
+    "about": {
+      "headline": "Good finance is accuracy first, then clarity.",
+      "paragraphs": [
+        "Sample profile (fictional). I am a finance and accounting manager who starts with the basics being right: reconciled balances, documented controls and a close that finishes on time. Once the numbers can be trusted, I make them easy to read and useful for decisions.",
+        "I began in audit, moved into reporting and now lead a small finance team. I have shortened a month-end close from nine working days to five, replaced a yearly budget with rolling forecasts and prepared a multi-site business for three clean audits in a row.",
+        "This page is sample content for the Finance & Accounting template. Replace it with your own story, and only share figures, employer names and client names you are allowed to."
+      ],
+      "valueProps": [
+        {
+          "title": "Controls that work",
+          "body": "Reconciled, reviewed and documented, so surprises are rare."
+        },
+        {
+          "title": "Plain-language reporting",
+          "body": "Numbers the whole leadership team can read and act on."
+        },
+        {
+          "title": "Forecasts with owners",
+          "body": "Every assumption has a name against it and is reviewed each quarter."
+        },
+        {
+          "title": "Audit-ready all year",
+          "body": "Evidence kept as the work happens, not assembled at the end."
+        }
+      ],
+      "currentlyNote": "Leading the finance team at a growing industrial supplier and studying for a treasury certificate.",
+      "focus": [
+        "Financial reporting",
+        "FP&A",
+        "Internal controls",
+        "Audit readiness"
+      ]
+    },
+    "email": "rhea.ashcombe@example.org",
+    "linkedIn": "https://www.linkedin.com/in/example-rhea-ashcombe/",
+    "templateKey": "finance-accounting"
+  },
+  "experiences": [
+    {
+      "company": "Example Industrial Supply (fictional)",
+      "title": "Finance Manager",
+      "start": "2021",
+      "end": null,
+      "current": true,
+      "summary": "Lead a four-person finance team covering the month-end close, management reporting, the rolling forecast and audit support for a sample industrial supplier.",
+      "highlights": [
+        "Cut the month-end close from nine working days to five",
+        "Replaced the annual budget with rolling quarterly forecasts",
+        "Led the move to a new ledger and reporting platform with no restatements"
+      ],
+      "tech": [
+        "Month-end close",
+        "Management reporting",
+        "Rolling forecasts",
+        "ERP migration"
+      ],
+      "sortOrder": 1
+    },
+    {
+      "company": "Sample Distribution Co (fictional)",
+      "title": "Senior Accountant",
+      "start": "2018",
+      "end": "2021",
+      "current": false,
+      "summary": "Prepared consolidated statements for six entities and ran the audit file for a sample multi-site distributor.",
+      "highlights": [
+        "Prepared monthly consolidations for six entities",
+        "Moved the audit file to a shared checklist and shortened fieldwork by a week",
+        "Built the first filing calendar for the group"
+      ],
+      "tech": [
+        "Consolidation",
+        "Audit coordination",
+        "Tax compliance"
+      ],
+      "sortOrder": 2
+    },
+    {
+      "company": "Placeholder Assurance LLP (fictional)",
+      "title": "Audit Senior",
+      "start": "2014",
+      "end": "2018",
+      "current": false,
+      "summary": "Planned and ran audits and reviews for mid-sized clients at a sample assurance firm.",
+      "highlights": [
+        "Led fieldwork on twelve annual audits",
+        "Supervised and trained four associates",
+        "Specialised in controls testing and inventory"
+      ],
+      "tech": [
+        "Audit planning",
+        "Controls testing",
+        "Risk assessment"
+      ],
+      "sortOrder": 3
+    }
+  ],
+  "skills": [
+    {
+      "name": "Month-end close",
+      "group": "Reporting and close",
+      "sortOrder": 1
+    },
+    {
+      "name": "Consolidation",
+      "group": "Reporting and close",
+      "sortOrder": 2
+    },
+    {
+      "name": "Management accounts",
+      "group": "Reporting and close",
+      "sortOrder": 3
+    },
+    {
+      "name": "Balance sheet reconciliation",
+      "group": "Reporting and close",
+      "sortOrder": 4
+    },
+    {
+      "name": "Budgeting",
+      "group": "FP&A",
+      "sortOrder": 5
+    },
+    {
+      "name": "Rolling forecasts",
+      "group": "FP&A",
+      "sortOrder": 6
+    },
+    {
+      "name": "Variance analysis",
+      "group": "FP&A",
+      "sortOrder": 7
+    },
+    {
+      "name": "Business partnering",
+      "group": "FP&A",
+      "sortOrder": 8
+    },
+    {
+      "name": "Internal controls",
+      "group": "Audit and controls",
+      "sortOrder": 9
+    },
+    {
+      "name": "Audit coordination",
+      "group": "Audit and controls",
+      "sortOrder": 10
+    },
+    {
+      "name": "Risk assessment",
+      "group": "Audit and controls",
+      "sortOrder": 11
+    },
+    {
+      "name": "Sales tax and VAT returns",
+      "group": "Tax and compliance",
+      "sortOrder": 12
+    },
+    {
+      "name": "Tax provisions",
+      "group": "Tax and compliance",
+      "sortOrder": 13
+    },
+    {
+      "name": "Statutory filings",
+      "group": "Tax and compliance",
+      "sortOrder": 14
+    },
+    {
+      "name": "ERP platforms",
+      "group": "Systems",
+      "sortOrder": 15
+    },
+    {
+      "name": "Spreadsheet modelling",
+      "group": "Systems",
+      "sortOrder": 16
+    },
+    {
+      "name": "Reporting dashboards",
+      "group": "Systems",
+      "sortOrder": 17
+    }
+  ],
+  "projects": [
+    {
+      "title": "Month-end close redesign (sample)",
+      "slug": "month-end-close-redesign",
+      "role": "Finance manager",
+      "org": "Wexcombe",
+      "period": "2024",
+      "summary": "Cutting the monthly close from nine working days to five for a sample industrial supplier. Sample engagement (fictional).",
+      "category": "Reporting and close",
+      "problem": "The close took nine working days, late journals kept reopening the ledger and the leadership team saw results too late to act on them.",
+      "approach": "Mapped every close task and its owner, moved recurring journals to a schedule, agreed a cut-off calendar with each department and added a short checklist review before sign-off.",
+      "impact": [
+        "56% faster month-end close",
+        "40% fewer manual journals",
+        "No late board pack in 12 months"
+      ],
+      "tech": [
+        "Close calendar",
+        "Reconciliations",
+        "Journal scheduling"
+      ],
+      "heroImage": "/img/starter/finance-accounting/month-end-close-redesign.svg",
+      "heroImageAlt": "Abstract illustration of a calendar grid with ticked cells beside a short descending bar.",
+      "screenshots": [
+        {
+          "url": "/img/starter/finance-accounting/month-end-close-redesign-1.svg",
+          "caption": "Close tasks on a timeline, before and after the redesign"
+        },
+        {
+          "url": "/img/starter/finance-accounting/month-end-close-redesign-2.svg",
+          "caption": "Working days to close, month by month"
+        }
+      ],
+      "links": [
+        {
+          "label": "Close process overview",
+          "url": "https://example.org/month-end-close-overview"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "title": "Rolling forecast rollout (sample)",
+      "slug": "rolling-forecast-rollout",
+      "role": "FP&A lead",
+      "org": "Lorvane",
+      "period": "2023",
+      "summary": "Replacing a yearly budget with rolling quarterly forecasts for a sample distribution business. Sample engagement (fictional).",
+      "category": "FP&A",
+      "problem": "The annual budget was out of date by March, so decisions were made on numbers nobody believed.",
+      "approach": "Built a driver-based model with the commercial and operations leads, named an owner for every assumption and compared the forecast with actuals each month.",
+      "impact": [
+        "Within 2% of actual revenue for four quarters",
+        "Budget cycle cut from ten weeks to four",
+        "Every assumption has a named owner"
+      ],
+      "tech": [
+        "Driver-based model",
+        "Variance analysis",
+        "Scenario planning"
+      ],
+      "heroImage": "/img/starter/finance-accounting/rolling-forecast-rollout.svg",
+      "heroImageAlt": "Abstract illustration of a solid line and a dashed line tracking each other across a chart.",
+      "screenshots": [
+        {
+          "url": "/img/starter/finance-accounting/rolling-forecast-rollout-1.svg",
+          "caption": "Forecast against actual revenue, by quarter"
+        }
+      ],
+      "links": [
+        {
+          "label": "Forecast method summary",
+          "url": "https://example.org/rolling-forecast-method"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 2
+    },
+    {
+      "title": "Spend review and savings (sample)",
+      "slug": "spend-review-and-savings",
+      "role": "Finance business partner",
+      "org": "Pentriss",
+      "period": "2023",
+      "summary": "A review of indirect spend for a sample manufacturer, with every category given an owner. Sample engagement (fictional).",
+      "category": "Cost control",
+      "problem": "Indirect spend had grown faster than revenue for three years and nobody owned the categories.",
+      "approach": "Classified a year of spend, named a budget owner for each category, benchmarked the largest suppliers and renegotiated the contracts with the biggest gaps.",
+      "impact": [
+        "$1.8M annual savings identified",
+        "14 supplier contracts renegotiated",
+        "Savings tracked monthly against the budget"
+      ],
+      "tech": [
+        "Spend analysis",
+        "Supplier benchmarking",
+        "Budget ownership"
+      ],
+      "heroImage": "/img/starter/finance-accounting/spend-review-and-savings.svg",
+      "heroImageAlt": "Abstract illustration of descending blocks stepping down to a smaller total bar.",
+      "screenshots": [
+        {
+          "url": "/img/starter/finance-accounting/spend-review-and-savings-1.svg",
+          "caption": "Indirect spend by category, before and after"
+        },
+        {
+          "url": "/img/starter/finance-accounting/spend-review-and-savings-2.svg",
+          "caption": "Savings found, by quarter"
+        }
+      ],
+      "links": [
+        {
+          "label": "Spend review summary",
+          "url": "https://example.org/spend-review-summary"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 3
+    },
+    {
+      "title": "Ledger and reporting migration (sample)",
+      "slug": "ledger-and-reporting-migration",
+      "role": "Project accountant",
+      "org": "Garrowick",
+      "period": "2022",
+      "summary": "Moving the ledger and the reporting to a new platform for a sample distributor. Sample engagement (fictional).",
+      "category": "Systems",
+      "problem": "The old ledger could not produce consolidated reports without a week of manual spreadsheet work.",
+      "approach": "Mapped the chart of accounts, ran two parallel closes, reconciled every balance at cut-over and trained the team before go-live.",
+      "impact": [
+        "0 restatements through the migration",
+        "Consolidation cut from five days to one"
+      ],
+      "tech": [
+        "Chart of accounts",
+        "Parallel close",
+        "Cut-over reconciliation"
+      ],
+      "heroImage": "/img/starter/finance-accounting/ledger-and-reporting-migration.svg",
+      "heroImageAlt": "Abstract illustration of two boxes joined by arrows with a tick mark between them.",
+      "links": [
+        {
+          "label": "Migration checklist",
+          "url": "https://example.org/ledger-migration-checklist"
+        }
+      ],
+      "featured": false,
+      "sortOrder": 4
+    },
+    {
+      "title": "Audit readiness programme (sample)",
+      "slug": "audit-readiness-programme",
+      "role": "Finance manager",
+      "org": "Sovrellan",
+      "period": "2022",
+      "summary": "Building year-round audit evidence for a sample multi-site operator. Sample engagement (fictional).",
+      "category": "Audit and controls",
+      "problem": "Audits needed six weeks of evidence gathering and produced the same control findings every year.",
+      "approach": "Documented the key controls, assigned a reviewer to each, kept the evidence in one shared index as the work happened and closed the repeat findings first.",
+      "impact": [
+        "3 consecutive audits with no significant findings",
+        "Audit fieldwork shortened by two weeks"
+      ],
+      "tech": [
+        "Control matrix",
+        "Evidence index",
+        "Remediation plan"
+      ],
+      "heroImage": "/img/starter/finance-accounting/audit-readiness-programme.svg",
+      "heroImageAlt": "Abstract illustration of a ledger page with rows of lines and tick marks down one side.",
+      "screenshots": [
+        {
+          "url": "/img/starter/finance-accounting/audit-readiness-programme-1.svg",
+          "caption": "Key controls reviewed on time, by quarter"
+        }
+      ],
+      "links": [
+        {
+          "label": "Controls overview",
+          "url": "https://example.org/audit-readiness-overview"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 5
+    },
+    {
+      "title": "Tax compliance calendar (sample)",
+      "slug": "tax-compliance-calendar",
+      "role": "Senior accountant",
+      "org": "Duskmere",
+      "period": "2021",
+      "summary": "A filing calendar and review routine for a sample multi-entity business. Sample engagement (fictional).",
+      "category": "Tax and compliance",
+      "problem": "Filings were tracked in several personal spreadsheets and two deadlines were missed in one year.",
+      "approach": "Built one calendar of every filing with an owner and a reviewer, set reminders ahead of each date and wrote a short review step for the larger returns.",
+      "impact": [
+        "Every filing submitted on time for three years",
+        "One calendar for all six entities"
+      ],
+      "tech": [
+        "Compliance calendar",
+        "Return review",
+        "Entity mapping"
+      ],
+      "heroImage": "/img/starter/finance-accounting/tax-compliance-calendar.svg",
+      "heroImageAlt": "Abstract illustration of a month grid with several dates marked beside a clock face.",
+      "links": [
+        {
+          "label": "Calendar template",
+          "url": "https://example.org/compliance-calendar-template"
+        }
+      ],
+      "featured": false,
+      "sortOrder": 6
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Chartered Accountant qualification (sample)",
+      "issuer": "Example Institute of Accountants",
+      "status": "Earned",
+      "date": "2016",
+      "category": "Qualification",
+      "sortOrder": 1
+    },
+    {
+      "name": "Member, Example Institute of Accountants (sample)",
+      "issuer": "Example Institute of Accountants",
+      "status": "Earned",
+      "date": "2016",
+      "category": "Membership",
+      "sortOrder": 2
+    },
+    {
+      "name": "Management Accounting Diploma (sample)",
+      "issuer": "Example Management Accounting Board",
+      "status": "Earned",
+      "date": "2019",
+      "category": "Qualification",
+      "sortOrder": 3
+    },
+    {
+      "name": "Treasury Certificate (sample)",
+      "issuer": "Example Treasury Association",
+      "status": "InProgress",
+      "date": "2026",
+      "category": "Course",
+      "sortOrder": 4
+    },
+    {
+      "name": "Data Analysis for Finance course (sample)",
+      "issuer": "Example Learning Academy",
+      "status": "Planned",
+      "date": "2027",
+      "category": "Course",
+      "sortOrder": 5
+    }
+  ],
+  "testimonials": [
+    {
+      "quote": "Sample reference (fictional). Rhea turned a close we dreaded into one we barely notice, and her numbers are the ones the whole board trusts.",
+      "author": "Sample Director",
+      "authorTitle": "Finance Director, Example Industrial Supply",
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "quote": "Sample reference (fictional). Calm under audit pressure, careful with the detail and always ready to explain the numbers in plain words.",
+      "author": "Sample Partner",
+      "authorTitle": "Audit Partner, Placeholder Assurance",
+      "featured": true,
+      "sortOrder": 2
+    }
+  ]
+}

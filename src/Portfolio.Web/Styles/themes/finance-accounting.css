@@ -1,0 +1,38 @@
+/* Finance & Accounting theme: a restrained graphite dark mode (a warm paper white in light) with a muted steel-blue accent, a serif display face and modest corners, so the page reads like a well-set report.
+   Besides the colour tokens, fonts and radii it sets three of the four layout variables the results layout reads, to keep the work cards text-forward and the CV-led pages quiet: --results-card-aspect (a shallow 2/1 cover),
+   --results-card-min (wider cards, so fewer per row) and --results-band-min (the narrowest a headline-figure tile may get). The fourth, --results-card-max, is left at its fallback.
+   Only variables are set here, so the whole site switches look with the data-template attribute and no rebuild. Specificity beats the base :root tokens. */
+:root[data-template="finance-accounting"] {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: Charter, "Bitstream Charter", Cambria, "Sitka Text", Georgia, "Times New Roman", serif;
+  --font-mono: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --radius-lg: 0.375rem;
+  --radius-md: 0.25rem;
+  --results-card-aspect: 2/1;
+  --results-card-min: 22rem;
+  --results-band-min: 10rem;
+}
+
+/* Dark is the default look (the base tokens do the same on :root), so it also applies before the theme script has set data-theme or when it cannot run. */
+:root[data-template="finance-accounting"],
+:root[data-template="finance-accounting"][data-theme="dark"] {
+  --c-bg: 18 21 26;
+  --c-surface: 26 30 37;
+  --c-surface-2: 36 41 50;
+  --c-border: 58 65 76;
+  --c-text: 238 241 245;
+  --c-muted: 163 171 182;
+  --c-accent: 125 170 221;
+  --c-accent-strong: 168 197 236;
+}
+
+:root[data-template="finance-accounting"][data-theme="light"] {
+  --c-bg: 250 250 248;
+  --c-surface: 255 255 255;
+  --c-surface-2: 238 240 243;
+  --c-border: 214 218 224;
+  --c-text: 22 28 36;
+  --c-muted: 82 92 106;
+  --c-accent: 30 74 122;
+  --c-accent-strong: 21 55 92;
+}
