@@ -1,6 +1,7 @@
 /* Photography & Film theme: a darker gallery wall (near-black in dark mode, a warm paper white in light) with one soft gold accent, square corners and
-   wider, shallower cards so the pictures carry the page. Besides the colour tokens, fonts and radii it sets two gallery layout variables the gallery
+   wider, shallower cards so the pictures carry the page. Besides the colour tokens, fonts and radii it sets two of the three gallery layout variables the gallery
    layout reads: --gallery-card-aspect (the shape of a work card) and --gallery-card-min (the narrowest a card may get, so a smaller value fits more columns).
+   The third, --gallery-card-max (the widest a single card may be), is left at its fallback.
    Only variables are set here, so the whole site switches look with the data-template attribute and no rebuild. Specificity beats the base :root tokens. */
 :root[data-template="photography-film"] {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
