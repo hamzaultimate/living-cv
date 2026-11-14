@@ -13,7 +13,7 @@
     var videos = new List<(string Url, string Label)>();
     if (Media.IsVideo(p.HeroImage) && LayoutPartials.IsLinkable(p.HeroImage)) videos.Add((p.HeroImage!, copy.WatchVideoText()));
     foreach (var v in p.Screenshots.Where(s => Media.IsVideo(s.Url) && LayoutPartials.IsLinkable(s.Url)))
-        videos.Add((v.Url, string.IsNullOrWhiteSpace(v.Caption) ? copy.WatchVideoText() : v.Caption!));
+        videos.Add((v.Url, string.IsNullOrWhiteSpace(v.Caption) ? copy.WatchVideoText() : v.Caption + " — " + copy.WatchVideoText()));
     var all = await Repo.GetProjectLinksAsync();
     var at = all.FindIndex(x => x.Id == p.Id);
     var next = all.Count > 1 && at >= 0 ? all[(at + 1) % all.Count] : null;
@@ -28,7 +28,7 @@
     <header class="mt-6 max-w-4xl min-w-0">
         <p class="eyebrow">@Text(item)</p>
         <h1 class="mt-3 break-words text-4xl font-semibold leading-[1.08] md:text-6xl">@p.Title</h1>
-        <p class="mt-3 font-mono text-xs text-muted">
+        <p class="mt-3 break-words font-mono text-xs text-muted">
             @string.Join(" · ", new[] { p.Role, p.Org, p.Period }.Where(x => !string.IsNullOrWhiteSpace(x)))
         </p>
         <p class="mt-5 max-w-3xl break-words text-lg text-muted">@p.Summary</p>
@@ -77,7 +77,7 @@
                     <div class="mt-3 flex flex-wrap gap-2">
                         @foreach (var t in p.Tech)
                         {
-                            <span class="tag">@t</span>
+                            <span class="tag max-w-full break-words">@t</span>
                         }
                     </div>
                 </div>

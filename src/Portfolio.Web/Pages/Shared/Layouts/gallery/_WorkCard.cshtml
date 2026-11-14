@@ -11,7 +11,7 @@
     var cat = p.Category?.Trim();
     var mark = string.Concat(p.Title.Split(' ', StringSplitOptions.RemoveEmptyEntries).Where(w => char.IsLetterOrDigit(w[0])).Take(2).Select(w => char.ToUpperInvariant(w[0])));
 }
-<article class="group relative flex min-w-0 flex-col" data-category="@cat">
+<article class="group relative mx-auto flex w-full min-w-0 max-w-[var(--gallery-card-max,40rem)] flex-col" data-category="@cat">
     <div class="relative aspect-[var(--gallery-card-aspect,4/3)] overflow-hidden rounded-lg border border-border bg-surface-2">
         @if (hasImage)
         {
@@ -36,7 +36,7 @@
     <div class="mt-4 flex flex-1 flex-col">
         @if (!string.IsNullOrWhiteSpace(cat))
         {
-            <p class="text-[11px] uppercase tracking-wider text-muted">@cat</p>
+            <p class="break-words text-[11px] uppercase tracking-wider text-muted">@cat</p>
         }
         @if (Model.HeadingLevel == 2)
         {
@@ -52,7 +52,7 @@
             <div class="mt-3 flex flex-wrap gap-2">
                 @foreach (var t in p.Tech.Take(3))
                 {
-                    <span class="tag">@t</span>
+                    <span class="tag max-w-full break-words">@t</span>
                 }
             </div>
         }

@@ -30,14 +30,14 @@
         @if (categories.Count > 1)
         {
             <div class="mt-10 flex flex-wrap gap-2" data-project-filter role="group" aria-label="@copy.FilterLabel">
-                <button type="button" class="filter-chip is-active" data-filter="all" aria-pressed="true">All</button>
+                <button type="button" class="filter-chip is-active max-w-full break-words" data-filter="all" aria-pressed="true">All</button>
                 @foreach (var c in categories)
                 {
-                    <button type="button" class="filter-chip" data-filter="@c" aria-pressed="false">@c</button>
+                    <button type="button" class="filter-chip max-w-full break-words" data-filter="@c" aria-pressed="false">@c</button>
                 }
             </div>
         }
-        <div class="mt-10 grid gap-x-6 gap-y-12 grid-cols-[repeat(auto-fill,minmax(min(100%,var(--gallery-card-min,17rem)),1fr))]" data-project-grid>
+        <div class="mt-10 grid gap-x-6 gap-y-12 grid-cols-[repeat(auto-fit,minmax(min(100%,var(--gallery-card-min,17rem)),1fr))]" data-project-grid>
             @foreach (var p in Model.Projects)
             {
                 @await Html.PartialAsync("Layouts/gallery/_WorkCard", new WorkCard(p, ShowFeatured: true, HeadingLevel: 2))
