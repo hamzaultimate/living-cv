@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Portfolio.Web.Tests.Support;
 using Portfolio.Web.Transfer;
 using Xunit;
@@ -230,5 +231,80 @@ public class ImportPlanningTests
 
         Assert.Contains(plan.FileNotes, n => n.Contains("2 image files") && n.Contains("not part of an export"));
         Assert.Equal(0, plan.UnknownProperties);
+    }
+
+    private async Task<RowReport> PlanOneAsync(string table, object row) => ImportHarness.OneRow(await ImportHarness.PlanOkAsync(App, ImportHarness.Table(table, row)), table);
+
+    [Fact]
+    public async Task ATestimonialKey_IsTheAuthorAndTheFirst40CharactersOfTheQuote()
+    {
+        // Differing only after character 40: the same entry. Differing within the first 40, or by author, or entirely: another one.
+        Assert.Equal(RowStatus.Update, (await PlanOneAsync("testimonials", new { author = "Seed Person", quote = "Seeded praise that is long enough to be rewritten at the end." })).Status);
+        Assert.Equal(RowStatus.Create, (await PlanOneAsync("testimonials", new { author = "Seed Person", quote = "Seeded praise that is entirely different from the stored one." })).Status);
+        Assert.Equal(RowStatus.Create, (await PlanOneAsync("testimonials", new { author = "Seed Person", quote = "A completely different quote." })).Status);
+        Assert.Equal(RowStatus.Create, (await PlanOneAsync("testimonials", new { author = "Another Person", quote = "Seeded praise that is long enough to be a quote." })).Status);
+    }
+
+    [Fact]
+    public async Task ARoleKey_IsTheCompanyAndTheTitle_NotTheCompanyAlone()
+    {
+        var row = await PlanOneAsync("experience", new { company = "Seed Co", title = "Another Role", start = "2022", end = "2023", summary = "New." });
+
+        Assert.Equal(RowStatus.Create, row.Status);
+    }
+
+    [Fact]
+    public async Task APostWithoutAnAddressName_IsMatchedByTheNameBuiltFromItsTitle()
+    {
+        var row = await PlanOneAsync("blog", new { title = "Seed Post" });
+
+        Assert.Equal(RowStatus.Unchanged, row.Status);
+    }
+
+    [Fact]
+    public async Task TwoRowsThatDifferOnlyByTheCaseOfTheirKey_AreTheSameEntry_TheSecondIsRefused()
+    {
+        var plan = await ImportHarness.PlanOkAsync(App, ImportHarness.Table("skills", new { name = "CaseKey", group = "G" }, new { name = "casekey", group = "G" }, new { name = "CASEKEY", group = "G" }));
+
+        var rows = ImportHarness.Section(plan, "skills").Rows;
+
+        Assert.Equal([RowStatus.Create, RowStatus.Refused, RowStatus.Refused], rows.Select(r => r.Status).ToArray());
+        Assert.All(rows.Skip(1), r => Assert.Contains("earlier", ImportHarness.Why(r)));
+    }
+
+    [Fact]
+    public async Task ADroppedGalleryPicture_OfAnExistingProject_SaysTheStoredImageIsKept()
+    {
+        var row = await PlanOneAsync("projects", new { slug = "seed-project", screenshots = new object[] { new { url = "https://example.com/x.png", caption = "Web" } } });
+
+        Assert.Contains(row.Warnings, w => w.Contains("the image that is stored was kept"));
+        Assert.DoesNotContain(row.Warnings, w => w.Contains("the image was left out"));
+    }
+
+    [Fact]
+    public async Task AnUploadsListOverTheCap_RefusesTheFile()
+    {
+        var uploads = Enumerable.Range(0, TransferLimits.MaxUploadEntries + 1).Select(_ => new { path = "/uploads/x.png" }).ToArray();
+
+        var outcome = await ImportHarness.PlanAsync(App, ImportHarness.File(extra: new Dictionary<string, object?> { ["uploads"] = uploads }));
+
+        Assert.Null(outcome.Plan);
+        Assert.Contains("more than", outcome.Refusal);
+        var atCap = await ImportHarness.PlanAsync(App, ImportHarness.File(extra: new Dictionary<string, object?> { ["uploads"] = uploads.Take(TransferLimits.MaxUploadEntries).ToArray() }));
+        Assert.NotNull(atCap.Plan);
+    }
+
+    [Fact]
+    public async Task BytesOverTheFileCap_AreRefusedByTheServiceToo_NotOnlyByTheUploadPath()
+    {
+        using var scope = App.Services.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<ImportService>();
+        var json = ImportHarness.Table("skills", new { name = "Big", group = "G" });
+        var bytes = TransferFlow.Utf8(json + new string(' ', TransferLimits.MaxFileBytes - json.Length + 1));
+
+        var outcome = await service.PreviewAsync(bytes, "big.json", false, "cap-session", CancellationToken.None);
+
+        Assert.Null(outcome.Plan);
+        Assert.Contains("larger than", outcome.Refusal);
     }
 }

@@ -310,4 +310,37 @@ public class ImportProfilePlanningTests
         var project = plan.Reports.SelectMany(r => r.Rows).Single(r => r.Warnings.Count > 0);
         Assert.Contains(project.Warnings, w => w.Contains("the stored list was kept as it is"));
     }
+
+    [Fact]
+    public async Task ANullForOneOptionalHeroField_ClearsThatFieldAlone()
+    {
+        var plan = await PlanAsync(new { hero = new { lede = (string?)null } });
+
+        Assert.Equal(RowStatus.Update, plan.Profile.Status);
+        Assert.Contains(plan.Profile.Changes, c => c.StartsWith("Changed: "));
+    }
+
+    [Fact]
+    public async Task ANullForAnOptionalIdentityField_ClearsIt()
+    {
+        using (var db = App.CreateDbContext())
+        {
+            var p = db.SiteProfiles.Single();
+            p.Location = "Somewhere";
+            await db.SaveChangesAsync();
+        }
+        try
+        {
+            var plan = await PlanAsync(new { location = (string?)null });
+
+            Assert.Equal(RowStatus.Update, plan.Profile.Status);
+            Assert.Contains(plan.Profile.Changes, c => c.Contains("Location"));
+        }
+        finally
+        {
+            using var db = App.CreateDbContext();
+            db.SiteProfiles.Single().Location = "Leeds, UK";
+            await db.SaveChangesAsync();
+        }
+    }
 }

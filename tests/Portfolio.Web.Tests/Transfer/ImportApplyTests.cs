@@ -853,4 +853,43 @@ public class ImportApplyTests
         using var db = app.CreateDbContext();
         Assert.Equal(["Also good", "Good"], await db.Skills.OrderBy(s => s.Name).Select(s => s.Name).ToListAsync());
     }
+
+    [Fact]
+    public async Task ATokenAtExactlyItsExpiry_WritesNothing()
+    {
+        var (app, owner) = await SiteAsync();
+        using var _ = app;
+        var token = await TransferFlow.HoldAsync(owner, ImportHarness.Table("skills", new { name = "Late", group = "G" }));
+        app.Clock.Advance(Portfolio.Web.Transfer.TransferLimits.PreviewLifetime);
+
+        var page = await (await TransferFlow.ConfirmAsync(owner, token)).Content.ReadAsStringAsync();
+
+        Assert.Contains("so nothing was written", page);
+        using var db = app.CreateDbContext();
+        Assert.Equal(0, await db.Skills.CountAsync());
+    }
+
+    [Fact]
+    public async Task AReorderOnlyImport_RefreshesTheCachedSitemap_SoTheNewOrderIsServed()
+    {
+        var (app, owner) = await SiteAsync();
+        using var _ = app;
+        await TransferFlow.ImportAsync(owner, ImportHarness.File(content: new
+        {
+            projects = new object[] { new { title = "Alpha work", slug = "alpha-work", summary = "S." }, new { title = "Beta work", slug = "beta-work", summary = "S." }, new { title = "Gamma work", slug = "gamma-work", summary = "S." } },
+        }));
+        var anyone = app.NewClient();
+        var before = await anyone.GetStringAsync("/sitemap.xml");
+        Assert.Equal(before, await anyone.GetStringAsync("/sitemap.xml")); // cached
+
+        var page = await TransferFlow.ImportAsync(owner, ImportHarness.File(content: new
+        {
+            projects = new object[] { new { title = "Gamma work", slug = "gamma-work", summary = "S." }, new { title = "Beta work", slug = "beta-work", summary = "S." }, new { title = "Alpha work", slug = "alpha-work", summary = "S." } },
+        }));
+
+        Assert.Contains("now follows the file", page);
+        var after = await anyone.GetStringAsync("/sitemap.xml");
+        Assert.NotEqual(before, after);
+        Assert.True(after.IndexOf("gamma-work", StringComparison.Ordinal) < after.IndexOf("alpha-work", StringComparison.Ordinal));
+    }
 }

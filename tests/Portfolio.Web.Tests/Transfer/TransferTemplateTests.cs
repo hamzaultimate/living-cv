@@ -244,4 +244,15 @@ public class TransferTemplateTests
         Assert.Contains("Wound care", result);
         Assert.Matches(@"<caption>[^<]*\(1 in the file\)</caption>", preview);
     }
+
+    [Fact]
+    public async Task TheUnknownTemplateRefusal_NamesTheProfileInTheManifestsWords()
+    {
+        using var app = AdminApp.WithTemplates(Quirky());
+        await ContentFlow.BlankSiteAsync(app, "quirky");
+
+        var plan = await ImportHarness.PlanOkAsync(app, ImportHarness.File(profile: new { templateKey = "not-installed" }), true);
+
+        Assert.Contains("so the zprofile was not applied", string.Join(" | ", plan.Profile.Reasons));
+    }
 }

@@ -248,4 +248,20 @@ public class ExportTests
         using var check = app.CreateDbContext();
         Assert.Equal(0, await check.SiteProfiles.CountAsync());
     }
+
+    [Fact]
+    public async Task TheExportPage_SetsTheNoStoreAndNosniffHeadersItself_NotOnlyThroughTheAdminMiddleware()
+    {
+        using var app = new AdminApp();
+        await ContentFlow.BlankSiteAsync(app);
+        using var scope = app.Services.CreateScope();
+        var model = new Portfolio.Web.Pages.Admin.Transfer.ExportModel(scope.ServiceProvider.GetRequiredService<Portfolio.Web.Transfer.ExportService>(), TimeProvider.System);
+        var context = new Microsoft.AspNetCore.Http.DefaultHttpContext { RequestServices = scope.ServiceProvider };
+        model.PageContext = new Microsoft.AspNetCore.Mvc.RazorPages.PageContext { HttpContext = context };
+
+        await model.OnGetAsync(CancellationToken.None);
+
+        Assert.Contains("no-store", context.Response.Headers.CacheControl.ToString());
+        Assert.Equal("nosniff", context.Response.Headers.XContentTypeOptions.ToString());
+    }
 }

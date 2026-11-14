@@ -213,4 +213,14 @@ public class ImportFileReaderTests
             return base.ReadAsync(buffer, cancellationToken);
         }
     }
+
+    [Fact]
+    public void ThirtyThreeLevelsOfNesting_AreRefused_WhateverTheConstantIs()
+    {
+        var text = """{ "schemaVersion": 1, "x": """ + new string('[', 33) + new string(']', 33) + " }";
+
+        using var read = Parse(text);
+
+        Assert.Contains("nested more than", read.Refusal);
+    }
 }
