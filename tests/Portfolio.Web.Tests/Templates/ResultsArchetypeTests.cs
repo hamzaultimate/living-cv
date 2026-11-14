@@ -12,12 +12,12 @@ namespace Portfolio.Web.Tests.Templates;
 
 /// <summary>
 /// The results layout archetype (the headline-figure band is the hero) and every template that uses it. Driven by <see cref="Keys"/>: a further results
-/// template (Sales & BD) is covered by adding its key to that list. The admin and cross-cutting paths are in <see cref="ArchetypeTemplateFlowTests"/>.
+/// template is covered by adding its key to that list. The admin and cross-cutting paths are in <see cref="ArchetypeTemplateFlowTests"/>.
 /// </summary>
 public class ResultsArchetypeTests
 {
     /// <summary>Every shipped template whose archetype is results.</summary>
-    public static readonly string[] Keys = ["marketing-content", "sales-bd"];
+    public static readonly string[] Keys = ["finance-accounting", "marketing-content", "sales-bd"];
 
     public static TheoryData<string> KeyData => new(Keys);
 
@@ -360,11 +360,12 @@ public class ResultsArchetypeTests
         Assert.DoesNotContain("data-results-band", await G.GetAsync(client, "/"));
     }
 
-    [Fact]
-    public async Task TheStarterFigures_AreAllOnTheHome()
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task TheStarterFigures_AreAllOnTheHome(string key)
     {
-        using var app = await G.SiteAsync(Keys[0], "sample");
-        var starter = new TemplateCatalog(G.TemplatesDir).GetStarter(Keys[0])!;
+        using var app = await G.SiteAsync(key, "sample");
+        var starter = new TemplateCatalog(G.TemplatesDir).GetStarter(key)!;
 
         var home = Plain(await G.GetAsync(app.NewClient(), "/"));
 
@@ -777,6 +778,35 @@ public class ResultsArchetypeTests
             Assert.Empty(CopyText.AllowedTokens[path]);
             Assert.Contains($"\"{path[(path.LastIndexOf('.') + 1)..]}\"", schema);
         }
+    }
+
+    // ---------------------------------------------------------------- Finance & Accounting is CV-first through data only
+
+    [Fact]
+    public async Task FinanceAccounting_IsCvFirst_ExperienceAndQualificationsLeadTheMenu_HeldQualificationsAreStructuredData_AndTheCoversAreShallow()
+    {
+        const string key = "finance-accounting";
+        var template = G.Definition(key);
+        using var app = await G.SiteAsync(key, "sample");
+
+        // Order is the template's own: experience, then qualifications, then the engagements, in the menu.
+        Assert.Equal(["experience", SectionRegistry.Certifications, SectionRegistry.Projects], template.Sections.Where(s => s.Enabled).Take(3).Select(s => s.Key));
+        var home = await G.GetAsync(app.NewClient(), "/");
+        var menu = Regex.Match(home, @"<nav class=""hidden items-center gap-6 md:flex"">.*?</nav>", RegexOptions.Singleline).Value;
+        var hrefs = Regex.Matches(menu, @"href=""(/[a-z]*)""").Select(m => m.Groups[1].Value).ToList();
+        Assert.Equal(["/experience", "/certifications", "/projects"], hrefs.Take(3));
+
+        // Held qualifications reach the Person markup; one still being studied for does not.
+        var ld = string.Concat(Regex.Matches(home, @"<script type=""application/ld(?:\+|&#x2B;)json"">(.*?)</script>", RegexOptions.Singleline).Select(m => m.Groups[1].Value));
+        Assert.NotEmpty(ld);
+        Assert.Contains("\"hasCredential\"", ld);
+        Assert.Contains("Chartered Accountant qualification (sample)", ld);
+        Assert.DoesNotContain("Treasury Certificate", ld);
+
+        // Shallow covers keep the cards text-forward (a ratio of at least 2:1), set by the theme variable and not by the markup.
+        var css = File.ReadAllText(Path.Combine(TemplateDirs.Web, "Styles", "themes", template.Theme.Default + ".css"));
+        var aspect = Regex.Match(css, @"--results-card-aspect:\s*(\d+)/(\d+);");
+        Assert.True(aspect.Success && double.Parse(aspect.Groups[1].Value) / double.Parse(aspect.Groups[2].Value) >= 2, "the finance cards should use a shallow cover");
     }
 
     // ---------------------------------------------------------------- accessibility and security
