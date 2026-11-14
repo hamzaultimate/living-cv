@@ -120,7 +120,7 @@ public class TemplateManifestTests
             {
                 var sw = (string?)prop.GetValue(group.GetValue(software.Copy));
                 var hc = (string?)prop.GetValue(group.GetValue(healthcare.Copy));
-                if (neutral.Contains(hc)) continue;
+                if (neutral.Contains(hc) || string.IsNullOrEmpty(hc)) continue; // optional wording is empty in both
                 Assert.True(sw != hc, $"copy.{group.Name}.{prop.Name} is identical in both templates: {hc}");
             }
     }
@@ -150,6 +150,9 @@ public class TemplateManifestTests
         Assert.Contains(Errors(t => t.Seo.AboutDescription = ""), e => e.Contains("seo.aboutDescription"));
         Assert.Contains(Errors(t => t.Copy.Skills.Heading = ""), e => e.Contains("copy.skills.heading is required"));
         Assert.Contains(Errors(t => t.Copy.Home.WorkHeading = "<b>x</b>"), e => e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Home.ViewWork = "<b>x</b>"), e => e.Contains("copy.home.viewWork") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Projects.NextItem = "<i>"), e => e.Contains("copy.projects.nextItem") && e.Contains("plain text"));
+        Assert.Empty(Errors(t => { t.Copy.Home.ViewWork = ""; t.Copy.Projects.ReadItem = ""; })); // the new wording keys are optional
         Assert.Contains(Errors(t => t.Copy.Contact.Description = new string('x', 200)), e => e.Contains("copy.contact.description"));
         Assert.Contains(Errors(t => t.SkillGroups.Add("backend")), e => e.Contains("repeat"));
         Assert.Contains(Errors(t => t.Theme.ThemeColor = "navy"), e => e.Contains("themeColor"));

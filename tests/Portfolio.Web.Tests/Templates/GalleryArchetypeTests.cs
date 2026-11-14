@@ -188,6 +188,9 @@ public class GalleryArchetypeTests
                         Screenshots = [new ProjectImage { Url = "/media/clip.webm", Caption = "A clip" }, new ProjectImage { Url = "/img/projects/telemetry-1.svg", Caption = "A still" }, new ProjectImage { Url = "/img/projects/telemetry-2.svg" }],
                         Links = [new Link { Label = "Watch the film", Url = "https://example.org/film" }] },
                     new Project { Title = "No picture at all", Slug = "no-picture", Summary = "Text only.", Featured = true, SortOrder = order++ },
+                    // A picture whose address is not safe to link, and one with a blank caption.
+                    new Project { Title = "Odd addresses", Slug = "odd", Summary = "Odd pictures.", HeroImage = "/img/projects/telemetry.svg", HeroImageAlt = "   ", SortOrder = order++,
+                        Screenshots = [new ProjectImage { Url = "//evil.example/x.mp4", Caption = "Evil" }, new ProjectImage { Url = "/img/projects/telemetry-1.svg", Caption = "  " }] },
                     new Project { Title = "Uncategorised", Slug = "plain", Summary = "No category, no tools.", HeroImage = "/img/projects/telemetry.svg", SortOrder = order++ });
                 for (var i = 0; i < 9; i++)
                     db.Projects.Add(new Project { Title = $"Extra work {i}", Slug = $"extra-{i}", Summary = "More work.", Category = i % 2 == 0 ? "Even" : "Odd", HeroImage = "/img/projects/ledger.svg", Featured = i < 2, SortOrder = order++, Tech = ["a", "b", "c", "d"] });
@@ -198,55 +201,94 @@ public class GalleryArchetypeTests
         return app;
     }
 
+    public static TheoryData<string, string> KeyAndPopulated
+    {
+        get
+        {
+            var data = new TheoryData<string, string>();
+            foreach (var key in Keys) foreach (var content in new[] { "sample", "full" }) data.Add(key, content);
+            return data;
+        }
+    }
+
+    private static string ItemOf(TemplateDefinition t) => t.Sections.Single(s => s.Key == "projects").ItemLabel!;
+
     [Theory]
     [MemberData(nameof(KeyAndContent))]
-    public async Task EveryPublicPage_RendersInTheGalleryLayout_ForBlankSampleAndFullContent(string key, string content)
+    public async Task EveryPublicPage_AnswersInTheGalleryLayout_ForBlankSampleAndFullContent(string key, string content)
     {
         using var app = await SiteAsync(key, content);
-        var template = Definition(key);
-        var copy = template.Copy;
         var client = app.NewClient();
-        var theme = template.Theme.Default!;
-
         var home = await GetAsync(client, "/");
-        var projects = await GetAsync(client, "/projects");
-        Assert.Contains($"data-template=\"{theme}\"", home);
+
+        Assert.Contains($"data-template=\"{Definition(key).Theme.Default}\"", home);
         AssertWellFormedGalleryPage("/", home);
-        AssertWellFormedGalleryPage("/projects", projects);
+        AssertWellFormedGalleryPage("/projects", await GetAsync(client, "/projects"));
         foreach (var path in new[] { "/about", "/experience", "/skills", "/certifications", "/contact", "/cv" })
         {
             var page = await GetAsync(client, path);
-            Assert.Contains("<main", page);
             Assert.Single(Regex.Matches(MainOf(page), "<h1[ >]"));
         }
         await GetAsync(client, "/talks", HttpStatusCode.NotFound); // off by default, and a template-off section is never shown
+    }
 
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task ABlankSite_ShowsTheTemplatesEmptyStatesAndItsNotFoundWords(string key)
+    {
+        using var app = await SiteAsync(key, "blank");
+        var template = Definition(key);
+        var client = app.NewClient();
+
+        var home = await GetAsync(client, "/");
+        var projects = await GetAsync(client, "/projects");
+        Assert.Contains(Escaped(template.Copy.Home.WorkEmptyTitle), home);
+        Assert.Contains(Escaped(template.Copy.Projects.EmptyTitle), projects);
+        Assert.DoesNotContain("data-project-grid", projects);
+        Assert.DoesNotContain("<article class=\"group", home);
+        var missing = await GetAsync(client, "/projects/nothing-here", HttpStatusCode.NotFound);
+        Assert.Contains(Escaped(ItemOf(template) + " not found"), missing);
+    }
+
+    [Theory]
+    [MemberData(nameof(KeyAndPopulated))]
+    public async Task TheWorkGrid_ShowsEveryProjectInTheLayoutsCard_AndTheHomeGridOnlyTheFeaturedOnes(string key, string content)
+    {
+        using var app = await SiteAsync(key, content);
+        var template = Definition(key);
+        var client = app.NewClient();
+        var home = await GetAsync(client, "/");
+        var projects = await GetAsync(client, "/projects");
         using var db = app.CreateDbContext();
         var rows = await db.Projects.OrderBy(p => p.SortOrder).ToListAsync();
-        if (content == "blank")
-        {
-            Assert.Contains(Escaped(copy.Home.WorkEmptyTitle), home);
-            Assert.Contains(Escaped(copy.Projects.EmptyTitle), projects);
-            Assert.DoesNotContain("data-project-grid", projects);
-            Assert.DoesNotContain("<article class=\"group", home);
-            var missing = await GetAsync(client, "/projects/nothing-here", HttpStatusCode.NotFound);
-            Assert.Contains(Escaped(template.Sections.Single(s => s.Key == "projects").ItemLabel + " not found"), missing);
-            return;
-        }
 
-        // Every project is on the work page, in the layout's card, with a picture or a tile, and links to its case study.
         Assert.Equal(rows.Count, Regex.Matches(projects, "<article class=\"group relative").Count);
         foreach (var p in rows) Assert.Contains($"href=\"/projects/{p.Slug}\"", projects);
         Assert.Equal(rows.Count(p => p.Featured), Regex.Matches(home, "<article class=\"group relative").Count);
         Assert.Contains("data-project-grid", projects);
         var categories = rows.Select(p => p.Category).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         if (categories.Count > 1) foreach (var c in categories) Assert.Contains($"data-filter=\"{WebUtility.HtmlEncode(c)}\"", projects);
-        Assert.Contains("motion-reduce:transition-none", home); // the hover zoom respects reduced motion
         Assert.DoesNotContain("data-lightbox", projects); // cards open the case study; the lightbox is for the pictures inside it
         Assert.Contains("id=\"work\"", home);
         Assert.Contains("id=\"skills\"", home);
+        // The "featured" mark belongs to the work page: the home grid is all featured work already.
+        const string badge = "text-[10px] uppercase tracking-wider text-accent";
+        Assert.Contains(badge, projects);
+        Assert.DoesNotContain(badge, home);
+        Assert.Contains(Escaped(template.Copy.Projects.ReadItemFor(ItemOf(template))), home);
+    }
 
-        foreach (var p in rows)
+    [Theory]
+    [MemberData(nameof(KeyAndPopulated))]
+    public async Task EveryCaseStudy_HasItsHeadingsGalleryAndStructuredData(string key, string content)
+    {
+        using var app = await SiteAsync(key, content);
+        var template = Definition(key);
+        var copy = template.Copy;
+        var client = app.NewClient();
+        using var db = app.CreateDbContext();
+
+        foreach (var p in await db.Projects.OrderBy(p => p.SortOrder).ToListAsync())
         {
             var detail = await GetAsync(client, $"/projects/{p.Slug}");
             AssertWellFormedGalleryPage($"/projects/{p.Slug}", detail);
@@ -255,23 +297,47 @@ public class GalleryArchetypeTests
             var shown = p.Screenshots.Where(s => !Media.IsVideo(s.Url)).ToList();
             Assert.Equal(shown.Count, Regex.Matches(detail, "data-lightbox-item").Count);
             if (shown.Count > 0) Assert.Contains($"aria-label=\"{copy.Projects.GalleryLabel}\"", detail);
-            foreach (var s in shown) Assert.Contains($"alt=\"{WebUtility.HtmlEncode(s.Caption ?? copy.Projects.AltFor(p.Title))}\"", detail);
+            foreach (var s in shown) Assert.Contains($"alt=\"{WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(s.Caption) ? copy.Projects.AltFor(p.Title) : s.Caption)}\"", detail);
             Assert.Contains(string.IsNullOrWhiteSpace(p.Problem) && string.IsNullOrWhiteSpace(p.Approach) ? Escaped(copy.Projects.NoWriteup) : Escaped(copy.Projects.ProblemHeading), detail);
-            Assert.Contains(Escaped($"Next {template.Sections.Single(s => s.Key == "projects").ItemLabel!.ToLowerInvariant()}"), detail);
+            var next = Escaped(copy.Projects.NextItemFor(ItemOf(template)));
+            Assert.Contains($"aria-label=\"{next}\"", detail); // the navigation is named by the template's own words
+            Assert.Contains(next, detail);
         }
+    }
 
-        if (content == "full")
-        {
-            // Hostile text is encoded; a video cover and video pictures never become a player; a project with nothing shows a text tile.
-            Assert.DoesNotContain("<script>alert(1)", projects);
-            Assert.Contains("Film &quot;reel&quot; &lt;b&gt;&amp; more", projects);
-            var film = await GetAsync(client, "/projects/film-reel");
-            Assert.DoesNotContain("reel.mp4", film);
-            Assert.DoesNotContain("clip.webm", film);
-            Assert.Contains("Watch the film", film);
-            Assert.Contains("aria-hidden=\"true\"", await GetAsync(client, "/projects/no-picture") + projects);
-            Assert.DoesNotContain("reel.mp4", projects + home);
-        }
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task HostileTextIsEncoded_VideoIsALinkNeverAPlayer_AndAProjectWithNothingGetsAnInitialsTile(string key)
+    {
+        using var app = await SiteAsync(key, "full");
+        var copy = Definition(key).Copy.Projects;
+        var client = app.NewClient();
+        var projects = await GetAsync(client, "/projects");
+        var home = await GetAsync(client, "/");
+        var film = await GetAsync(client, "/projects/film-reel");
+
+        Assert.DoesNotContain("<script>alert(1)", projects);
+        Assert.Contains("Film &quot;reel&quot; &lt;b&gt;&amp; more", projects);
+
+        // A video file as the cover: not an image, not a player, but a plain link, on the card and on the page.
+        Assert.DoesNotContain("src=\"/media/", projects + home + film);
+        Assert.DoesNotMatch(@"<(video|iframe|source)\b", projects + home + film);
+        Assert.Matches($@"<a href=""/media/reel\.mp4"" target=""_blank"" rel=""noopener""[^>]*>{Regex.Escape(Escaped(copy.WatchVideoText()))}</a>", projects);
+        Assert.Matches($@"<a href=""/media/reel\.mp4"" target=""_blank"" rel=""noopener""[^>]*>{Regex.Escape(Escaped(copy.WatchVideoText()))}</a>", film);
+        // A video picture with a caption is linked by its caption; the entry's own links still render beside it.
+        Assert.Matches(@"<a href=""/media/clip\.webm"" target=""_blank"" rel=""noopener""[^>]*>A clip</a>", film);
+        Assert.Contains("<a href=\"https://example.org/film\" target=\"_blank\" rel=\"noopener\"", film);
+        Assert.Contains("Watch the film →", film);
+        Assert.Equal(2, Regex.Matches(film, "data-lightbox-item").Count); // the two image pictures only
+
+        // An address that is not a site path or an http(s) address is never put in a link.
+        var odd = await GetAsync(client, "/projects/odd");
+        Assert.DoesNotContain("evil.example", odd);
+        Assert.Matches(@"alt=""" + Regex.Escape(WebUtility.HtmlEncode(copy.AltFor("Odd addresses"))) + @"""", odd); // blank caption and blank HeroImageAlt both fall back
+
+        // A project with nothing to show gets a decorative initials tile that is hidden from screen readers.
+        Assert.Matches(@"<div class=""flex h-full w-full items-end p-5"" aria-hidden=""true"">\s*<span[^>]*>NP</span>", projects);
+        Assert.DoesNotMatch(@"<div class=""flex h-full w-full items-end p-5""(?! aria-hidden=""true"")", projects + home);
     }
 
     private static string Escaped(string text) => TemplateView.Text(text).ToString()!;
@@ -345,18 +411,18 @@ public class GalleryArchetypeTests
             var gamma = await GetAsync(client, "/projects/gamma");
 
             foreach (var word in new[] { "zork-home-workEyebrow", "zork-home-workHeading", "zork-home-skillsHeading", "zork-home-contactHeading" }) Assert.Contains(word, home);
-            Assert.Contains($"View {work}", home);
-            Assert.Contains($"All {work} →", home);
-            Assert.Contains($"Read {item.ToLowerInvariant()} →", home);
+            Assert.Contains("zork-home-viewWork", home);
+            Assert.Contains("zork-home-allWork", home);
+            Assert.Contains("zork-projects-readItem", home);
             Assert.Contains("alt=\"zork-projects-imageAlt Alpha\"", home);
             foreach (var word in new[] { "zork-projects-eyebrow", "zork-projects-heading", "zork-projects-lead", "zork-projects-featuredBadge" }) Assert.Contains(word, list);
             Assert.Contains("aria-label=\"zork-projects-filterLabel\"", list);
-            Assert.Contains($"Read {item.ToLowerInvariant()} →", list);
+            Assert.Contains("zork-projects-readItem", list);
             foreach (var word in new[] { "zork-projects-problemHeading", "zork-projects-stackHeading", "zork-projects-screenshotsHeading" }) Assert.Contains(word, alpha + beta);
             Assert.Contains(item, alpha);
             Assert.Contains($"← {work}", alpha);
-            Assert.Contains($"Next {item.ToLowerInvariant()}", alpha);
-            Assert.Contains($"aria-label=\"{work}\"", alpha);
+            Assert.Contains(">zork-projects-nextItem<", alpha);
+            Assert.Contains("aria-label=\"zork-projects-nextItem\"", alpha);
             Assert.Contains("aria-label=\"zork-projects-galleryLabel\"", alpha);
             Assert.Contains("aria-label=\"zork-projects-openImageLabel\"", alpha);
             Assert.Contains("aria-label=\"zork-projects-openImageLabel: Captioned\"", alpha);
@@ -377,34 +443,209 @@ public class GalleryArchetypeTests
         finally { Directory.Delete(dir, recursive: true); }
     }
 
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task TheOptionalVerbs_FallBackToThePlainEnglishPatterns_BuiltFromTheSectionAndItemLabels(string key)
+    {
+        var dir = TemplateDirs.WithExtra("plain-gallery", node =>
+        {
+            node["name"] = "Plain Gallery";
+            node["sections"]!.AsArray().Single(s => s!["key"]!.GetValue<string>() == "projects")!["label"] = "zorkwork";
+            node["sections"]!.AsArray().Single(s => s!["key"]!.GetValue<string>() == "projects")!["itemLabel"] = "Zorkitem";
+            foreach (var (group, name) in new[] { ("home", "viewWork"), ("home", "allWork"), ("projects", "nextItem"), ("projects", "readItem"), ("projects", "watchVideo") })
+                node["copy"]![group]!.AsObject().Remove(name);
+        }, baseTemplate: key, starterFrom: key);
+        try
+        {
+            using var app = AdminApp.WithTemplates(dir);
+            await ContentFlow.BlankSiteAsync(app, "plain-gallery");
+            using (var db = app.CreateDbContext())
+            {
+                db.Projects.AddRange(
+                    new Project { Title = "Alpha", Slug = "alpha", Summary = "First.", Featured = true, SortOrder = 1, HeroImage = "/media/a.mp4" },
+                    new Project { Title = "Beta", Slug = "beta", Summary = "Second.", Featured = true, SortOrder = 2 });
+                await db.SaveChangesAsync();
+            }
+            app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
+            var client = app.NewClient();
+
+            var home = await GetAsync(client, "/");
+            Assert.Contains(">View zorkwork<", home);
+            Assert.Contains(">All zorkwork →<", home);
+            Assert.Contains("Read zorkitem →", home);
+            Assert.Contains(">Watch the video ↗<", home);
+            var detail = await GetAsync(client, "/projects/alpha");
+            Assert.Contains(">Next zorkitem<", detail);
+            Assert.Contains("aria-label=\"Next zorkitem\"", detail);
+            Assert.Contains(">Watch the video ↗</a>", detail);
+        }
+        finally { Directory.Delete(dir, recursive: true); }
+    }
+
+    private sealed class FakeView : Microsoft.AspNetCore.Mvc.ViewEngines.IView
+    {
+        public string Path => "fake";
+        public Task RenderAsync(Microsoft.AspNetCore.Mvc.Rendering.ViewContext context) => Task.CompletedTask;
+    }
+
+    private sealed class FakeViews : Microsoft.AspNetCore.Mvc.ViewEngines.ICompositeViewEngine
+    {
+        private readonly bool _found;
+        public List<string> Asked { get; } = [];
+        public FakeViews(bool found) => _found = found;
+        public IReadOnlyList<Microsoft.AspNetCore.Mvc.ViewEngines.IViewEngine> ViewEngines => [];
+        public Microsoft.AspNetCore.Mvc.ViewEngines.ViewEngineResult FindView(Microsoft.AspNetCore.Mvc.ActionContext context, string viewName, bool isMainPage)
+        {
+            Asked.Add(viewName);
+            return _found ? Microsoft.AspNetCore.Mvc.ViewEngines.ViewEngineResult.Found(viewName, new FakeView()) : Microsoft.AspNetCore.Mvc.ViewEngines.ViewEngineResult.NotFound(viewName, [viewName]);
+        }
+        public Microsoft.AspNetCore.Mvc.ViewEngines.ViewEngineResult GetView(string? executingFilePath, string viewPath, bool isMainPage) => throw new NotSupportedException();
+    }
+
+    [Theory]
+    [InlineData("../gallery")]
+    [InlineData("gallery/../showcase")]
+    [InlineData("..")]
+    [InlineData("")]
+    [InlineData("Gallery")]
+    [InlineData("gallery ")]
+    [InlineData("unknown")]
+    [InlineData("results")]
+    public void FindingAPartial_RefusesAnArchetypeThatIsNotImplemented_WithoutAskingTheViewEngine(string archetype)
+    {
+        var views = new FakeViews(found: true);
+
+        Assert.Null(LayoutPartials.Find(views, null!, archetype, LayoutPartials.Projects));
+        Assert.Empty(views.Asked);
+    }
+
+    [Fact]
+    public void FindingAPartial_ReturnsTheNameOnlyWhenTheViewEngineHasIt()
+    {
+        var present = new FakeViews(found: true);
+        var absent = new FakeViews(found: false);
+
+        Assert.Equal("Layouts/gallery/_Projects", LayoutPartials.Find(present, null!, "gallery", LayoutPartials.Projects));
+        Assert.Null(LayoutPartials.Find(absent, null!, "showcase", LayoutPartials.Projects));
+        Assert.Equal(["Layouts/showcase/_Projects"], absent.Asked);
+    }
+
+    [Theory]
+    [InlineData("/media/a.mp4", true)]
+    [InlineData("https://example.org/a.mp4", true)]
+    [InlineData("http://example.org/a.mp4", true)]
+    [InlineData("//evil.example/a.mp4", false)]
+    [InlineData("javascript:alert(1)", false)]
+    [InlineData("data:text/html,x", false)]
+    [InlineData("a.mp4", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void OnlyASitePathOrAnHttpAddress_IsLinkable(string? url, bool expected) => Assert.Equal(expected, LayoutPartials.IsLinkable(url));
+
     // ---------------------------------------------------------------- accessibility and security
 
     [Theory]
     [MemberData(nameof(KeyData))]
-    public async Task ThePages_HaveLandmarksAFocusableSkipLink_AndTheStylesheetHasFocusAndBothColourModes(string key)
+    public async Task TheCaseStudyGallery_NamesItsControlsOnce_RespectsReducedMotion_AndTheStylesheetKeepsFocusAndBothColourModes(string key)
     {
         using var app = await SiteAsync(key, "sample");
         var client = app.NewClient();
+        var copy = Definition(key).Copy.Projects;
         var theme = Definition(key).Theme.Default!;
+        using var db = app.CreateDbContext();
+        var project = await db.Projects.Where(p => p.Screenshots.Count > 0).OrderBy(p => p.SortOrder).FirstAsync();
+        var detail = await GetAsync(client, "/projects/" + project.Slug);
+        var home = await GetAsync(client, "/");
 
-        foreach (var path in new[] { "/", "/projects", "/projects/" + (await FirstSlugAsync(app)) })
+        // The lightbox button carries the picture's name; the visible caption beside it is hidden from screen readers so it is not read twice.
+        foreach (var s in project.Screenshots)
         {
-            var html = await GetAsync(client, path);
-            Assert.Contains("<html lang=\"en\"", html);
-            Assert.Contains("<a href=\"#main-content\" class=\"sr-only focus:not-sr-only", html);
-            Assert.Contains("<main id=\"main-content\"", html);
-            Assert.Contains("<header", html);
-            Assert.Contains("<nav", html);
-            Assert.Contains("<footer", html);
-            Assert.Contains("name=\"viewport\"", html);
+            Assert.Contains($"aria-label=\"{copy.OpenImageLabel}: {WebUtility.HtmlEncode(s.Caption!)}\"", detail);
+            Assert.Matches($@"<figcaption[^>]*aria-hidden=""true""[^>]*>{Regex.Escape(WebUtility.HtmlEncode(s.Caption!))}</figcaption>", detail);
         }
+        Assert.Matches(@"<button type=""button""[^>]*data-lightbox-item", detail); // the script's hooks are unchanged
+        Assert.Contains("data-lightbox-gallery", detail);
+
+        // Reduced motion: the hover zoom on cards and on the case-study pictures has a variant that switches it off.
+        Assert.Contains("motion-reduce:transition-none", home);
+        Assert.Contains("motion-reduce:group-hover:scale-100", detail);
 
         var css = File.ReadAllText(Path.Combine(Wwwroot, "css", "app.css"));
         Assert.Contains(":focus-visible", css);
-        Assert.Contains("prefers-reduced-motion", css + ".motion-reduce");
+        Assert.Matches(@"@media \(prefers-reduced-motion:\s*reduce\)\{[^@]*?\.motion-reduce\\:transition-none", css);
         Assert.Matches($@"\[data-template=[""']?{Regex.Escape(theme)}[""']?\]\[data-theme=[""']?light", css);
         Assert.Matches($@"\[data-template=[""']?{Regex.Escape(theme)}[""']?\]\[data-theme=[""']?dark", css);
         Assert.Contains("line-clamp", css);
+    }
+
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task ACoverDescription_IsPreferredOverTheFallback_OnTheCardsAndTheCaseStudy(string key)
+    {
+        using var app = await SiteAsync(key, "sample");
+        var copy = Definition(key).Copy.Projects;
+        var client = app.NewClient();
+        using var db = app.CreateDbContext();
+        var project = await db.Projects.Where(p => p.Featured).OrderBy(p => p.SortOrder).FirstAsync();
+        var plain = await db.Projects.Where(p => !p.Featured).OrderBy(p => p.SortOrder).FirstAsync();
+        plain.HeroImageAlt = null; // no description of its own
+        await db.SaveChangesAsync();
+        app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
+        Assert.False(string.IsNullOrWhiteSpace(project.HeroImageAlt));
+
+        var own = $"alt=\"{WebUtility.HtmlEncode(project.HeroImageAlt!)}\"";
+        var fallback = $"alt=\"{WebUtility.HtmlEncode(copy.AltFor(project.Title))}\"";
+        foreach (var path in new[] { "/", "/projects", "/projects/" + project.Slug })
+        {
+            var html = await GetAsync(client, path);
+            Assert.Contains(own, html);
+            Assert.DoesNotContain(fallback, html);
+        }
+        // Without one, the card and the case study agree on the template's own fallback.
+        var plainFallback = $"alt=\"{WebUtility.HtmlEncode(copy.AltFor(plain.Title))}\"";
+        Assert.Contains(plainFallback, await GetAsync(client, "/projects"));
+        Assert.Contains(plainFallback, await GetAsync(client, "/projects/" + plain.Slug));
+    }
+
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task TheHome_ShowsTheMetrics_AndHidesTheStripWhenThereAreNone(string key)
+    {
+        using var app = await SiteAsync(key, "sample");
+        var starter = new TemplateCatalog(TemplatesDir).GetStarter(key)!;
+        var client = app.NewClient();
+
+        var home = await GetAsync(client, "/");
+        Assert.NotEmpty(starter.Profile.Metrics);
+        foreach (var m in starter.Profile.Metrics) { Assert.Contains($">{WebUtility.HtmlEncode(m.Label)}<", home); Assert.Contains(WebUtility.HtmlEncode(m.Value).Replace("+", "&#x2B;"), home); } // Razor also encodes a plus sign
+        Assert.Equal(starter.Profile.Metrics.Count, Regex.Matches(home, "class=\"metric-value\"").Count);
+
+        using (var db = app.CreateDbContext())
+        {
+            (await db.SiteProfiles.SingleAsync()).Metrics = [];
+            await db.SaveChangesAsync();
+        }
+        app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
+        Assert.DoesNotContain("metric-value", await GetAsync(client, "/"));
+    }
+
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task TheHomeSkillStrip_FollowsTheManifestsGroupOrder_AndPutsOtherGroupsLast(string key)
+    {
+        using var app = await SiteAsync(key, "sample");
+        var template = Definition(key);
+        using (var db = app.CreateDbContext())
+        {
+            db.Skills.Add(new Skill { Name = "Odd one", Group = "Aardvark", SortOrder = 99 }); // sorts first alphabetically, but the manifest does not list it
+            await db.SaveChangesAsync();
+        }
+        app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
+
+        var section = Regex.Match(await GetAsync(app.NewClient(), "/"), "<section id=\"skills\".*?</section>", RegexOptions.Singleline).Value;
+        var groups = Regex.Matches(section, "<p class=\"eyebrow\">(.*?)</p>").Select(m => WebUtility.HtmlDecode(m.Groups[1].Value)).ToList();
+
+        Assert.Equal(template.SkillGroups.Concat(["Aardvark"]), groups);
     }
 
     private static async Task<string> FirstSlugAsync(AdminApp app)
@@ -453,7 +694,7 @@ public class GalleryArchetypeTests
             {
                 var a = (string?)prop.GetValue(group.GetValue(software.Copy));
                 var b = (string?)prop.GetValue(group.GetValue(template.Copy));
-                if (neutral.Contains(b)) continue;
+                if (neutral.Contains(b) || string.IsNullOrEmpty(b)) continue; // optional wording is left empty by templates that do not set it
                 Assert.True(a != b, $"copy.{group.Name}.{prop.Name} is identical to software's: {b}");
             }
         Assert.DoesNotMatch(@"\.NET|GitHub|software|developer|clinical|patient|licen[cs]e", System.Text.Json.JsonSerializer.Serialize(template.Copy));
