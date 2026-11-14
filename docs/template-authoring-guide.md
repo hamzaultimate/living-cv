@@ -265,6 +265,17 @@ Five optional `copy` keys (empty or absent uses the English default, which is bu
 `home.viewWork` (default "View {work}"), `home.allWork` ("All {work} →"), `projects.nextItem` ("Next {item}"; also the accessible name of the next-entry navigation), `projects.readItem` ("Read {item} →") and `projects.watchVideo` ("Watch the video ↗"). They are plain text like all copy. Each key may use only the tokens listed for it (`watchVideo` takes none): the validator rejects any other `{...}`, so a token is never silently dropped. A pattern is filled in one pass, so a label that itself contains the text `{item}` is printed as written.
 The gallery hero's "Download CV" and "LinkedIn" buttons stay fixed words, as in the credentials layout.
 
+### The results layout
+
+`results` is for work judged by numbers (campaigns, writing, deals). The home page's hero ends in a large band of the profile's **Key figures** (the metrics editor's value, unit and label; hidden when there are none), then a strip of **client names**, then the featured work as result cards. No new column or table:
+- **Key figures** are `SiteProfile.Metrics`, set large in the band.
+- **Client names** are the distinct `Project.Org` values in work order, drawn as plain text wordmarks (never a picture or logo), loaded by `IndexModel` through `Archetypes.ShowsClientsOnHome`.
+- **Result lines** are `Project.Impact`. A line that starts with a short figure (`+38%`, `2.1M`, `$1,200`, `10x`) is split by `ImpactLine.Split` into the figure, set large, and the words after it; any other line is shown whole. The card shows the first non-blank line; the case-study page shows all of them as tiles above the cover.
+- Every project, metrics, testimonial and hero field the manifest offers in an editor appears on the public site (a test writes a value into each and looks for it).
+- Optional copy keys (English defaults, plain text, no placeholders): `home.downloadCv` ("Download CV"), `home.linkedIn` ("LinkedIn"), `home.clientsHeading` ("Worked with"), `projects.filterAll` ("All"). The layout also reads `home.viewWork`, `home.allWork`, `projects.nextItem`, `projects.readItem` and `projects.watchVideo` as the gallery does.
+- Theme variables, all with fallbacks: `--results-card-aspect` (`16/10`), `--results-card-min` (`20rem`), `--results-card-max` (`40rem`), `--results-band-min` (`11rem`). Marketing & Content sets only `--results-band-min`.
+- Tests: `ResultsArchetypeTests.Keys` lists the templates; `ArchetypeTemplateFlowTests` runs the admin paths for the gallery and results keys together.
+
 ### Media and video in layouts
 
 A layout never embeds a third-party player or script. The gallery draws images only: a project cover or picture whose address is a video file is not drawn as an image or a player (it appears as a plain link, see below; on a card the plain initials tile is only the placeholder where a cover image would be), and
