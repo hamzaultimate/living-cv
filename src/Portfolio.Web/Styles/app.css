@@ -1,4 +1,5 @@
 /* One file per template theme: variables only, scoped to [data-template="<key>"]. */
+@import "./themes/design-ux.css";
 @import "./themes/healthcare.css";
 
 @tailwind base;
