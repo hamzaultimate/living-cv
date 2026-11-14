@@ -161,6 +161,7 @@ public class ThemeStylesheetTests
                     if (markers.Contains(token) || token.StartsWith("group/", StringComparison.Ordinal)) continue;
                     checkedClasses++;
                     var selector = "." + Regex.Replace(token, @"([^a-zA-Z0-9_-])", @"\$1");
+                    selector = selector.Replace(@"\,", @"\2c "); // Tailwind writes a comma inside an arbitrary value as a hex escape
                     if (!css.Contains(selector, StringComparison.Ordinal)) missing.Add($"{Path.GetFileName(file)}: {token}");
                 }
 

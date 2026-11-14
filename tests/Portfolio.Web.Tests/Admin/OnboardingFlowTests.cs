@@ -299,10 +299,12 @@ public class OnboardingFlowTests
         Assert.Contains("licences & registrations", html);
         Assert.Contains("Case study", html);
         Assert.Contains("Initiative", html);
-        Assert.Equal(2, Regex.Matches(html, "Before you publish").Count); // the sensitive template and the design template carry guidance, software does not
+        Assert.Equal(3, Regex.Matches(html, "Before you publish").Count); // the sensitive template and the two gallery templates carry guidance, software does not
         Assert.Contains("patient-identifiable", html);
         Assert.Contains("confidential screens", html);
-        Assert.Equal(3, Regex.Matches(html, "type=\"radio\" name=\"Key\"").Count);
+        Assert.Contains(">Photographer and filmmaker</h2>", html);
+        Assert.Contains("src=\"/admin/welcome/thumb/photography-film\"", html);
+        Assert.Equal(4, Regex.Matches(html, "type=\"radio\" name=\"Key\"").Count);
     }
 
     [Fact]

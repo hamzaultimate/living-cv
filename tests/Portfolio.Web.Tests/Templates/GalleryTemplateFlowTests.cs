@@ -272,6 +272,51 @@ public class GalleryTemplateFlowTests
         Assert.Contains("seed-project", await gallery.NewClient().GetStringAsync("/sitemap.xml"));
     }
 
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task AHandCraftedExport_WithSectionKeysTheTargetLacks_LeavesThemInert(string key)
+    {
+        // A copy of the template that has no journal and no screenings: those keys, and one nothing knows, are "sections the target lacks".
+        var dir = TemplateDirs.WithExtra("lean-gallery", node =>
+        {
+            node["name"] = "Lean Gallery";
+            var sections = node["sections"]!.AsArray();
+            foreach (var drop in sections.Where(s => s!["key"]!.GetValue<string>() is "blog" or "talks").ToList()) sections.Remove(drop);
+        }, baseTemplate: key, starterFrom: key);
+        try
+        {
+            using var app = AdminApp.WithTemplates(dir);
+            var owner = await ContentFlow.BlankSiteAsync(app, "lean-gallery");
+            var visitor = app.NewClient();
+            var file = ImportHarness.File(
+                profile: new { sections = new object[] { new { key = "blog", label = "Dispatches", shown = true }, new { key = "talks", shown = true }, new { key = "photo-wall", shown = true }, new { key = "projects", label = "Folios" } } },
+                content: new { skills = new object[] { new { name = "Imported craft", group = "Photography" } } });
+
+            var preview = Plain(await (await TransferFlow.PreviewAsync(owner, file, applyProfile: true)).Content.ReadAsStringAsync());
+            Assert.Contains("for sections that the template does not have", preview);
+            Assert.Contains("blog, talks, photo-wall", preview);
+
+            var report = await TransferFlow.ImportAsync(owner, file, applyProfile: true);
+            Assert.Contains("Applied: ", report);
+            var stored = (await ProfileFlow.ProfileAsync(app)).Sections;
+            Assert.DoesNotContain(stored, s => s.Key is "blog" or "talks" or "photo-wall"); // never stored, so never switchable on later
+            Assert.Contains(stored, s => s.Key == "projects" && s.Label == "Folios");       // the section the template does list was applied
+            Assert.Equal("lean-gallery", (await ProfileFlow.ProfileAsync(app)).TemplateKey);
+
+            var home = await visitor.GetStringAsync("/");
+            Assert.Contains("Folios", home);
+            Assert.DoesNotContain("Dispatches", home);
+            Assert.DoesNotContain("href=\"/blog\"", home);
+            Assert.DoesNotContain("href=\"/talks\"", home);
+            Assert.Equal(HttpStatusCode.NotFound, (await visitor.GetAsync("/blog")).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await visitor.GetAsync("/talks")).StatusCode);
+            Assert.DoesNotContain("/blog", SectionsFlow.SitemapPaths(await visitor.GetStringAsync("/sitemap.xml")));
+            Assert.DoesNotContain("photo-wall", await visitor.GetStringAsync("/sitemap.xml"));
+            Assert.Contains("Imported craft", await visitor.GetStringAsync("/skills")); // the rest of the file imported normally
+        }
+        finally { Directory.Delete(dir, recursive: true); }
+    }
+
     // ---------------------------------------------------------------- a blank wizard-finished site, end to end
 
     [Theory]

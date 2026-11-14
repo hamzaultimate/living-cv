@@ -17,7 +17,7 @@ namespace Portfolio.Web.Tests.Templates;
 public class GalleryArchetypeTests
 {
     /// <summary>Every shipped template whose archetype is gallery.</summary>
-    public static readonly string[] Keys = ["design-ux"];
+    public static readonly string[] Keys = ["design-ux", "photography-film"];
 
     public static TheoryData<string> KeyData => new(Keys);
 

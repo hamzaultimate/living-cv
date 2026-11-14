@@ -53,9 +53,9 @@ public class TemplateManifestTests
     [Fact]
     public void ShipsExactlyTheShippedTemplates()
     {
-        Assert.Equal(new[] { "design-ux", "healthcare", "software" }, TemplateFolders().Select(Path.GetFileName).OrderBy(x => x).ToArray());
+        Assert.Equal(new[] { "design-ux", "healthcare", "photography-film", "software" }, TemplateFolders().Select(Path.GetFileName).OrderBy(x => x).ToArray());
         var catalog = new TemplateCatalog(TemplatesDir);
-        Assert.Equal(new[] { "software", "design-ux", "healthcare" }, catalog.All.Select(t => t.Key));
+        Assert.Equal(new[] { "software", "design-ux", "healthcare", "photography-film" }, catalog.All.Select(t => t.Key));
     }
 
     [Fact]
