@@ -98,7 +98,7 @@ public sealed class ImportPlanner
             foreach (var property in known.EnumerateObject()) if (!Tables.Contains(property.Name, StringComparer.Ordinal)) context.UnknownProperties++;
         plan.UnknownProperties = context.UnknownProperties;
         if (uploads.ValueKind == JsonValueKind.Array && uploads.GetArrayLength() > 0)
-            plan.FileNotes.Add($"The file lists {uploads.GetArrayLength():N0} image files. Image files are not part of an export and are not imported: a reference to a file that is already on this site is kept, any other image reference is left out.");
+            plan.FileNotes.Add($"The file lists {uploads.GetArrayLength():N0} image {(uploads.GetArrayLength() == 1 ? "file" : "files")}. Image files are not part of an export and are not imported: a reference to a file that is already on this site is kept, any other image reference is left out.");
         if (!applyProfile && report.InFile)
             plan.FileNotes.Add($"The file has a {report.Label.ToLowerInvariant()}. It is ignored because \"also apply\" was not ticked.");
         if (applyProfile && !report.InFile)
@@ -161,14 +161,17 @@ public sealed class ImportPlanner
             }
 
             var status = RowStatus.Create;
+            IReadOnlyList<string> changed = [];
             if (match is not null)
             {
                 // Applied to the planner's own untracked copy of the stored row: if the export of the result is the same, there is nothing to write.
                 var before = spec.Fingerprint(match);
                 foreach (var step in patch.Steps) step(match);
-                status = spec.Fingerprint(match) == before ? RowStatus.Unchanged : RowStatus.Update;
+                var after = spec.Fingerprint(match);
+                status = after == before ? RowStatus.Unchanged : RowStatus.Update;
+                if (status == RowStatus.Update) changed = ChangedFields(before, after, ImportRules.Labels(view));
             }
-            plan.Report.Rows.Add(new RowReport(position, name, status, [], reader.Warnings));
+            plan.Report.Rows.Add(new RowReport(position, name, status, [], reader.Warnings, changed));
             if (key is not null) plan.FileOrder.Add((key, patch.Group));
             if (status == RowStatus.Unchanged) continue;
             plan.Rows.Add(new PlannedRow<T>
@@ -203,6 +206,20 @@ public sealed class ImportPlanner
             if (!current.SequenceEqual(named.Concat(current.Where(r => !named.Contains(r))))) return true;
         }
         return false;
+    }
+
+    // The export property that holds the same value as an editor field of another name.
+    private static readonly Dictionary<string, string> FieldKey = new(StringComparer.Ordinal) { ["heroImageAlt"] = "heroImage", ["coverAlt"] = "cover", ["body"] = "body", ["youtubeId"] = "youtubeId" };
+
+    /// <summary>The names (in the template's field words) of the properties that differ between two exports of a row.</summary>
+    private static List<string> ChangedFields(string before, string after, Func<string, string> label)
+    {
+        var a = System.Text.Json.Nodes.JsonNode.Parse(before)!.AsObject();
+        var b = System.Text.Json.Nodes.JsonNode.Parse(after)!.AsObject();
+        var names = new List<string>();
+        foreach (var (key, value) in b)
+            if (a[key]?.ToJsonString() != value?.ToJsonString()) names.Add(label(FieldKey.GetValueOrDefault(key, key)));
+        return names.Distinct().ToList();
     }
 
     /// <summary>A name from the file, as short and plain as a preview needs it.</summary>

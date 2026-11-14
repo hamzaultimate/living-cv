@@ -20,8 +20,11 @@ public enum RowStatus
 }
 
 /// <summary>One row of the file as the preview or the result tells it. Reasons explain a refusal; warnings are things that were changed or dropped on the way in.</summary>
-public sealed record RowReport(int Position, string Name, RowStatus Status, IReadOnlyList<string> Reasons, IReadOnlyList<string> Warnings)
+public sealed record RowReport(int Position, string Name, RowStatus Status, IReadOnlyList<string> Reasons, IReadOnlyList<string> Warnings, IReadOnlyList<string>? Changed = null)
 {
+    /// <summary>For an update: the fields the file changes, in the template's words.</summary>
+    public IReadOnlyList<string> ChangedFields => Changed ?? [];
+
     public RowReport With(RowStatus status, params string[] reasons) => this with { Status = status, Reasons = [.. Reasons, .. reasons] };
 }
 

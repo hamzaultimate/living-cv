@@ -65,10 +65,11 @@
                     <th scope="row">@row.Name</th>
                     <td><strong class="@Css(row.Status)">@Label(row.Status, Model.Done)</strong></td>
                     <td>
-                        @if (row.Reasons.Count + row.Warnings.Count == 0) { <span class="adm-muted">None</span> }
+                        @if (row.Reasons.Count + row.Warnings.Count + row.ChangedFields.Count == 0) { <span class="adm-muted">@(row.Status == RowStatus.Create ? "New entry" : "No differences")</span> }
                         else
                         {
                             <ul class="adm-plain">
+                                @if (row.ChangedFields.Count > 0) { <li>Changes: @string.Join(", ", row.ChangedFields)</li> }
                                 @foreach (var reason in row.Reasons.Take(8)) { <li>@reason</li> }
                                 @if (row.Reasons.Count > 8) { <li>and @(row.Reasons.Count - 8) more.</li> }
                                 @foreach (var warning in row.Warnings.Take(4)) { <li>Note: @warning</li> }

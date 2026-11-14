@@ -107,7 +107,7 @@ public class TransferEndToEndTests
         var page = await TransferFlow.ImportAsync(owner, exported, applyProfile: true);
 
         Assert.Contains("0 were not imported", page);
-        Assert.Contains("was applied", page);
+        Assert.Contains("Applied: ", page);
         var after = await PublicPagesAsync(app, slugs);
         Assert.Equal(before.Count, after.Count);
         for (var i = 0; i < before.Count; i++)
@@ -150,7 +150,7 @@ public class TransferEndToEndTests
         var page = await TransferFlow.ImportAsync(owner, file, applyProfile: true);
 
         Assert.Contains("7 added", page);
-        Assert.Contains("was applied", page);
+        Assert.Contains("Applied: ", page);
         var home = await anyone.GetStringAsync("/");
         foreach (var text in new[] { "Hand-written headline", "A lede from a file.", "Answers", "Pat Writer" }) Assert.Contains(text, home);
         Assert.Contains("A colleague", home, StringComparison.OrdinalIgnoreCase);

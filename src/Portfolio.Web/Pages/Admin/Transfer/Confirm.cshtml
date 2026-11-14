@@ -20,7 +20,7 @@
     <section id="result" class="adm-card" aria-labelledby="result-heading">
         <h2 id="result-heading" tabindex="-1" autofocus>Import finished</h2>
         <p role="status">
-            @result.Created added, @result.Updated updated, @result.Unchanged already matched and @result.Refused were not imported@(result.ProfileApplied ? $"; the {result.Profile.Label.ToLowerInvariant()} was applied" : "").
+            @result.Created added, @result.Updated updated, @result.Unchanged already matched and @result.Refused were not imported@(result.ProfileApplied ? $". Applied: {result.Profile.Label}" : "").
             @if (applied == 0) { <text>Nothing was changed.</text> }
             Nothing was deleted.
         </p>

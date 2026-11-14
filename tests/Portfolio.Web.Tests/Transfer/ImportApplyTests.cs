@@ -353,7 +353,7 @@ public class ImportApplyTests
         var page = await confirm.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, confirm.StatusCode);
-        Assert.Contains("was applied", page);
+        Assert.Contains("Applied: ", page);
         var profile = await ProfileFlow.ProfileAsync(app);
         Assert.Equal("Imported Name", profile.OwnerName);
         Assert.NotEqual(unchanged.ConcurrencyStamp, profile.ConcurrencyStamp);
