@@ -11,7 +11,7 @@
     var mark = string.Concat(p.Title.Split(' ', StringSplitOptions.RemoveEmptyEntries).Where(w => char.IsLetterOrDigit(w[0])).Take(2).Select(w => char.ToUpperInvariant(w[0])));
 }
 <article class="group relative flex flex-col" data-category="@cat">
-    <div class="relative aspect-[4/3] overflow-hidden rounded-lg border border-border bg-surface-2">
+    <div class="relative aspect-[var(--gallery-card-aspect,4/3)] overflow-hidden rounded-lg border border-border bg-surface-2">
         @if (hasImage)
         {
             <img src="@p.HeroImage" alt="@(string.IsNullOrWhiteSpace(p.HeroImageAlt) ? copy.AltFor(p.Title) : p.HeroImageAlt)" loading="lazy" width="800" height="600"

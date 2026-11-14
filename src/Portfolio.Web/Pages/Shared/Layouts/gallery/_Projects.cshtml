@@ -37,7 +37,7 @@
                 }
             </div>
         }
-        <div class="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3" data-project-grid>
+        <div class="mt-10 grid gap-x-6 gap-y-12 grid-cols-[repeat(auto-fill,minmax(min(100%,var(--gallery-card-min,17rem)),1fr))]" data-project-grid>
             @foreach (var p in Model.Projects)
             {
                 @await Html.PartialAsync("Layouts/gallery/_WorkCard", new WorkCard(p, ShowFeatured: true, HeadingLevel: 2))
