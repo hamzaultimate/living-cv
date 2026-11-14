@@ -277,6 +277,12 @@ public class GalleryArchetypeTests
         // The "featured" mark belongs to the work page: the home grid is all featured work already.
         const string badge = "text-[10px] uppercase tracking-wider text-accent";
         Assert.Contains(badge, projects);
+        // A few cards fill the row (auto-fit); auto-fill would leave empty columns on the right.
+        const string fit = "grid-cols-[repeat(auto-fit,minmax(min(100%,var(--gallery-card-min,17rem)),1fr))]";
+        Assert.Contains(fit, home);
+        Assert.Contains(fit, projects);
+        Assert.DoesNotContain("repeat(auto-fill", home + projects);
+        Assert.Contains("repeat(auto-fit,minmax(min(100%,var(--gallery-card-min,17rem)),1fr))", File.ReadAllText(Path.Combine(Wwwroot, "css", "app.css")));
         Assert.DoesNotContain(badge, home);
         Assert.Contains(Escaped(template.Copy.Projects.ReadItemFor(ItemOf(template))), home);
     }
