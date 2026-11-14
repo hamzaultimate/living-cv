@@ -43,6 +43,9 @@ public class ResultsArchetypeTests
 
     private static string ResultsLayouts => Path.Combine(G.Layouts, "results");
     private static string Plain(string html) => WebUtility.HtmlDecode(html);
+
+    /// <summary>The visible text of a page's own content: inside &lt;main&gt;, scripts (structured data) removed, entities decoded.</summary>
+    private static string MainText(string html) => DemoSite.WithoutScripts(G.MainOf(html));
     private static string ItemOf(TemplateDefinition t) => t.Sections.Single(s => s.Key == "projects").ItemLabel!;
     private const string Fit = "grid-cols-[repeat(auto-fit,minmax(min(100%,var(--results-card-min,20rem)),1fr))]";
 
@@ -113,7 +116,7 @@ public class ResultsArchetypeTests
             Assert.DoesNotMatch(@"<(iframe|video|audio|object|embed)\b", text);
             Assert.DoesNotMatch(@"(?i)templateKey|\.Key\s*==|Definition\.Key", text);
             // The words a button or chip carries come from optional manifest wording, never from the markup.
-            Assert.DoesNotMatch(@">\s*(Download CV|LinkedIn|All|Worked with|Next|Read|Watch)\b[^<@]*<", text);
+            Assert.DoesNotMatch(@">\s*(Download CV|LinkedIn|All|Worked with|Next|Read|Watch|Links|Approach|Proof|Problem|Brief|Situation|Stack|Tools|Skills|Featured|Contact|Work|Experience|Recognition|Results|Impact|Screenshots|Gallery|Previous|Back)\b[^<@]*<", text);
             Assert.DoesNotMatch(@">\s*View \w", text);
         }
         Assert.Contains("copy.DownloadCvText()", File.ReadAllText(Path.Combine(ResultsLayouts, "_Home.cshtml")));
@@ -141,11 +144,14 @@ public class ResultsArchetypeTests
         Assert.True(starter.Projects.Select(p => p.Org).Where(o => !string.IsNullOrWhiteSpace(o)).Distinct().Count() >= 3, "the client strip needs a few names");
         Assert.All(starter.Experiences, e => Assert.Contains("fictional", e.Company, StringComparison.OrdinalIgnoreCase));
         Assert.All(starter.Projects, p => Assert.Contains("(sample)", p.Title));
-        // Client names are invented wordmarks: plain names (no address, no handle), each used only by a "(sample)" entry, and none that a visitor could mistake for a real company
-        // through a suffix such as Inc. or Ltd. The honesty lives in the "(sample)" titles and the profile summary above, not in the strip.
+        // Client names are invented wordmarks: coined single words (no address, handle, industry word or company suffix), each used only by a "(sample)" entry. The honesty lives in the
+        // "(sample)" titles and the profile summary above, not in the strip.
         Assert.All(starter.Projects.Where(p => !string.IsNullOrWhiteSpace(p.Org)), p =>
         {
             Assert.DoesNotMatch(@"[@/]|https?:|www\.|\.(com|org|net|io)\b|\b(inc|ltd|llc|gmbh|plc)\b", p.Org!.ToLowerInvariant());
+            // A coined single word, not a place or industry combination that reads like an existing business (no trademark search is possible, so owners replace them).
+            Assert.DoesNotMatch(@"(?i)\b(software|health|medical|energy|freight|logistics|retail|foods?|coffee|analytics|studio|media|bank|capital|group|partners|labs|systems|solutions|consulting|cloud|digital|global|company|co|corp|sample|example)\b|&", p.Org!);
+            Assert.DoesNotContain(' ', p.Org!);
             Assert.True(p.Org!.Length <= 40, $"{p.Org} is too long for a wordmark");
             Assert.Contains("(sample)", p.Title);
         });
@@ -354,6 +360,17 @@ public class ResultsArchetypeTests
     [InlineData("3rd place", "", "3rd place")]
     [InlineData("1234567890123 users", "", "1234567890123 users")]
     [InlineData("<script>alert(1)</script>", "", "<script>alert(1)</script>")]
+    [InlineData("$1234567x users", "$1234567x", "users")]                       // nine characters: the longest figure that is set large
+    [InlineData("$12345678x users", "", "$12345678x users")]                     // ten: shown whole
+    [InlineData("+$1234567pts gain", "", "+$1234567pts gain")]                   // twelve
+    [InlineData("+12345678 users", "+12345678", "users")]                        // nine, no unit
+    [InlineData("2,500 attendees", "2,500", "attendees")]
+    [InlineData("3000 users", "3000", "users")]
+    [InlineData("2024 President's Club winner", "", "2024 President's Club winner")] // a year is a date, not a result
+    [InlineData("1999", "", "1999")]
+    [InlineData("1. Opened the region", "", "1. Opened the region")]            // a list number is not a figure
+    [InlineData("3, then 4 more", "", "3, then 4 more")]
+    [InlineData("+38 % lift", "", "+38 % lift")]                                  // a unit parted by a space would open the rest of the line
     [InlineData("", "", "")]
     [InlineData(null, "", "")]
     public void AnImpactLine_IsSplitIntoItsLeadingFigureAndTheRest_AndNeverLosesText(string? line, string figure, string rest)
@@ -381,22 +398,25 @@ public class ResultsArchetypeTests
                 Screenshots = [new ProjectImage { Url = "/img/projects/telemetry-1.svg", Caption = "Fieldcaption" }],
                 Links = [new Link { Label = "Fieldlink", Url = "https://example.org/l" }], Proofs = [new Proof { Label = "Fieldproof", Url = "https://example.org/p" }],
             });
+            var hero = (await db.SiteProfiles.SingleAsync()).Hero;
+            (hero.Eyebrow, hero.Headline, hero.HeadlineAccent, hero.Lede) = ("Fieldeyebrow", "Fieldheadline", "Fieldaccent", "Fieldlede");
             db.Testimonials.Add(new Testimonial { Quote = "Fieldquote", Author = "Fieldauthor", AuthorTitle = "Fieldauthortitle", SourceUrl = "https://example.org/s", Featured = true, SortOrder = 1 });
             await db.SaveChangesAsync();
         }
         app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
         var client = app.NewClient();
 
-        var detail = Plain(await G.GetAsync(client, "/projects/fields"));
+        // The words are looked for in the page's own content: not in the head, the shared header or the structured data, where a field could appear without being shown.
+        var detail = MainText(await G.GetAsync(client, "/projects/fields"));
         foreach (var word in new[] { "Fieldtitle", "Fieldrole", "Fieldorg", "Fieldperiod", "Fieldsummary", "Fieldproblem", "Fieldapproach", "Fieldimpactone", "Fieldimpacttwo", "+7%", "Fieldtech", "Fieldcoveralt", "Fieldcaption", "Fieldlink", "Fieldproof", "https://example.org/p" })
             Assert.Contains(word, detail);
-        var home = Plain(await G.GetAsync(client, "/"));
-        var projects = Plain(await G.GetAsync(client, "/projects"));
+        var home = MainText(await G.GetAsync(client, "/"));
+        var projects = MainText(await G.GetAsync(client, "/projects"));
         foreach (var page in new[] { home, projects })
             foreach (var word in new[] { "Fieldtitle", "Fieldorg", "Fieldcategory", "Fieldsummary", "Fieldtech", "Fieldcoveralt", "+7%", "Fieldimpactone" })
                 Assert.Contains(word, page);
         Assert.Contains("Fieldcategory", projects); // and the filter has it once there is more than one category
-        foreach (var word in new[] { "Fieldquote", "Fieldauthor", "Fieldauthortitle", "https://example.org/s", "Fieldorg" }) Assert.Contains(word, home);
+        foreach (var word in new[] { "Fieldquote", "Fieldauthor", "Fieldauthortitle", "https://example.org/s", "Fieldorg", "Fieldeyebrow", "Fieldheadline", "Fieldaccent", "Fieldlede" }) Assert.Contains(word, home);
         // Only the first result is on the card; the others are on the case study.
         Assert.DoesNotContain("Fieldimpacttwo", home + projects);
     }
@@ -408,13 +428,14 @@ public class ResultsArchetypeTests
         using var app = await G.SiteAsync(key, "blank");
         using (var db = app.CreateDbContext())
         {
+            // Inserted out of work order, so only the sort order can put them right.
             db.Projects.AddRange(
-                new Project { Title = "A", Slug = "a", Summary = "s", Org = "Zed <b>Corp</b>", SortOrder = 1 },
-                new Project { Title = "B", Slug = "b", Summary = "s", Org = "  Acme  ", SortOrder = 2 },
+                new Project { Title = "F", Slug = "f", Summary = "s", Org = new string('w', 90), SortOrder = 6 },
                 new Project { Title = "C", Slug = "c", Summary = "s", Org = "zed <b>corp</b>", SortOrder = 3 },
-                new Project { Title = "D", Slug = "d", Summary = "s", Org = "   ", SortOrder = 4 },
                 new Project { Title = "E", Slug = "e", Summary = "s", Org = null, SortOrder = 5 },
-                new Project { Title = "F", Slug = "f", Summary = "s", Org = new string('w', 90), SortOrder = 6 });
+                new Project { Title = "B", Slug = "b", Summary = "s", Org = "  Acme  ", SortOrder = 2 },
+                new Project { Title = "D", Slug = "d", Summary = "s", Org = "   ", SortOrder = 4 },
+                new Project { Title = "A", Slug = "a", Summary = "s", Org = "Zed <b>Corp</b>", SortOrder = 1 });
             await db.SaveChangesAsync();
         }
         app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
@@ -498,6 +519,64 @@ public class ResultsArchetypeTests
         Assert.Contains("&lt;b&gt;bold&lt;/b&gt;", list);
     }
 
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task ACoverThatIsAVideoAtAnUnsafeAddress_IsNeverPutInALinkOrAnImage(string key)
+    {
+        using var app = await G.SiteAsync(key, "blank");
+        using (var db = app.CreateDbContext())
+        {
+            db.Projects.AddRange(
+                new Project { Title = "Badcoverone", Slug = "bad-one", Summary = "s", Featured = true, SortOrder = 1, HeroImage = "javascript:alert(1)//x.mp4" },
+                new Project { Title = "Badcovertwo", Slug = "bad-two", Summary = "s", Featured = true, SortOrder = 2, HeroImage = "//evil.example/x.mp4" },
+                new Project { Title = "Goodcover", Slug = "good", Summary = "s", Featured = true, SortOrder = 3, HeroImage = "/media/ok.mp4" });
+            await db.SaveChangesAsync();
+        }
+        app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
+        var client = app.NewClient();
+
+        foreach (var path in new[] { "/", "/projects", "/projects/bad-one", "/projects/bad-two" })
+        {
+            var html = await G.GetAsync(client, path);
+            Assert.DoesNotMatch(@"(href|src|data-src)=""[^""]*(javascript:|evil\.example)", html);
+            Assert.DoesNotMatch(@"<(video|source|iframe)\b", html);
+            Assert.Contains("Badcover", html);
+        }
+        // A safe site path to a video is still a plain link, so the check above is not passing because nothing is ever linked.
+        Assert.Contains("<a href=\"/media/ok.mp4\" target=\"_blank\" rel=\"noopener\"", await G.GetAsync(client, "/projects"));
+        Assert.Contains("<a href=\"/media/ok.mp4\" target=\"_blank\" rel=\"noopener\"", await G.GetAsync(client, "/projects/good"));
+    }
+
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task ALongUnbrokenTitleAndMetricLabel_WrapOnTheHomeTheWorkPageAndTheCaseStudy(string key)
+    {
+        using var app = await G.SiteAsync(key, "blank");
+        var title = new string('T', 70);
+        var label = new string('l', 60);
+        using (var db = app.CreateDbContext())
+        {
+            (await db.SiteProfiles.SingleAsync()).Metrics = [new ProfileMetric { Value = "5", Unit = "u", Label = label }];
+            db.Projects.AddRange(
+                new Project { Title = title, Slug = "long-title", Summary = "s", Featured = true, SortOrder = 1 },
+                new Project { Title = "Short", Slug = "short", Summary = "s", Featured = true, SortOrder = 2 });
+            await db.SaveChangesAsync();
+        }
+        app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
+        var client = app.NewClient();
+
+        var home = await G.GetAsync(client, "/");
+        Assert.Contains($"<h3 class=\"mt-1 break-words text-xl\"><a href=\"/projects/long-title\" class=\"text-text after:absolute after:inset-0 hover:text-accent\">{title}</a></h3>", home);
+        Assert.Contains($"<p class=\"mt-3 break-words text-sm text-muted\">{label}</p>", home);
+        Assert.Contains("<li class=\"min-w-0 rounded-lg", home);
+        Assert.Contains($"<h2 class=\"mt-1 break-words text-xl\"><a href=\"/projects/long-title\"", await G.GetAsync(client, "/projects"));
+        var detail = await G.GetAsync(client, "/projects/long-title");
+        Assert.Contains($"<h1 class=\"mt-3 break-words text-4xl font-semibold leading-[1.08] md:text-6xl\">{title}</h1>", detail);
+        Assert.Contains("<header class=\"mt-6 max-w-4xl min-w-0\">", detail);
+        // The "next" link names the long title too, and wraps it.
+        Assert.Contains($"<span class=\"mt-2 block break-words text-2xl text-text group-hover:text-accent md:text-3xl\">{title} →</span>", await G.GetAsync(client, "/projects/short"));
+    }
+
     // ---------------------------------------------------------------- labels come from the manifest
 
     private static string UniqueWordsDir(string baseKey, string newKey)
@@ -553,7 +632,7 @@ public class ResultsArchetypeTests
                 var profile = await db.SiteProfiles.SingleAsync();
                 profile.LinkedIn = "https://www.linkedin.com/in/example/";
                 db.Projects.AddRange(
-                    new Project { Title = "Alpha", Slug = "alpha", Summary = "First.", Category = "Cat one", Org = "Orgone", Tech = ["Tooling"], Impact = ["+9% Gain"], HeroImage = "/img/projects/telemetry.svg", Featured = true, SortOrder = 1, Screenshots = [new ProjectImage { Url = "/img/projects/telemetry-1.svg" }, new ProjectImage { Url = "/img/projects/telemetry-2.svg", Caption = "Captioned" }] },
+                    new Project { Title = "Alpha", Slug = "alpha", Summary = "First.", Category = "Cat one", Org = "Orgone", Tech = ["Tooling"], Impact = ["+9% Gain"], Approach = "An approach.", Links = [new Link { Label = "A link", Url = "https://example.org/l" }], Proofs = [new Proof { Label = "A proof", Url = "https://example.org/p" }], HeroImage = "/img/projects/telemetry.svg", Featured = true, SortOrder = 1, Screenshots = [new ProjectImage { Url = "/img/projects/telemetry-1.svg" }, new ProjectImage { Url = "/img/projects/telemetry-2.svg", Caption = "Captioned" }] },
                     new Project { Title = "Beta", Slug = "beta", Summary = "Second.", Category = "Cat two", HeroImage = "/img/projects/ledger.svg", Featured = true, SortOrder = 2, Problem = "A problem." },
                     new Project { Title = "Gamma", Slug = "gamma", Summary = "Third.", SortOrder = 3 });
                 db.Skills.Add(new Skill { Name = "Skilled", Group = "Research", SortOrder = 1 });
@@ -580,6 +659,7 @@ public class ResultsArchetypeTests
             Assert.Contains("aria-label=\"zork-projects-galleryLabel\"", alpha);
             Assert.Contains("aria-label=\"zork-projects-openImageLabel: Captioned\"", alpha);
             Assert.Contains("alt=\"zork-projects-imageAlt Alpha\"", alpha);
+            foreach (var word in new[] { "zork-projects-linksHeading", "zork-projects-approachHeading", "zork-projects-proofHeading" }) Assert.Contains(word, alpha);
             Assert.Contains("zork-projects-noWriteup", gamma);
 
             // None of the template's real wording survives anywhere on the pages the partials draw.

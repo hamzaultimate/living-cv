@@ -44,6 +44,7 @@ public class ArchetypeTemplateFlowTests
             p.HeroImage = "/img/projects/telemetry.svg";
             p.HeroImageAlt = "A seeded cover";
             p.Tech = ["Seeding"];
+            p.Org = "Seedclient";
             await db.SaveChangesAsync();
         }
         app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
@@ -209,6 +210,9 @@ public class ArchetypeTemplateFlowTests
         foreach (var k in off) Assert.DoesNotContain(SectionRegistry.PathFor(k), sitemap);
         var detail = await visitor.GetStringAsync("/projects/seed-project");
         Assert.Contains("\"@type\":\"CreativeWork\"", detail);
+        // The results layout's client strip is made of the work's client names, so it follows the work section.
+        var hasStrip = template.Archetype == Archetypes.Results;
+        Assert.Equal(hasStrip, (await visitor.GetStringAsync("/")).Contains("id=\"clients\""));
         var counts = await ContentFlow.CountAsync(app);
 
         // Hide the work section, rename another, move one to the front and switch on what the template leaves off.
@@ -220,6 +224,8 @@ public class ArchetypeTemplateFlowTests
         var home = await visitor.GetStringAsync("/");
         Assert.DoesNotContain("id=\"work\"", home);
         Assert.DoesNotContain("href=\"/projects\"", home);
+        Assert.DoesNotContain("id=\"clients\"", home);   // no work section, so no client names
+        Assert.DoesNotContain("Seedclient", home);
         Assert.Contains("Reach me", home);
         var nav = SectionsFlow.NavOf(home).Split(',').Select(x => x.Split('=')[0]).ToList();
         Assert.Equal("/skills", nav[0]);
@@ -234,6 +240,7 @@ public class ArchetypeTemplateFlowTests
         // Back on: the case study and its structured data return.
         await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("projects", true));
         Assert.Contains("\"@type\":\"CreativeWork\"", await visitor.GetStringAsync("/projects/seed-project"));
+        Assert.Equal(hasStrip, (await visitor.GetStringAsync("/")).Contains("id=\"clients\""));
         Assert.Contains("/projects/seed-project", SectionsFlow.SitemapPaths(await visitor.GetStringAsync("/sitemap.xml")));
     }
 
