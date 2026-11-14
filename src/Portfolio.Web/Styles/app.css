@@ -3,6 +3,7 @@
 @import "./themes/healthcare.css";
 @import "./themes/marketing-content.css";
 @import "./themes/photography-film.css";
+@import "./themes/sales-bd.css";
 
 @tailwind base;
 @tailwind components;

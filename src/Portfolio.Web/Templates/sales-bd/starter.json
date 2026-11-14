@@ -1,0 +1,476 @@
+// Fictional sample content for the Sales & Business Development template. Every person, company, client, deal and figure below is invented.
+// The pictures are simple generated placeholders bundled under wwwroot/img/starter/sales-bd.
+{
+  "fictional": true,
+  "profile": {
+    "ownerName": "Elias Brandt",
+    "brandName": "Elias",
+    "role": "Sales & Business Development Lead · Enterprise and partnerships (sample profile)",
+    "jobTitle": "Sales and Business Development Lead",
+    "summary": "Sample profile (fictional). Sales and business development lead with nine years of enterprise sales, account growth and partnerships, consistently above quota and focused on long-term client relationships.",
+    "knowsAbout": [
+      "Enterprise sales",
+      "Business development",
+      "Account management",
+      "Partnerships",
+      "Negotiation",
+      "Sales forecasting"
+    ],
+    "hero": {
+      "eyebrow": "Sales & Business Development · Enterprise and partnerships",
+      "headline": "Quota beaten, pipeline built,",
+      "headlineAccent": "relationships that last.",
+      "lede": "Sample profile (fictional). Nine years of enterprise sales and partnerships, from first discovery call to renewal, with the numbers to show for it."
+    },
+    "metrics": [
+      {
+        "value": "128%",
+        "unit": "",
+        "label": "average quota attainment over three years"
+      },
+      {
+        "value": "$6.2M",
+        "unit": "",
+        "label": "new annual revenue closed"
+      },
+      {
+        "value": "34%",
+        "unit": "",
+        "label": "win rate on qualified deals"
+      },
+      {
+        "value": "3.1x",
+        "unit": "",
+        "label": "pipeline coverage held each quarter"
+      }
+    ],
+    "about": {
+      "headline": "Selling is listening first, then proving the value.",
+      "paragraphs": [
+        "Sample profile (fictional). I am a sales and business development lead who wins by understanding the buyer's problem better than they expect, then building the case that gets the whole buying group behind the decision.",
+        "I work best with teams that share their numbers openly. I have closed multi-year contracts with enterprise clients, turned a single-site pilot into a nine-site rollout and launched a channel partnership from nothing.",
+        "This page is sample content for the Sales & Business Development template. Replace it with your own story, and only share figures and client names you are allowed to."
+      ],
+      "valueProps": [
+        {
+          "title": "Discovery first",
+          "body": "Questions before proposals, so the solution fits the problem."
+        },
+        {
+          "title": "Whole buying group",
+          "body": "Every deal has several voices; I earn each of them."
+        },
+        {
+          "title": "Honest forecasts",
+          "body": "A pipeline I would stake my name on, reviewed every week."
+        },
+        {
+          "title": "Relationships that renew",
+          "body": "The best deal is the one that comes back and refers a friend."
+        }
+      ],
+      "currentlyNote": "Leading enterprise sales for a growing company and coaching two new account executives.",
+      "focus": [
+        "Enterprise sales",
+        "Partnerships",
+        "Account growth",
+        "Forecasting"
+      ]
+    },
+    "email": "elias.brandt@example.org",
+    "linkedIn": "https://www.linkedin.com/in/example-elias-brandt/",
+    "templateKey": "sales-bd"
+  },
+  "experiences": [
+    {
+      "company": "Example Cloud Services (fictional)",
+      "title": "Senior Account Executive",
+      "start": "2021",
+      "end": null,
+      "current": true,
+      "summary": "Own a named enterprise territory, from prospecting to close and renewal, for a sample services company.",
+      "highlights": [
+        "Beat quota every quarter for three years",
+        "Closed the largest contract in the company's history",
+        "Coached two new account executives"
+      ],
+      "tech": [
+        "Enterprise sales",
+        "Forecasting",
+        "Negotiation"
+      ],
+      "sortOrder": 1
+    },
+    {
+      "company": "Sample Logistics Group (fictional)",
+      "title": "Business Development Manager",
+      "start": "2018",
+      "end": "2021",
+      "current": false,
+      "summary": "Opened a new region and launched a reseller channel for a sample logistics business.",
+      "highlights": [
+        "Signed the first three channel partners",
+        "Opened a new region with five customers",
+        "Built the first partner pack"
+      ],
+      "tech": [
+        "Partnerships",
+        "Market entry"
+      ],
+      "sortOrder": 2
+    },
+    {
+      "company": "Placeholder Distribution Co (fictional)",
+      "title": "Sales Representative",
+      "start": "2015",
+      "end": "2018",
+      "current": false,
+      "summary": "Managed a book of mid-market accounts for a sample food distributor.",
+      "highlights": [
+        "Grew the book by a third",
+        "Started a referral programme",
+        "Top rep two years running"
+      ],
+      "tech": [
+        "Account management",
+        "Referral selling"
+      ],
+      "sortOrder": 3
+    }
+  ],
+  "skills": [
+    {
+      "name": "Outbound sequences",
+      "group": "Prospecting",
+      "sortOrder": 1
+    },
+    {
+      "name": "Territory planning",
+      "group": "Prospecting",
+      "sortOrder": 2
+    },
+    {
+      "name": "Referral selling",
+      "group": "Prospecting",
+      "sortOrder": 3
+    },
+    {
+      "name": "Discovery calls",
+      "group": "Discovery and closing",
+      "sortOrder": 4
+    },
+    {
+      "name": "Business cases",
+      "group": "Discovery and closing",
+      "sortOrder": 5
+    },
+    {
+      "name": "Negotiation",
+      "group": "Discovery and closing",
+      "sortOrder": 6
+    },
+    {
+      "name": "Proposal writing",
+      "group": "Discovery and closing",
+      "sortOrder": 7
+    },
+    {
+      "name": "Renewals and expansion",
+      "group": "Account management",
+      "sortOrder": 8
+    },
+    {
+      "name": "Executive sponsorship",
+      "group": "Account management",
+      "sortOrder": 9
+    },
+    {
+      "name": "Multi-threading",
+      "group": "Account management",
+      "sortOrder": 10
+    },
+    {
+      "name": "Pipeline reviews",
+      "group": "Pipeline and forecasting",
+      "sortOrder": 11
+    },
+    {
+      "name": "Forecasting",
+      "group": "Pipeline and forecasting",
+      "sortOrder": 12
+    },
+    {
+      "name": "Win-loss analysis",
+      "group": "Pipeline and forecasting",
+      "sortOrder": 13
+    },
+    {
+      "name": "CRM platforms",
+      "group": "Tools",
+      "sortOrder": 14
+    },
+    {
+      "name": "Sales engagement tools",
+      "group": "Tools",
+      "sortOrder": 15
+    },
+    {
+      "name": "Reporting dashboards",
+      "group": "Tools",
+      "sortOrder": 16
+    }
+  ],
+  "projects": [
+    {
+      "title": "Multi-year freight contract (sample)",
+      "slug": "tessera-freight-contract",
+      "role": "Account executive",
+      "org": "Tessera Freight",
+      "period": "2024",
+      "summary": "A three-year logistics services contract won against two incumbents for a sample freight company. Sample deal (fictional).",
+      "category": "Enterprise",
+      "problem": "The client was renewing a large logistics contract and had never changed supplier, with finance and operations disagreeing about what a change was worth.",
+      "approach": "Mapped the buying group, ran a cost-and-delay workshop with operations, built a shared business case with finance and offered a staged start to lower the risk of switching.",
+      "impact": [
+        "$2.4M in annual recurring revenue",
+        "146% of annual quota from this deal alone",
+        "Closed in 5 months against a 9-month average"
+      ],
+      "tech": [
+        "Discovery workshop",
+        "Business case",
+        "Stakeholder mapping"
+      ],
+      "heroImage": "/img/starter/sales-bd/tessera-freight-contract.svg",
+      "heroImageAlt": "Abstract illustration of rising bars with a horizontal quota line across them.",
+      "screenshots": [
+        {
+          "url": "/img/starter/sales-bd/tessera-freight-contract-1.svg",
+          "caption": "Quota line against the staged ramp-up of the contract"
+        },
+        {
+          "url": "/img/starter/sales-bd/tessera-freight-contract-2.svg",
+          "caption": "Deal timeline from first call to signature"
+        }
+      ],
+      "links": [
+        {
+          "label": "Read the announcement",
+          "url": "https://example.org/tessera-freight-announcement"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "title": "Hospital group expansion (sample)",
+      "slug": "alderbrook-health-expansion",
+      "role": "Senior account manager",
+      "org": "Alderbrook Health",
+      "period": "2023",
+      "summary": "Growing a single-site pilot into a nine-site rollout for a sample health group. Sample deal (fictional).",
+      "category": "Enterprise",
+      "problem": "A successful pilot at one site had stalled because each new site needed its own approval and budget.",
+      "approach": "Built a one-page results summary from the pilot, found a sponsor in the group's operations team and proposed a phased rollout with a shared contract.",
+      "impact": [
+        "9 sites signed from a 1-site pilot",
+        "3.2x contract value in 14 months",
+        "Zero churn across the group"
+      ],
+      "tech": [
+        "Account planning",
+        "Executive sponsor",
+        "Phased rollout"
+      ],
+      "heroImage": "/img/starter/sales-bd/alderbrook-health-expansion.svg",
+      "heroImageAlt": "Abstract illustration of three circles connected in a row, like sites in a network.",
+      "screenshots": [
+        {
+          "url": "/img/starter/sales-bd/alderbrook-health-expansion-1.svg",
+          "caption": "Growth in signed sites over fourteen months"
+        },
+        {
+          "url": "/img/starter/sales-bd/alderbrook-health-expansion-2.svg",
+          "caption": "Rollout plan, site by site"
+        }
+      ],
+      "links": [
+        {
+          "label": "See the case study",
+          "url": "https://example.org/alderbrook-case-study"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 2
+    },
+    {
+      "title": "Channel partnership launch (sample)",
+      "slug": "copperline-energy-partnership",
+      "role": "Business development manager",
+      "org": "Copperline Energy",
+      "period": "2023",
+      "summary": "Launching a reseller partnership with a sample energy services firm. Sample deal (fictional).",
+      "category": "Partnerships",
+      "problem": "The company had no channel, and its best leads came from partners who were not yet partners.",
+      "approach": "Chose three target partners, built a simple partner pack and margin model, ran a joint pilot with the first and used its results to sign the others.",
+      "impact": [
+        "$1.1M partner-sourced pipeline in the first two quarters",
+        "3 partners signed in 6 months",
+        "Partner deals closed 30% faster than direct"
+      ],
+      "tech": [
+        "Partner programme",
+        "Margin model",
+        "Joint pilot"
+      ],
+      "heroImage": "/img/starter/sales-bd/copperline-energy-partnership.svg",
+      "heroImageAlt": "Abstract illustration of two large circles joined by a bar with a smaller circle between them.",
+      "screenshots": [
+        {
+          "url": "/img/starter/sales-bd/copperline-energy-partnership-1.svg",
+          "caption": "Partner pipeline by source, by quarter"
+        }
+      ],
+      "links": [
+        {
+          "label": "Partner programme overview",
+          "url": "https://example.org/copperline-partners"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 3
+    },
+    {
+      "title": "Strategic account renewal (sample)",
+      "slug": "marlow-finch-renewal",
+      "role": "Account manager",
+      "org": "Marlow & Finch",
+      "period": "2022",
+      "summary": "Saving and growing a renewal at risk for a sample professional services client. Sample deal (fictional).",
+      "category": "Mid-market",
+      "problem": "The client had cut usage by half and its sponsor had left, so the renewal was marked at risk.",
+      "approach": "Rebuilt the relationship with three new contacts, ran a usage review to show what was unused and rewrote the contract around the two features they valued.",
+      "impact": [
+        "Renewed at 118% of the previous value",
+        "Usage back to 90% within a quarter"
+      ],
+      "tech": [
+        "Account review",
+        "Renewal plan",
+        "Multi-threading"
+      ],
+      "heroImage": "/img/starter/sales-bd/marlow-finch-renewal.svg",
+      "heroImageAlt": "Abstract illustration of a contract page with a headline bar and a small bar chart.",
+      "links": [
+        {
+          "label": "Renewal summary",
+          "url": "https://example.org/marlow-finch-renewal"
+        }
+      ],
+      "featured": false,
+      "sortOrder": 4
+    },
+    {
+      "title": "New market entry (sample)",
+      "slug": "quillon-retail-new-market",
+      "role": "Business development lead",
+      "org": "Quillon Retail",
+      "period": "2022",
+      "summary": "Opening a new region by landing the first anchor customer for a sample retail group. Sample deal (fictional).",
+      "category": "New markets",
+      "problem": "The company wanted to enter a region where it had no references, no partners and no sales team.",
+      "approach": "Interviewed twenty local buyers, picked one anchor customer to design the offer around and used that win to open four further conversations.",
+      "impact": [
+        "Opened a region with 5 customers in 9 months",
+        "Anchor customer became the lead reference"
+      ],
+      "tech": [
+        "Market research",
+        "Anchor account",
+        "Reference selling"
+      ],
+      "heroImage": "/img/starter/sales-bd/quillon-retail-new-market.svg",
+      "heroImageAlt": "Abstract illustration of a grid of six cards, each with a coloured tag and lines of text.",
+      "links": [
+        {
+          "label": "Market entry story",
+          "url": "https://example.org/quillon-market-entry"
+        }
+      ],
+      "featured": false,
+      "sortOrder": 5
+    },
+    {
+      "title": "Customer referral programme (sample)",
+      "slug": "ostrava-foods-referral-programme",
+      "role": "Sales manager",
+      "org": "Ostrava Foods",
+      "period": "2021",
+      "summary": "A customer referral programme for a sample food distributor. Sample deal (fictional).",
+      "category": "Mid-market",
+      "problem": "Most new business came from cold outreach, though happy customers kept offering introductions.",
+      "approach": "Asked the best customers for introductions at a set moment in the relationship, made it easy with a short intro note and thanked every referrer personally.",
+      "impact": [
+        "41% of new deals from referrals",
+        "Referred deals won at twice the rate of cold leads"
+      ],
+      "tech": [
+        "Referral programme",
+        "Customer success",
+        "Intro notes"
+      ],
+      "heroImage": "/img/starter/sales-bd/ostrava-foods-referral-programme.svg",
+      "heroImageAlt": "Abstract illustration of a central circle connected by lines to five surrounding circles.",
+      "links": [
+        {
+          "label": "How the programme works",
+          "url": "https://example.org/ostrava-referrals"
+        }
+      ],
+      "featured": false,
+      "sortOrder": 6
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Strategic Selling Certificate (sample)",
+      "issuer": "Example Sales Institute",
+      "status": "Earned",
+      "date": "2020",
+      "category": "Certificate",
+      "sortOrder": 1
+    },
+    {
+      "name": "President's Club (sample)",
+      "issuer": "Example Cloud Services",
+      "status": "Earned",
+      "date": "2023",
+      "category": "Award",
+      "sortOrder": 2
+    },
+    {
+      "name": "Negotiation course (sample)",
+      "issuer": "Example Learning Academy",
+      "status": "InProgress",
+      "date": "2025",
+      "category": "Course",
+      "sortOrder": 3
+    }
+  ],
+  "testimonials": [
+    {
+      "quote": "Sample reference (fictional). Elias read our situation better than we had and built a case our whole team could back.",
+      "author": "Sample Client",
+      "authorTitle": "Operations Director, Example Freight Client",
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "quote": "Sample reference (fictional). The most reliable forecast on the team, and the best at turning pilots into rollouts.",
+      "author": "Sample Manager",
+      "authorTitle": "VP Sales, Example Cloud Services",
+      "featured": true,
+      "sortOrder": 2
+    }
+  ]
+}
