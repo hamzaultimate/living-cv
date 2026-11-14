@@ -57,12 +57,16 @@ public static class Archetypes
 {
     public const string Showcase = "showcase";
     public const string Credentials = "credentials";
+    public const string Gallery = "gallery";
 
     /// <summary>Archetypes the plan names (showcase, gallery, results, credentials).</summary>
-    public static readonly IReadOnlyList<string> Known = [Showcase, "gallery", "results", Credentials];
+    public static readonly IReadOnlyList<string> Known = [Showcase, Gallery, "results", Credentials];
 
     /// <summary>Archetypes that have layout partials under <c>Pages/Shared/Layouts/&lt;archetype&gt;</c>. A manifest naming any other is skipped.</summary>
-    public static readonly IReadOnlyList<string> Implemented = [Showcase, Credentials];
+    public static readonly IReadOnlyList<string> Implemented = [Showcase, Gallery, Credentials];
+
+    /// <summary>Archetypes whose home page also lists the owner's skills (the credentials layout leads with them, the gallery shows them as a tools strip).</summary>
+    public static bool ShowsSkillsOnHome(string archetype) => archetype is Credentials or Gallery;
 }
 
 public class TemplateTheme

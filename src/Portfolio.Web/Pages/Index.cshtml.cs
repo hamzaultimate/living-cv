@@ -37,7 +37,7 @@ public class IndexModel : PageModel
             Certifications = await _repo.GetCertificationsAsync();
         if (credentialsLayout && tpl.IsEnabled(SectionRegistry.Experience))
             RecentRoles = (await _repo.GetExperiencesAsync()).Take(3).ToList();
-        if (credentialsLayout && tpl.IsEnabled(SectionRegistry.Skills))
+        if (Archetypes.ShowsSkillsOnHome(tpl.Archetype) && tpl.IsEnabled(SectionRegistry.Skills))
             Skills = await _repo.GetSkillsAsync();
     }
 }

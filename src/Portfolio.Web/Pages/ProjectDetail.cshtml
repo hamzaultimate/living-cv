@@ -3,6 +3,7 @@
 @inject PortfolioContentService Repo
 @inject ISiteProfileProvider SiteProfile
 @inject RequestTemplate Template
+@inject Microsoft.AspNetCore.Mvc.ViewEngines.ICompositeViewEngine Views
 @{
     var tpl = await Template.GetAsync();
     var copy = tpl.Copy.Projects;
@@ -41,6 +42,13 @@
         };
         if (p.Tech.Count > 0) project["keywords"] = string.Join(", ", p.Tech);
         projectLd = System.Text.Json.JsonSerializer.Serialize(project);
+
+        // An archetype that lays out its own case-study page (a partial under Layouts/<archetype>) takes over from here; the others use the markup below.
+        if (LayoutPartials.Find(Views, ViewContext, tpl.Archetype, LayoutPartials.ProjectDetail) is { } layout)
+        {
+            await Html.RenderPartialAsync(layout, new ProjectPage(p, breadcrumbLd, projectLd));
+            return;
+        }
     }
 }
 @if (breadcrumbLd is not null)

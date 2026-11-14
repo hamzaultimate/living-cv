@@ -2,6 +2,7 @@
 @attribute [SectionPage(SectionRegistry.Projects)]
 @inject PortfolioContentService Repo
 @inject RequestTemplate Template
+@inject Microsoft.AspNetCore.Mvc.ViewEngines.ICompositeViewEngine Views
 @{
     var tpl = await Template.GetAsync();
     var copy = tpl.Copy.Projects;
@@ -18,6 +19,12 @@
         .ToList();
     var absBase = await SeoHelpers.AbsoluteBaseAsync(HttpContext);
     var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), (copy.Title, "/projects"));
+    // An archetype that lays out its own work page (a partial under Layouts/<archetype>) takes over from here; the others use the markup below.
+    if (LayoutPartials.Find(Views, ViewContext, tpl.Archetype, LayoutPartials.Projects) is { } layout)
+    {
+        await Html.RenderPartialAsync(layout, new ProjectsPage(projects, breadcrumbLd));
+        return;
+    }
 }
 <script type="application/ld+json">@Html.Raw(breadcrumbLd)</script>
 
