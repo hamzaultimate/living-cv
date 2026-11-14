@@ -17,7 +17,7 @@ namespace Portfolio.Web.Tests.Templates;
 public class ResultsArchetypeTests
 {
     /// <summary>Every shipped template whose archetype is results.</summary>
-    public static readonly string[] Keys = ["marketing-content"];
+    public static readonly string[] Keys = ["marketing-content", "sales-bd"];
 
     public static TheoryData<string> KeyData => new(Keys);
 
@@ -141,7 +141,14 @@ public class ResultsArchetypeTests
         Assert.True(starter.Projects.Select(p => p.Org).Where(o => !string.IsNullOrWhiteSpace(o)).Distinct().Count() >= 3, "the client strip needs a few names");
         Assert.All(starter.Experiences, e => Assert.Contains("fictional", e.Company, StringComparison.OrdinalIgnoreCase));
         Assert.All(starter.Projects, p => Assert.Contains("(sample)", p.Title));
-        Assert.All(starter.Projects.Where(p => !string.IsNullOrWhiteSpace(p.Org)), p => Assert.Contains("(fictional)", p.Org));
+        // Client names are invented wordmarks: plain names (no address, no handle), each used only by a "(sample)" entry, and none that a visitor could mistake for a real company
+        // through a suffix such as Inc. or Ltd. The honesty lives in the "(sample)" titles and the profile summary above, not in the strip.
+        Assert.All(starter.Projects.Where(p => !string.IsNullOrWhiteSpace(p.Org)), p =>
+        {
+            Assert.DoesNotMatch(@"[@/]|https?:|www\.|\.(com|org|net|io)\b|\b(inc|ltd|llc|gmbh|plc)\b", p.Org!.ToLowerInvariant());
+            Assert.True(p.Org!.Length <= 40, $"{p.Org} is too long for a wordmark");
+            Assert.Contains("(sample)", p.Title);
+        });
         var images = new List<string>();
         foreach (var p in starter.Projects)
         {
