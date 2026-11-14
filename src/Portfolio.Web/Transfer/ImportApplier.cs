@@ -114,8 +114,10 @@ public sealed class ImportApplier
         foreach (var row in await spec.Stored(_db).ToListAsync(ct)) keys.Add(spec.KeyOf(row));
 
         // New rows are placed after the positions as they are now. For a list with a manual order the list stamp is taken right before the first new row is committed, and the positions are read
-        // after it: an order change committed after that makes the commit a conflict instead of leaving two rows in one position. Taking it only then means no change is staged when nothing
-        // is committed (a refused create), and an update before it is never refused because of a stamp it does not need.
+        // after it: an order change committed between that read and the first new row's commit makes that commit a conflict. Only the first new row is guarded: later new rows take the
+        // next position from the same read, so an editor create committed between two of them can share a position until the order step renumbers (and if another list change overlaps
+        // the order step too, the duplicate can remain; the page then tells the owner to reorder). Guarding every new row would cost one list-stamp change per row. Taking the stamp only
+        // at the first commit means nothing is staged when nothing is committed (a refused create), and an update before it is never refused because of a stamp it does not need.
         var guardsOrder = spec.FollowsFileOrder && typeof(IOrderedContent).IsAssignableFrom(typeof(T));
         var guarded = false;
         var next = 0;
