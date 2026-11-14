@@ -13,8 +13,8 @@ A template is two independent parts:
 | Preset | Sections and their order, wording ("copy"), skill groups, SEO patterns, guidance, wizard suggestions, accent colours, editor wording and field visibility, optional starter content and thumbnail | `src/Portfolio.Web/Templates/<key>/template.json` (+ `starter.json`, `preview.png`) |
 | Layout | One of a fixed set of archetypes plus a theme | Razor partials under `Pages/Shared/Layouts/<archetype>/` (shared blocks in `Pages/Shared/Blocks/`), theme in `Styles/themes/<key>.css` |
 
-Archetypes with a layout today: `showcase` (Software & IT) and `credentials` (Healthcare). `gallery` and `results`
-are named in the plan but not built, so a manifest that names them is skipped until they exist.
+Archetypes with a layout today: `showcase` (Software & IT), `credentials` (Healthcare) and `gallery` (Design & UX, Photography & Film). `results`
+is named in the plan but not built, so a manifest that names it is skipped until it exists.
 A new profession picks an existing archetype. A new archetype is a larger change (section 5).
 
 ## 2. Hard rules
@@ -59,7 +59,7 @@ load, the site renders the software template. See `Templates/healthcare/template
   "name": "Healthcare",
   "profession": "Healthcare professional",
   "description": "Credentials-first layout for clinicians and allied health ...",
-  "archetype": "credentials",        // showcase | credentials today (gallery | results planned)
+  "archetype": "credentials",        // showcase | credentials | gallery today (results planned)
   "sensitive": true,                 // required for healthcare/legal; needs "guidance"
   "guidance": "Never publish patient-identifiable information ...",
   "theme": {
@@ -240,6 +240,38 @@ Only when no existing archetype can express the layout. Requires:
 - an entry in the archetype registry,
 - the same automated page-render tests passing for at least two presets,
 - design review before merge.
+
+How the gallery archetype was added, as the worked example:
+- **Partials.** `Pages/Shared/Layouts/<archetype>/_Home.cshtml` is required (the home page renders `Layouts/<archetype>/_Home`). `_Projects.cshtml` and
+  `_ProjectDetail.cshtml` are optional: `Projects.cshtml` and `ProjectDetail.cshtml` ask `LayoutPartials.Find` whether the archetype has one and render it (with a
+  `ProjectsPage` or `ProjectPage` model carrying the data and the structured data the page built), otherwise they use the shared markup. An archetype that
+  provides none of them leaves the shared pages byte-for-byte as they were, which is how Software and Healthcare stay unchanged. Shared pieces inside an archetype
+  (the gallery's `_WorkCard`) live next to its other partials. Reuse the blocks in `Pages/Shared/Blocks/` (testimonials, contact call to action) rather than copying them.
+- **Registry.** Add the constant and the name to `Archetypes.Implemented` in `TemplateDefinition.cs` (it is already in `Known` and in the schema enum). A manifest naming an archetype outside
+  `Implemented` is skipped with a logged error. If the home page needs data other archetypes do not load, extend the decision in `IndexModel` by archetype
+  (`Archetypes.ShowsSkillsOnHome`), never by template key.
+- **Theme variables.** Besides the colour tokens, fonts and radii, a theme may set variables the layout reads with a fallback, so a template can change density or shape
+  with data only. The gallery reads `--gallery-card-aspect` (the shape of a work card, fallback `4/3`) and `--gallery-card-min` (the narrowest a card may get, fallback `17rem`; a
+  smaller value fits more columns). Photography & Film sets `3/2` and `14rem`; Design & UX sets neither. Use a fallback for every new variable, keep the values free of class selectors (a test checks theme files),
+  and note that an arbitrary Tailwind value with a comma (`minmax(a,b)`) is written by Tailwind as a hex escape, which the stylesheet test already accounts for.
+- **Tests to extend.** `GalleryArchetypeTests.Keys` lists every template on the archetype; adding a key runs the whole suite of checks for it (partials, starter, blank / sample / full rendering,
+  wording read from the manifest, accessibility, headers) and `GalleryTemplateFlowTests` runs the admin paths (wizard, preview, switch, sections, export and import, a blank site end to end). Add the key to the
+  hard-coded lists in `TemplateManifestTests` (shipped folders and catalog order) and the wizard card counts in `OnboardingFlowTests`. A new archetype should get a test file of the same shape and
+  must prove the shared pages are unchanged for the other archetypes (the Software parity snapshots, and a before / after render of Healthcare).
+
+### Media and video in layouts
+
+A layout never embeds a third-party player or script. The gallery draws images only: a project cover or picture whose address is a video file is not rendered (a text tile stands in for the cover), and
+film is shown as a link in the entry's `links` with a still as its poster (the cover). Talks, which embed a YouTube player when a video id is stored, are off by default in the gallery templates and their `youtubeId` field is hidden.
+Every picture needs alt text: a cover uses the entry's `heroImageAlt`, then `copy.projects.imageAlt` with the title; a gallery picture uses its caption. A layout must also respect reduced motion (the hover zoom has `motion-reduce` variants).
+
+### Bundled starter images
+
+Starter content may bring pictures, which are ordinary static files, not uploads:
+- Put them under `wwwroot/img/starter/<key>/` and refer to them by site-relative address (`/img/starter/<key>/<name>.svg`). Never point at another site; a test fails for any address outside `/img/`.
+- Generate them yourself or use work you own outright. Simple generated SVG or PNG placeholders are enough; keep each under about 60 KB, with no scripts and no text that needs a font. Do not download images, and do not include anyone's real photograph, logo or product.
+- Give every cover a `heroImageAlt` and every extra picture a caption (which becomes its alt text); a test checks both.
+- Titles carry "(sample)" and organisations "(fictional)", as in the Healthcare starter.
 
 ## 6. Extension points (kept stable)
 
