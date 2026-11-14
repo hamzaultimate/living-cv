@@ -305,10 +305,22 @@ public class HomeCopy
 /// <summary>Fills the optional wording patterns of the gallery layout: <c>{work}</c> is the work section's label and <c>{item}</c> what one entry is called, in lower case.</summary>
 public static class CopyText
 {
+    private static readonly System.Text.RegularExpressions.Regex Token = new(@"\{(work|item)\}", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    /// <summary>One pass over the pattern, so a label that itself contains "{item}" or "{work}" is printed as written and never filled again.</summary>
     public static string Fill(string? pattern, string fallback, string? work, string? item) =>
-        (string.IsNullOrWhiteSpace(pattern) ? fallback : pattern)
-            .Replace("{work}", work ?? "", StringComparison.Ordinal)
-            .Replace("{item}", (item ?? "").ToLowerInvariant(), StringComparison.Ordinal);
+        Token.Replace(string.IsNullOrWhiteSpace(pattern) ? fallback : pattern,
+            m => m.Groups[1].Value == "work" ? work ?? "" : (item ?? "").ToLowerInvariant());
+
+    /// <summary>The tokens each optional wording key may use (none for a key not listed). The validator refuses any other {...} so a token is never silently dropped.</summary>
+    public static readonly IReadOnlyDictionary<string, string[]> AllowedTokens = new Dictionary<string, string[]>
+    {
+        ["copy.home.viewWork"] = ["{work}"],
+        ["copy.home.allWork"] = ["{work}"],
+        ["copy.projects.nextItem"] = ["{item}"],
+        ["copy.projects.readItem"] = ["{item}"],
+        ["copy.projects.watchVideo"] = [],
+    };
 }
 
 public class ProjectsCopy

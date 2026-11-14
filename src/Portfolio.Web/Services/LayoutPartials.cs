@@ -14,10 +14,8 @@ public static class LayoutPartials
     public const string Projects = "_Projects";
     public const string ProjectDetail = "_ProjectDetail";
 
-    /// <summary>True for an address a plain link can carry: a site-relative path or an http(s) address. Anything else (a script scheme, a protocol-relative address) is never put in a link.</summary>
-    public static bool IsLinkable(string? url) =>
-        !string.IsNullOrWhiteSpace(url) && ((url.StartsWith('/') && !url.StartsWith("//", StringComparison.Ordinal))
-            || url.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || url.StartsWith("http://", StringComparison.OrdinalIgnoreCase));
+    /// <summary>True for an address a plain link can carry: the editors' own rules for a site-relative path or an http(s) address. Anything else (a script scheme, a protocol-relative or backslash address, a path with control characters) is never put in a link.</summary>
+    public static bool IsLinkable(string? url) => ContentRules.IsLocalPath(url) || ContentRules.IsHttpUrl(url);
 
     /// <summary>The view name of the archetype's partial, or null when the archetype has none. The archetype comes from a validated manifest
     /// (one of <see cref="Archetypes.Known"/>), and anything else is refused before it is used as part of a view name.</summary>

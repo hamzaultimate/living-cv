@@ -220,6 +220,10 @@ public static partial class TemplateValidator
                 if (HasMarkup(value)) errors.Add($"{path} must be plain text (no < or >).");
                 if (prop.Name == "Description")
                     CheckPattern(errors, path, value, site, MaxDescriptionLength);
+                if (CopyText.AllowedTokens.TryGetValue(path, out var allowed))
+                    foreach (var token in System.Text.RegularExpressions.Regex.Matches(value, @"\{[^}]*\}").Select(m => m.Value).Distinct())
+                        if (!allowed.Contains(token, StringComparer.Ordinal))
+                            errors.Add($"{path} uses {token}, which it cannot fill in" + (allowed.Length == 0 ? " (it takes no placeholders)." : $" (it may use {string.Join(", ", allowed)})."));
                 if (path == "copy.projects.imageAlt" && !value.Contains("{title}", StringComparison.Ordinal))
                     errors.Add($"{path} must contain {{title}}, or every image would share one alt text.");
             }
