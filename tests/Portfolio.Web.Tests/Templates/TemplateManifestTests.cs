@@ -53,9 +53,9 @@ public class TemplateManifestTests
     [Fact]
     public void ShipsExactlyTheShippedTemplates()
     {
-        Assert.Equal(new[] { "design-ux", "healthcare", "photography-film", "software" }, TemplateFolders().Select(Path.GetFileName).OrderBy(x => x).ToArray());
+        Assert.Equal(new[] { "design-ux", "healthcare", "marketing-content", "photography-film", "software" }, TemplateFolders().Select(Path.GetFileName).OrderBy(x => x).ToArray());
         var catalog = new TemplateCatalog(TemplatesDir);
-        Assert.Equal(new[] { "software", "design-ux", "healthcare", "photography-film" }, catalog.All.Select(t => t.Key));
+        Assert.Equal(new[] { "software", "design-ux", "healthcare", "marketing-content", "photography-film" }, catalog.All.Select(t => t.Key));
     }
 
     [Fact]
@@ -140,7 +140,6 @@ public class TemplateManifestTests
         Assert.Contains(Errors(t => t.Key = "Software Two"), e => e.Contains("kebab-case"));
         Assert.Contains(Errors(t => t.Key = "other"), e => e.Contains("does not match folder"));
         Assert.Contains(Errors(t => t.Archetype = "mosaic"), e => e.Contains("unknown"));
-        Assert.Contains(Errors(t => t.Archetype = "results"), e => e.Contains("no layout yet"));
         Assert.Contains(Errors(t => t.Sections.Add(new TemplateSection { Key = "wiki", Label = "wiki" })), e => e.Contains("'wiki'"));
         Assert.Contains(Errors(t => t.Sections.Add(new TemplateSection { Key = "about", Label = "about" })), e => e.Contains("listed twice"));
         Assert.Contains(Errors(t => t.Sections[0].Label = ""), e => e.Contains("needs a label"));
@@ -159,6 +158,15 @@ public class TemplateManifestTests
         Assert.Contains(Errors(t => t.Copy.Projects.WatchVideo = "Watch {item}"), e => e.Contains("copy.projects.watchVideo") && e.Contains("no placeholders"));
         Assert.Empty(Errors(t => { t.Copy.Home.ViewWork = "Open {work}"; t.Copy.Projects.ReadItem = "Open the {item}"; t.Copy.Projects.WatchVideo = "Watch"; }));
         Assert.Empty(Errors(t => { t.Copy.Home.ViewWork = ""; t.Copy.Projects.ReadItem = ""; })); // the new wording keys are optional
+        Assert.Contains(Errors(t => t.Copy.Home.DownloadCv = "<b>CV</b>"), e => e.Contains("copy.home.downloadCv") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Home.LinkedIn = "<i>"), e => e.Contains("copy.home.linkedIn") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Home.ClientsHeading = "<i>"), e => e.Contains("copy.home.clientsHeading") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Projects.FilterAll = "<i>"), e => e.Contains("copy.projects.filterAll") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Home.DownloadCv = "Get {name}"), e => e.Contains("copy.home.downloadCv") && e.Contains("no placeholders"));
+        Assert.Contains(Errors(t => t.Copy.Home.LinkedIn = "{work}"), e => e.Contains("copy.home.linkedIn") && e.Contains("{work}"));
+        Assert.Contains(Errors(t => t.Copy.Home.ClientsHeading = "Clients of {item}"), e => e.Contains("copy.home.clientsHeading") && e.Contains("{item}"));
+        Assert.Contains(Errors(t => t.Copy.Projects.FilterAll = "All {work}"), e => e.Contains("copy.projects.filterAll") && e.Contains("{work}"));
+        Assert.Empty(Errors(t => { t.Copy.Home.DownloadCv = ""; t.Copy.Home.LinkedIn = ""; t.Copy.Home.ClientsHeading = ""; t.Copy.Projects.FilterAll = ""; }));
         Assert.Contains(Errors(t => t.Copy.Contact.Description = new string('x', 200)), e => e.Contains("copy.contact.description"));
         Assert.Contains(Errors(t => t.SkillGroups.Add("backend")), e => e.Contains("repeat"));
         Assert.Contains(Errors(t => t.Theme.ThemeColor = "navy"), e => e.Contains("themeColor"));
@@ -189,7 +197,6 @@ public class TemplateManifestTests
     {
         { "typo in a property name", n => n["archetyp"] = "showcase" },
         { "unknown archetype", n => n["archetype"] = "mosaic" },
-        { "archetype without a layout", n => n["archetype"] = "results" },
         { "unknown section", n => n["sections"]!.AsArray().Add(new JsonObject { ["key"] = "wiki", ["label"] = "wiki" }) },
         { "seo title too long", n => n["seo"]!["title"] = new string('x', 90) },
         { "missing copy string", n => n["copy"]!["home"]!.AsObject().Remove("workHeading") },

@@ -548,7 +548,7 @@ public class GalleryArchetypeTests
     [InlineData("Gallery")]
     [InlineData("gallery ")]
     [InlineData("unknown")]
-    [InlineData("results")]
+    [InlineData("Results")]
     public void FindingAPartial_RefusesAnArchetypeThatIsNotImplemented_WithoutAskingTheViewEngine(string archetype)
     {
         var views = new FakeViews(found: true);
