@@ -223,9 +223,9 @@
   "projects": [
     {
       "title": "Multi-year freight contract (sample)",
-      "slug": "tessera-freight-contract",
+      "slug": "multi-year-freight-contract",
       "role": "Account executive",
-      "org": "Tessera Freight",
+      "org": "Brenvick",
       "period": "2024",
       "summary": "A three-year logistics services contract won against two incumbents for a sample freight company. Sample deal (fictional).",
       "category": "Enterprise",
@@ -241,15 +241,15 @@
         "Business case",
         "Stakeholder mapping"
       ],
-      "heroImage": "/img/starter/sales-bd/tessera-freight-contract.svg",
+      "heroImage": "/img/starter/sales-bd/multi-year-freight-contract.svg",
       "heroImageAlt": "Abstract illustration of rising bars with a horizontal quota line across them.",
       "screenshots": [
         {
-          "url": "/img/starter/sales-bd/tessera-freight-contract-1.svg",
+          "url": "/img/starter/sales-bd/multi-year-freight-contract-1.svg",
           "caption": "Quota line against the staged ramp-up of the contract"
         },
         {
-          "url": "/img/starter/sales-bd/tessera-freight-contract-2.svg",
+          "url": "/img/starter/sales-bd/multi-year-freight-contract-2.svg",
           "caption": "Deal timeline from first call to signature"
         }
       ],
@@ -264,9 +264,9 @@
     },
     {
       "title": "Hospital group expansion (sample)",
-      "slug": "alderbrook-health-expansion",
+      "slug": "hospital-group-expansion",
       "role": "Senior account manager",
-      "org": "Alderbrook Health",
+      "org": "Odalmere",
       "period": "2023",
       "summary": "Growing a single-site pilot into a nine-site rollout for a sample health group. Sample deal (fictional).",
       "category": "Enterprise",
@@ -282,15 +282,15 @@
         "Executive sponsor",
         "Phased rollout"
       ],
-      "heroImage": "/img/starter/sales-bd/alderbrook-health-expansion.svg",
+      "heroImage": "/img/starter/sales-bd/hospital-group-expansion.svg",
       "heroImageAlt": "Abstract illustration of three circles connected in a row, like sites in a network.",
       "screenshots": [
         {
-          "url": "/img/starter/sales-bd/alderbrook-health-expansion-1.svg",
+          "url": "/img/starter/sales-bd/hospital-group-expansion-1.svg",
           "caption": "Growth in signed sites over fourteen months"
         },
         {
-          "url": "/img/starter/sales-bd/alderbrook-health-expansion-2.svg",
+          "url": "/img/starter/sales-bd/hospital-group-expansion-2.svg",
           "caption": "Rollout plan, site by site"
         }
       ],
@@ -305,9 +305,9 @@
     },
     {
       "title": "Channel partnership launch (sample)",
-      "slug": "copperline-energy-partnership",
+      "slug": "channel-partnership-launch",
       "role": "Business development manager",
-      "org": "Copperline Energy",
+      "org": "Cravelin",
       "period": "2023",
       "summary": "Launching a reseller partnership with a sample energy services firm. Sample deal (fictional).",
       "category": "Partnerships",
@@ -323,11 +323,11 @@
         "Margin model",
         "Joint pilot"
       ],
-      "heroImage": "/img/starter/sales-bd/copperline-energy-partnership.svg",
+      "heroImage": "/img/starter/sales-bd/channel-partnership-launch.svg",
       "heroImageAlt": "Abstract illustration of two large circles joined by a bar with a smaller circle between them.",
       "screenshots": [
         {
-          "url": "/img/starter/sales-bd/copperline-energy-partnership-1.svg",
+          "url": "/img/starter/sales-bd/channel-partnership-launch-1.svg",
           "caption": "Partner pipeline by source, by quarter"
         }
       ],
@@ -342,9 +342,9 @@
     },
     {
       "title": "Strategic account renewal (sample)",
-      "slug": "marlow-finch-renewal",
+      "slug": "strategic-account-renewal",
       "role": "Account manager",
-      "org": "Marlow & Finch",
+      "org": "Yostrel",
       "period": "2022",
       "summary": "Saving and growing a renewal at risk for a sample professional services client. Sample deal (fictional).",
       "category": "Mid-market",
@@ -359,12 +359,12 @@
         "Renewal plan",
         "Multi-threading"
       ],
-      "heroImage": "/img/starter/sales-bd/marlow-finch-renewal.svg",
+      "heroImage": "/img/starter/sales-bd/strategic-account-renewal.svg",
       "heroImageAlt": "Abstract illustration of a contract page with a headline bar and a small bar chart.",
       "links": [
         {
           "label": "Renewal summary",
-          "url": "https://example.org/marlow-finch-renewal"
+          "url": "https://example.org/strategic-account-renewal"
         }
       ],
       "featured": false,
@@ -372,9 +372,9 @@
     },
     {
       "title": "New market entry (sample)",
-      "slug": "quillon-retail-new-market",
+      "slug": "new-market-entry",
       "role": "Business development lead",
-      "org": "Quillon Retail",
+      "org": "Dunmarrow",
       "period": "2022",
       "summary": "Opening a new region by landing the first anchor customer for a sample retail group. Sample deal (fictional).",
       "category": "New markets",
@@ -389,7 +389,7 @@
         "Anchor account",
         "Reference selling"
       ],
-      "heroImage": "/img/starter/sales-bd/quillon-retail-new-market.svg",
+      "heroImage": "/img/starter/sales-bd/new-market-entry.svg",
       "heroImageAlt": "Abstract illustration of a grid of six cards, each with a coloured tag and lines of text.",
       "links": [
         {
@@ -402,9 +402,9 @@
     },
     {
       "title": "Customer referral programme (sample)",
-      "slug": "ostrava-foods-referral-programme",
+      "slug": "customer-referral-programme",
       "role": "Sales manager",
-      "org": "Ostrava Foods",
+      "org": "Pelquist",
       "period": "2021",
       "summary": "A customer referral programme for a sample food distributor. Sample deal (fictional).",
       "category": "Mid-market",
@@ -419,7 +419,7 @@
         "Customer success",
         "Intro notes"
       ],
-      "heroImage": "/img/starter/sales-bd/ostrava-foods-referral-programme.svg",
+      "heroImage": "/img/starter/sales-bd/customer-referral-programme.svg",
       "heroImageAlt": "Abstract illustration of a central circle connected by lines to five surrounding circles.",
       "links": [
         {
