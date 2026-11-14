@@ -485,7 +485,7 @@ public class ResultsArchetypeTests
 
         Assert.Equal(3, Regex.Matches(list, "<li ").Count); // the blank line is not a result
         Assert.Contains(">12345678901234567890 reads<", list);
-        Assert.Equal(1, Regex.Matches(list, "font-display text-4xl").Count); // only "7%" is set large
+        Assert.Single(Regex.Matches(list, "font-display text-4xl")); // only "7%" is set large
         Assert.DoesNotContain("<script>alert", detail);
         Assert.Contains("&lt;script&gt;alert(1)&lt;/script&gt; and &#x2B;5%", list);
         Assert.Contains("&lt;b&gt;bold&lt;/b&gt;", list);
@@ -696,7 +696,7 @@ public class ResultsArchetypeTests
         Assert.Contains("motion-reduce:group-hover:scale-100", detail);
         // One stretched link per card: one tab stop, no nested links.
         foreach (Match card in Regex.Matches(projects, "<article class=\"group relative.*?</article>", RegexOptions.Singleline))
-            Assert.Equal(1, Regex.Matches(card.Value, "<a href=\"/projects/").Count);
+            Assert.Single(Regex.Matches(card.Value, "<a href=\"/projects/"));
 
         var css = File.ReadAllText(Path.Combine(G.Wwwroot, "css", "app.css"));
         Assert.Contains(":focus-visible", css);
