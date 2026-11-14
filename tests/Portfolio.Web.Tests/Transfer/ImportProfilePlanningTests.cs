@@ -306,7 +306,7 @@ public class ImportProfilePlanningTests
         Assert.Equal(RowStatus.Unchanged, plan.Profile.Status);
         Assert.False(plan.Count(RowStatus.Refused) > 0, string.Join("\n", plan.Reports.SelectMany(r => r.Rows).Where(r => r.Status == RowStatus.Refused).Select(r => r.Name + ": " + ImportHarness.Why(r))));
         // The seeded gallery images name upload files that were never stored: the file's gallery cannot be kept, so the stored list stays and the row says so. Nothing changes.
-        Assert.Empty(plan.Reports.SelectMany(r => r.Rows).Where(r => r.Status is RowStatus.Create or RowStatus.Update));
+        Assert.DoesNotContain(plan.Reports.SelectMany(r => r.Rows), r => r.Status is RowStatus.Create or RowStatus.Update);
         var project = plan.Reports.SelectMany(r => r.Rows).Single(r => r.Warnings.Count > 0);
         Assert.Contains(project.Warnings, w => w.Contains("the stored list was kept as it is"));
     }

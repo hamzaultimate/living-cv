@@ -309,7 +309,7 @@ public class ImportValidationTests
             slug = "seed-project", screenshots = new object[] { new { url = "/img/projects/telemetry-1.svg", caption = "Bundled" }, new { url = "https://example.com/x.png", caption = "Web" } },
         })), "projects");
         Assert.Equal(RowStatus.Unchanged, update.Status);
-        Assert.Contains("the stored list was kept as it is", Assert.Single(update.Warnings.Where(w => w.Contains("stored list"))));
+        Assert.Contains("the stored list was kept as it is", Assert.Single(update.Warnings, w => w.Contains("stored list")));
 
         var allKept = ImportHarness.OneRow(await ImportHarness.PlanOkAsync(App, ImportHarness.Table("projects", new
         {
