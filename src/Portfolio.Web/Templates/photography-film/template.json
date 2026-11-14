@@ -160,7 +160,9 @@
       "experienceHeading": "Commissions and credits",
       "credentialsEyebrow": "Shown and awarded",
       "credentialsHeading": "Exhibitions & awards",
-      "skillsHeading": "Craft & kit"
+      "skillsHeading": "Craft & kit",
+      "viewWork": "See the series",
+      "allWork": "Every series →"
     },
     "projects": {
       "title": "Series",
@@ -181,7 +183,10 @@
       "screenshotsHeading": "The series",
       "imageAlt": "{title} photograph",
       "galleryLabel": "Pictures in the series",
-      "openImageLabel": "View picture larger"
+      "openImageLabel": "View picture larger",
+      "nextItem": "Next {item}",
+      "readItem": "Open the {item} →",
+      "watchVideo": "Watch the film ↗"
     },
     "experience": {
       "title": "Commissions & credits",

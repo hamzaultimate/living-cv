@@ -264,6 +264,14 @@
             },
             "skillsHeading": {
               "type": "string"
+            },
+            "viewWork": {
+              "type": "string",
+              "description": "Optional. Gallery home button to the work grid; {work} is the work section's label. Default: View {work}."
+            },
+            "allWork": {
+              "type": "string",
+              "description": "Optional. Gallery home link to the full work page; {work} is the work section's label. Default: All {work} →."
             }
           }
         },
@@ -348,6 +356,18 @@
             },
             "openImageLabel": {
               "type": "string"
+            },
+            "nextItem": {
+              "type": "string",
+              "description": "Optional. Gallery case-study 'next' link and its navigation's name; {item} is what one entry is called. Default: Next {item}."
+            },
+            "readItem": {
+              "type": "string",
+              "description": "Optional. Gallery work card cue; {item} is what one entry is called. Default: Read {item} →."
+            },
+            "watchVideo": {
+              "type": "string",
+              "description": "Optional. Label of a link to a video file when the video has no caption. Default: Watch the video ↗."
             }
           }
         },

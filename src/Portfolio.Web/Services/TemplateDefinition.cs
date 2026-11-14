@@ -291,6 +291,24 @@ public class HomeCopy
     public string CredentialsEyebrow { get; set; } = "";
     public string CredentialsHeading { get; set; } = "";
     public string SkillsHeading { get; set; } = "";
+
+    /// <summary>Optional wording of the gallery home page's button to the work grid; <c>{work}</c> is the work section's label. Empty uses "View {work}".</summary>
+    [OptionalCopy] public string ViewWork { get; set; } = "";
+
+    /// <summary>Optional wording of the gallery home page's link to the full work page; <c>{work}</c> is the work section's label. Empty uses "All {work} →".</summary>
+    [OptionalCopy] public string AllWork { get; set; } = "";
+
+    public string ViewWorkFor(string work) => CopyText.Fill(ViewWork, "View {work}", work, null);
+    public string AllWorkFor(string work) => CopyText.Fill(AllWork, "All {work} →", work, null);
+}
+
+/// <summary>Fills the optional wording patterns of the gallery layout: <c>{work}</c> is the work section's label and <c>{item}</c> what one entry is called, in lower case.</summary>
+public static class CopyText
+{
+    public static string Fill(string? pattern, string fallback, string? work, string? item) =>
+        (string.IsNullOrWhiteSpace(pattern) ? fallback : pattern)
+            .Replace("{work}", work ?? "", StringComparison.Ordinal)
+            .Replace("{item}", (item ?? "").ToLowerInvariant(), StringComparison.Ordinal);
 }
 
 public class ProjectsCopy
@@ -320,6 +338,19 @@ public class ProjectsCopy
 
     /// <summary>Accessible name of the button that opens an image full size; a caption is appended after a colon.</summary>
     public string OpenImageLabel { get; set; } = "";
+
+    /// <summary>Optional wording of the "next" link on a gallery case-study page (also its navigation's name); <c>{item}</c> is what one entry is called. Empty uses "Next {item}".</summary>
+    [OptionalCopy] public string NextItem { get; set; } = "";
+
+    /// <summary>Optional wording of the cue on a gallery work card; <c>{item}</c> is what one entry is called. Empty uses "Read {item} →".</summary>
+    [OptionalCopy] public string ReadItem { get; set; } = "";
+
+    /// <summary>Optional label of a link to a video file on a gallery page, used when the video has no caption. Empty uses "Watch the video ↗".</summary>
+    [OptionalCopy] public string WatchVideo { get; set; } = "";
+
+    public string NextItemFor(string item) => CopyText.Fill(NextItem, "Next {item}", null, item);
+    public string ReadItemFor(string item) => CopyText.Fill(ReadItem, "Read {item} →", null, item);
+    public string WatchVideoText() => string.IsNullOrWhiteSpace(WatchVideo) ? "Watch the video ↗" : WatchVideo;
 
     /// <summary><see cref="ImageAlt"/> for one project.</summary>
     public string AltFor(string title) => ImageAlt.Replace("{title}", title);

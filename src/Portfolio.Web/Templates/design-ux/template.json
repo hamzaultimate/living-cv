@@ -158,7 +158,9 @@
       "experienceHeading": "Where I've designed",
       "credentialsEyebrow": "Recognition",
       "credentialsHeading": "Awards & training",
-      "skillsHeading": "Skills & tools"
+      "skillsHeading": "Skills & tools",
+      "viewWork": "View work",
+      "allWork": "All work →"
     },
     "projects": {
       "title": "Work",
@@ -179,7 +181,10 @@
       "screenshotsHeading": "The work",
       "imageAlt": "{title} project image",
       "galleryLabel": "Project images",
-      "openImageLabel": "View larger image"
+      "openImageLabel": "View larger image",
+      "nextItem": "Next {item}",
+      "readItem": "Read {item} →",
+      "watchVideo": "Watch the walkthrough ↗"
     },
     "experience": {
       "title": "Experience",
