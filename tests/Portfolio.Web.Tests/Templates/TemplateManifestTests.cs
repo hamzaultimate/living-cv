@@ -51,11 +51,11 @@ public class TemplateManifestTests
     }
 
     [Fact]
-    public void ShipsExactlyTheSoftwareAndHealthcareTemplates()
+    public void ShipsExactlyTheShippedTemplates()
     {
-        Assert.Equal(new[] { "healthcare", "software" }, TemplateFolders().Select(Path.GetFileName).OrderBy(x => x).ToArray());
+        Assert.Equal(new[] { "design-ux", "healthcare", "software" }, TemplateFolders().Select(Path.GetFileName).OrderBy(x => x).ToArray());
         var catalog = new TemplateCatalog(TemplatesDir);
-        Assert.Equal(new[] { "software", "healthcare" }, catalog.All.Select(t => t.Key));
+        Assert.Equal(new[] { "software", "design-ux", "healthcare" }, catalog.All.Select(t => t.Key));
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public class TemplateManifestTests
         Assert.Contains(Errors(t => t.Key = "Software Two"), e => e.Contains("kebab-case"));
         Assert.Contains(Errors(t => t.Key = "other"), e => e.Contains("does not match folder"));
         Assert.Contains(Errors(t => t.Archetype = "mosaic"), e => e.Contains("unknown"));
-        Assert.Contains(Errors(t => t.Archetype = "gallery"), e => e.Contains("no layout yet"));
+        Assert.Contains(Errors(t => t.Archetype = "results"), e => e.Contains("no layout yet"));
         Assert.Contains(Errors(t => t.Sections.Add(new TemplateSection { Key = "wiki", Label = "wiki" })), e => e.Contains("'wiki'"));
         Assert.Contains(Errors(t => t.Sections.Add(new TemplateSection { Key = "about", Label = "about" })), e => e.Contains("listed twice"));
         Assert.Contains(Errors(t => t.Sections[0].Label = ""), e => e.Contains("needs a label"));
@@ -180,7 +180,7 @@ public class TemplateManifestTests
     {
         { "typo in a property name", n => n["archetyp"] = "showcase" },
         { "unknown archetype", n => n["archetype"] = "mosaic" },
-        { "archetype without a layout", n => n["archetype"] = "gallery" },
+        { "archetype without a layout", n => n["archetype"] = "results" },
         { "unknown section", n => n["sections"]!.AsArray().Add(new JsonObject { ["key"] = "wiki", ["label"] = "wiki" }) },
         { "seo title too long", n => n["seo"]!["title"] = new string('x', 90) },
         { "missing copy string", n => n["copy"]!["home"]!.AsObject().Remove("workHeading") },
