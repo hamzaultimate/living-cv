@@ -187,6 +187,7 @@ Implementation notes (decisions worth reviewing):
   with the previous values as fallbacks. Healthcare uses system fonts, so no font files were added.
 - **JSON-LD** follows sections: no page, no breadcrumb for a disabled section; `seo.credentialsJsonLd` adds `hasCredential` from the
   earned certifications only, never in-progress or planned ones (Healthcare on, software off to keep its output unchanged).
+- **Second review fixes.** `IsLinkable` uses the editors' own `ContentRules.IsLocalPath` / `IsHttpUrl`; the optional wording keys accept only their own tokens (validator) and are filled in one pass; a captioned video link reads "caption — Watch ..."; long unbroken words wrap in the category label, filter chips, tags and the role line (gallery utility classes only); the home grid no longer leaves empty columns; the starter wording "Mentored two second shooters"; the Design & UX and Photography & Film thumbnails were re-cropped to show the metrics and the work grid.
 - **Review fixes.** The preview page has no analytics script; the Space Grotesk and JetBrains Mono preloads are emitted only for the base
   look (no theme); project image wording (`imageAlt`, `galleryLabel`, `openImageLabel`) is manifest copy; Healthcare's dark colours also
   apply when the page has no `data-theme`; the catalog is resolved at startup so a broken default manifest fails the start; expanded
@@ -533,12 +534,73 @@ download with `nosniff`). Two exports of the same data are byte-identical apart 
 **What remains.** Phase 5 (more templates) and 6 (CV output per template) are untouched. The unique-index gap for names that the editors share (two simultaneous creates of one skill name) is still known; the import re-checks keys at confirm but has the same theoretical race.
 
 ### Phase 5: Remaining templates and archetypes
+**Status: step 1 done** (gallery, Design & UX, Photography & Film; pending independent review); steps 2 to 4 are not started. Notes are in "Phase 5 step 1" below.
+
 Build one archetype per step, then the presets that use it:
-1. Gallery layout, then Design & UX, Photography/Creative.
+1. Gallery layout, then Design & UX, Photography/Creative. **Done.**
 2. Results layout, then Marketing, Sales, Finance.
 3. Credentials layout (already proven by Healthcare), then Education.
 4. Data & Analytics and Product/Project Management on the Showcase layout.
 Each template needs a preset, theme, starter content, thumbnail, and a11y/contrast check.
+
+#### Phase 5 step 1: gallery archetype, Design & UX, Photography & Film (done, pending independent review)
+
+**Scope.** One new layout archetype and two presets on it. No migration, no change to the Software or Healthcare public output (the Software parity snapshots pass unedited, and a before / after render of
+13 Healthcare and Software routes was identical apart from asset fingerprints), no CSP change, no new script. `/cv`, `/cv.pdf` and `/og.png` keep the Software look (Phase 6).
+
+**How the archetype is wired.**
+- `Archetypes.Gallery` is in `Implemented`. Its layout lives in `Pages/Shared/Layouts/gallery/`: `_Home` (hero, headline metrics strip, featured work grid, skills strip, then the shared testimonials and contact blocks), `_Projects` (the full grid with the existing
+  category filter hooks), `_ProjectDetail` (the case-study page) and `_WorkCard` (the card both grids share).
+- **Dispatch.** `Projects.cshtml` and `ProjectDetail.cshtml` call `LayoutPartials.Find(archetype, "_Projects" | "_ProjectDetail")` through the view engine and render the partial when it exists, handing it a `ProjectsPage` / `ProjectPage` record
+  (the data plus the breadcrumb and project JSON-LD the page already built, so structured data is not duplicated). Other archetypes have no such partial and fall through to the old markup, which is why their output did not move. The archetype name is
+  checked against `Archetypes.Implemented` before it becomes part of a view name. There is no `if (templateKey == ...)` anywhere (a test greps the partials and the three pages).
+- `IndexModel` loads skills for the home page when `Archetypes.ShowsSkillsOnHome(archetype)` (credentials and gallery).
+
+**Design decisions.**
+- **Card.** A cover that fills the card (`4/3` by default), then category, title, a two-line summary, up to three tool chips and a "Read ... →" cue built from the section's item label. The title link is stretched over the whole card, so there is one link per card
+  and one tab stop. Headings are `h2` under the page title on the work page and `h3` under the home section heading. A card without a usable cover shows a plain tile with the title's initials (decorative, `aria-hidden`).
+- **Images and alt text with the existing columns.** Cover = `Project.HeroImage`, alt = `Project.HeroImageAlt`, falling back to `copy.projects.imageAlt` with the title. Case-study pictures = `Project.Screenshots`; the caption is the alt text and the visible figcaption. Pictures open in the existing lightbox
+  (`site.js`, unchanged). No new columns, no new tables.
+- **Case-study page.** Back link, title, one line of role · client · period, summary, a wide cover, the outcomes (`Project.Impact`) as accent-ruled lines, the brief and process (`Problem`, `Approach`) beside a tools / links / proof aside, the picture gallery (first picture wide, captions shown), and a "next" link to the following piece
+  (the first one wraps round). Every noun comes from the manifest (`copy.projects`, the projects section's label and item label).
+- **Video decision (confirmed, wording corrected after review).** The gallery never plays media: no `<video>`, no `<iframe>`, no third-party script. There is no poster field. Film is a link in `Project.Links` with a still as the cover, so the cover is the only poster. A cover or gallery picture whose address is a video file is not drawn as an image
+  or a player: on the card it shows the plain tile with a "Watch" link to the file, and the case-study page lists it among the links (its caption is the link text, else `copy.projects.watchVideo`), as a first-party link with `target="_blank" rel="noopener"`. An address that is not a site path or an http(s) address is never linked (`LayoutPartials.IsLinkable`).
+  The entry itself is untouched, so the other layouts still play it. Talks (which embed a YouTube player when an id is stored) are off by default in both gallery templates and their `youtubeId` editor field is hidden.
+- **Optional wording through data.** Five optional `copy` keys (`home.viewWork`, `home.allWork`, `projects.nextItem`, `projects.readItem`, `projects.watchVideo`) carry the layout's verbs, with `{work}` / `{item}` patterns and the previous English as the default, so neither Software nor Healthcare needed a change (schema, validator, drift test, both gallery manifests and a unique-word test were extended; a second test proves the defaults). "Download CV" and "LinkedIn" on the hero stay fixed words.
+- **Review fixes.** The home page has a headline-metrics strip (hidden when there are none); the next-entry link no longer loads every project with its collections (`GetProjectLinksAsync`); the detail cover's alt fallback matches the card's; a blank caption or blank cover description falls back to the template's alt text; the visible caption is hidden from screen readers because the lightbox button's name already carries it; headings, summaries and grid items wrap long words (`break-words`, `min-w-0`).
+- **Density and shape through data.** The gallery reads three optional theme variables with fallbacks, `--gallery-card-aspect` (`4/3`), `--gallery-card-min` (`17rem`, used as `repeat(auto-fit, minmax(min(100%, var), 1fr))`, so a few cards fill the row instead of leaving columns empty) and `--gallery-card-max` (`40rem`, the widest a card may be, so a single card is capped and centred). Design & UX sets none; Photography & Film sets `3/2` and `14rem` (a wider, denser grid) and leaves `--gallery-card-max` at its fallback.
+  The stylesheet-coverage test learned that Tailwind writes a comma inside an arbitrary value as a hex escape (`\2c `).
+- **Design & UX** (`design-ux`, profession "Product designer"). Work first; Talks off; item label "Case study"; skill groups Research, Interaction design, Visual design, Prototyping, Collaboration; a `guidance` note about client confidentiality (shown on the wizard card, review step and template page; it is not
+  `sensitive`, so editors do not repeat it). Quiet neutral theme with a warm coral accent (light and dark both above 4.5:1; accents coral, violet, teal, gold), system fonts.
+- **Photography & Film** (`photography-film`, profession "Photographer and filmmaker"). "Series" and "Entry" item labels; "commissions & credits", "craft & kit", "exhibitions & awards", "journal", "client notes", "enquiries"; Talks ("screenings & talks") off; skill groups Photography, Film, Post-production, Light and sound, Business;
+  a `guidance` note about releases, permissions and credit. Darker gallery theme (near-black, gold accent, serif display face, square corners; accents gold, sky, rose, sage).
+- **Starter content.** Invented personas ("Casey Marlowe", "Ivo Tennant"), five "(sample)" pieces each, fictional organisations, `example.org` links, a mix of featured and not, three with several pictures, one with a film link. Pictures are 11 generated SVG placeholders per template under `wwwroot/img/starter/<key>/` (about 23 KB and 44 KB in total); no downloads, no scripts, every cover
+  has `heroImageAlt` and every picture a caption. Rules are in the authoring guide.
+- Thumbnails are real screenshots (1200 x 800, dark mode, sample content) of the home page, taken with a headless browser from the rendered HTML.
+
+**Surfaces checked for the new templates (data only).** Wizard template step, thumbnail and sample-content publish; the admin template preview and switch (nothing deleted; switching to the template and back restores the Software pages exactly; the no-menu rule keeps a section that is on, and refuses when nothing would be);
+sections settings (order, hide, rename, switch on a section the template leaves off) with the menu, sitemap, structured data, routes and CV following; export from each template importing into the others and the other way round, and a hand-crafted file with section keys the target lacks leaving them inert; content editors, transfer and profile
+editor wording from the manifest; a blank wizard-finished site end to end.
+
+**Tests.** `GalleryArchetypeTests` and `GalleryTemplateFlowTests`, driven by `GalleryArchetypeTests.Keys` (add a key and every check runs for it); a unique-word manifest proves the labels and the empty-state, not-found and "next / read / all" wording are read from the manifest; accessibility (alt text, one `h1`, no skipped heading level, landmarks, skip link,
+link names, reduced motion); no inline script, handler or player in the partials, and public response headers identical to Software's. Existing lists were extended (`TemplateManifestTests`, `OnboardingFlowTests`, the stylesheet test). Full suite after the review fixes: 2229 passed, 0 failed.
+
+**Known gaps / owner decisions carried forward.**
+1. The gallery's hero buttons keep "Download CV" and "LinkedIn" as fixed words, as the credentials layout does; "View ..." and "All ... →" are built from the section label.
+2. Only the home, work and case-study pages differ by archetype. About, experience, skills, certifications, blog, talks and contact are shared pages in the template's wording, so a gallery site's About page is not image-led.
+3. A video file used as a cover or picture is shown as a link, not played, in the gallery layout (the other layouts still play it); there is no poster field, so the cover image is the poster.
+4. The grid uses auto-fit, so a few cards stretch to fill the row (capped by `--gallery-card-max`). An earlier auto-fill version left the right quarter empty for three cards.
+5. The sample `/cv.pdf` cannot be produced on a host without the fonts the "▸" impact glyph needs (the Phase 4a known gap); the tests check `/cv` for sample content and `/cv.pdf` on a blank site.
+6. A project with no cover shows the initials tile even if it has pictures in its gallery (the first picture is not promoted to a cover). The gallery home has no GitHub button (the profile's GitHub link is shown only by the showcase layout and the contact page).
+7. The starter pictures are abstract placeholders, not photographs; owners replace them in the project editor. SVGs are served as static files only; uploads stay raster (SVG upload is still refused).
+8. Not run against a real SQL Server (no migration was added); no browser pass on the new admin pages. Screenshots were checked for the Design & UX home and case-study pages (light) and the Photography & Film home (dark) only.
+9. Found in a real-browser pass and left alone because they are in the shared `site.js` that Software also uses (changing it would alter the Software page): the lightbox has no focus trap (Tab leaves the dialog; Escape and returning focus work), and the mobile menu ignores Escape. The lightbox caption can clip at 1280 x 900.
+10. The Person JSON-LD on the home page carries `"knowsAbout":[]` when the profile has no topics. This is the shared `Index.cshtml` markup for every template, not gallery code: wizard-published sites of any template have no topics (sample content brings rows only, never profile text) while the Software demo takes its topics from the `Site` config.
+11. Video items cannot be created in the admin: the editors only upload images (cover and gallery pictures), so a video file as a cover or picture comes from an imported file or older content; film links are added in the links field.
+12. Carried from earlier phases and unchanged: no shipped template marks a section required; the CV ATS badge is still the committed demo report; per-template CV output is Phase 6.
+
+**What remains in Phase 5.** Step 2 Results layout (Marketing, Sales, Finance); step 3 Education on the existing Credentials layout (a preset only, plus tests added to the Credentials checks); step 4 Data & Analytics and Product / Project Management on the existing Showcase layout (presets only).
+The gallery work shows the pattern for the new Results archetype: partials plus the optional page overrides, `Archetypes.Implemented`, theme variables read with fallbacks, a keyed list in the tests, and a before / after render proving Software and Healthcare did not move.
 
 ### Phase 6: CV output per template
 - QuestPDF layout variants per archetype (section order and labels from the preset). HTML `/cv`

@@ -1,0 +1,249 @@
+{
+  "$schema": "../template.schema.json",
+  "key": "design-ux",
+  "name": "Design & UX",
+  "profession": "Product designer",
+  "description": "Image-first work grid and case-study pages for product, UX and visual designers.",
+  "archetype": "gallery",
+  "guidance": "Only publish work you are allowed to show. Check your client and employer agreements, blur or replace confidential screens and data, and ask permission before naming a client or showing unreleased work.",
+  "theme": {
+    "default": "design-ux",
+    "themeColor": "#111113",
+    "accents": [
+      { "key": "coral", "label": "Coral", "dark": { "accent": "#ff8a65", "strong": "#ffb096" }, "light": { "accent": "#be3f0a", "strong": "#92320e" } },
+      { "key": "violet", "label": "Violet", "dark": { "accent": "#b79cff", "strong": "#d0bfff" }, "light": { "accent": "#6d28d9", "strong": "#5b21b6" } },
+      { "key": "teal", "label": "Teal", "dark": { "accent": "#2dd4bf", "strong": "#5eead4" }, "light": { "accent": "#0f766e", "strong": "#115e59" } },
+      { "key": "gold", "label": "Gold", "dark": { "accent": "#fbbf24", "strong": "#fcd34d" }, "light": { "accent": "#a84a09", "strong": "#92400e" } }
+    ]
+  },
+  "heroSuggestions": {
+    "title": "Product Designer",
+    "summary": "Product designer who turns complex problems into clear, usable interfaces, working across research, interaction design and prototyping with engineers and product teams."
+  },
+  "sections": [
+    { "key": "projects", "label": "work", "itemLabel": "Case study" },
+    { "key": "about", "label": "about" },
+    { "key": "experience", "label": "experience" },
+    { "key": "skills", "label": "skills & tools", "shortLabel": "tools" },
+    { "key": "certifications", "label": "awards & training", "shortLabel": "awards" },
+    { "key": "blog", "label": "writing", "itemLabel": "Article" },
+    { "key": "talks", "label": "talks", "enabled": false },
+    { "key": "testimonials", "label": "kind words" },
+    { "key": "contact", "label": "contact" }
+  ],
+  "skillGroups": ["Research", "Interaction design", "Visual design", "Prototyping", "Collaboration"],
+  "seo": {
+    "title": "{name} — {title}",
+    "description": "{name}, {title}. Selected case studies, the process behind them and how to get in touch.",
+    "aboutDescription": "About {name}, {title}: background, approach and the teams and products worked on."
+  },
+  "editor": {
+    "experience": {
+      "itemLabel": "Role",
+      "fields": {
+        "company": { "label": "Studio or company" },
+        "title": { "label": "Role" },
+        "summary": { "hint": "What you were responsible for and what changed because of your work." },
+        "highlights": { "label": "Key contributions", "hint": "One per line, up to 12." },
+        "tech": { "label": "Tools and methods" }
+      }
+    },
+    "skills": {
+      "itemLabel": "Skill or tool",
+      "fields": {
+        "name": { "label": "Skill or tool" }
+      }
+    },
+    "projects": {
+      "fields": {
+        "title": { "hint": "Name the project, for example the product and the part you redesigned." },
+        "role": { "hint": "Your part, for example Lead designer." },
+        "org": { "label": "Client or team", "hint": "Only name a client you have permission to name." },
+        "problem": { "label": "The brief", "hint": "What needed solving and for whom. Plain text." },
+        "approach": { "label": "Process", "hint": "What you did and why: research, ideas, testing. Plain text." },
+        "impact": { "label": "Outcomes", "hint": "One outcome per line, up to 8. Use figures you can stand behind." },
+        "tech": { "label": "Tools and methods" },
+        "heroImage": { "label": "Cover image", "hint": "Shown on the work grid and at the top of the case study. JPEG, PNG or WebP. Cropped to a 4:3 card." },
+        "screenshots": { "label": "Case-study images", "hint": "Add pictures one at a time on the Images page. Each needs a description for people who cannot see it." },
+        "links": { "label": "Links", "hint": "Where to see more, such as a prototype or a film. Videos are linked, never embedded." },
+        "category": { "hint": "A discipline such as Product design or Research. Used by the filter on the work page." }
+      }
+    },
+    "certifications": {
+      "itemLabel": "Award or course",
+      "fields": {
+        "name": { "label": "Award, course or certification" },
+        "issuer": { "label": "Awarded or taught by" },
+        "credentialUrl": { "label": "Link to the award or course" }
+      }
+    },
+    "talks": {
+      "itemLabel": "Talk",
+      "fields": {
+        "event": { "label": "Event or conference" },
+        "typeVideo": { "label": "Recording" },
+        "typeTalk": { "label": "Live talk" },
+        "url": { "label": "Link to the recording or slides", "hint": "http or https. Recordings are linked, not embedded." },
+        "youtubeId": { "hidden": true }
+      }
+    },
+    "testimonials": {
+      "itemLabel": "Kind word",
+      "fields": {
+        "quote": { "label": "What they said", "hint": "Plain text. Only with the person's permission." },
+        "author": { "label": "Who said it" },
+        "authorTitle": { "label": "Their role and company" }
+      }
+    },
+    "blog": {
+      "itemLabel": "Article",
+      "fields": {
+        "title": { "label": "Article title" },
+        "body": { "label": "Article text", "hint": "Markdown. Raw HTML is shown as text, not run." },
+        "cover": { "hint": "JPEG, PNG or WebP. Shown at the top of the article and when it is shared." }
+      }
+    },
+    "hero": {
+      "fields": {
+        "heading": { "label": "Home page introduction", "hint": "The first thing visitors read, above your selected work. Plain text. Changes apply as soon as you save." },
+        "eyebrow": { "label": "Role line", "hint": "For example your discipline and focus. Plain text." },
+        "lede": { "label": "Introduction" }
+      }
+    },
+    "metrics": {
+      "itemLabel": "Figure",
+      "fields": {
+        "heading": { "label": "Key figures", "hint": "Short facts such as years of practice or products shipped. Only publish figures you can stand behind. Changes apply as soon as you save." },
+        "label": { "label": "What it measures" }
+      }
+    },
+    "sections": {
+      "itemLabel": "Page",
+      "fields": {
+        "heading": { "label": "Pages of your site", "hint": "Choose which pages the site has, what the menu calls them and in which order. Hiding a page never deletes it. Changes apply as soon as you save." },
+        "label": { "label": "Menu name" }
+      }
+    },
+    "about": {
+      "itemLabel": "Principle",
+      "fields": {
+        "heading": { "label": "About you", "hint": "Your story, how you work and what you care about. Changes apply as soon as you save." },
+        "valueProps": { "label": "Principles", "hint": "Short statements about how you work, shown above the text." },
+        "currentlyNote": { "label": "Currently" },
+        "focus": { "label": "Areas of focus", "hint": "One per line." }
+      }
+    },
+    "transfer": {
+      "itemLabel": "Entry",
+      "fields": {
+        "heading": { "label": "Back up and restore your portfolio", "hint": "Keep your portfolio in one file, or restore one. You see what would change first, and nothing is ever removed." },
+        "exportHeading": { "label": "Save a copy", "hint": "One file with your details and every entry, including unpublished ones. Pictures you uploaded are listed, not included." },
+        "importHeading": { "label": "Restore from a file", "hint": "Each entry in the file is matched to one of yours by its name or title: a match is updated, anything else is added." },
+        "profile": { "label": "Details" }
+      }
+    }
+  },
+  "starter": { "file": "starter.json" },
+  "copy": {
+    "layout": { "footerNote": "Product and visual design portfolio." },
+    "home": {
+      "workEyebrow": "Selected work",
+      "workHeading": "Recent case studies",
+      "workEmptyTitle": "Case studies coming soon",
+      "workEmptyBody": "Add the projects you are proudest of. Lead with a strong cover image, then tell the story behind it.",
+      "testimonialsEyebrow": "Kind words",
+      "testimonialsHeading": "What collaborators say",
+      "contactHeading": "Have a product to shape? Let's talk.",
+      "experienceEyebrow": "Experience",
+      "experienceHeading": "Where I've designed",
+      "credentialsEyebrow": "Recognition",
+      "credentialsHeading": "Awards & training",
+      "skillsHeading": "Skills & tools",
+      "viewWork": "View work",
+      "allWork": "All work →"
+    },
+    "projects": {
+      "title": "Work",
+      "description": "Selected case studies: the brief, the process and what changed, with the images to show it.",
+      "eyebrow": "Selected work",
+      "heading": "Case studies",
+      "lead": "Selected projects: the brief, how I approached it and what changed.",
+      "emptyTitle": "No case studies yet",
+      "emptyBody": "Add your first case study with a cover image and a few pictures of the work.",
+      "filterLabel": "Filter work by discipline",
+      "featuredBadge": "featured",
+      "problemHeading": "The brief",
+      "approachHeading": "Process",
+      "noWriteup": "The full story behind this project is on the way.",
+      "stackHeading": "Tools & methods",
+      "linksHeading": "See more",
+      "proofHeading": "Recognition",
+      "screenshotsHeading": "The work",
+      "imageAlt": "{title} project image",
+      "galleryLabel": "Project images",
+      "openImageLabel": "View larger image",
+      "nextItem": "Next {item}",
+      "readItem": "Read {item} →",
+      "watchVideo": "Watch the walkthrough ↗"
+    },
+    "experience": {
+      "title": "Experience",
+      "description": "{name}'s design experience: studios, products and teams, most recent first.",
+      "eyebrow": "Experience",
+      "heading": "Where I've designed",
+      "lead": "Most recent first: the teams I have joined, what I owned and what we shipped.",
+      "empty": "No roles have been added yet."
+    },
+    "skills": {
+      "title": "Skills & tools",
+      "description": "Design skills and tools grouped by area: research, interaction, visual design, prototyping and collaboration.",
+      "eyebrow": "Skills & tools",
+      "heading": "How I work",
+      "lead": "Grouped by area: the methods and tools I reach for.",
+      "empty": "No skills have been added yet."
+    },
+    "certifications": {
+      "title": "Awards & training",
+      "description": "Awards, courses and certifications: earned, in progress and planned.",
+      "eyebrow": "Recognition",
+      "heading": "Awards, courses & certifications",
+      "lead": "Recognition received and the learning that keeps the craft sharp.",
+      "emptyTitle": "Nothing listed yet",
+      "emptyBody": "Add awards, courses or certifications you would like to show.",
+      "filterLabel": "Filter by awarding body",
+      "statusEarned": "Received",
+      "statusInProgress": "Studying",
+      "statusPlanned": "Next up",
+      "viewCertificate": "View certificate",
+      "viewCredential": "View details →"
+    },
+    "blog": {
+      "title": "Writing",
+      "description": "Articles on design process, research and craft.",
+      "eyebrow": "Writing",
+      "heading": "Notes on the craft",
+      "lead": "Thoughts on process, research and the details that make interfaces feel right.",
+      "empty": "Articles coming soon."
+    },
+    "talks": {
+      "title": "Talks",
+      "description": "Talks, workshops and recordings.",
+      "eyebrow": "Talks",
+      "heading": "Talks & workshops",
+      "empty": "No talks listed yet. Check back soon.",
+      "watch": "Watch the recording →"
+    },
+    "contact": {
+      "description": "Contact {name}: email, phone or LinkedIn.",
+      "heading": "Have a product to shape? Let's talk.",
+      "lead": "The best ways to reach me about projects, collaborations or full-time roles."
+    },
+    "cv": {
+      "description": "Curriculum vitae — {name}, {title}.",
+      "experienceHeading": "Experience",
+      "skillsHeading": "Skills & tools",
+      "projectsHeading": "Selected case studies",
+      "certificationsHeading": "Awards & training"
+    }
+  }
+}

@@ -69,7 +69,7 @@ Publish**: the draft is stored apart from the live profile, and the public pages
 showing the placeholder site meanwhile.
 
 1. **Template.** Cards grouped by profession show a thumbnail, the pages the template has, what a piece of work is
-   called, whether sample content is available and any guidance (Healthcare reminds you never to publish patient data).
+   called, whether sample content is available and any guidance (Healthcare reminds you never to publish patient data; Design & UX and Photography & Film remind you to publish only work you have the right to show).
 2. **Basics.** Name, professional title, email, location (optional) and a short summary. Title and summary start
    from the template's suggestion; they are published as written, so edit them.
 3. **Photo.** Optional. The photo goes through the same checks as the Photo page (JPEG, PNG or WebP, re-encoded,
@@ -365,12 +365,26 @@ These values are the defaults for the site profile. With a database, they are co
 
 ### Template
 
-The wizard's first step picks the template; to change it later without running the wizard, go to `/admin/template`, where you pick the template that suits your profession: **Software & IT** or **Healthcare**.
+The wizard's first step picks the template; to change it later without running the wizard, go to `/admin/template`, where you pick the template that suits your profession: **Software & IT**, **Healthcare**, **Design & UX** or **Photography & Film**.
 Choose a card, press Preview, and the public site is shown inside the page in that template's layout, wording and
 colours, with tabs for each page and a mobile width. Nothing is saved until you press "Use ...". Switching never
 deletes content: sections the new template does not use (for example Blog posts under Healthcare) are hidden from the
 navigation, sitemap and CV, their pages answer 404, and everything returns if you switch back. The page shows what
 stays hidden but kept. Healthcare shows a reminder never to publish patient-identifiable information.
+
+**Design & UX and Photography & Film (the gallery layout).** These two templates lead with pictures. The home page has a short introduction and a grid of
+your featured work: each card is a large cover picture with the title, a one-line summary and a few tags underneath, and the whole card opens that piece. The
+work page shows every piece in the same grid, with filter chips when you have used more than one category. Each piece opens as a case-study page: a wide cover,
+your outcomes, the brief and process, the tools and links, then your pictures, which open in a viewer you can page through. A piece with no cover picture gets a
+plain tile with its initials, so nothing looks broken while you are still adding images. Design & UX calls a piece a "Case study" and uses a quiet neutral
+look with a warm accent; Photography & Film calls it a "Series" and uses a darker gallery look, square corners and a denser grid of wider cards. Both can start
+with fictional sample content (clearly marked "sample") so you can see the layout before you add your own work. The pictures that come with the samples
+are simple generated placeholders; replace them in the project editor.
+
+**Video is a link, not a player.** The gallery layout never embeds video and never loads another site's player or script. To show a film, add a link in the
+piece's links ("Watch the film") and use a still from the film as the cover picture: visitors see the still and follow the link. There is no separate poster setting; the cover picture is the still. If you
+use a video file itself as the cover or as a gallery picture, the layout does not play it: the card shows a plain tile with a "Watch" link to the file, and the case-study page lists the file as a link (the picture's caption, then "Watch ..." as the link text). The project editor only uploads pictures, so such a link comes from an imported file or older content; for a film you add yourself, use the links field.
+The template's YouTube field is hidden. Nothing you entered is removed either way.
 
 Previews only work while you are signed in as the owner; visitors and search engines never see them. The preview
 address is `/?preview=<template key>` and is marked noindex.
@@ -403,7 +417,9 @@ The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed
 
 ### Images
 
-Easiest: upload your photo at `/admin/photo` (see above). Alternatively add images under [src/Portfolio.Web/wwwroot/img](../src/Portfolio.Web/wwwroot/img) and point the `Site:PhotoUrl` setting to them. With no photo the home page shows a monogram of your initials.
+For work pictures, use the project editor (`/admin/content/projects`): a cover picture on the project form and further pictures one at a time on its Images page. Every picture you upload needs a description, which becomes its alt text for people who cannot see it. Pictures are re-encoded on upload, so very large originals are reduced to 1600 pixels on the long side.
+
+Easiest for your own photo: upload it at `/admin/photo` (see above). Alternatively add images under [src/Portfolio.Web/wwwroot/img](../src/Portfolio.Web/wwwroot/img) and point the `Site:PhotoUrl` setting to them. With no photo the home page shows a monogram of your initials.
 
 ### SEO and analytics
 

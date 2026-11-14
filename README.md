@@ -42,9 +42,12 @@ testable the moment you run it. Swap in your own details to make it yours.
   (in your template's wording, refusing a stale tab instead of overwriting it), a sections page (`/admin/sections`) to show, hide, rename and reorder
   the sections your template has, and photo upload (re-encoded, metadata stripped,
   stored outside `wwwroot`). See [docs/new-user-guide.md](docs/new-user-guide.md#3-claim-the-site-and-use-the-admin)
-- **Profession templates** with a live preview switcher at `/admin/template`. Two ship today:
-  **Software & IT** (case-study showcase, the original look) and **Healthcare** (credentials-first
-  layout, calm theme, guidance against publishing patient data, fictional starter content). A template
+- **Profession templates** with a live preview switcher at `/admin/template`. Four ship today:
+  **Software & IT** (case-study showcase, the original look), **Healthcare** (credentials-first
+  layout, calm theme, guidance against publishing patient data, fictional starter content),
+  **Design & UX** and **Photography & Film** (an image-first gallery layout: a work grid of large cover pictures and a
+  case-study page per piece, each with its own theme and fictional starter content; video is a link, never an embedded
+  player, and the cover picture is what visitors see). A template
   sets the wording, section list and theme; switching hides sections the template does not use and
   never deletes content. See [docs/template-authoring-guide.md](docs/template-authoring-guide.md)
 - **Setup wizard** at `/admin/welcome`, opened right after `/setup` and re-runnable from the dashboard: pick a
@@ -148,7 +151,9 @@ src/Portfolio.Web/                ASP.NET Core Razor Pages app
   Configuration/SiteOptions.cs    Bound identity/content config ("Site" section)
   Pages/                          Razor Pages (Pages/Admin is the owner area, Pages/Admin/Welcome the setup wizard, Pages/Admin/Profile the hero / metrics / About editors, Pages/Admin/Sections the section settings, Pages/Setup.cshtml the one-time setup)
   Templates/<key>/template.json   Profession templates (manifest, optional starter.json, preview.png thumbnail); template.schema.json documents the shape
+  Pages/Shared/Layouts/<archetype>/  Layout partials per archetype (showcase, credentials, gallery)
   Styles/themes/<key>.css         Per-template theme variables, compiled into app.css
+  wwwroot/img/starter/<key>/      Bundled placeholder pictures used by a template's sample content
   Security/                       Owner account, cookie sign-in, setup key gate, reset-owner command
   Uploads/                        Image processing (SkiaSharp re-encode) and upload storage
   appsettings.json                Default site identity and public content

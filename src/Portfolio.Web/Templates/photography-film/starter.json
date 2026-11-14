@@ -1,0 +1,218 @@
+// Fictional sample content for the Photography & Film template. Every person, client, publication, venue and award below is invented.
+// The pictures are simple generated placeholders bundled under wwwroot/img/starter/photography-film. Nothing here describes a real person or client.
+{
+  "fictional": true,
+  "profile": {
+    "ownerName": "Ivo Tennant",
+    "brandName": "Ivo",
+    "role": "Photographer and Filmmaker · Documentary and editorial (sample profile)",
+    "jobTitle": "Photographer and Filmmaker",
+    "summary": "Sample profile (fictional). Photographer and filmmaker with nine years of documentary and editorial work, making quiet, human stories on location with small crews.",
+    "knowsAbout": ["Documentary photography", "Short documentary film", "Editorial portraits", "Landscape photography", "Colour grading", "Location sound"],
+    "hero": {
+      "eyebrow": "Photographer and Filmmaker · Documentary and editorial",
+      "headline": "Quiet, human stories,",
+      "headlineAccent": "told in light and time.",
+      "lede": "Sample profile (fictional). Nine years of documentary and editorial work: patient pictures, short films and the occasional long walk to get them."
+    },
+    "metrics": [
+      { "value": "9", "unit": "years", "label": "behind the camera" },
+      { "value": "14", "unit": "", "label": "series completed" },
+      { "value": "5", "unit": "", "label": "short films screened" },
+      { "value": "3", "unit": "", "label": "group exhibitions" }
+    ],
+    "about": {
+      "headline": "Pictures that earn their silence.",
+      "paragraphs": [
+        "Sample profile (fictional). I am a photographer and filmmaker who likes slow subjects: working landscapes, markets that run at night and people who are busy being themselves.",
+        "I work alone or with a very small crew, and I stay long enough for people to forget the camera. Series usually take months; films take a little longer.",
+        "This page is sample content for the Photography & Film template. Replace it with your own story, and only show pictures you have the right to publish."
+      ],
+      "valueProps": [
+        { "title": "Time on location", "body": "Return visits and patience, so the pictures show a place as it really is." },
+        { "title": "Consent and care", "body": "Releases for the people in the frame and respect for the places I work in." },
+        { "title": "Honest light", "body": "Available light and a small kit wherever the story allows." },
+        { "title": "Finished with restraint", "body": "Grading and edits that serve the picture rather than announce themselves." }
+      ],
+      "currentlyNote": "Editing a short film about a river ferry and printing a new landscape series for a group show.",
+      "focus": ["Documentary photography", "Short film", "Editorial portraits", "Landscape"]
+    },
+    "email": "ivo.tennant@example.org",
+    "linkedIn": "https://www.linkedin.com/in/example-ivo-tennant/",
+    "templateKey": "photography-film"
+  },
+  "experiences": [
+    {
+      "company": "Example Picture Agency (fictional)",
+      "title": "Staff Photographer",
+      "start": "2021",
+      "end": null,
+      "current": true,
+      "summary": "Documentary and editorial assignments for sample magazines and charities, from pitch to final selects.",
+      "highlights": ["Shot twelve commissioned features", "Built the agency's colour and retouching guide", "Mentored two second shooters"],
+      "tech": ["Mirrorless stills", "Natural light", "Colour grading"],
+      "sortOrder": 1
+    },
+    {
+      "company": "Sample Film Collective (fictional)",
+      "title": "Cinematographer and Editor",
+      "start": "2018",
+      "end": "2021",
+      "current": false,
+      "summary": "Shot and cut short documentaries for a sample collective, from one-person shoots to four-day productions.",
+      "highlights": ["Shot three festival shorts", "Recorded location sound on small crews"],
+      "tech": ["Cinema camera", "Handheld rigs", "Offline edit"],
+      "sortOrder": 2
+    },
+    {
+      "company": "Example Wedding Studio (fictional)",
+      "title": "Second Photographer",
+      "start": "2016",
+      "end": "2018",
+      "current": false,
+      "summary": "Learned pace, light and people on a sample studio's weekend commissions before moving into documentary work.",
+      "highlights": ["Photographed more than sixty events"],
+      "tech": ["Flash", "Event coverage"],
+      "sortOrder": 3
+    }
+  ],
+  "skills": [
+    { "name": "Documentary photography", "group": "Photography", "sortOrder": 1 },
+    { "name": "Editorial portraits", "group": "Photography", "sortOrder": 2 },
+    { "name": "Landscape", "group": "Photography", "sortOrder": 3 },
+    { "name": "Cinematography", "group": "Film", "sortOrder": 4 },
+    { "name": "Short documentary direction", "group": "Film", "sortOrder": 5 },
+    { "name": "Offline editing", "group": "Film", "sortOrder": 6 },
+    { "name": "Colour grading", "group": "Post-production", "sortOrder": 7 },
+    { "name": "Retouching", "group": "Post-production", "sortOrder": 8 },
+    { "name": "Archiving and backup", "group": "Post-production", "sortOrder": 9 },
+    { "name": "Available-light shooting", "group": "Light and sound", "sortOrder": 10 },
+    { "name": "Location sound", "group": "Light and sound", "sortOrder": 11 },
+    { "name": "Licensing and releases", "group": "Business", "sortOrder": 12 },
+    { "name": "Print sales", "group": "Business", "sortOrder": 13 }
+  ],
+  "projects": [
+    {
+      "title": "Salt Flats at Dawn (sample)",
+      "slug": "salt-flats-dawn",
+      "role": "Photographer",
+      "org": "Self-initiated (fictional)",
+      "period": "2023",
+      "summary": "A landscape series made over twelve dawns on a sample salt plain. Sample series (fictional).",
+      "category": "Landscape",
+      "problem": "A place that looks empty is full of small changes, and most pictures of it flatten them into a single horizon.",
+      "approach": "Returned at first light for twelve mornings, kept one fixed lens and one fixed position, and let the weather decide each frame.",
+      "impact": ["Shown in a group exhibition of landscape work", "Printed as an edition of ten", "Selected for a regional photo prize"],
+      "tech": ["Medium format", "Fixed lens", "Tripod"],
+      "heroImage": "/img/starter/photography-film/salt-flats-dawn.svg",
+      "heroImageAlt": "Abstract illustration of a salt plain at dawn with a low sun over a flat horizon.",
+      "screenshots": [
+        { "url": "/img/starter/photography-film/salt-flats-dawn-1.svg", "caption": "Second morning: low sun and a pale horizon" },
+        { "url": "/img/starter/photography-film/salt-flats-dawn-2.svg", "caption": "Ninth morning: the sun climbs higher over the crust" }
+      ],
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "title": "Night Market (sample)",
+      "slug": "night-market",
+      "role": "Photographer",
+      "org": "Example Travel Magazine (fictional)",
+      "period": "2022",
+      "summary": "A street series on a sample market that only opens after dark. Sample series (fictional).",
+      "category": "Documentary",
+      "problem": "The market's character is its light, and ordinary exposures turned it into a row of identical stalls.",
+      "approach": "Shot with fast lenses and no flash, asked every stallholder before photographing them and went back to give prints to the people in them.",
+      "impact": ["Ran as a ten-page magazine feature", "Stallholders asked for prints for their stalls"],
+      "tech": ["Fast prime lenses", "No flash", "Prints for subjects"],
+      "heroImage": "/img/starter/photography-film/night-market.svg",
+      "heroImageAlt": "Abstract illustration of glowing market lights above dark silhouettes of people.",
+      "screenshots": [
+        { "url": "/img/starter/photography-film/night-market-1.svg", "caption": "Lanterns over the fruit stalls" },
+        { "url": "/img/starter/photography-film/night-market-2.svg", "caption": "Shoppers moving between the lanes" }
+      ],
+      "featured": true,
+      "sortOrder": 2
+    },
+    {
+      "title": "The Last Ferry (sample)",
+      "slug": "the-last-ferry",
+      "role": "Director and cinematographer",
+      "org": "Sample Film Collective (fictional)",
+      "period": "2024",
+      "summary": "A twelve-minute documentary about the final crossing of a sample river ferry. Sample film (fictional).",
+      "category": "Film",
+      "problem": "The ferry was closing after ninety years and the people who used it had no place to say goodbye.",
+      "approach": "Rode every crossing for a month, recorded sound on board and cut the film around the passengers' own words.",
+      "impact": ["Screened at two sample film festivals", "Shown on the ferry's final evening"],
+      "tech": ["Cinema camera", "Handheld", "Location sound"],
+      "heroImage": "/img/starter/photography-film/the-last-ferry.svg",
+      "heroImageAlt": "Abstract illustration of a small ferry crossing grey water under a pale sky.",
+      "screenshots": [
+        { "url": "/img/starter/photography-film/the-last-ferry-1.svg", "caption": "Still from the film: the ferry mid-crossing" },
+        { "url": "/img/starter/photography-film/the-last-ferry-2.svg", "caption": "Still from the film: the ferry nearing the far bank" }
+      ],
+      "links": [
+        { "label": "Watch the film", "url": "https://example.org/the-last-ferry" },
+        { "label": "Read the director's notes", "url": "https://example.org/the-last-ferry-notes" }
+      ],
+      "featured": true,
+      "sortOrder": 3
+    },
+    {
+      "title": "Studio Portraits (sample)",
+      "slug": "studio-portraits",
+      "role": "Photographer",
+      "org": "Example Arts Council (fictional)",
+      "period": "2021",
+      "summary": "Portraits of sample local artists, each lit with one window and one reflector. Sample series (fictional).",
+      "category": "Portrait",
+      "problem": "Artists are often photographed in their studios with their work, which says little about them.",
+      "approach": "Made each sitting a conversation, kept the lighting to a single soft source and let sitters choose the frame.",
+      "impact": ["Used for a sample arts festival programme"],
+      "tech": ["Single light", "Reflector"],
+      "heroImage": "/img/starter/photography-film/studio-portraits.svg",
+      "heroImageAlt": "Abstract illustration of a lit portrait of a seated figure against a dark background.",
+      "featured": false,
+      "sortOrder": 4
+    },
+    {
+      "title": "Harvest Weeks (sample)",
+      "slug": "harvest-weeks",
+      "role": "Photographer",
+      "org": "Example Grain Cooperative (fictional)",
+      "period": "2020",
+      "summary": "A commissioned editorial series on the harvest at a sample farming cooperative. Sample series (fictional).",
+      "category": "Editorial",
+      "problem": "The cooperative wanted pictures for its annual report that showed the work rather than the machinery.",
+      "approach": "Followed three families through the busiest weeks and made pictures between the jobs, not instead of them.",
+      "impact": ["Used across the annual report and website"],
+      "tech": ["Natural light", "Telephoto"],
+      "heroImage": "/img/starter/photography-film/harvest-weeks.svg",
+      "heroImageAlt": "Abstract illustration of rows of golden fields under a pale blue sky.",
+      "featured": false,
+      "sortOrder": 5
+    }
+  ],
+  "certifications": [
+    { "name": "Emerging Photographer Prize (sample)", "issuer": "Example Photo Awards", "status": "Earned", "date": "2023", "category": "Award", "sortOrder": 1 },
+    { "name": "Group exhibition: Thresholds (sample)", "issuer": "Example Gallery", "status": "Earned", "date": "2023", "category": "Exhibition", "sortOrder": 2 },
+    { "name": "Documentary film workshop (sample)", "issuer": "Example Film School", "status": "InProgress", "date": "2025", "category": "Course", "sortOrder": 3 }
+  ],
+  "testimonials": [
+    {
+      "quote": "Sample client note (fictional). Ivo was patient, quiet and thorough, and the pictures looked like the place felt.",
+      "author": "Sample Editor",
+      "authorTitle": "Picture Editor, Example Travel Magazine",
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "quote": "Sample client note (fictional). Easy to work with on location, and the film gave our community the goodbye it deserved.",
+      "author": "Sample Producer",
+      "authorTitle": "Producer, Sample Film Collective",
+      "featured": true,
+      "sortOrder": 2
+    }
+  ]
+}

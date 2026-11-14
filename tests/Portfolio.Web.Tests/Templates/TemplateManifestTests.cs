@@ -51,11 +51,11 @@ public class TemplateManifestTests
     }
 
     [Fact]
-    public void ShipsExactlyTheSoftwareAndHealthcareTemplates()
+    public void ShipsExactlyTheShippedTemplates()
     {
-        Assert.Equal(new[] { "healthcare", "software" }, TemplateFolders().Select(Path.GetFileName).OrderBy(x => x).ToArray());
+        Assert.Equal(new[] { "design-ux", "healthcare", "photography-film", "software" }, TemplateFolders().Select(Path.GetFileName).OrderBy(x => x).ToArray());
         var catalog = new TemplateCatalog(TemplatesDir);
-        Assert.Equal(new[] { "software", "healthcare" }, catalog.All.Select(t => t.Key));
+        Assert.Equal(new[] { "software", "design-ux", "healthcare", "photography-film" }, catalog.All.Select(t => t.Key));
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public class TemplateManifestTests
             {
                 var sw = (string?)prop.GetValue(group.GetValue(software.Copy));
                 var hc = (string?)prop.GetValue(group.GetValue(healthcare.Copy));
-                if (neutral.Contains(hc)) continue;
+                if (neutral.Contains(hc) || string.IsNullOrEmpty(hc)) continue; // optional wording is empty in both
                 Assert.True(sw != hc, $"copy.{group.Name}.{prop.Name} is identical in both templates: {hc}");
             }
     }
@@ -140,7 +140,7 @@ public class TemplateManifestTests
         Assert.Contains(Errors(t => t.Key = "Software Two"), e => e.Contains("kebab-case"));
         Assert.Contains(Errors(t => t.Key = "other"), e => e.Contains("does not match folder"));
         Assert.Contains(Errors(t => t.Archetype = "mosaic"), e => e.Contains("unknown"));
-        Assert.Contains(Errors(t => t.Archetype = "gallery"), e => e.Contains("no layout yet"));
+        Assert.Contains(Errors(t => t.Archetype = "results"), e => e.Contains("no layout yet"));
         Assert.Contains(Errors(t => t.Sections.Add(new TemplateSection { Key = "wiki", Label = "wiki" })), e => e.Contains("'wiki'"));
         Assert.Contains(Errors(t => t.Sections.Add(new TemplateSection { Key = "about", Label = "about" })), e => e.Contains("listed twice"));
         Assert.Contains(Errors(t => t.Sections[0].Label = ""), e => e.Contains("needs a label"));
@@ -150,6 +150,15 @@ public class TemplateManifestTests
         Assert.Contains(Errors(t => t.Seo.AboutDescription = ""), e => e.Contains("seo.aboutDescription"));
         Assert.Contains(Errors(t => t.Copy.Skills.Heading = ""), e => e.Contains("copy.skills.heading is required"));
         Assert.Contains(Errors(t => t.Copy.Home.WorkHeading = "<b>x</b>"), e => e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Home.ViewWork = "<b>x</b>"), e => e.Contains("copy.home.viewWork") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Projects.NextItem = "<i>"), e => e.Contains("copy.projects.nextItem") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Home.ViewWork = "View {item}"), e => e.Contains("copy.home.viewWork") && e.Contains("{item}"));
+        Assert.Contains(Errors(t => t.Copy.Home.AllWork = "{work} {typo}"), e => e.Contains("copy.home.allWork") && e.Contains("{typo}"));
+        Assert.Contains(Errors(t => t.Copy.Projects.NextItem = "Next {work}"), e => e.Contains("copy.projects.nextItem") && e.Contains("{work}"));
+        Assert.Contains(Errors(t => t.Copy.Projects.ReadItem = "Read {name}"), e => e.Contains("copy.projects.readItem") && e.Contains("{name}"));
+        Assert.Contains(Errors(t => t.Copy.Projects.WatchVideo = "Watch {item}"), e => e.Contains("copy.projects.watchVideo") && e.Contains("no placeholders"));
+        Assert.Empty(Errors(t => { t.Copy.Home.ViewWork = "Open {work}"; t.Copy.Projects.ReadItem = "Open the {item}"; t.Copy.Projects.WatchVideo = "Watch"; }));
+        Assert.Empty(Errors(t => { t.Copy.Home.ViewWork = ""; t.Copy.Projects.ReadItem = ""; })); // the new wording keys are optional
         Assert.Contains(Errors(t => t.Copy.Contact.Description = new string('x', 200)), e => e.Contains("copy.contact.description"));
         Assert.Contains(Errors(t => t.SkillGroups.Add("backend")), e => e.Contains("repeat"));
         Assert.Contains(Errors(t => t.Theme.ThemeColor = "navy"), e => e.Contains("themeColor"));
@@ -180,7 +189,7 @@ public class TemplateManifestTests
     {
         { "typo in a property name", n => n["archetyp"] = "showcase" },
         { "unknown archetype", n => n["archetype"] = "mosaic" },
-        { "archetype without a layout", n => n["archetype"] = "gallery" },
+        { "archetype without a layout", n => n["archetype"] = "results" },
         { "unknown section", n => n["sections"]!.AsArray().Add(new JsonObject { ["key"] = "wiki", ["label"] = "wiki" }) },
         { "seo title too long", n => n["seo"]!["title"] = new string('x', 90) },
         { "missing copy string", n => n["copy"]!["home"]!.AsObject().Remove("workHeading") },
