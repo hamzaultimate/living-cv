@@ -733,6 +733,32 @@ public class ResultsArchetypeTests
             Assert.DoesNotMatch(@"var\(--results-[a-z-]+\)", File.ReadAllText(file)); // never without a fallback
     }
 
+    private static double Lum(int r, int g, int b)
+    {
+        static double C(int v) { var s = v / 255.0; return s <= 0.03928 ? s / 12.92 : Math.Pow((s + 0.055) / 1.055, 2.4); }
+        return 0.2126 * C(r) + 0.7152 * C(g) + 0.0722 * C(b);
+    }
+
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public void EveryTextAndAccentToken_MeetsAtLeast4Point5To1_OnEverySurface_InLightAndDark(string key)
+    {
+        var theme = G.Definition(key).Theme.Default!;
+        var css = File.ReadAllText(Path.Combine(TemplateDirs.Web, "Styles", "themes", theme + ".css"));
+        foreach (var mode in new[] { "dark", "light" })
+        {
+            var block = Regex.Match(css, $@":root\[data-template=""{theme}""\]\[data-theme=""{mode}""\]\s*\{{([^}}]*)\}}").Groups[1].Value;
+            var tokens = Regex.Matches(block, @"--c-([a-z0-9-]+):\s*(\d+) (\d+) (\d+);")
+                .ToDictionary(m => m.Groups[1].Value, m => Lum(int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value), int.Parse(m.Groups[4].Value)));
+            Assert.Equal(8, tokens.Count);
+            double Ratio(string a, string b) { var (x, y) = (tokens[a], tokens[b]); return (Math.Max(x, y) + 0.05) / (Math.Min(x, y) + 0.05); }
+            foreach (var fg in new[] { "text", "muted", "accent", "accent-strong" })
+                foreach (var bg in new[] { "bg", "surface", "surface-2" })
+                    Assert.True(Ratio(fg, bg) >= 4.5, $"{key} {mode}: {fg} on {bg} is {Ratio(fg, bg):F2}:1");
+            Assert.True(Ratio("bg", "accent") >= 4.5, $"{key} {mode}: bg on accent is {Ratio("bg", "accent"):F2}:1"); // primary buttons
+        }
+    }
+
     [Theory]
     [MemberData(nameof(KeyData))]
     public async Task APublicResultsPage_HasTheSameSecurityHeadersAsSoftware_AndNoThirdPartyScriptOrFrame(string key)
