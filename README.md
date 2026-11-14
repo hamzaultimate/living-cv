@@ -46,8 +46,8 @@ testable the moment you run it. Swap in your own details to make it yours.
   **Software & IT** (case-study showcase, the original look), **Healthcare** (credentials-first
   layout, calm theme, guidance against publishing patient data, fictional starter content),
   **Design & UX** and **Photography & Film** (an image-first gallery layout: a work grid of large cover pictures and a
-  case-study page per piece, each with its own theme and fictional starter content; video is a link with a poster
-  picture, never an embedded player). A template
+  case-study page per piece, each with its own theme and fictional starter content; video is a link, never an embedded
+  player, and the cover picture is what visitors see). A template
   sets the wording, section list and theme; switching hides sections the template does not use and
   never deletes content. See [docs/template-authoring-guide.md](docs/template-authoring-guide.md)
 - **Setup wizard** at `/admin/welcome`, opened right after `/setup` and re-runnable from the dashboard: pick a

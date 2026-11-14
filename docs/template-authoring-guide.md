@@ -259,10 +259,16 @@ How the gallery archetype was added, as the worked example:
   hard-coded lists in `TemplateManifestTests` (shipped folders and catalog order) and the wizard card counts in `OnboardingFlowTests`. A new archetype should get a test file of the same shape and
   must prove the shared pages are unchanged for the other archetypes (the Software parity snapshots, and a before / after render of Healthcare).
 
+### Optional wording of the gallery layout
+
+Five optional `copy` keys (empty or absent uses the English default, which is built from the section and item labels, so a template that does not set them reads as before). Patterns take `{work}` (the work section's label) and `{item}` (what one entry is called, in lower case):
+`home.viewWork` (default "View {work}"), `home.allWork` ("All {work} →"), `projects.nextItem` ("Next {item}"; also the accessible name of the next-entry navigation), `projects.readItem` ("Read {item} →") and `projects.watchVideo` ("Watch the video ↗"). They are plain text like all copy.
+The gallery hero's "Download CV" and "LinkedIn" buttons stay fixed words, as in the credentials layout.
+
 ### Media and video in layouts
 
 A layout never embeds a third-party player or script. The gallery draws images only: a project cover or picture whose address is a video file is not rendered (a text tile stands in for the cover), and
-film is shown as a link in the entry's `links` with a still as its poster (the cover). Talks, which embed a YouTube player when a video id is stored, are off by default in the gallery templates and their `youtubeId` field is hidden.
+film is shown as a link in the entry's `links`, with a still as the cover. There is no poster field: the cover image is the only "poster". A video file used as a cover or picture is drawn as a plain first-party link (`target="_blank" rel="noopener"`, labelled by its caption, or by `copy.projects.watchVideo`) on the card and the case-study page, never as `<video>` or `<img>`; an address that is not a site path or an http(s) address is not linked at all (`LayoutPartials.IsLinkable`). Talks, which embed a YouTube player when a video id is stored, are off by default in the gallery templates and their `youtubeId` field is hidden.
 Every picture needs alt text: a cover uses the entry's `heroImageAlt`, then `copy.projects.imageAlt` with the title; a gallery picture uses its caption. A layout must also respect reduced motion (the hover zoom has `motion-reduce` variants).
 
 ### Bundled starter images

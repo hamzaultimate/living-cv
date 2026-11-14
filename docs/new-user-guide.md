@@ -382,8 +382,9 @@ with fictional sample content (clearly marked "sample") so you can see the layou
 are simple generated placeholders; replace them in the project editor.
 
 **Video is a link, not a player.** The gallery layout never embeds video and never loads another site's player or script. To show a film, add a link in the
-piece's links ("Watch the film") and use a still from the film as the cover picture: visitors see the still and follow the link. A video file used as a cover or
-gallery picture is not drawn (the card shows the plain tile instead), and the template's YouTube field is hidden. Your entry is kept either way.
+piece's links ("Watch the film") and use a still from the film as the cover picture: visitors see the still and follow the link. There is no separate poster setting; the cover picture is the still. If you
+use a video file itself as the cover or as a gallery picture, the layout does not play it: the card shows a plain tile with a "Watch" link to the file, and the case-study page lists the file as a link (using the picture's caption as the link text when it has one).
+The template's YouTube field is hidden. Nothing you entered is removed either way.
 
 Previews only work while you are signed in as the owner; visitors and search engines never see them. The preview
 address is `/?preview=<template key>` and is marked noindex.
