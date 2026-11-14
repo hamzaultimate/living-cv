@@ -252,7 +252,7 @@ How the gallery archetype was added, as the worked example:
   (`Archetypes.ShowsSkillsOnHome`), never by template key.
 - **Theme variables.** Besides the colour tokens, fonts and radii, a theme may set variables the layout reads with a fallback, so a template can change density or shape
   with data only. The gallery reads `--gallery-card-aspect` (the shape of a work card, fallback `4/3`) and `--gallery-card-min` (the narrowest a card may get, fallback `17rem`; a
-  smaller value fits more columns). Photography & Film sets `3/2` and `14rem`; Design & UX sets neither. Use a fallback for every new variable, keep the values free of class selectors (a test checks theme files),
+  smaller value fits more columns) and `--gallery-card-max` (the widest one card may be, fallback `40rem`; with auto-fit columns a row of few cards fills the width and a single card is capped and centred). Photography & Film sets `3/2` and `14rem`; Design & UX sets neither. Use a fallback for every new variable, keep the values free of class selectors (a test checks theme files),
   and note that an arbitrary Tailwind value with a comma (`minmax(a,b)`) is written by Tailwind as a hex escape, which the stylesheet test already accounts for.
 - **Tests to extend.** `GalleryArchetypeTests.Keys` lists every template on the archetype; adding a key runs the whole suite of checks for it (partials, starter, blank / sample / full rendering,
   wording read from the manifest, accessibility, headers) and `GalleryTemplateFlowTests` runs the admin paths (wizard, preview, switch, sections, export and import, a blank site end to end). Add the key to the
@@ -262,13 +262,14 @@ How the gallery archetype was added, as the worked example:
 ### Optional wording of the gallery layout
 
 Five optional `copy` keys (empty or absent uses the English default, which is built from the section and item labels, so a template that does not set them reads as before). Patterns take `{work}` (the work section's label) and `{item}` (what one entry is called, in lower case):
-`home.viewWork` (default "View {work}"), `home.allWork` ("All {work} →"), `projects.nextItem` ("Next {item}"; also the accessible name of the next-entry navigation), `projects.readItem` ("Read {item} →") and `projects.watchVideo` ("Watch the video ↗"). They are plain text like all copy.
+`home.viewWork` (default "View {work}"), `home.allWork` ("All {work} →"), `projects.nextItem` ("Next {item}"; also the accessible name of the next-entry navigation), `projects.readItem` ("Read {item} →") and `projects.watchVideo` ("Watch the video ↗"). They are plain text like all copy. Each key may use only the tokens listed for it (`watchVideo` takes none): the validator rejects any other `{...}`, so a token is never silently dropped. A pattern is filled in one pass, so a label that itself contains the text `{item}` is printed as written.
 The gallery hero's "Download CV" and "LinkedIn" buttons stay fixed words, as in the credentials layout.
 
 ### Media and video in layouts
 
 A layout never embeds a third-party player or script. The gallery draws images only: a project cover or picture whose address is a video file is not rendered (a text tile stands in for the cover), and
-film is shown as a link in the entry's `links`, with a still as the cover. There is no poster field: the cover image is the only "poster". A video file used as a cover or picture is drawn as a plain first-party link (`target="_blank" rel="noopener"`, labelled by its caption, or by `copy.projects.watchVideo`) on the card and the case-study page, never as `<video>` or `<img>`; an address that is not a site path or an http(s) address is not linked at all (`LayoutPartials.IsLinkable`). Talks, which embed a YouTube player when a video id is stored, are off by default in the gallery templates and their `youtubeId` field is hidden.
+film is shown as a link in the entry's `links`, with a still as the cover. There is no poster field: the cover image is the only "poster". A video file used as a cover or picture is drawn as a plain first-party link (`target="_blank" rel="noopener"`, labelled "caption — watchVideo wording" when it has a caption, else by `copy.projects.watchVideo`) on the card and the case-study page, never as `<video>` or `<img>`; an address that is not a site path or an http(s) address is not linked at all (`LayoutPartials.IsLinkable`). Talks, which embed a YouTube player when a video id is stored, are off by default in the gallery templates and their `youtubeId` field is hidden.
+Long unbroken words (a category, a tool name, a role line) must wrap: use `break-words` and `min-w-0` utilities in the layout partials, never a change to the shared `.tag` or `.filter-chip` rules, which Software and Healthcare use.
 Every picture needs alt text: a cover uses the entry's `heroImageAlt`, then `copy.projects.imageAlt` with the title; a gallery picture uses its caption. A layout must also respect reduced motion (the hover zoom has `motion-reduce` variants).
 
 ### Bundled starter images

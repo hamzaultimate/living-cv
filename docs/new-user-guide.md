@@ -383,7 +383,7 @@ are simple generated placeholders; replace them in the project editor.
 
 **Video is a link, not a player.** The gallery layout never embeds video and never loads another site's player or script. To show a film, add a link in the
 piece's links ("Watch the film") and use a still from the film as the cover picture: visitors see the still and follow the link. There is no separate poster setting; the cover picture is the still. If you
-use a video file itself as the cover or as a gallery picture, the layout does not play it: the card shows a plain tile with a "Watch" link to the file, and the case-study page lists the file as a link (using the picture's caption as the link text when it has one).
+use a video file itself as the cover or as a gallery picture, the layout does not play it: the card shows a plain tile with a "Watch" link to the file, and the case-study page lists the file as a link (the picture's caption, then "Watch ..." as the link text). The project editor only uploads pictures, so such a link comes from an imported file or older content; for a film you add yourself, use the links field.
 The template's YouTube field is hidden. Nothing you entered is removed either way.
 
 Previews only work while you are signed in as the owner; visitors and search engines never see them. The preview
