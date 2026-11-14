@@ -56,10 +56,11 @@
 
 @if (plan is not null)
 {
-    var created = plan.Count(RowStatus.Create);
-    var updated = plan.Count(RowStatus.Update);
-    var unchanged = plan.Count(RowStatus.Unchanged);
-    var refused = plan.Count(RowStatus.Refused);
+    // Rows only: the profile is a block of its own below and is counted there, the same way the result page counts it.
+    var created = plan.Reports.Sum(r => r.Count(RowStatus.Create));
+    var updated = plan.Reports.Sum(r => r.Count(RowStatus.Update));
+    var unchanged = plan.Reports.Sum(r => r.Count(RowStatus.Unchanged));
+    var refused = plan.Reports.Sum(r => r.Count(RowStatus.Refused));
     <section id="preview" class="adm-card" aria-labelledby="preview-heading">
         <h2 id="preview-heading" tabindex="-1" autofocus>Preview of @plan.FileName</h2>
         <p role="status">
@@ -80,7 +81,7 @@
                 <input type="hidden" name="Token" value="@plan.Token" />
                 <div class="adm-actions">
                     <button type="submit" class="adm-btn adm-btn-primary">@v.Label("confirmButton")</button>
-                    <button type="submit" class="adm-btn" asp-page-handler="Discard">@v.Label("discardButton")</button>
+                    <button type="submit" class="adm-btn" asp-page="/Admin/Transfer/Confirm" asp-page-handler="Discard">@v.Label("discardButton")</button>
                 </div>
             </form>
         }

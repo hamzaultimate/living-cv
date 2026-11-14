@@ -1,4 +1,6 @@
+using System.Net;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 using Portfolio.Web.Tests.Admin;
 using Portfolio.Web.Tests.Support;
 using Xunit;
@@ -34,6 +36,7 @@ public class TransferAccessibilityTests
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
+        await owner.GetAsync("/admin"); // takes the message the wizard leaves behind, which would otherwise be on this page
 
         var html = await owner.GetStringAsync(TransferFlow.Page);
 
@@ -134,5 +137,72 @@ public class TransferAccessibilityTests
         Assert.Contains(".adm-table thead { position: absolute", css);
         Assert.Contains(".adm-status-refused", css);
         Assert.DoesNotContain("/css/app.", preview); // the admin has its own stylesheet, not the public site's Tailwind build
+    }
+
+    // ---- every control does what it says: the real addresses are read from the rendered pages, never written into the test ----
+
+    private static List<string> Targets(string html) =>
+        Regex.Matches(html, @"<(?:form|button)\b[^>]*?\s(?:action|formaction)=""([^""]+)""").Select(m => WebUtility.HtmlDecode(m.Groups[1].Value)).Distinct().ToList();
+
+    private static async Task<HttpResponseMessage> PostToAsync(HttpClient client, string html, string target, string token) =>
+        await AdminApp.PostFormAsync(client, target, AdminApp.TokenPattern.Match(html) is { Success: true } m ? WebUtility.HtmlDecode(m.Groups[1].Value) : null,
+            new Dictionary<string, string> { ["Token"] = token });
+
+    [Fact]
+    public async Task DiscardOnAPreviewWithChanges_GoesWhereItSays_AndEndsThePreview_WithAnAnnouncedMessage()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        var preview = await (await TransferFlow.PreviewAsync(owner, ImportHarness.Table("skills", new { name = "Fresh", group = "G" }))).Content.ReadAsStringAsync();
+        var token = TransferFlow.TokenOf(preview)!;
+        var discard = Targets(preview).Single(t => t.Contains("handler=Discard", StringComparison.OrdinalIgnoreCase));
+        Assert.StartsWith("/admin/transfer/confirm", discard);
+
+        var response = await PostToAsync(owner, preview, discard, token);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/admin/transfer", response.Headers.Location!.OriginalString);
+        var page = await owner.GetStringAsync(TransferFlow.Page);
+        Assert.Matches(@"<div class=""adm-flash adm-flash-ok"" role=""status"" aria-live=""polite"" tabindex=""-1"" autofocus=""autofocus"">The preview was discarded\. Nothing was written\.</div>", page);
+        Assert.DoesNotContain("id=\"preview-heading\"", page);
+        Assert.Contains("so nothing was written", await (await TransferFlow.ConfirmAsync(owner, token)).Content.ReadAsStringAsync());
+        using var db = app.CreateDbContext();
+        Assert.Equal(0, await db.Skills.CountAsync());
+    }
+
+    [Fact]
+    public async Task EveryFormAndButtonOnTheTransferPages_PostsToARealAddress_AndEveryLinkOpens()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        await ContentFlow.SeedRowsAsync(app);
+        var form = await owner.GetStringAsync(TransferFlow.Page);
+
+        // The import form: its real action takes the file.
+        var importAction = Targets(form).Single(t => t.Contains("handler=Preview", StringComparison.OrdinalIgnoreCase));
+        async Task<string> PreviewPageAsync(string name) => await (await ContentFlow.PostMultipartAsync(owner, importAction, new Dictionary<string, string> { ["ApplyProfile"] = "false" },
+            ("Upload", TransferFlow.Utf8(ImportHarness.Table("skills", new { name, group = name == "Seeding" ? "Garden" : "G" })), "a.json", "application/json"), TransferFlow.Page)).Content.ReadAsStringAsync();
+
+        // A session holds one preview, so each is used before the next is made. The one with nothing to write offers only its discard, to the real address.
+        var samePage = await PreviewPageAsync("Seeding");
+        var sameToken = TransferFlow.TokenOf(samePage)!;
+        var sameTargets = Targets(samePage).Where(t => t.Contains("/confirm")).ToList();
+        Assert.Equal(["/admin/transfer/confirm?handler=Discard"], sameTargets);
+        Assert.Equal(HttpStatusCode.Redirect, (await PostToAsync(owner, samePage, sameTargets[0], sameToken)).StatusCode);
+
+        var changedPage = await PreviewPageAsync("Fresh");
+
+        // Every address on every screen opens or is a post that works: links are fetched, the forms of the previews are posted.
+        foreach (var html in new[] { form, changedPage, samePage })
+            foreach (var href in Regex.Matches(html, @"<a\b[^>]*\shref=""(/admin[^""]*)""").Select(m => WebUtility.HtmlDecode(m.Groups[1].Value)).Distinct())
+                Assert.True((await owner.GetAsync(href)).StatusCode < HttpStatusCode.BadRequest, $"link {href}");
+
+        // The preview with changes: its apply form and its discard button both work (apply last: it writes).
+        var token = TransferFlow.TokenOf(changedPage)!;
+        var confirmTargets = Targets(changedPage).Where(t => t.Contains("/confirm")).ToList();
+        var apply = confirmTargets.Single(t => !t.Contains("handler=", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(HttpStatusCode.OK, (await PostToAsync(owner, changedPage, apply, token)).StatusCode);
+        using var db = app.CreateDbContext();
+        Assert.Contains(await db.Skills.Select(x => x.Name).ToListAsync(), n => n == "Fresh");
     }
 }

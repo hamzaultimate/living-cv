@@ -41,6 +41,9 @@ public class IndexModel : AdminPageModel
 
     public EditorView View { get; private set; } = null!;
 
+    /// <summary>The message after a discard takes keyboard focus, so it is announced (a preview or a refusal has its own focus target).</summary>
+    public override void OnPageHandlerExecuting(Microsoft.AspNetCore.Mvc.Filters.PageHandlerExecutingContext context) => ViewData["FocusFlash"] = true;
+
     /// <summary>The file chosen on the form.</summary>
     [BindProperty]
     public IFormFile? Upload { get; set; }
