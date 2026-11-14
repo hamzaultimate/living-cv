@@ -43,7 +43,9 @@ A new profession picks an existing archetype. A new archetype is a larger change
 9. **Sensitive professions need guardrails.** Healthcare, legal, and similar presets must include
    a `guidance` note telling users not to publish patient or client data.
 10. **Starter content is fictional and clearly marked.** No real people, employers, or
-    credentials.
+    credentials. The convention: the persona and the profile summary say "fictional", titles carry
+    "(sample)", employers in experience carry "(fictional)", and client names (`org`) are coined plain
+    names without that suffix (see "Bundled starter images" below).
 
 ## 3. Manifest (`template.json`)
 
@@ -255,7 +257,7 @@ How the gallery archetype was added, as the worked example:
   smaller value fits more columns) and `--gallery-card-max` (the widest one card may be, fallback `40rem`; with auto-fit columns a row of few cards fills the width and a single card is capped and centred). Photography & Film sets `3/2` and `14rem`; Design & UX sets neither. Use a fallback for every new variable, keep the values free of class selectors (a test checks theme files),
   and note that an arbitrary Tailwind value with a comma (`minmax(a,b)`) is written by Tailwind as a hex escape, which the stylesheet test already accounts for.
 - **Tests to extend.** `GalleryArchetypeTests.Keys` lists every template on the archetype; adding a key runs the whole suite of checks for it (partials, starter, blank / sample / full rendering,
-  wording read from the manifest, accessibility, headers) and `GalleryTemplateFlowTests` runs the admin paths (wizard, preview, switch, sections, export and import, a blank site end to end). Add the key to the
+  wording read from the manifest, accessibility, headers) and `ArchetypeTemplateFlowTests` (shared with the results key list) runs the admin paths (wizard, preview, switch, sections, export and import, a blank site end to end). Add the key to the
   hard-coded lists in `TemplateManifestTests` (shipped folders and catalog order) and the wizard card counts in `OnboardingFlowTests`. A new archetype should get a test file of the same shape and
   must prove the shared pages are unchanged for the other archetypes (the Software parity snapshots, and a before / after render of Healthcare).
 
@@ -265,9 +267,24 @@ Five optional `copy` keys (empty or absent uses the English default, which is bu
 `home.viewWork` (default "View {work}"), `home.allWork` ("All {work} →"), `projects.nextItem` ("Next {item}"; also the accessible name of the next-entry navigation), `projects.readItem` ("Read {item} →") and `projects.watchVideo` ("Watch the video ↗"). They are plain text like all copy. Each key may use only the tokens listed for it (`watchVideo` takes none): the validator rejects any other `{...}`, so a token is never silently dropped. A pattern is filled in one pass, so a label that itself contains the text `{item}` is printed as written.
 The gallery hero's "Download CV" and "LinkedIn" buttons stay fixed words, as in the credentials layout.
 
+### The results layout
+
+`results` is for work judged by numbers (campaigns, writing, deals). The home page's hero ends in a large band of the profile's **Key figures** (the metrics editor's value, unit and label; hidden when there are none), then a strip of **client names**, then the featured work as result cards. No new column or table:
+- **Key figures** are `SiteProfile.Metrics`, set large in the band.
+- **Client names** are the distinct `Project.Org` values in work order, drawn as plain text wordmarks (never a picture or logo), loaded by `IndexModel` through `Archetypes.ShowsClientsOnHome`.
+- **Result lines** are `Project.Impact`. A line that starts with a short figure (`+38%`, `2.1M`, `$1,200`, `10x`) is split by `ImpactLine.Split` into the figure, set large, and the words after it; any other line is shown whole. A bare year ("2024 President's Club winner"), a list number ("1. Opened the region") and a figure with a space before its unit ("+38 % lift", "3.2 x contract value", "38 pts lift", "$2.4 M in ARR") are not treated as figures, and a figure longer than nine characters is shown as plain text. A line that merely starts with a number ("3000 users") is a figure; owners control the lead figure by how they word the line. The card shows the first non-blank line; the case-study page shows all of them as tiles above the cover.
+- Every project, testimonial and hero (eyebrow, headline, accent, introduction) field the manifest offers in an editor appears in the page's own content, and the key figures band shows every metric (a test writes a value into each and looks for it inside `<main>`, outside the structured data). The About fields are shown by the shared About page, which this layout does not change.
+- **Every verb comes from a copy key.** The results hero's buttons and the filter's "all" chip are not hardcoded: `home.downloadCv` ("Download CV"), `home.linkedIn` ("LinkedIn"), `home.clientsHeading` ("Worked with") and `projects.filterAll` ("All") are optional copy keys with those English defaults, plain text, no placeholders (the validator rejects any `{...}` in them, and the schema, the drift test and a unique-word test cover them). The layout also reads `home.viewWork`, `home.allWork`, `projects.nextItem`, `projects.readItem` and `projects.watchVideo` as the gallery does. A test greps the results partials for fixed button words, so a new UI verb in a results partial must be a new optional key (add it to `HomeCopy` / `ProjectsCopy` with `[OptionalCopy]`, a text helper with the default, `CopyText.AllowedTokens`, the schema, and the optional-copy tests).
+- **Theme variables, all with fallbacks:** `--results-card-aspect` (`16/10`), `--results-card-min` (`20rem`), `--results-card-max` (`40rem`) and `--results-band-min` (`11rem`, the narrowest a figure tile may get). Marketing & Content sets only `--results-band-min`; Sales & Business Development sets `3/2`, `18rem` and `10rem`. A theme file sets variables only.
+- **Contrast.** `ThemeStylesheetTests` checks every theme's text, muted, accent and accent-strong tokens against bg, surface and surface-2 (and bg on accent) at 4.5:1 in light and dark; `ResultsArchetypeTests` repeats the check by name for each results key.
+- **Starter content.** Client names (`org`) are coined single words (no address, industry word, "&" or company suffix), used only by "(sample)" entries; at least one result line starts with a figure and one with a word, so both shapes show in the sample.
+- **Adding a results template.** Add its key to `ResultsArchetypeTests.Keys` (every check, and the flow tests in `ArchetypeTemplateFlowTests`, then run for it), to the hard-coded lists in `TemplateManifestTests` and the wizard card counts in `OnboardingFlowTests`, and write a manifest, starter, theme, bundled pictures and a real screenshot thumbnail. The layout needs no change.
+
+The validator's "has no layout yet" check (an archetype in `Known` but not in `Implemented`) is kept as a safety net for the next archetype, but it has no test while `Implemented` equals `Known`; add one with the first archetype that ships in two steps.
+
 ### Media and video in layouts
 
-A layout never embeds a third-party player or script. The gallery draws images only: a project cover or picture whose address is a video file is not drawn as an image or a player (it appears as a plain link, see below; on a card the plain initials tile is only the placeholder where a cover image would be), and
+A layout never embeds a third-party player or script. The gallery and results layouts draw images only: a project cover or picture whose address is a video file is not drawn as an image or a player (it appears as a plain link, see below; on a card the plain initials tile is only the placeholder where a cover image would be), and
 film is shown as a link in the entry's `links`, with a still as the cover. There is no poster field: the cover image is the only "poster". A video file used as a cover or picture is drawn as a plain first-party link (`target="_blank" rel="noopener"`, labelled "caption — watchVideo wording" when it has a caption, else by `copy.projects.watchVideo`) on the card and the case-study page, never as `<video>` or `<img>`; an address that is not a site path or an http(s) address is not linked at all (`LayoutPartials.IsLinkable`). Talks, which embed a YouTube player when a video id is stored, are off by default in the gallery templates and their `youtubeId` field is hidden.
 Long unbroken words (a category, a tool name, a role line) must wrap: use `break-words` and `min-w-0` utilities in the layout partials, never a change to the shared `.tag` or `.filter-chip` rules, which Software and Healthcare use.
 Every picture needs alt text: a cover uses the entry's `heroImageAlt`, then `copy.projects.imageAlt` with the title; a gallery picture uses its caption. A layout must also respect reduced motion (the hover zoom has `motion-reduce` variants).
@@ -278,7 +295,7 @@ Starter content may bring pictures, which are ordinary static files, not uploads
 - Put them under `wwwroot/img/starter/<key>/` and refer to them by site-relative address (`/img/starter/<key>/<name>.svg`). Never point at another site; a test fails for any address outside `/img/`.
 - Generate them yourself or use work you own outright. Simple generated SVG or PNG placeholders are enough; keep each under about 60 KB, with no scripts and no text that needs a font. Do not download images, and do not include anyone's real photograph, logo or product.
 - Give every cover a `heroImageAlt` and every extra picture a caption (which becomes its alt text); a test checks both.
-- Titles carry "(sample)" and organisations "(fictional)", as in the Healthcare starter.
+- Titles carry "(sample)" and employers in experience "(fictional)", as in the Healthcare starter. Client names on work entries (`org`, which the results layout also shows as a strip of wordmarks) are coined single words with no industry word, place, "&" or company suffix (for example "Quillbarrow"), used only by "(sample)" entries; a test enforces that shape. No trademark search was possible, so owners replace them with their own clients, and an author should avoid anything that reads like an existing business.
 
 ## 6. Extension points (kept stable)
 

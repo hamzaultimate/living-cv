@@ -1,0 +1,459 @@
+{
+  "$schema": "../template.schema.json",
+  "key": "sales-bd",
+  "name": "Sales & Business Development",
+  "profession": "Sales and business development lead",
+  "description": "A results-first home page with quota and pipeline figures, closed deals and client names for sales, account and business development professionals.",
+  "archetype": "results",
+  "guidance": "Only publish figures and client names you are allowed to share. Check your employer and customer agreements, round or index confidential revenue and quota numbers, and ask permission before naming a client or a deal.",
+  "theme": {
+    "default": "sales-bd",
+    "themeColor": "#0a121e",
+    "accents": [
+      {
+        "key": "green",
+        "label": "Green",
+        "dark": {
+          "accent": "#34d399",
+          "strong": "#6ee7b7"
+        },
+        "light": {
+          "accent": "#047857",
+          "strong": "#065f46"
+        }
+      },
+      {
+        "key": "blue",
+        "label": "Blue",
+        "dark": {
+          "accent": "#60a5fa",
+          "strong": "#93c5fd"
+        },
+        "light": {
+          "accent": "#1d4ed8",
+          "strong": "#1e40af"
+        }
+      },
+      {
+        "key": "amber",
+        "label": "Amber",
+        "dark": {
+          "accent": "#fbbf24",
+          "strong": "#fcd34d"
+        },
+        "light": {
+          "accent": "#a84a09",
+          "strong": "#92400e"
+        }
+      },
+      {
+        "key": "violet",
+        "label": "Violet",
+        "dark": {
+          "accent": "#b79cff",
+          "strong": "#d0bfff"
+        },
+        "light": {
+          "accent": "#6d28d9",
+          "strong": "#5b21b6"
+        }
+      }
+    ]
+  },
+  "heroSuggestions": {
+    "title": "Sales and Business Development Lead",
+    "summary": "Sales and business development lead who builds pipeline and closes complex deals, consistently beating quota through careful discovery, clear proposals and long-term client relationships."
+  },
+  "sections": [
+    {
+      "key": "projects",
+      "label": "deals & results",
+      "shortLabel": "deals",
+      "itemLabel": "Deal"
+    },
+    {
+      "key": "about",
+      "label": "about"
+    },
+    {
+      "key": "experience",
+      "label": "experience"
+    },
+    {
+      "key": "skills",
+      "label": "skills & methods",
+      "shortLabel": "skills"
+    },
+    {
+      "key": "certifications",
+      "label": "training & awards",
+      "shortLabel": "training"
+    },
+    {
+      "key": "blog",
+      "label": "insights",
+      "itemLabel": "Insight"
+    },
+    {
+      "key": "talks",
+      "label": "talks",
+      "enabled": false
+    },
+    {
+      "key": "testimonials",
+      "label": "references"
+    },
+    {
+      "key": "contact",
+      "label": "contact"
+    }
+  ],
+  "skillGroups": [
+    "Prospecting",
+    "Discovery and closing",
+    "Account management",
+    "Pipeline and forecasting",
+    "Tools"
+  ],
+  "seo": {
+    "title": "{name} — {title}",
+    "description": "{name}, {title}. Quota results, closed deals and how to get in touch.",
+    "aboutDescription": "About {name}, {title}: the approach, the deals and relationships behind the numbers, and the teams worked with."
+  },
+  "editor": {
+    "experience": {
+      "itemLabel": "Role",
+      "fields": {
+        "company": {
+          "label": "Company"
+        },
+        "title": {
+          "label": "Role"
+        },
+        "summary": {
+          "hint": "The territory or accounts you owned and the result you delivered."
+        },
+        "highlights": {
+          "label": "Key results",
+          "hint": "One per line, up to 12. Lead with the figure, such as quota attainment."
+        },
+        "tech": {
+          "label": "Methods and tools"
+        }
+      }
+    },
+    "skills": {
+      "itemLabel": "Skill or method",
+      "fields": {
+        "name": {
+          "label": "Skill, method or tool"
+        }
+      }
+    },
+    "projects": {
+      "fields": {
+        "title": {
+          "hint": "Name the deal, for example the client and what was sold."
+        },
+        "role": {
+          "hint": "Your part, for example Account executive or Deal lead."
+        },
+        "org": {
+          "label": "Client",
+          "hint": "Shown on the card and in the client strip on the home page. Only name a client you have permission to name."
+        },
+        "problem": {
+          "label": "The situation",
+          "hint": "The client's need and what was at stake. Plain text."
+        },
+        "approach": {
+          "label": "How it was won",
+          "hint": "Discovery, who was involved, the proposal and the close. Plain text."
+        },
+        "impact": {
+          "label": "Results",
+          "hint": "One result per line, up to 8. Start with the figure, such as \"132% of quota\", so it is shown large; the first line is shown on the card. Use figures you can share."
+        },
+        "tech": {
+          "label": "Methods and tools"
+        },
+        "heroImage": {
+          "label": "Cover image",
+          "hint": "Shown on the deals grid and at the top of the deal page. JPEG, PNG or WebP. Cropped to a 3:2 card."
+        },
+        "screenshots": {
+          "label": "Supporting images",
+          "hint": "Add pictures one at a time on the Images page, such as a proposal page or a chart. Each needs a description for people who cannot see it."
+        },
+        "links": {
+          "label": "Links",
+          "hint": "Where to see more, such as a public case study or announcement. Videos are linked, never embedded."
+        },
+        "category": {
+          "hint": "A segment such as Enterprise, Mid-market or Partnerships. Used by the filter on the deals page."
+        }
+      }
+    },
+    "certifications": {
+      "itemLabel": "Training or award",
+      "fields": {
+        "name": {
+          "label": "Award, course or certification"
+        },
+        "issuer": {
+          "label": "Awarded or taught by"
+        },
+        "credentialUrl": {
+          "label": "Link to the award or course"
+        }
+      }
+    },
+    "talks": {
+      "itemLabel": "Talk",
+      "fields": {
+        "event": {
+          "label": "Event or conference"
+        },
+        "typeVideo": {
+          "label": "Recording"
+        },
+        "typeTalk": {
+          "label": "Live talk"
+        },
+        "url": {
+          "label": "Link to the recording or slides",
+          "hint": "http or https. Recordings are linked, not embedded."
+        },
+        "youtubeId": {
+          "hidden": true
+        }
+      }
+    },
+    "testimonials": {
+      "itemLabel": "Reference",
+      "fields": {
+        "quote": {
+          "label": "What they said",
+          "hint": "Plain text. Only with the person's permission."
+        },
+        "author": {
+          "label": "Who said it"
+        },
+        "authorTitle": {
+          "label": "Their role and company"
+        }
+      }
+    },
+    "blog": {
+      "itemLabel": "Insight",
+      "fields": {
+        "title": {
+          "label": "Insight title"
+        },
+        "body": {
+          "label": "Insight text",
+          "hint": "Markdown. Raw HTML is shown as text, not run."
+        },
+        "cover": {
+          "hint": "JPEG, PNG or WebP. Shown at the top of the post and when it is shared."
+        }
+      }
+    },
+    "hero": {
+      "fields": {
+        "heading": {
+          "label": "Home page introduction",
+          "hint": "The first thing visitors read, above your headline figures. Plain text. Changes apply as soon as you save."
+        },
+        "eyebrow": {
+          "label": "Role line",
+          "hint": "For example your market and the kind of deals you close. Plain text."
+        },
+        "lede": {
+          "label": "Introduction"
+        }
+      }
+    },
+    "metrics": {
+      "itemLabel": "Figure",
+      "fields": {
+        "heading": {
+          "label": "Headline figures",
+          "hint": "The big numbers at the top of your home page, such as quota attainment, revenue closed or win rate. Only publish figures you can share. Changes apply as soon as you save."
+        },
+        "value": {
+          "hint": "For example 128% or $6.2M."
+        },
+        "unit": {
+          "hint": "For example of quota or closed-won."
+        },
+        "label": {
+          "label": "What it measures"
+        }
+      }
+    },
+    "sections": {
+      "itemLabel": "Page",
+      "fields": {
+        "heading": {
+          "label": "Pages of your site",
+          "hint": "Choose which pages the site has, what the menu calls them and in which order. Hiding a page never deletes it. Changes apply as soon as you save."
+        },
+        "label": {
+          "label": "Menu name"
+        }
+      }
+    },
+    "about": {
+      "itemLabel": "Principle",
+      "fields": {
+        "heading": {
+          "label": "About you",
+          "hint": "Your story, how you work and what you care about. Changes apply as soon as you save."
+        },
+        "valueProps": {
+          "label": "Principles",
+          "hint": "Short statements about how you work, shown above the text."
+        },
+        "currentlyNote": {
+          "label": "Currently"
+        },
+        "focus": {
+          "label": "Areas of focus",
+          "hint": "One per line."
+        }
+      }
+    },
+    "transfer": {
+      "itemLabel": "Entry",
+      "fields": {
+        "heading": {
+          "label": "Back up and restore your portfolio",
+          "hint": "Keep your portfolio in one file, or restore one. You see what would change first, and nothing is ever removed."
+        },
+        "exportHeading": {
+          "label": "Save a copy",
+          "hint": "One file with your details and every entry, including unpublished ones. Pictures you uploaded are listed, not included."
+        },
+        "importHeading": {
+          "label": "Restore from a file",
+          "hint": "Each entry in the file is matched to one of yours by its name or title: a match is updated, anything else is added."
+        },
+        "profile": {
+          "label": "Details"
+        }
+      }
+    }
+  },
+  "starter": {
+    "file": "starter.json"
+  },
+  "copy": {
+    "layout": {
+      "footerNote": "Sales and business development portfolio. Figures and clients are shared with permission."
+    },
+    "home": {
+      "workEyebrow": "Closed deals",
+      "workHeading": "Deals that built the numbers",
+      "workEmptyTitle": "Deals coming soon",
+      "workEmptyBody": "Add the deals you are proudest of. Lead with the outcome, then explain how you won it.",
+      "testimonialsEyebrow": "References",
+      "testimonialsHeading": "What clients and managers say",
+      "contactHeading": "Looking for a closer? Let us talk.",
+      "experienceEyebrow": "Experience",
+      "experienceHeading": "Where I have sold",
+      "credentialsEyebrow": "Training",
+      "credentialsHeading": "Training & awards",
+      "skillsHeading": "Skills & methods",
+      "viewWork": "See the deals",
+      "allWork": "Every deal →",
+      "downloadCv": "Download my CV",
+      "linkedIn": "LinkedIn profile",
+      "clientsHeading": "Selected clients"
+    },
+    "projects": {
+      "title": "Deals & results",
+      "description": "Closed deals, each with the situation, how it was won and the measured result.",
+      "eyebrow": "Closed deals",
+      "heading": "Deals and results",
+      "lead": "Each deal leads with the outcome: the situation, how I won it and what it was worth.",
+      "emptyTitle": "No deals yet",
+      "emptyBody": "Add your first deal with the client, the situation and the result it delivered.",
+      "filterLabel": "Filter deals by segment",
+      "featuredBadge": "featured",
+      "problemHeading": "The situation",
+      "approachHeading": "How it was won",
+      "noWriteup": "The full story of this deal is on the way.",
+      "stackHeading": "Methods & tools",
+      "linksHeading": "More detail",
+      "proofHeading": "References & proof",
+      "screenshotsHeading": "Supporting material",
+      "imageAlt": "{title} deal image",
+      "galleryLabel": "Deal images",
+      "openImageLabel": "View larger image",
+      "nextItem": "Next {item}",
+      "readItem": "Read the {item} →",
+      "watchVideo": "Watch the recording ↗",
+      "filterAll": "All segments"
+    },
+    "experience": {
+      "title": "Experience",
+      "description": "{name}'s sales experience: teams, territories and quota results, most recent first.",
+      "eyebrow": "Experience",
+      "heading": "Where I have sold",
+      "lead": "Most recent first: the teams I joined, the territory or accounts I owned and the numbers that followed.",
+      "empty": "No roles have been added yet."
+    },
+    "skills": {
+      "title": "Skills & methods",
+      "description": "Sales skills grouped by area: prospecting, discovery and closing, account management, forecasting and tools.",
+      "eyebrow": "Skills & methods",
+      "heading": "How I sell",
+      "lead": "Grouped by area: the methods, habits and tools I rely on.",
+      "empty": "No skills have been added yet."
+    },
+    "certifications": {
+      "title": "Training & awards",
+      "description": "Training, courses, awards and certifications: earned, in progress and planned.",
+      "eyebrow": "Training",
+      "heading": "Training, awards & certifications",
+      "lead": "Recognition received and the training that keeps the craft sharp.",
+      "emptyTitle": "Nothing listed yet",
+      "emptyBody": "Add training, awards or certifications you would like to show.",
+      "filterLabel": "Filter by awarding body",
+      "statusEarned": "Received",
+      "statusInProgress": "Studying",
+      "statusPlanned": "Next up",
+      "viewCertificate": "View certificate",
+      "viewCredential": "View details →"
+    },
+    "blog": {
+      "title": "Insights",
+      "description": "Notes on selling, negotiation and building relationships.",
+      "eyebrow": "Insights",
+      "heading": "Notes on selling",
+      "lead": "What I am learning about buyers, pipeline and winning trust.",
+      "empty": "Insights coming soon."
+    },
+    "talks": {
+      "title": "Talks",
+      "description": "Talks, workshops and recordings.",
+      "eyebrow": "Talks",
+      "heading": "Talks & workshops",
+      "empty": "No talks listed yet. Check back soon.",
+      "watch": "Watch the recording →"
+    },
+    "contact": {
+      "description": "Contact {name}: email, phone or LinkedIn.",
+      "heading": "Looking for a closer? Let us talk.",
+      "lead": "The best ways to reach me about sales roles, partnerships or growing a territory."
+    },
+    "cv": {
+      "description": "Curriculum vitae — {name}, {title}.",
+      "experienceHeading": "Experience",
+      "skillsHeading": "Skills & methods",
+      "projectsHeading": "Selected deals",
+      "certificationsHeading": "Training & awards"
+    }
+  }
+}

@@ -10,12 +10,18 @@ using Xunit;
 namespace Portfolio.Web.Tests.Templates;
 
 /// <summary>
-/// The admin and cross-cutting paths for every gallery template, through data only: wizard, preview, switching, section settings,
-/// sitemap and structured data, export and import, and a blank wizard-finished site end to end. Driven by <see cref="GalleryArchetypeTests.Keys"/>.
+/// The admin and cross-cutting paths for every template on an archetype that lays out its own work pages (gallery and results), through data only: wizard, preview,
+/// switching, section settings, sitemap and structured data, export and import, and a blank wizard-finished site end to end. Driven by
+/// <see cref="GalleryArchetypeTests.Keys"/> and <see cref="ResultsArchetypeTests.Keys"/>: a further template on either archetype is covered by adding its key there.
 /// </summary>
-public class GalleryTemplateFlowTests
+public class ArchetypeTemplateFlowTests
 {
-    public static TheoryData<string> KeyData => GalleryArchetypeTests.KeyData;
+    public static readonly string[] Keys = [.. GalleryArchetypeTests.Keys, .. ResultsArchetypeTests.Keys];
+
+    public static TheoryData<string> KeyData => new(Keys);
+
+    /// <summary>What marks one work card in the archetype's own layout.</summary>
+    private static string Card(string key) => Definition(key).Archetype == Archetypes.Results ? "data-results-card" : "<article class=\"group relative";
 
     private static string TemplatesDir => Path.Combine(AppContext.BaseDirectory, "Templates");
     private static TemplateDefinition Definition(string key) => new TemplateCatalog(TemplatesDir).Get(key);
@@ -38,6 +44,7 @@ public class GalleryTemplateFlowTests
             p.HeroImage = "/img/projects/telemetry.svg";
             p.HeroImageAlt = "A seeded cover";
             p.Tech = ["Seeding"];
+            p.Org = "Seedclient";
             await db.SaveChangesAsync();
         }
         app.Services.GetRequiredService<ISiteProfileProvider>().Invalidate();
@@ -108,7 +115,7 @@ public class GalleryTemplateFlowTests
             Assert.Contains("noindex", html);
             Assert.Contains("no-store", preview.Headers.CacheControl?.ToString() ?? "");
             Assert.Contains("Telemetry", html); // the same rows, drawn by the gallery layout
-            if (path != "/") Assert.Contains(path == "/projects" ? "<article class=\"group relative" : "Next ", html);
+            if (path != "/") Assert.Contains(path == "/projects" ? Card(key) : "Next ", html);
 
             // A visitor asking for the same thing gets the saved (software) page, unchanged.
             var plain = await (await visitor.GetAsync($"{path}?preview={key}")).Content.ReadAsStringAsync();
@@ -140,7 +147,7 @@ public class GalleryTemplateFlowTests
         var template = Definition(key);
         var projects = await visitor.GetStringAsync("/projects");
         Assert.Contains($"data-template=\"{template.Theme.Default}\"", projects);
-        Assert.Contains("<article class=\"group relative", projects);
+        Assert.Contains(Card(key), projects);
         Assert.Contains("Telemetry", projects);
         Assert.Contains(template.Copy.Experience.Heading, Plain(await visitor.GetStringAsync("/experience")));
         Assert.Contains($"/projects/{project}", await visitor.GetStringAsync("/sitemap.xml"));
@@ -203,6 +210,9 @@ public class GalleryTemplateFlowTests
         foreach (var k in off) Assert.DoesNotContain(SectionRegistry.PathFor(k), sitemap);
         var detail = await visitor.GetStringAsync("/projects/seed-project");
         Assert.Contains("\"@type\":\"CreativeWork\"", detail);
+        // The results layout's client strip is made of the work's client names, so it follows the work section.
+        var hasStrip = template.Archetype == Archetypes.Results;
+        Assert.Equal(hasStrip, (await visitor.GetStringAsync("/")).Contains("id=\"clients\""));
         var counts = await ContentFlow.CountAsync(app);
 
         // Hide the work section, rename another, move one to the front and switch on what the template leaves off.
@@ -214,6 +224,8 @@ public class GalleryTemplateFlowTests
         var home = await visitor.GetStringAsync("/");
         Assert.DoesNotContain("id=\"work\"", home);
         Assert.DoesNotContain("href=\"/projects\"", home);
+        Assert.DoesNotContain("id=\"clients\"", home);   // no work section, so no client names
+        Assert.DoesNotContain("Seedclient", home);
         Assert.Contains("Reach me", home);
         var nav = SectionsFlow.NavOf(home).Split(',').Select(x => x.Split('=')[0]).ToList();
         Assert.Equal("/skills", nav[0]);
@@ -228,6 +240,7 @@ public class GalleryTemplateFlowTests
         // Back on: the case study and its structured data return.
         await SectionsFlow.SaveAsync(owner, SectionsFlow.Set("projects", true));
         Assert.Contains("\"@type\":\"CreativeWork\"", await visitor.GetStringAsync("/projects/seed-project"));
+        Assert.Equal(hasStrip, (await visitor.GetStringAsync("/")).Contains("id=\"clients\""));
         Assert.Contains("/projects/seed-project", SectionsFlow.SitemapPaths(await visitor.GetStringAsync("/sitemap.xml")));
     }
 
@@ -243,7 +256,7 @@ public class GalleryTemplateFlowTests
         Assert.Contains("\"seed-project\"", file);
         Assert.Contains($"\"templateKey\": \"{key}\"", file);
 
-        foreach (var other in new[] { "software", "healthcare" })
+        foreach (var other in new[] { "software", "healthcare" }.Concat(Keys.Where(k => k != key)))
         {
             using var target = new AdminApp();
             var owner = await ContentFlow.BlankSiteAsync(target, other);
@@ -252,11 +265,12 @@ public class GalleryTemplateFlowTests
             Assert.Equal(other, (await ProfileFlow.ProfileAsync(target)).TemplateKey); // content only: the target keeps its own template
             var projects = await target.NewClient().GetStringAsync("/projects");
             Assert.Contains("Seed Project", projects);
-            Assert.DoesNotContain("<article class=\"group relative", projects); // drawn by that template's own layout
+            if (Keys.Contains(other)) Assert.Contains(Card(other), projects); // drawn by that template's own layout
+            else { Assert.DoesNotContain("data-results-card", projects); Assert.DoesNotContain("<article class=\"group relative", projects); }
             Assert.Equal(HttpStatusCode.OK, (await target.NewClient().GetAsync("/projects/seed-project")).StatusCode);
         }
 
-        // And back the other way: a software export lands in the gallery template's grid.
+        // And back the other way: a software export lands in the template's grid.
         var (software, softwareOwner, _) = await SiteAsync("software");
         using var _w = software;
         var softwareFile = await TransferFlow.ExportTextAsync(softwareOwner);
@@ -265,7 +279,7 @@ public class GalleryTemplateFlowTests
         Assert.Contains("Seed Project", await TransferFlow.ImportAsync(galleryOwner, softwareFile));
         Assert.Equal(key, (await ProfileFlow.ProfileAsync(gallery)).TemplateKey);
         var grid = await gallery.NewClient().GetStringAsync("/projects");
-        Assert.Contains("<article class=\"group relative", grid);
+        Assert.Contains(Card(key), grid);
         Assert.Contains("Seed Project", grid);
         Assert.Contains("Second Project", grid);
         // Importing the profile too switches to the file's template, which is installed; a section the template lacks would stay inert.
@@ -277,16 +291,16 @@ public class GalleryTemplateFlowTests
     public async Task AHandCraftedExport_WithSectionKeysTheTargetLacks_LeavesThemInert(string key)
     {
         // A copy of the template that has no journal and no screenings: those keys, and one nothing knows, are "sections the target lacks".
-        var dir = TemplateDirs.WithExtra("lean-gallery", node =>
+        var dir = TemplateDirs.WithExtra("lean-layout", node =>
         {
-            node["name"] = "Lean Gallery";
+            node["name"] = "Lean Layout";
             var sections = node["sections"]!.AsArray();
             foreach (var drop in sections.Where(s => s!["key"]!.GetValue<string>() is "blog" or "talks").ToList()) sections.Remove(drop);
         }, baseTemplate: key, starterFrom: key);
         try
         {
             using var app = AdminApp.WithTemplates(dir);
-            var owner = await ContentFlow.BlankSiteAsync(app, "lean-gallery");
+            var owner = await ContentFlow.BlankSiteAsync(app, "lean-layout");
             var visitor = app.NewClient();
             var file = ImportHarness.File(
                 profile: new { sections = new object[] { new { key = "blog", label = "Dispatches", shown = true }, new { key = "talks", shown = true }, new { key = "photo-wall", shown = true }, new { key = "projects", label = "Folios" } } },
@@ -301,7 +315,7 @@ public class GalleryTemplateFlowTests
             var stored = (await ProfileFlow.ProfileAsync(app)).Sections;
             Assert.DoesNotContain(stored, s => s.Key is "blog" or "talks" or "photo-wall"); // never stored, so never switchable on later
             Assert.Contains(stored, s => s.Key == "projects" && s.Label == "Folios");       // the section the template does list was applied
-            Assert.Equal("lean-gallery", (await ProfileFlow.ProfileAsync(app)).TemplateKey);
+            Assert.Equal("lean-layout", (await ProfileFlow.ProfileAsync(app)).TemplateKey);
 
             var home = await visitor.GetStringAsync("/");
             Assert.Contains("Folios", home);
@@ -359,7 +373,7 @@ public class GalleryTemplateFlowTests
         Assert.Equal(HttpStatusCode.Redirect, created.StatusCode);
         var grid = await visitor.GetStringAsync("/projects");
         Assert.Contains("First case study", grid);
-        Assert.Contains("<article class=\"group relative", grid);
+        Assert.Contains(Card(key), grid);
         Assert.Contains("First case study", await visitor.GetStringAsync("/"));
         Assert.Contains("/projects/first-case-study", await visitor.GetStringAsync("/sitemap.xml"));
         Assert.Equal(HttpStatusCode.OK, (await visitor.GetAsync("/projects/first-case-study")).StatusCode);

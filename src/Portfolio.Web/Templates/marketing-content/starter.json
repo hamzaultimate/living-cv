@@ -1,0 +1,485 @@
+// Fictional sample content for the Marketing & Content template. Every person, company, client, campaign and figure below is invented.
+// The pictures are simple generated placeholders bundled under wwwroot/img/starter/marketing-content.
+{
+  "fictional": true,
+  "profile": {
+    "ownerName": "Dara Winslow",
+    "brandName": "Dara",
+    "role": "Marketing & Content Strategist · Campaigns and writing (sample profile)",
+    "jobTitle": "Marketing and Content Strategist",
+    "summary": "Sample profile (fictional). Marketing and content strategist with eight years of launch campaigns, lifecycle email and long-form writing for software and consumer brands, focused on results that can be measured.",
+    "knowsAbout": [
+      "Content strategy",
+      "Lifecycle email",
+      "Copywriting",
+      "Search marketing",
+      "Campaign analytics",
+      "Brand messaging"
+    ],
+    "hero": {
+      "eyebrow": "Marketing & Content Strategist · Campaigns and writing",
+      "headline": "Campaigns and content",
+      "headlineAccent": "built to move the numbers.",
+      "lede": "Sample profile (fictional). Eight years of launch campaigns, lifecycle email and long-form writing, each one tied to a result you can measure."
+    },
+    "metrics": [
+      {
+        "value": "+38%",
+        "unit": "",
+        "label": "average click-through lift on email series"
+      },
+      {
+        "value": "2.4M",
+        "unit": "",
+        "label": "campaign impressions delivered"
+      },
+      {
+        "value": "120+",
+        "unit": "",
+        "label": "articles and case studies published"
+      },
+      {
+        "value": "8",
+        "unit": "years",
+        "label": "in marketing and content"
+      }
+    ],
+    "about": {
+      "headline": "Strategy that starts with the audience, not the channel.",
+      "paragraphs": [
+        "Sample profile (fictional). I am a marketing and content strategist who likes to start with the question the audience is really asking, and work back from the result the business needs.",
+        "I work best in small teams where marketing, product and sales share the same numbers. I have led launch campaigns for a software company, built a customer stories programme for an analytics company and rewritten a newsletter that people now reply to.",
+        "This page is sample content for the Marketing & Content template. Replace it with your own story, and only share results and client names you are allowed to."
+      ],
+      "valueProps": [
+        {
+          "title": "Start with the audience",
+          "body": "Interviews and search data first, so the work answers a real question."
+        },
+        {
+          "title": "One clear action",
+          "body": "Every email, page and post asks for one thing and makes it easy."
+        },
+        {
+          "title": "Measure and tell the truth",
+          "body": "Results are reported plainly, including what did not work."
+        },
+        {
+          "title": "Write for people",
+          "body": "Plain words, short sentences and a voice that sounds like a person."
+        }
+      ],
+      "currentlyNote": "Leading content for a small software company and mentoring two junior writers.",
+      "focus": [
+        "Content strategy",
+        "Lifecycle email",
+        "Campaign launches",
+        "Search-led writing"
+      ]
+    },
+    "email": "dara.winslow@example.org",
+    "linkedIn": "https://www.linkedin.com/in/example-dara-winslow/",
+    "templateKey": "marketing-content"
+  },
+  "experiences": [
+    {
+      "company": "Example Growth Agency (fictional)",
+      "title": "Senior Content Strategist",
+      "start": "2022",
+      "end": null,
+      "current": true,
+      "summary": "Lead strategist on content and email programmes for sample software and consumer clients, from audience research to reporting.",
+      "highlights": [
+        "Led launch campaigns for three clients with measured gains in sign-ups",
+        "Set up a shared editorial calendar and a monthly results review",
+        "Mentored two junior writers"
+      ],
+      "tech": [
+        "Content strategy",
+        "Lifecycle email",
+        "Analytics"
+      ],
+      "sortOrder": 1
+    },
+    {
+      "company": "Sample SaaS Co (fictional)",
+      "title": "Marketing Manager",
+      "start": "2019",
+      "end": "2022",
+      "current": false,
+      "summary": "Owned email, webinars and the blog for a small sample software company.",
+      "highlights": [
+        "Rebuilt the onboarding email series",
+        "Grew the newsletter list fourfold",
+        "Ran a six-part webinar series"
+      ],
+      "tech": [
+        "Email",
+        "Webinars",
+        "SEO"
+      ],
+      "sortOrder": 2
+    },
+    {
+      "company": "Placeholder Media (fictional)",
+      "title": "Copywriter and Editor",
+      "start": "2016",
+      "end": "2019",
+      "current": false,
+      "summary": "Wrote and edited articles, newsletters and campaign copy for sample consumer brands.",
+      "highlights": [
+        "Wrote over 100 articles",
+        "Edited a weekly newsletter",
+        "Introduced a house style guide"
+      ],
+      "tech": [
+        "Copywriting",
+        "Editing"
+      ],
+      "sortOrder": 3
+    }
+  ],
+  "skills": [
+    {
+      "name": "Editorial planning",
+      "group": "Content strategy",
+      "sortOrder": 1
+    },
+    {
+      "name": "Audience research",
+      "group": "Content strategy",
+      "sortOrder": 2
+    },
+    {
+      "name": "Messaging and positioning",
+      "group": "Content strategy",
+      "sortOrder": 3
+    },
+    {
+      "name": "Long-form writing",
+      "group": "Copywriting and editing",
+      "sortOrder": 4
+    },
+    {
+      "name": "Email copy",
+      "group": "Copywriting and editing",
+      "sortOrder": 5
+    },
+    {
+      "name": "Editing and style guides",
+      "group": "Copywriting and editing",
+      "sortOrder": 6
+    },
+    {
+      "name": "Lifecycle email",
+      "group": "Channels",
+      "sortOrder": 7
+    },
+    {
+      "name": "Paid social",
+      "group": "Channels",
+      "sortOrder": 8
+    },
+    {
+      "name": "Search (SEO)",
+      "group": "Channels",
+      "sortOrder": 9
+    },
+    {
+      "name": "Webinars and events",
+      "group": "Channels",
+      "sortOrder": 10
+    },
+    {
+      "name": "Campaign reporting",
+      "group": "Analytics and SEO",
+      "sortOrder": 11
+    },
+    {
+      "name": "A/B testing",
+      "group": "Analytics and SEO",
+      "sortOrder": 12
+    },
+    {
+      "name": "Search analytics",
+      "group": "Analytics and SEO",
+      "sortOrder": 13
+    },
+    {
+      "name": "Email platforms",
+      "group": "Tools",
+      "sortOrder": 14
+    },
+    {
+      "name": "Analytics dashboards",
+      "group": "Tools",
+      "sortOrder": 15
+    },
+    {
+      "name": "Content calendars",
+      "group": "Tools",
+      "sortOrder": 16
+    }
+  ],
+  "projects": [
+    {
+      "title": "Spring launch email series (sample)",
+      "slug": "spring-launch-email-series",
+      "role": "Campaign lead",
+      "org": "Quillbarrow",
+      "period": "2024",
+      "summary": "A four-send lifecycle email series for a sample software launch. Sample case study (fictional).",
+      "category": "Email",
+      "problem": "The last launch emails were opened but rarely clicked, and a growing share of the list was unsubscribing during launch weeks.",
+      "approach": "Segmented the list by product use, rewrote each send around one clear action, tested subject lines and send times and paced the series over three weeks instead of one.",
+      "impact": [
+        "+38% click-through on launch emails",
+        "2.1M emails delivered across four sends",
+        "14% fewer unsubscribes than the previous launch"
+      ],
+      "tech": [
+        "Lifecycle email",
+        "Segmentation",
+        "A/B testing"
+      ],
+      "heroImage": "/img/starter/marketing-content/spring-launch-email-series.svg",
+      "heroImageAlt": "Abstract illustration of an email inbox with a highlighted message and a preview of a launch email.",
+      "screenshots": [
+        {
+          "url": "/img/starter/marketing-content/spring-launch-email-series-1.svg",
+          "caption": "Click-through by send, with the highlighted lift on the later emails"
+        },
+        {
+          "url": "/img/starter/marketing-content/spring-launch-email-series-2.svg",
+          "caption": "Inbox view of the four-send series"
+        }
+      ],
+      "links": [
+        {
+          "label": "Read the full write-up",
+          "url": "https://example.org/spring-launch-write-up"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "title": "Customer stories programme (sample)",
+      "slug": "customer-stories-programme",
+      "role": "Content strategist",
+      "org": "Zemblor",
+      "period": "2023",
+      "summary": "A programme of customer stories and search-led articles for a sample analytics company. Sample case study (fictional).",
+      "category": "Content",
+      "problem": "Almost all sign-ups came from paid channels, and the blog read like a product changelog rather than something a buyer would search for.",
+      "approach": "Interviewed customers, turned each story into an article, a short summary and a sales one-pager, and built a calendar around the questions buyers searched for.",
+      "impact": [
+        "+212% organic sign-ups in twelve months",
+        "18 customer stories published",
+        "Sales used the one-pagers in 40% of late-stage deals"
+      ],
+      "tech": [
+        "Content strategy",
+        "Interviews",
+        "SEO"
+      ],
+      "heroImage": "/img/starter/marketing-content/customer-stories-programme.svg",
+      "heroImageAlt": "Abstract illustration of three story cards, each with a photo area, a name and a few lines of text.",
+      "screenshots": [
+        {
+          "url": "/img/starter/marketing-content/customer-stories-programme-1.svg",
+          "caption": "Organic sign-ups month by month, climbing after the programme began"
+        },
+        {
+          "url": "/img/starter/marketing-content/customer-stories-programme-2.svg",
+          "caption": "A customer story as an article, with the pull quote beside the text"
+        }
+      ],
+      "links": [
+        {
+          "label": "Browse the stories",
+          "url": "https://example.org/customer-stories"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 2
+    },
+    {
+      "title": "Rebrand launch campaign (sample)",
+      "slug": "rebrand-launch-campaign",
+      "role": "Campaign manager",
+      "org": "Taldrick",
+      "period": "2024",
+      "summary": "A six-week launch for a sample coffee brand's new look and limited blend. Sample case study (fictional).",
+      "category": "Campaigns",
+      "problem": "A new look and a limited blend were launching with a small budget, and the brand was little known outside its home city.",
+      "approach": "Built the story around the people behind the blend, paired short social posts with a launch email and a local partner push and put most of the spend on the two channels that converted in week one.",
+      "impact": [
+        "2.4M impressions in six weeks",
+        "6.1x return on ad spend",
+        "Limited blend sold out in nine days"
+      ],
+      "tech": [
+        "Paid social",
+        "Email",
+        "Partnerships"
+      ],
+      "heroImage": "/img/starter/marketing-content/rebrand-launch-campaign.svg",
+      "heroImageAlt": "Abstract illustration of overlapping coloured circles, like a brand mark, above a long thin line.",
+      "screenshots": [
+        {
+          "url": "/img/starter/marketing-content/rebrand-launch-campaign-1.svg",
+          "caption": "Four launch posts in the new colours"
+        },
+        {
+          "url": "/img/starter/marketing-content/rebrand-launch-campaign-2.svg",
+          "caption": "Launch page, partner map and a chart of daily orders"
+        }
+      ],
+      "links": [
+        {
+          "label": "See the campaign page",
+          "url": "https://example.org/launch-campaign-page"
+        },
+        {
+          "label": "Launch report summary",
+          "url": "https://example.org/launch-report-summary"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 3
+    },
+    {
+      "title": "Pricing guide for small teams (sample)",
+      "slug": "pricing-guide-for-small-teams",
+      "role": "Writer and editor",
+      "org": "Vintrel",
+      "period": "2023",
+      "summary": "A long-form guide explaining pricing models to small teams, written for a sample finance tool. Sample case study (fictional).",
+      "category": "Writing",
+      "problem": "Small teams kept asking the same pricing questions, and the answers were scattered across support articles and sales calls.",
+      "approach": "Interviewed support and sales, mapped the ten questions behind most conversations and wrote one guide that answers them in order, with a worked example and a calculator link.",
+      "impact": [
+        "38,000 reads in the first quarter",
+        "Page-one ranking for four target search terms"
+      ],
+      "tech": [
+        "Long-form writing",
+        "SEO",
+        "Editing"
+      ],
+      "heroImage": "/img/starter/marketing-content/pricing-guide-for-small-teams.svg",
+      "heroImageAlt": "Abstract illustration of an article page with a headline bar, lines of text and a small bar chart.",
+      "links": [
+        {
+          "label": "Read the guide",
+          "url": "https://example.org/pricing-guide"
+        }
+      ],
+      "featured": false,
+      "sortOrder": 4
+    },
+    {
+      "title": "Product newsletter rewrite (sample)",
+      "slug": "product-newsletter-rewrite",
+      "role": "Editor",
+      "org": "Pennivore",
+      "period": "2022",
+      "summary": "A rewrite of a monthly product newsletter for a sample design studio. Sample case study (fictional).",
+      "category": "Email",
+      "problem": "The newsletter was a long list of changes that most subscribers skipped.",
+      "approach": "Cut it to one story and one tip per issue, wrote subject lines for a person rather than a product and added a single button to each issue.",
+      "impact": [
+        "Open rate up from 31% to 44%",
+        "Replies to the newsletter tripled"
+      ],
+      "tech": [
+        "Newsletter",
+        "Editing",
+        "Copywriting"
+      ],
+      "heroImage": "/img/starter/marketing-content/product-newsletter-rewrite.svg",
+      "heroImageAlt": "Abstract illustration of two newsletter layouts side by side, one dense and one with a single story and a button.",
+      "links": [
+        {
+          "label": "Read a sample issue",
+          "url": "https://example.org/newsletter-issue"
+        }
+      ],
+      "featured": false,
+      "sortOrder": 5
+    },
+    {
+      "title": "Webinar series promotion (sample)",
+      "slug": "webinar-series-promotion",
+      "role": "Marketing manager",
+      "org": "Quillbarrow",
+      "period": "2022",
+      "summary": "A promotion plan for a six-part customer webinar series for a sample software company. Sample case study (fictional).",
+      "category": "Campaigns",
+      "problem": "Earlier webinars drew small crowds and most people who registered did not attend.",
+      "approach": "Gave each session its own topic page, sent reminders that offered one takeaway and reused the recordings as short clips and a follow-up email.",
+      "impact": [
+        "3,200 registrations from a 600-person list",
+        "61% of registrants attended live"
+      ],
+      "tech": [
+        "Email",
+        "Landing pages",
+        "Social"
+      ],
+      "heroImage": "/img/starter/marketing-content/webinar-series-promotion.svg",
+      "heroImageAlt": "Abstract illustration of a grid of six session cards, each with a coloured tag and a few lines of text.",
+      "links": [
+        {
+          "label": "See the series",
+          "url": "https://example.org/webinar-series"
+        }
+      ],
+      "featured": false,
+      "sortOrder": 6
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Content Strategy Certificate (sample)",
+      "issuer": "Example Marketing Institute",
+      "status": "Earned",
+      "date": "2021",
+      "category": "Certificate",
+      "sortOrder": 1
+    },
+    {
+      "name": "Email Marketing Award, Silver (sample)",
+      "issuer": "Example Marketing Awards",
+      "status": "Earned",
+      "date": "2023",
+      "category": "Award",
+      "sortOrder": 2
+    },
+    {
+      "name": "Advanced Search Analytics course (sample)",
+      "issuer": "Example Learning Academy",
+      "status": "InProgress",
+      "date": "2025",
+      "category": "Course",
+      "sortOrder": 3
+    }
+  ],
+  "testimonials": [
+    {
+      "quote": "Sample client feedback (fictional). Dara tied every piece of content to a number we cared about, and then hit it.",
+      "author": "Sample Client",
+      "authorTitle": "Head of Marketing, Example Growth Agency",
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "quote": "Sample client feedback (fictional). The newsletter went from something we sent to something people wait for.",
+      "author": "Sample Founder",
+      "authorTitle": "Founder, Pennivore",
+      "featured": true,
+      "sortOrder": 2
+    }
+  ]
+}

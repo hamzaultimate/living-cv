@@ -31,13 +31,13 @@ public class GalleryArchetypeTests
         }
     }
 
-    private static string Wwwroot => Path.Combine(TemplateDirs.Web, "wwwroot");
-    private static string Layouts => Path.Combine(TemplateDirs.Web, "Pages", "Shared", "Layouts");
-    private static string TemplatesDir => Path.Combine(AppContext.BaseDirectory, "Templates");
+    internal static string Wwwroot => Path.Combine(TemplateDirs.Web, "wwwroot");
+    internal static string Layouts => Path.Combine(TemplateDirs.Web, "Pages", "Shared", "Layouts");
+    internal static string TemplatesDir => Path.Combine(AppContext.BaseDirectory, "Templates");
 
-    private static TemplateDefinition Definition(string key) => new TemplateCatalog(TemplatesDir).Get(key);
+    internal static TemplateDefinition Definition(string key) => new TemplateCatalog(TemplatesDir).Get(key);
 
-    private static async Task<string> GetAsync(HttpClient client, string path, HttpStatusCode expected = HttpStatusCode.OK)
+    internal static async Task<string> GetAsync(HttpClient client, string path, HttpStatusCode expected = HttpStatusCode.OK)
     {
         var response = await client.GetAsync(path);
         Assert.True(response.StatusCode == expected, $"{path} returned {(int)response.StatusCode}, expected {(int)expected}");
@@ -45,7 +45,7 @@ public class GalleryArchetypeTests
     }
 
     /// <summary>The page's own content: what the layout partials rendered, without the shared header, footer and scripts.</summary>
-    private static string MainOf(string html)
+    internal static string MainOf(string html)
     {
         var start = html.IndexOf("<main", StringComparison.Ordinal);
         var end = html.IndexOf("</main>", StringComparison.Ordinal);
@@ -165,7 +165,7 @@ public class GalleryArchetypeTests
 
     // ---------------------------------------------------------------- rendering: blank, sample and full content
 
-    private static async Task<AdminApp> SiteAsync(string key, string content)
+    internal static async Task<AdminApp> SiteAsync(string key, string content)
     {
         var app = new AdminApp();
         await DemoSite.ApplyStarterAsync(app, key);
@@ -367,7 +367,7 @@ public class GalleryArchetypeTests
         Assert.DoesNotMatch(@"<div class=""flex h-full w-full items-end p-5""(?! aria-hidden=""true"")", projects + home);
     }
 
-    private static string Escaped(string text) => TemplateView.Text(text).ToString()!;
+    internal static string Escaped(string text) => TemplateView.Text(text).ToString()!;
 
     // ---------------------------------------------------------------- labels come from the manifest
 
@@ -548,7 +548,7 @@ public class GalleryArchetypeTests
     [InlineData("Gallery")]
     [InlineData("gallery ")]
     [InlineData("unknown")]
-    [InlineData("results")]
+    [InlineData("Results")]
     public void FindingAPartial_RefusesAnArchetypeThatIsNotImplemented_WithoutAskingTheViewEngine(string archetype)
     {
         var views = new FakeViews(found: true);
@@ -690,7 +690,7 @@ public class GalleryArchetypeTests
         Assert.Equal(template.SkillGroups.Concat(["Aardvark"]), groups);
     }
 
-    private static async Task<string> FirstSlugAsync(AdminApp app)
+    internal static async Task<string> FirstSlugAsync(AdminApp app)
     {
         using var db = app.CreateDbContext();
         return await db.Projects.OrderBy(p => p.SortOrder).Select(p => p.Slug).FirstAsync();

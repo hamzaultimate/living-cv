@@ -58,15 +58,19 @@ public static class Archetypes
     public const string Showcase = "showcase";
     public const string Credentials = "credentials";
     public const string Gallery = "gallery";
+    public const string Results = "results";
 
     /// <summary>Archetypes the plan names (showcase, gallery, results, credentials).</summary>
-    public static readonly IReadOnlyList<string> Known = [Showcase, Gallery, "results", Credentials];
+    public static readonly IReadOnlyList<string> Known = [Showcase, Gallery, Results, Credentials];
 
     /// <summary>Archetypes that have layout partials under <c>Pages/Shared/Layouts/&lt;archetype&gt;</c>. A manifest naming any other is skipped.</summary>
-    public static readonly IReadOnlyList<string> Implemented = [Showcase, Gallery, Credentials];
+    public static readonly IReadOnlyList<string> Implemented = [Showcase, Gallery, Results, Credentials];
 
-    /// <summary>Archetypes whose home page also lists the owner's skills (the credentials layout leads with them, the gallery shows them as a tools strip).</summary>
-    public static bool ShowsSkillsOnHome(string archetype) => archetype is Credentials or Gallery;
+    /// <summary>Archetypes whose home page also lists the owner's skills (the credentials layout leads with them, the gallery and results layouts show them as a strip).</summary>
+    public static bool ShowsSkillsOnHome(string archetype) => archetype is Credentials or Gallery || archetype == Results;
+
+    /// <summary>Archetypes whose home page also shows the names of the clients the owner's work was for (the results layout's wordmark strip).</summary>
+    public static bool ShowsClientsOnHome(string archetype) => archetype == Results;
 }
 
 public class TemplateTheme
@@ -298,11 +302,24 @@ public class HomeCopy
     /// <summary>Optional wording of the gallery home page's link to the full work page; <c>{work}</c> is the work section's label. Empty uses "All {work} →".</summary>
     [OptionalCopy] public string AllWork { get; set; } = "";
 
+    /// <summary>Optional wording of the results hero's CV button. Empty uses "Download CV".</summary>
+    [OptionalCopy] public string DownloadCv { get; set; } = "";
+
+    /// <summary>Optional wording of the results hero's LinkedIn button. Empty uses "LinkedIn".</summary>
+    [OptionalCopy] public string LinkedIn { get; set; } = "";
+
+    /// <summary>Optional heading of the results home page's strip of client names. Empty uses "Worked with".</summary>
+    [OptionalCopy] public string ClientsHeading { get; set; } = "";
+
+    public string DownloadCvText() => string.IsNullOrWhiteSpace(DownloadCv) ? "Download CV" : DownloadCv;
+    public string LinkedInText() => string.IsNullOrWhiteSpace(LinkedIn) ? "LinkedIn" : LinkedIn;
+    public string ClientsHeadingText() => string.IsNullOrWhiteSpace(ClientsHeading) ? "Worked with" : ClientsHeading;
+
     public string ViewWorkFor(string work) => CopyText.Fill(ViewWork, "View {work}", work, null);
     public string AllWorkFor(string work) => CopyText.Fill(AllWork, "All {work} →", work, null);
 }
 
-/// <summary>Fills the optional wording patterns of the gallery layout: <c>{work}</c> is the work section's label and <c>{item}</c> what one entry is called, in lower case.</summary>
+/// <summary>Fills the optional wording patterns of the gallery and results layouts: <c>{work}</c> is the work section's label and <c>{item}</c> what one entry is called, in lower case.</summary>
 public static class CopyText
 {
     private static readonly System.Text.RegularExpressions.Regex Token = new(@"\{(work|item)\}", System.Text.RegularExpressions.RegexOptions.Compiled);
@@ -320,6 +337,10 @@ public static class CopyText
         ["copy.projects.nextItem"] = ["{item}"],
         ["copy.projects.readItem"] = ["{item}"],
         ["copy.projects.watchVideo"] = [],
+        ["copy.home.downloadCv"] = [],
+        ["copy.home.linkedIn"] = [],
+        ["copy.home.clientsHeading"] = [],
+        ["copy.projects.filterAll"] = [],
     };
 }
 
@@ -360,6 +381,10 @@ public class ProjectsCopy
     /// <summary>Optional label of a link to a video file on a gallery page, used when the video has no caption. Empty uses "Watch the video ↗".</summary>
     [OptionalCopy] public string WatchVideo { get; set; } = "";
 
+    /// <summary>Optional label of the "show everything" chip of the results work page's category filter. Empty uses "All".</summary>
+    [OptionalCopy] public string FilterAll { get; set; } = "";
+
+    public string FilterAllText() => string.IsNullOrWhiteSpace(FilterAll) ? "All" : FilterAll;
     public string NextItemFor(string item) => CopyText.Fill(NextItem, "Next {item}", null, item);
     public string ReadItemFor(string item) => CopyText.Fill(ReadItem, "Read {item} →", null, item);
     public string WatchVideoText() => string.IsNullOrWhiteSpace(WatchVideo) ? "Watch the video ↗" : WatchVideo;

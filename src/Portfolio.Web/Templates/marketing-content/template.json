@@ -1,0 +1,459 @@
+{
+  "$schema": "../template.schema.json",
+  "key": "marketing-content",
+  "name": "Marketing & Content",
+  "profession": "Marketing and content strategist",
+  "description": "A results-first home page with headline campaign figures, writing samples and campaign case studies for marketers and content writers.",
+  "archetype": "results",
+  "guidance": "Only publish figures and client names you are allowed to share. Check your client and employer agreements, round or index confidential numbers, and ask permission before naming a client or showing unreleased campaigns.",
+  "theme": {
+    "default": "marketing-content",
+    "themeColor": "#0f111a",
+    "accents": [
+      {
+        "key": "magenta",
+        "label": "Magenta",
+        "dark": {
+          "accent": "#ff6b9d",
+          "strong": "#ffa3c2"
+        },
+        "light": {
+          "accent": "#be185d",
+          "strong": "#9d174d"
+        }
+      },
+      {
+        "key": "amber",
+        "label": "Amber",
+        "dark": {
+          "accent": "#fbbf24",
+          "strong": "#fcd34d"
+        },
+        "light": {
+          "accent": "#a84a09",
+          "strong": "#92400e"
+        }
+      },
+      {
+        "key": "cyan",
+        "label": "Cyan",
+        "dark": {
+          "accent": "#22d3ee",
+          "strong": "#67e8f9"
+        },
+        "light": {
+          "accent": "#0e7490",
+          "strong": "#155e75"
+        }
+      },
+      {
+        "key": "lime",
+        "label": "Lime",
+        "dark": {
+          "accent": "#a3e635",
+          "strong": "#bef264"
+        },
+        "light": {
+          "accent": "#3f6212",
+          "strong": "#365314"
+        }
+      }
+    ]
+  },
+  "heroSuggestions": {
+    "title": "Marketing and Content Strategist",
+    "summary": "Marketing and content strategist who turns audience insight into campaigns and writing that grow reach and revenue, working across strategy, copy, lifecycle email and analytics."
+  },
+  "sections": [
+    {
+      "key": "projects",
+      "label": "campaigns & writing",
+      "shortLabel": "work",
+      "itemLabel": "Case study"
+    },
+    {
+      "key": "about",
+      "label": "about"
+    },
+    {
+      "key": "experience",
+      "label": "experience"
+    },
+    {
+      "key": "skills",
+      "label": "skills & channels",
+      "shortLabel": "skills"
+    },
+    {
+      "key": "certifications",
+      "label": "training & awards",
+      "shortLabel": "training"
+    },
+    {
+      "key": "blog",
+      "label": "notes",
+      "itemLabel": "Post"
+    },
+    {
+      "key": "talks",
+      "label": "talks",
+      "enabled": false
+    },
+    {
+      "key": "testimonials",
+      "label": "client feedback"
+    },
+    {
+      "key": "contact",
+      "label": "contact"
+    }
+  ],
+  "skillGroups": [
+    "Content strategy",
+    "Copywriting and editing",
+    "Channels",
+    "Analytics and SEO",
+    "Tools"
+  ],
+  "seo": {
+    "title": "{name} — {title}",
+    "description": "{name}, {title}. Campaign results, writing samples and how to work together.",
+    "aboutDescription": "About {name}, {title}: the approach, the campaigns and content behind the results, and the teams worked with."
+  },
+  "editor": {
+    "experience": {
+      "itemLabel": "Role",
+      "fields": {
+        "company": {
+          "label": "Company or agency"
+        },
+        "title": {
+          "label": "Role"
+        },
+        "summary": {
+          "hint": "What you owned and the result it produced."
+        },
+        "highlights": {
+          "label": "Key results",
+          "hint": "One per line, up to 12. Lead with the figure where you have one."
+        },
+        "tech": {
+          "label": "Channels and tools"
+        }
+      }
+    },
+    "skills": {
+      "itemLabel": "Skill or channel",
+      "fields": {
+        "name": {
+          "label": "Skill, channel or tool"
+        }
+      }
+    },
+    "projects": {
+      "fields": {
+        "title": {
+          "hint": "Name the campaign or the piece, for example the product launch or the article series."
+        },
+        "role": {
+          "hint": "Your part, for example Campaign lead or Writer and editor."
+        },
+        "org": {
+          "label": "Client or brand",
+          "hint": "Shown on the card and in the client strip on the home page. Only name a client you have permission to name."
+        },
+        "problem": {
+          "label": "The brief",
+          "hint": "The goal and the audience. Plain text."
+        },
+        "approach": {
+          "label": "What you did",
+          "hint": "Strategy, channels, content and testing. Plain text."
+        },
+        "impact": {
+          "label": "Results",
+          "hint": "One result per line, up to 8. Start with the figure, such as \"+38% click-through\", so it is shown large; the first line is shown on the card. Use figures you can stand behind."
+        },
+        "tech": {
+          "label": "Channels and tools"
+        },
+        "heroImage": {
+          "label": "Cover image",
+          "hint": "Shown on the work grid and at the top of the case study. JPEG, PNG or WebP. Cropped to a 16:10 card."
+        },
+        "screenshots": {
+          "label": "Case-study images",
+          "hint": "Add pictures one at a time on the Images page, such as a layout, an ad or a chart. Each needs a description for people who cannot see it."
+        },
+        "links": {
+          "label": "Links",
+          "hint": "Where to see the live piece, a campaign page or a report. Videos are linked, never embedded."
+        },
+        "category": {
+          "hint": "A channel or type such as Email, Social or Long-form writing. Used by the filter on the work page."
+        }
+      }
+    },
+    "certifications": {
+      "itemLabel": "Training or award",
+      "fields": {
+        "name": {
+          "label": "Award, course or certification"
+        },
+        "issuer": {
+          "label": "Awarded or taught by"
+        },
+        "credentialUrl": {
+          "label": "Link to the award or course"
+        }
+      }
+    },
+    "talks": {
+      "itemLabel": "Talk",
+      "fields": {
+        "event": {
+          "label": "Event or conference"
+        },
+        "typeVideo": {
+          "label": "Recording"
+        },
+        "typeTalk": {
+          "label": "Live talk"
+        },
+        "url": {
+          "label": "Link to the recording or slides",
+          "hint": "http or https. Recordings are linked, not embedded."
+        },
+        "youtubeId": {
+          "hidden": true
+        }
+      }
+    },
+    "testimonials": {
+      "itemLabel": "Piece of feedback",
+      "fields": {
+        "quote": {
+          "label": "What they said",
+          "hint": "Plain text. Only with the person's permission."
+        },
+        "author": {
+          "label": "Who said it"
+        },
+        "authorTitle": {
+          "label": "Their role and company"
+        }
+      }
+    },
+    "blog": {
+      "itemLabel": "Post",
+      "fields": {
+        "title": {
+          "label": "Post title"
+        },
+        "body": {
+          "label": "Post text",
+          "hint": "Markdown. Raw HTML is shown as text, not run."
+        },
+        "cover": {
+          "hint": "JPEG, PNG or WebP. Shown at the top of the post and when it is shared."
+        }
+      }
+    },
+    "hero": {
+      "fields": {
+        "heading": {
+          "label": "Home page introduction",
+          "hint": "The first thing visitors read, above your headline figures. Plain text. Changes apply as soon as you save."
+        },
+        "eyebrow": {
+          "label": "Role line",
+          "hint": "For example your specialism and the kind of work you do. Plain text."
+        },
+        "lede": {
+          "label": "Introduction"
+        }
+      }
+    },
+    "metrics": {
+      "itemLabel": "Figure",
+      "fields": {
+        "heading": {
+          "label": "Headline figures",
+          "hint": "The big numbers at the top of your home page, such as campaign results, reach or years of experience. Only publish figures you can stand behind. Changes apply as soon as you save."
+        },
+        "value": {
+          "hint": "For example +38% or 2.1M."
+        },
+        "unit": {
+          "hint": "For example leads or views."
+        },
+        "label": {
+          "label": "What it measures"
+        }
+      }
+    },
+    "sections": {
+      "itemLabel": "Page",
+      "fields": {
+        "heading": {
+          "label": "Pages of your site",
+          "hint": "Choose which pages the site has, what the menu calls them and in which order. Hiding a page never deletes it. Changes apply as soon as you save."
+        },
+        "label": {
+          "label": "Menu name"
+        }
+      }
+    },
+    "about": {
+      "itemLabel": "Principle",
+      "fields": {
+        "heading": {
+          "label": "About you",
+          "hint": "Your story, how you work and what you care about. Changes apply as soon as you save."
+        },
+        "valueProps": {
+          "label": "Principles",
+          "hint": "Short statements about how you work, shown above the text."
+        },
+        "currentlyNote": {
+          "label": "Currently"
+        },
+        "focus": {
+          "label": "Areas of focus",
+          "hint": "One per line."
+        }
+      }
+    },
+    "transfer": {
+      "itemLabel": "Entry",
+      "fields": {
+        "heading": {
+          "label": "Back up and restore your portfolio",
+          "hint": "Keep your portfolio in one file, or restore one. You see what would change first, and nothing is ever removed."
+        },
+        "exportHeading": {
+          "label": "Save a copy",
+          "hint": "One file with your details and every entry, including unpublished ones. Pictures you uploaded are listed, not included."
+        },
+        "importHeading": {
+          "label": "Restore from a file",
+          "hint": "Each entry in the file is matched to one of yours by its name or title: a match is updated, anything else is added."
+        },
+        "profile": {
+          "label": "Details"
+        }
+      }
+    }
+  },
+  "starter": {
+    "file": "starter.json"
+  },
+  "copy": {
+    "layout": {
+      "footerNote": "Marketing and content portfolio. Results are shared with permission."
+    },
+    "home": {
+      "workEyebrow": "Results & writing",
+      "workHeading": "Campaigns and content that moved numbers",
+      "workEmptyTitle": "Campaigns coming soon",
+      "workEmptyBody": "Add the campaigns and writing you are proudest of. Lead with the result, then tell the story behind it.",
+      "testimonialsEyebrow": "Client feedback",
+      "testimonialsHeading": "What clients and teams say",
+      "contactHeading": "Have a launch or a story to tell? Let us talk.",
+      "experienceEyebrow": "Experience",
+      "experienceHeading": "Where I have worked",
+      "credentialsEyebrow": "Training",
+      "credentialsHeading": "Training & awards",
+      "skillsHeading": "Skills & channels",
+      "viewWork": "See the results",
+      "allWork": "Every campaign and article →",
+      "downloadCv": "Get my CV",
+      "linkedIn": "Find me on LinkedIn",
+      "clientsHeading": "Brands and teams I have worked with"
+    },
+    "projects": {
+      "title": "Campaigns & writing",
+      "description": "Campaign case studies and writing samples, each with the brief, the approach and the measured result.",
+      "eyebrow": "Results & writing",
+      "heading": "Campaigns and writing samples",
+      "lead": "Each piece leads with the result: what the brief was, what I did and what changed.",
+      "emptyTitle": "No campaigns yet",
+      "emptyBody": "Add your first campaign or writing sample with a cover image and the results it achieved.",
+      "filterLabel": "Filter work by channel",
+      "featuredBadge": "featured",
+      "problemHeading": "The brief",
+      "approachHeading": "What I did",
+      "noWriteup": "The full story behind this piece is on the way.",
+      "stackHeading": "Channels & tools",
+      "linksHeading": "See the work",
+      "proofHeading": "Coverage & proof",
+      "screenshotsHeading": "The work itself",
+      "imageAlt": "{title} campaign image",
+      "galleryLabel": "Campaign images",
+      "openImageLabel": "View larger image",
+      "nextItem": "Next {item}",
+      "readItem": "See the {item} →",
+      "watchVideo": "Watch the video ↗",
+      "filterAll": "Everything"
+    },
+    "experience": {
+      "title": "Experience",
+      "description": "{name}'s marketing and content experience: teams, brands and results, most recent first.",
+      "eyebrow": "Experience",
+      "heading": "Where I have worked",
+      "lead": "Most recent first: the teams I joined, what I owned and the results that followed.",
+      "empty": "No roles have been added yet."
+    },
+    "skills": {
+      "title": "Skills & channels",
+      "description": "Marketing and content skills grouped by area: strategy, writing, channels, analytics and tools.",
+      "eyebrow": "Skills & channels",
+      "heading": "What I bring",
+      "lead": "Grouped by area: the strategy, craft, channels and tools I use.",
+      "empty": "No skills have been added yet."
+    },
+    "certifications": {
+      "title": "Training & awards",
+      "description": "Training, courses, awards and certifications: earned, in progress and planned.",
+      "eyebrow": "Training",
+      "heading": "Training, awards & certifications",
+      "lead": "Recognition received and the learning that keeps the craft sharp.",
+      "emptyTitle": "Nothing listed yet",
+      "emptyBody": "Add training, awards or certifications you would like to show.",
+      "filterLabel": "Filter by awarding body",
+      "statusEarned": "Received",
+      "statusInProgress": "Studying",
+      "statusPlanned": "Next up",
+      "viewCertificate": "View certificate",
+      "viewCredential": "View details →"
+    },
+    "blog": {
+      "title": "Notes",
+      "description": "Notes on marketing, content strategy and writing.",
+      "eyebrow": "Notes",
+      "heading": "Notes on marketing and writing",
+      "lead": "What I am learning about audiences, channels and getting words to work.",
+      "empty": "Posts coming soon."
+    },
+    "talks": {
+      "title": "Talks",
+      "description": "Talks, workshops and recordings.",
+      "eyebrow": "Talks",
+      "heading": "Talks & workshops",
+      "empty": "No talks listed yet. Check back soon.",
+      "watch": "Watch the recording →"
+    },
+    "contact": {
+      "description": "Contact {name}: email, phone or LinkedIn.",
+      "heading": "Have a launch or a story to tell? Let us talk.",
+      "lead": "The best ways to reach me about campaigns, content projects or full-time roles."
+    },
+    "cv": {
+      "description": "Curriculum vitae — {name}, {title}.",
+      "experienceHeading": "Experience",
+      "skillsHeading": "Skills & channels",
+      "projectsHeading": "Selected campaigns & writing",
+      "certificationsHeading": "Training & awards"
+    }
+  }
+}
