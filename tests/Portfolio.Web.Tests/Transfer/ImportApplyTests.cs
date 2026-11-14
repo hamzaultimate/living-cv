@@ -892,4 +892,104 @@ public class ImportApplyTests
         Assert.NotEqual(before, after);
         Assert.True(after.IndexOf("gamma-work", StringComparison.Ordinal) < after.IndexOf("alpha-work", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public async Task ARefusedCreateInOneTable_LeavesNothingStaged_SoTheNextOrderedTableIsStillWritten()
+    {
+        var (app, owner) = await SiteAsync();
+        using var _ = app;
+        var token = await TransferFlow.HoldAsync(owner, ImportHarness.File(content: new
+        {
+            experience = new object[] { new { company = "Raced Org", title = "T", start = "2020", end = "2021", summary = "S." } },
+            skills = new object[] { new { name = "Written anyway", group = "G" } },
+        }));
+        using (var db = app.CreateDbContext())
+        {
+            db.Experiences.Add(new Experience { Company = "raced org", Title = "t", Start = "2019", End = "2020", Summary = "Someone else's.", SortOrder = 1, ConcurrencyStamp = ContentEditor.NewStamp() });
+            await db.SaveChangesAsync();
+        }
+
+        var page = await (await TransferFlow.ConfirmAsync(owner, token)).Content.ReadAsStringAsync();
+
+        Assert.Contains("was added after the preview was made, so this one was not added", page);
+        Assert.DoesNotContain("unexpected error", page);
+        Assert.DoesNotContain("Not attempted", page);
+        using var check = app.CreateDbContext();
+        Assert.Equal(["Written anyway"], await check.Skills.Select(s => s.Name).ToListAsync());
+    }
+
+    [Fact]
+    public async Task AnUpdateBeforeTheFirstCreate_IsNotRefusedBecauseAnOrderChangeLandedInTheMiddle()
+    {
+        var (app, owner) = await SiteAsync();
+        using var _ = app;
+        await TransferFlow.ImportAsync(owner, ImportHarness.Table("skills", new { name = "A", group = "G" }, new { name = "B", group = "G" }));
+        int b;
+        using (var db = app.CreateDbContext()) b = (await db.Skills.SingleAsync(x => x.Name == "B")).Id;
+        var token = await TransferFlow.HoldAsync(owner, ImportHarness.Table("skills", new { name = "A", group = "Other" }, new { name = "Created", group = "G" }));
+
+        // A move lands right before the update is saved: it replaces the list stamp, which the update itself does not depend on.
+        var page = await app.OverlapAsync(
+            async () => await (await TransferFlow.ConfirmAsync(owner, token)).Content.ReadAsStringAsync(),
+            async () => Assert.Equal(HttpStatusCode.Redirect, (await ContentFlow.MoveAsync(owner, ContentFlow.Skills, b, "up")).StatusCode));
+
+        Assert.DoesNotContain("changed while the import was running", page);
+        Assert.Contains("1 added, 1 updated", page);
+        using var check = app.CreateDbContext();
+        Assert.Equal("Other", (await check.Skills.SingleAsync(x => x.Name == "A")).Group);
+    }
+
+    [Fact]
+    public async Task AFailureInTheOrderStep_KeepsTheWrittenRowsReported_RefreshesTheCaches_AndSaysOnlyTheOrderWasNotSet()
+    {
+        var (app, owner) = await SiteAsync();
+        using var _ = app;
+        await TransferFlow.ImportAsync(owner, ImportHarness.Table("projects", new { title = "Old project", slug = "old-project", summary = "S." }));
+        var anyone = app.NewClient();
+        var sitemapBefore = await anyone.GetStringAsync("/sitemap.xml"); // cached now
+        var token = await TransferFlow.HoldAsync(owner, ImportHarness.Table("projects", new { title = "New project", slug = "new-project", summary = "S." }, new { title = "Old project", slug = "old-project", summary = "S." }));
+
+        // The save of the new row runs this hook; it arms a failure for the next save, which is the order step's.
+        app.BeforeOrderedSave = () =>
+        {
+            app.BeforeOrderedSave = () => throw new InvalidOperationException("forced failure in the order step");
+            return Task.CompletedTask;
+        };
+        var page = await (await TransferFlow.ConfirmAsync(owner, token)).Content.ReadAsStringAsync();
+        app.BeforeOrderedSave = null;
+
+        Assert.Contains("was not set because of an unexpected error", page);
+        Assert.DoesNotContain("stopped after", page);
+        Assert.DoesNotContain("Not attempted", page);
+        Assert.Contains("1 added", page);
+        using var db = app.CreateDbContext();
+        Assert.Contains(await db.Projects.Select(p => p.Slug).ToListAsync(), s => s == "new-project");
+        var sitemap = await anyone.GetStringAsync("/sitemap.xml");
+        Assert.NotEqual(sitemapBefore, sitemap);
+        Assert.Contains("/projects/new-project", sitemap);
+    }
+
+    [Fact]
+    public async Task AOneRowFileThatOnlyUpdatesAField_DoesNotReorderTheList()
+    {
+        var (app, owner) = await SiteAsync();
+        using var _ = app;
+        await TransferFlow.ImportAsync(owner, ImportHarness.Table("projects", new { title = "Alpha", slug = "alpha", summary = "S." }, new { title = "Beta", slug = "beta", summary = "S." }, new { title = "Gamma", slug = "gamma", summary = "S." }));
+
+        var page = await TransferFlow.ImportAsync(owner, ImportHarness.Table("projects", new { slug = "gamma", summary = "Changed." }));
+
+        Assert.Contains("0 added, 1 updated", page);
+        Assert.DoesNotContain("now follows the file", page);
+        using var db = app.CreateDbContext();
+        Assert.Equal(["alpha", "beta", "gamma"], await db.Projects.OrderBy(p => p.SortOrder).Select(p => p.Slug).ToListAsync());
+        Assert.Equal([1, 2, 3], await db.Projects.OrderBy(p => p.SortOrder).Select(p => p.SortOrder).ToListAsync());
+    }
+
+    [Fact]
+    public void TheConfigFallbackProfile_IsCutToTheColumnLengths()
+    {
+        var profile = Portfolio.Web.Transfer.ExportService.ConfigProfile(new Portfolio.Web.Configuration.SiteOptions { OwnerName = new string('n', 500) });
+
+        Assert.Equal(Portfolio.Data.Entities.SiteProfile.MaxLength.OwnerName, profile.OwnerName.Length);
+    }
 }

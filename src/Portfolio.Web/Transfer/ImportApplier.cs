@@ -110,16 +110,15 @@ public sealed class ImportApplier
         }
 
         var itemLower = plan.Report.ItemLabel.ToLowerInvariant();
-        // New rows are placed after the positions as they are now, so the list stamp is taken before they are read: an order change committed after this point makes the first commit a conflict
-        // instead of leaving two rows in one position.
-        if (spec.FollowsFileOrder && typeof(IOrderedContent).IsAssignableFrom(typeof(T)) && plan.Rows.Any(r => r.Status == RowStatus.Create)) await _content.BeginOrderChangeAsync(plan.Report.Section, ct);
         var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in await spec.Stored(_db).ToListAsync(ct)) keys.Add(spec.KeyOf(row));
+
+        // New rows are placed after the positions as they are now. For a list with a manual order the list stamp is taken right before the first new row is committed, and the positions are read
+        // after it: an order change committed after that makes the commit a conflict instead of leaving two rows in one position. Taking it only then means no change is staged when nothing
+        // is committed (a refused create), and an update before it is never refused because of a stamp it does not need.
+        var guardsOrder = spec.FollowsFileOrder && typeof(IOrderedContent).IsAssignableFrom(typeof(T));
+        var guarded = false;
         var next = 0;
-        foreach (var row in await spec.Stored(_db).ToListAsync(ct))
-        {
-            keys.Add(spec.KeyOf(row));
-            if (row is IOrderedContent ordered) next = Math.Max(next, ordered.SortOrder);
-        }
 
         var attempted = new HashSet<int>();
         var inFlight = 0;
@@ -157,6 +156,14 @@ public sealed class ImportApplier
                     results[planned.Position] = current.With(RowStatus.Refused, $"A {itemLower} with the same {spec.KeyWords(plan.View)} was added after the preview was made, so this one was not added.");
                     continue;
                 }
+                if (!guarded)
+                {
+                    if (guardsOrder) await _content.BeginOrderChangeAsync(plan.Report.Section, ct);
+                    next = 0;
+                    foreach (var existing in await spec.Stored(_db).ToListAsync(ct))
+                        if (existing is IOrderedContent o) next = Math.Max(next, o.SortOrder);
+                    guarded = true;
+                }
                 var row = spec.NewRow();
                 planned.Apply(row);
                 row.ConcurrencyStamp = ContentEditor.NewStamp();
@@ -164,7 +171,8 @@ public sealed class ImportApplier
                 spec.Set(_db).Add(row);
                 var outcome = await _content.CommitAsync(ct, refreshCaches: false);
                 if (outcome == SaveOutcome.Saved) keys.Add(planned.Key);
-                else results[planned.Position] = current.With(RowStatus.Refused, outcome == SaveOutcome.Duplicate
+                else guarded = false; // the failed commit dropped the staged stamp: the next new row takes it again and reads the positions again
+                if (outcome != SaveOutcome.Saved) results[planned.Position] = current.With(RowStatus.Refused, outcome == SaveOutcome.Duplicate
                     ? $"Another {itemLower} was added with the same address name while the import was running, so this one was not added."
                     : $"This {itemLower} could not be added because the list changed while the import was running.");
             }
@@ -184,13 +192,31 @@ public sealed class ImportApplier
             return report;
         }
 
-        // The order step runs whenever a row was written (a new row, or a skill that changed group, may share a position with a row already there), and when the file names several unchanged rows.
-        var wrote = results.Values.Any(r => r.Status is RowStatus.Create or RowStatus.Update);
-        if (spec.FollowsFileOrder && ((plan.FileOrder.Count >= 1 && wrote) || (plan.FileOrder.Count > 1 && results.Values.Any(r => r.Status == RowStatus.Unchanged))))
+        // Nothing may stay staged for the next table (a refused create stages nothing now, but the rule is cheap to keep).
+        if (_db.ChangeTracker.HasChanges()) _db.ChangeTracker.Clear();
+
+        // The order step runs when a row was created, when a skill changed group (either may share a position with a row already there), and when the file names several rows (their order is the file's).
+        // A file of one row that only updates a field leaves the order alone.
+        var created = results.Values.Any(r => r.Status == RowStatus.Create);
+        var regrouped = plan.Rows.Any(r => r.Status == RowStatus.Update && r.GroupChanged && results[r.Position].Status == RowStatus.Update);
+        var several = plan.FileOrder.Count > 1 && results.Values.Any(r => r.Status is RowStatus.Create or RowStatus.Update or RowStatus.Unchanged);
+        if (spec.FollowsFileOrder && plan.FileOrder.Count >= 1 && (created || regrouped || several))
         {
-            var ordered = await OrderAsync(plan, ct);
+            OrderResult ordered;
+            try
+            {
+                ordered = await OrderAsync(plan, ct);
+            }
+            catch (Exception ex)
+            {
+                // The rows are committed; only the positions failed. The table's report is still returned, with a note, instead of the rows being reported as not attempted.
+                _log?.LogError(ex, "The order step of {Section} failed after its rows were written.", plan.Report.Section);
+                _db.ChangeTracker.Clear();
+                ordered = OrderResult.Failed;
+            }
             report.Notes.Clear();
-            if (ordered == OrderResult.Conflict) report.Notes.Add($"The order of the {plan.Report.Label.ToLowerInvariant()} was not set, because the list was changed somewhere else while the import was running. The rows themselves were written; reorder them from their list.");
+            if (ordered == OrderResult.Failed) report.Notes.Add($"The order of the {plan.Report.Label.ToLowerInvariant()} was not set because of an unexpected error. The rows themselves were written; reorder them from their list.");
+            else if (ordered == OrderResult.Conflict) report.Notes.Add($"The order of the {plan.Report.Label.ToLowerInvariant()} was not set, because the list was changed somewhere else while the import was running. The rows themselves were written; reorder them from their list.");
             else if (ordered == OrderResult.Set) { report.Reordered = true; report.Notes.Add($"The order of the {plan.Report.Label.ToLowerInvariant()} now follows the file; any not in the file come after them."); }
         }
 
@@ -203,7 +229,7 @@ public sealed class ImportApplier
     /// order, the rest follow in the order they had. Only rows whose position changes are written, without a new row stamp (like a move), under the section's list stamp taken
     /// before the positions are read, so an order change made at the same moment makes this a conflict instead of leaving two rows in one position.
     /// </summary>
-    private enum OrderResult { Unchanged, Set, Conflict }
+    private enum OrderResult { Unchanged, Set, Conflict, Failed }
 
     private async Task<OrderResult> OrderAsync<T>(TablePlan<T> plan, CancellationToken ct) where T : class, IStampedContent
     {

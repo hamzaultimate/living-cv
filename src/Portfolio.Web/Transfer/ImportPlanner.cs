@@ -66,7 +66,7 @@ public sealed class ImportPlanner
             }
 
         var profile = await _db.SiteProfiles.AsNoTracking().FirstOrDefaultAsync(p => p.Id == SiteProfile.SingletonId, ct)
-                      ?? SiteProfileMapper.ToEntity(_site.Value); // never stored yet: nothing is created by a preview
+                      ?? ExportService.ConfigProfile(_site.Value); // never stored yet: nothing is created by a preview
         var options = SiteProfileMapper.ToOptions(profile);
         var current = _resolver.Resolve(options);
 
@@ -162,11 +162,14 @@ public sealed class ImportPlanner
 
             var status = RowStatus.Create;
             IReadOnlyList<string> changed = [];
+            var groupChanged = false;
             if (match is not null)
             {
+                var groupBefore = spec.GroupOf(match);
                 // Applied to the planner's own untracked copy of the stored row: if the export of the result is the same, there is nothing to write.
                 var before = spec.Fingerprint(match);
                 foreach (var step in patch.Steps) step(match);
+                groupChanged = spec.GroupOf(match) != groupBefore;
                 var after = spec.Fingerprint(match);
                 status = after == before ? RowStatus.Unchanged : RowStatus.Update;
                 if (status == RowStatus.Update) changed = ChangedFields(before, after, ImportRules.Labels(view));
@@ -177,7 +180,7 @@ public sealed class ImportPlanner
             plan.Rows.Add(new PlannedRow<T>
             {
                 Position = position, Name = name, Key = key ?? "", Status = status, RowId = match?.Id, SeenStamp = match?.ConcurrencyStamp,
-                Steps = patch.Steps, Warnings = reader.Warnings, Group = patch.Group,
+                Steps = patch.Steps, Warnings = reader.Warnings, Group = patch.Group, GroupChanged = groupChanged,
             });
         }
 

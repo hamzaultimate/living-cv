@@ -10,7 +10,7 @@ namespace Portfolio.Web.Transfer;
 
 /// <summary>
 /// Reads the profile and every content table into an <see cref="ExportFile"/>. It only reads: nothing is tracked, no row is created (a profile that was never
-/// stored is taken from the provider), so a GET that exports never changes the site. Rows come out in a fixed order (the public order of each list, ties by
+/// stored is taken from the `Site` config it would start from), so a GET that exports never changes the site. Rows come out in a fixed order (the public order of each list, ties by
 /// id), so two exports of the same data are the same file apart from its timestamp.
 /// </summary>
 public sealed class ExportService
@@ -28,11 +28,19 @@ public sealed class ExportService
         _clock = clock;
     }
 
+    /// <summary>The profile a site with no stored row would start with: the Site config, cut to the column lengths like the row the provider would create.</summary>
+    public static SiteProfile ConfigProfile(SiteOptions options)
+    {
+        var profile = SiteProfileMapper.ToEntity(options);
+        SiteProfileMapper.FitToColumns(profile);
+        return profile;
+    }
+
     public async Task<ExportFile> BuildAsync(CancellationToken ct)
     {
         var profile = await _db.SiteProfiles.AsNoTracking().FirstOrDefaultAsync(p => p.Id == SiteProfile.SingletonId, ct)
                       // A profile that was never stored comes from the Site config it would start from. Nothing is created: the provider would save the row, and an export saves nothing.
-                      ?? SiteProfileMapper.ToEntity(_site.Value);
+                      ?? ConfigProfile(_site.Value);
 
         var experience = await _db.Experiences.AsNoTracking().OrderBy(x => x.SortOrder).ThenBy(x => x.Id).ToListAsync(ct);
         // Skills are ordered within their group; the groups themselves have no stored order, so they are listed alphabetically (ordinal, whatever the database collation).

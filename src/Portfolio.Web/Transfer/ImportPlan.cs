@@ -94,6 +94,9 @@ public sealed class PlannedRow<T> where T : class
     /// <summary>The group the row is ordered within (a skill's group), or null when the whole table is one list.</summary>
     public string? Group { get; init; }
 
+    /// <summary>True for an update that moves the row to another group (a skill changing group): its old position may then be taken in the new group.</summary>
+    public bool GroupChanged { get; init; }
+
     public void Apply(T row)
     {
         foreach (var step in Steps) step(row);
