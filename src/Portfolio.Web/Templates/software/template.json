@@ -97,6 +97,14 @@
         "currentlyNote": { "label": "\"Currently\" note" },
         "focus": { "label": "Focus areas", "hint": "One per line, for example the technologies you are working with now." }
       }
+    },
+    "transfer": {
+      "fields": {
+        "heading": { "label": "Backup and portability", "hint": "Download all your content as one JSON file, or load one. You see a preview first; nothing is written until you confirm, and an import never deletes anything." },
+        "exportHeading": { "label": "Export", "hint": "One JSON file with the profile and every entry, drafts included. Uploaded images are not in it, but the file lists the ones it uses." },
+        "importHeading": { "label": "Import", "hint": "Entries are matched to yours by name, address name or title: a match is updated, anything else is added." },
+        "profile": { "label": "Profile" }
+      }
     }
   },
   "starter": { "source": "seed" },

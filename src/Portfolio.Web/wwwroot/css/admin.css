@@ -182,3 +182,9 @@ a.adm-btn { text-decoration: none; display: inline-block; }
 .adm-post-preview table { border-collapse: collapse; }
 .adm-post-preview th, .adm-post-preview td { border: 1px solid var(--adm-border); padding: .25rem .5rem; text-align: left; }
 .adm-post-preview blockquote { margin-left: 0; padding-left: 1rem; border-left: 3px solid var(--adm-border); }
+
+/* Export and import: the result of a row is a word first, so it never relies on colour alone. */
+.adm-status { font-weight: 700; }
+.adm-status-refused { color: var(--adm-error-text); }
+.adm-plain { margin: 0; padding-left: 1.1rem; }
+.adm-muted { color: var(--adm-muted); }

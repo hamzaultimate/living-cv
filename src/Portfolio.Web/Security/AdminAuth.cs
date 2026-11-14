@@ -14,6 +14,9 @@ public static class AdminAuth
 {
     public const string StampClaim = "lcv:stamp";
     public const string SignedInClaim = "lcv:signed-in";
+
+    /// <summary>A random id for one sign-in, so something held for a session (an import preview) belongs to that sign-in and no other, even one made in the same second.</summary>
+    public const string SessionClaim = "lcv:sid";
     public static readonly TimeSpan MaxSessionAge = TimeSpan.FromHours(12);
     public const string LoginPath = "/admin/login";
     public const string AdminPath = "/admin";
@@ -103,6 +106,7 @@ public static class AdminAuth
             new Claim(ClaimTypes.Name, account.UserName),
             new Claim(StampClaim, account.SecurityStamp),
             new Claim(SignedInClaim, signedInAt.ToUnixTimeSeconds().ToString()),
+            new Claim(SessionClaim, Guid.NewGuid().ToString("N")),
         ], CookieAuthenticationDefaults.AuthenticationScheme);
         return new ClaimsPrincipal(identity);
     }

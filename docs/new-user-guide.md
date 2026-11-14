@@ -204,8 +204,8 @@ so a restart does not refill a table you emptied. Only `Seed:Mode=Authoritative`
 for the seed files to be the source of truth.
 
 **Backups.** Your content is in the database and your uploaded images are in `Uploads:Path`; back up both (a database
-backup alone restores the entries but not the images they point at). A one-file export and import of all content is planned
-as the next step of this work.
+backup alone restores the entries but not the images they point at). For a portable copy of the content itself, use the one-file
+export described under [Export and import](#export-and-import-backup-and-moving-between-sites) (it lists the image files it uses, but does not contain them).
 
 ### Your home page introduction, metrics and About page
 
@@ -244,6 +244,47 @@ For each you can switch it on or off, give it your own name in the menu (leave t
   Renaming a section changes its name in the menu and in the links back to it, not the headings, page titles or breadcrumbs of the page itself, which come from the template.
   A name may not match another section's name or short menu name, or the fixed "CV" entry, and may not contain invisible characters (a zero-width joiner or non-joiner between letters, as in Persian or Urdu names and emoji, is fine, and an emoji selector right after a symbol or digit; flag tag sequences, selectors anywhere else and names with nothing visible are refused). Names are compared without joiners, so a hidden joiner cannot make a duplicate.
 - As on the other editors, a save from a page that was open before something else changed the profile is refused with a message that says nothing was saved.
+
+### Export and import (backup and moving between sites)
+
+`/admin/transfer` (named "Backup and portability" in Software & IT and "Save and restore your portfolio" in Healthcare; linked from the dashboard and the content hub) downloads
+everything you have written as **one JSON file** and loads such a file again. It replaces hand-editing the seed files.
+
+**Export.** The button downloads `site-export-<date>.json`: your profile (name, contact details, home page introduction, headline metrics, About text, template, accent colour and
+the choices you made on the sections page, including choices for sections your current template does not list), every experience entry, skill, work entry (with its links, gallery images and proofs),
+credential, talk, testimonial and blog post (**drafts included**, with the cover's description), and a list of the uploaded image files they use. It never contains passwords, stamps or database ids, and the file is indented and
+in a fixed order, so two exports of the same data are the same file. **Image files are not in it**: the list says which `/uploads/...` files the data points at and whether each is on this site now. Back up
+`Uploads:Path` too, and put the files back before importing if you want the pictures. Exporting changes nothing, so it is a plain download link.
+
+**Import** is always two steps, so you see everything before anything is written:
+
+1. Choose the file (a `.json` file of up to 2 MB). Tick **Also apply the profile** if you want the profile in the file to replace yours as well; left unticked, only the entries are imported. Press **Preview**.
+2. The preview lists, table by table and row by row, what would happen: **Will be added**, **Will be updated**, **Already up to date** or **Not imported**, with the reasons and any notes (an image that was left out, an entry
+   for a section your template does not have). **Nothing has been written yet.** Press **Apply** to write it, or **Discard**. A preview can be applied once, only from the session that made it, and for 10 minutes; after that, preview again.
+
+What the import does, and does not do:
+
+- **It never deletes.** It only adds and updates. An entry you have that the file does not name stays exactly as it is.
+- **Matching.** A row in the file is the same entry as one you have when its key matches, without regard to case: a skill by its name, a credential by its name, a role by organisation + title, a work entry by its address name (built from the
+  title when the file gives none, so loading the same file twice never adds a second copy), a post by its address name, a talk by its title, a testimonial by its author + the first 40 characters of its quote. A match is **updated**
+  (fields the file does not mention are kept; a field the file sets to `null` is cleared) and anything else is **added**. If the file names the same entry twice, the first is used and the later ones are not imported.
+- **Each row stands alone.** A row that does not pass the same checks as its editor (required fields, lengths, plain text only, web addresses only, dates, a post's Markdown limits) is **not imported** and the reasons are listed; the other rows go on. When you press Apply, every row that is valid is applied.
+- **Order.** The order of the rows in the file sets the order on your site (within a skill's group); entries the file does not name follow after them. Talks and posts are ordered by date, so the file's order means nothing for them.
+- **Images.** In an image field (photo, work cover, gallery picture, post cover) only an uploaded file (`/uploads/...`) that is already on this site, or a picture that ships with the site (`/img/...`, `/proofs/...`), is kept. A web address or an upload that is not here is
+  left out and the preview says so; it **never removes an image you already have** (the stored image and its description stay; a gallery stays as it is if the file's list names a picture that cannot be kept). Only a field the file sets to `null` is cleared. Links and a credential's badge address may still be web addresses. Image files themselves are never written by an import.
+- **The profile** (only if ticked) is applied as one piece, through the same checks as the profile pages, and only if it has not changed since the preview; otherwise none of it is applied and nothing is overwritten. The file's template is applied
+  if you have it installed (an unknown template refuses the whole profile; it is never guessed), so importing a profile can switch your template, and the preview says so. Section choices are applied for the sections your template lists; settings for sections it does not list
+  are shown as "not applied" and never switch anything on. An accent colour your template does not offer is left as it is. The import is refused for the profile if it would leave no section in the menu.
+- **Changed since the preview.** If you (or another tab) change an entry between the preview and Apply, that entry is not updated and the page says so; nothing is overwritten.
+- **Limits.** 2 MB, nesting at most 32 levels, and at most 100 roles, 500 skills, 200 work entries, 200 credentials, 300 talks, 200 testimonials and 300 posts per file; a file over a limit is refused whole. A file that is not UTF-8 JSON, has a property written
+  twice in one object, has a missing, wrong or newer `schemaVersion` (this version reads 1), or is cut off is refused whole with a message. Properties this version does not read are ignored and counted in the preview.
+- **Seed:Mode=Authoritative.** If your site is set to rebuild its content from the seed files at every start, the page says so: an import would be replaced at the next start. Change that setting first if you want to keep imported content.
+
+**Writing a file by hand.** A minimal file is `{ "schemaVersion": 1, "content": { "skills": [ { "name": "Go", "group": "Backend" } ] } }`. Use an export as the reference for every field name. Dates are text (`2021`, `Mar 2021`, `2021-03`; a post's date
+is `yyyy-MM-dd`), a certification's `status` is `Earned`, `InProgress` or `Planned`, a talk's `type` is `Video` or `Talk`, and a post that does not say `draft` is a draft.
+
+**Moving to another template or site.** Import the file there. Without the tick, the entries come across and the other site keeps its own profile and template; a template hides what it does not use and never deletes it, so entries for a section the new template
+lacks are kept and show if you switch to a template that has it.
 
 ### Forgot the password
 

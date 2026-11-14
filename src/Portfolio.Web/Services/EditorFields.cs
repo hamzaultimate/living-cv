@@ -133,9 +133,30 @@ public static class EditorFields
         new("noOrder", "Position does not matter", "This section is not part of the menu order, so moving it changes nothing visitors see.", false, true),
     ];
 
+    /// <summary>
+    /// The export and import page (<c>/admin/transfer</c>). Every key only carries words, so none can be hidden: the page title and its intro (<c>heading</c>), the two halves of the page,
+    /// their buttons, the file box, the tick box that also applies the profile, <c>profile</c> (what the page calls the owner's profile in messages) and the notice shown when
+    /// start-up seeding would overwrite an import. Neutral wording: what each entry is called comes from the other editors' own words.
+    /// </summary>
+    public static readonly IReadOnlyList<EditorFieldInfo> TransferFields =
+    [
+        new("heading", "Export and import", "Download everything on your site as one file, as a backup or to move it, or load a file made this way. Nothing is changed until you have seen what would happen and confirmed it, and an import never deletes anything.", false, true),
+        new("exportHeading", "Export", "One JSON file with your profile and all your entries, drafts included. Image files are not in it: it lists the ones it uses.", false, true),
+        new("exportButton", "Download the export file", null, false, true),
+        new("importHeading", "Import", "Entries in the file are matched to yours by name (or address name). A match is updated and anything else is added.", false, true),
+        new("fileLabel", "Export file (.json)", null, false, true),
+        new("applyProfile", "Also apply the profile in the file", "Left unticked, only the entries are imported. Ticked, the profile in the file replaces the matching parts of yours; the preview lists each change.", false, true),
+        new("previewButton", "Preview the import", null, false, true),
+        new("confirmButton", "Apply the import", null, false, true),
+        new("discardButton", "Discard the preview", null, false, true),
+        new("profile", "Profile", "What messages call your profile.", false, true),
+        new("authoritative", "Start-up seeding is set to replace content", "This site rebuilds its content from the seed files each time it starts, so anything imported here is overwritten at the next start. Change that setting first if you want to keep what you import.", false, true),
+    ];
+
     /// <summary>The fields of a section, or an empty list for a section without an editor.</summary>
     public static IReadOnlyList<EditorFieldInfo> For(string section) => section switch
     {
+        ProfileParts.Transfer => TransferFields,
         ProfileParts.Sections => SectionFields,
         ProfileParts.Hero => HeroFields,
         ProfileParts.Metrics => MetricsFields,
@@ -167,6 +188,9 @@ public static class ProfileParts
 
     /// <summary>The sections page is also an editor with a block in the manifest, but it is not under <c>/admin/profile</c> and is not one of <see cref="All"/>.</summary>
     public const string Sections = "sections";
+
+    /// <summary>The export and import page: a block of the manifest (<c>editor.transfer</c>) for its words, not a form with a stamp of its own.</summary>
+    public const string Transfer = "transfer";
 
     public const int SectionLabelMax = 40;
 
