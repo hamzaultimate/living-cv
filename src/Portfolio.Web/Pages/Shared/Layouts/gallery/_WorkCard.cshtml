@@ -5,12 +5,13 @@
     var copy = tpl.Copy.Projects;
     var item = tpl.Section(SectionRegistry.Projects).ItemLabel ?? "";
     var p = Model.Project;
-    // The gallery never plays media: a cover that is a video file shows the text tile, and the video is linked from the entry's links instead.
+    // The gallery never plays media: a cover that is a video file shows the text tile with a plain link to the file.
     var hasImage = !string.IsNullOrWhiteSpace(p.HeroImage) && !Media.IsVideo(p.HeroImage);
+    var coverVideo = !hasImage && Media.IsVideo(p.HeroImage) && LayoutPartials.IsLinkable(p.HeroImage);
     var cat = p.Category?.Trim();
     var mark = string.Concat(p.Title.Split(' ', StringSplitOptions.RemoveEmptyEntries).Where(w => char.IsLetterOrDigit(w[0])).Take(2).Select(w => char.ToUpperInvariant(w[0])));
 }
-<article class="group relative flex flex-col" data-category="@cat">
+<article class="group relative flex min-w-0 flex-col" data-category="@cat">
     <div class="relative aspect-[var(--gallery-card-aspect,4/3)] overflow-hidden rounded-lg border border-border bg-surface-2">
         @if (hasImage)
         {
@@ -22,6 +23,10 @@
             <div class="flex h-full w-full items-end p-5" aria-hidden="true">
                 <span class="font-display text-6xl font-semibold text-accent">@mark</span>
             </div>
+        }
+        @if (coverVideo)
+        {
+            <a href="@p.HeroImage" target="_blank" rel="noopener" class="absolute bottom-3 right-3 z-10 rounded bg-bg/90 px-2 py-1 text-xs text-accent hover:text-accent-strong">@Text(copy.WatchVideoText())</a>
         }
         @if (Model.ShowFeatured && p.Featured)
         {
@@ -35,13 +40,13 @@
         }
         @if (Model.HeadingLevel == 2)
         {
-            <h2 class="mt-1 text-xl"><a href="/projects/@p.Slug" class="text-text after:absolute after:inset-0 hover:text-accent">@p.Title</a></h2>
+            <h2 class="mt-1 break-words text-xl"><a href="/projects/@p.Slug" class="text-text after:absolute after:inset-0 hover:text-accent">@p.Title</a></h2>
         }
         else
         {
-            <h3 class="mt-1 text-xl"><a href="/projects/@p.Slug" class="text-text after:absolute after:inset-0 hover:text-accent">@p.Title</a></h3>
+            <h3 class="mt-1 break-words text-xl"><a href="/projects/@p.Slug" class="text-text after:absolute after:inset-0 hover:text-accent">@p.Title</a></h3>
         }
-        <p class="mt-2 line-clamp-2 text-sm text-muted">@p.Summary</p>
+        <p class="mt-2 line-clamp-2 break-words text-sm text-muted">@p.Summary</p>
         @if (p.Tech.Count > 0)
         {
             <div class="mt-3 flex flex-wrap gap-2">
@@ -51,6 +56,6 @@
                 }
             </div>
         }
-        <p class="mt-3 text-xs text-muted group-hover:text-accent" aria-hidden="true">@Text($"Read {item.ToLowerInvariant()} →")</p>
+        <p class="mt-3 text-xs text-muted group-hover:text-accent" aria-hidden="true">@Text(copy.ReadItemFor(item))</p>
     </div>
 </article>
