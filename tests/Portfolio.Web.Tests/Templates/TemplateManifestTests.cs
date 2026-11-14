@@ -152,6 +152,12 @@ public class TemplateManifestTests
         Assert.Contains(Errors(t => t.Copy.Home.WorkHeading = "<b>x</b>"), e => e.Contains("plain text"));
         Assert.Contains(Errors(t => t.Copy.Home.ViewWork = "<b>x</b>"), e => e.Contains("copy.home.viewWork") && e.Contains("plain text"));
         Assert.Contains(Errors(t => t.Copy.Projects.NextItem = "<i>"), e => e.Contains("copy.projects.nextItem") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Home.ViewWork = "View {item}"), e => e.Contains("copy.home.viewWork") && e.Contains("{item}"));
+        Assert.Contains(Errors(t => t.Copy.Home.AllWork = "{work} {typo}"), e => e.Contains("copy.home.allWork") && e.Contains("{typo}"));
+        Assert.Contains(Errors(t => t.Copy.Projects.NextItem = "Next {work}"), e => e.Contains("copy.projects.nextItem") && e.Contains("{work}"));
+        Assert.Contains(Errors(t => t.Copy.Projects.ReadItem = "Read {name}"), e => e.Contains("copy.projects.readItem") && e.Contains("{name}"));
+        Assert.Contains(Errors(t => t.Copy.Projects.WatchVideo = "Watch {item}"), e => e.Contains("copy.projects.watchVideo") && e.Contains("no placeholders"));
+        Assert.Empty(Errors(t => { t.Copy.Home.ViewWork = "Open {work}"; t.Copy.Projects.ReadItem = "Open the {item}"; t.Copy.Projects.WatchVideo = "Watch"; }));
         Assert.Empty(Errors(t => { t.Copy.Home.ViewWork = ""; t.Copy.Projects.ReadItem = ""; })); // the new wording keys are optional
         Assert.Contains(Errors(t => t.Copy.Contact.Description = new string('x', 200)), e => e.Contains("copy.contact.description"));
         Assert.Contains(Errors(t => t.SkillGroups.Add("backend")), e => e.Contains("repeat"));

@@ -191,6 +191,9 @@ public class GalleryArchetypeTests
                     // A picture whose address is not safe to link, and one with a blank caption.
                     new Project { Title = "Odd addresses", Slug = "odd", Summary = "Odd pictures.", HeroImage = "/img/projects/telemetry.svg", HeroImageAlt = "   ", SortOrder = order++,
                         Screenshots = [new ProjectImage { Url = "//evil.example/x.mp4", Caption = "Evil" }, new ProjectImage { Url = "/img/projects/telemetry-1.svg", Caption = "  " }] },
+                    // Long unbroken words everywhere a visitor's text can go.
+                    new Project { Title = "Overflow", Slug = "overflow", Summary = new string('s', 140), Category = new string('c', 60), Role = new string('r', 60), Org = new string('o', 60), Period = "2020",
+                        HeroImage = "/img/projects/telemetry.svg", Tech = [new string('t', 50)], Impact = [new string('i', 80)], Featured = true, SortOrder = order++ },
                     new Project { Title = "Uncategorised", Slug = "plain", Summary = "No category, no tools.", HeroImage = "/img/projects/telemetry.svg", SortOrder = order++ });
                 for (var i = 0; i < 9; i++)
                     db.Projects.Add(new Project { Title = $"Extra work {i}", Slug = $"extra-{i}", Summary = "More work.", Category = i % 2 == 0 ? "Even" : "Odd", HeroImage = "/img/projects/ledger.svg", Featured = i < 2, SortOrder = order++, Tech = ["a", "b", "c", "d"] });
@@ -325,7 +328,7 @@ public class GalleryArchetypeTests
         Assert.Matches($@"<a href=""/media/reel\.mp4"" target=""_blank"" rel=""noopener""[^>]*>{Regex.Escape(Escaped(copy.WatchVideoText()))}</a>", projects);
         Assert.Matches($@"<a href=""/media/reel\.mp4"" target=""_blank"" rel=""noopener""[^>]*>{Regex.Escape(Escaped(copy.WatchVideoText()))}</a>", film);
         // A video picture with a caption is linked by its caption; the entry's own links still render beside it.
-        Assert.Matches(@"<a href=""/media/clip\.webm"" target=""_blank"" rel=""noopener""[^>]*>A clip</a>", film);
+        Assert.Matches($@"<a href=""/media/clip\.webm"" target=""_blank"" rel=""noopener""[^>]*>A clip — {Regex.Escape(Escaped(copy.WatchVideoText()))}</a>", film); // the link says it is a video, in words
         Assert.Contains("<a href=\"https://example.org/film\" target=\"_blank\" rel=\"noopener\"", film);
         Assert.Contains("Watch the film →", film);
         Assert.Equal(2, Regex.Matches(film, "data-lightbox-item").Count); // the two image pictures only
@@ -334,6 +337,24 @@ public class GalleryArchetypeTests
         var odd = await GetAsync(client, "/projects/odd");
         Assert.DoesNotContain("evil.example", odd);
         Assert.Matches(@"alt=""" + Regex.Escape(WebUtility.HtmlEncode(copy.AltFor("Odd addresses"))) + @"""", odd); // blank caption and blank HeroImageAlt both fall back
+
+        // Long unbroken words wrap instead of widening the page: the gallery's own utility classes are on every place such text lands.
+        var cat = new string('c', 60);
+        Assert.Contains($"<p class=\"break-words text-[11px] uppercase tracking-wider text-muted\">{cat}</p>", projects);
+        Assert.Contains($"data-filter=\"{cat}\"", projects);
+        Assert.Matches($@"class=""filter-chip max-w-full break-words"" data-filter=""{cat}""", projects);
+        Assert.DoesNotMatch(@"class=""filter-chip(?! max-w-full break-words)[ ""]", projects.Replace("filter-chip is-active", "filter-chip"));
+        Assert.Contains(">" + new string('t', 50) + "<", projects);
+        foreach (var page in new[] { projects, home, await GetAsync(client, "/projects/overflow") })
+        {
+            Assert.DoesNotMatch(@"class=""tag""", page);
+            Assert.Contains("class=\"tag max-w-full break-words\"", page);
+        }
+        var overflow = await GetAsync(client, "/projects/overflow");
+        Assert.Contains("<p class=\"mt-3 break-words font-mono text-xs text-muted\">", overflow);
+        Assert.Contains("class=\"min-w-0 break-words border-l-2", overflow); // outcomes wrap too
+        Assert.Contains("class=\"group relative mx-auto flex w-full min-w-0 max-w-[var(--gallery-card-max,40rem)] flex-col\"", projects);
+        Assert.Contains("break-words text-xl", projects);
 
         // A project with nothing to show gets a decorative initials tile that is hidden from screen readers.
         Assert.Matches(@"<div class=""flex h-full w-full items-end p-5"" aria-hidden=""true"">\s*<span[^>]*>NP</span>", projects);
@@ -503,6 +524,17 @@ public class GalleryArchetypeTests
     }
 
     [Theory]
+    [InlineData("View {work}", "the {item} wall", "View the {item} wall")]            // a label that looks like a token is printed as written
+    [InlineData("{work} / {work}", "{item}", "{item} / {item}")]
+    [InlineData("", "Series", "View Series")]                                          // empty uses the default
+    public void FillingAPattern_IsASinglePass_SoALabelContainingATokenIsNotFilledAgain(string pattern, string work, string expected) =>
+        Assert.Equal(expected, CopyText.Fill(pattern, "View {work}", work, null));
+
+    [Fact]
+    public void FillingAnItemPattern_LowerCasesTheItemLabel_AndLeavesAnItemLabelThatContainsATokenAlone() =>
+        Assert.Equal("Next {work} study", CopyText.Fill("Next {item}", "x", "ignored", "{WORK} Study"));
+
+    [Theory]
     [InlineData("../gallery")]
     [InlineData("gallery/../showcase")]
     [InlineData("..")]
@@ -535,6 +567,10 @@ public class GalleryArchetypeTests
     [InlineData("https://example.org/a.mp4", true)]
     [InlineData("http://example.org/a.mp4", true)]
     [InlineData("//evil.example/a.mp4", false)]
+    [InlineData("/\\evil.example/a.mp4", false)]
+    [InlineData("/\t/evil.example/a.mp4", false)]
+    [InlineData("/media/../secret.mp4", false)]
+    [InlineData("https://user:pw@example.org/a.mp4", false)]
     [InlineData("javascript:alert(1)", false)]
     [InlineData("data:text/html,x", false)]
     [InlineData("a.mp4", false)]
