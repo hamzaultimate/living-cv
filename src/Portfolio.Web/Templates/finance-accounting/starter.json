@@ -39,9 +39,9 @@
         "label": "annual savings found in a spend review"
       },
       {
-        "value": "0",
+        "value": "100%",
         "unit": "",
-        "label": "significant findings in the last three audits"
+        "label": "of statutory filings submitted on time"
       }
     ],
     "about": {
