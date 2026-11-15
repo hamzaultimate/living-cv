@@ -1,4 +1,4 @@
-// Fictional sample content for the Finance & Accounting template. Every person, employer, client, engagement and figure below is invented.
+// Fictional sample content for the Finance & Accounting template. Every person, employer, entity, client, engagement and figure below is invented.
 // The pictures are simple generated placeholders bundled under wwwroot/img/starter/finance-accounting.
 {
   "fictional": true,
@@ -7,7 +7,7 @@
     "brandName": "Rhea",
     "role": "Finance & Accounting Manager · Reporting, FP&A and controls (sample profile)",
     "jobTitle": "Finance and Accounting Manager",
-    "summary": "Sample profile (fictional). Finance and accounting manager with eleven years across audit, reporting and finance leadership, focused on accurate numbers, strong controls and forecasts the business can act on.",
+    "summary": "Sample profile (fictional). Finance and accounting manager with more than ten years across audit, reporting and finance leadership, focused on accurate numbers, strong controls and forecasts the business can act on.",
     "knowsAbout": [
       "Financial reporting",
       "Management accounting",
@@ -20,7 +20,7 @@
       "eyebrow": "Finance & Accounting · Reporting, FP&A and controls",
       "headline": "Accurate books, clear forecasts,",
       "headlineAccent": "decisions the business can trust.",
-      "lede": "Sample profile (fictional). Eleven years across audit, reporting and finance leadership, from the month-end close to the annual forecast, with the numbers to show for it."
+      "lede": "Sample profile (fictional). More than ten years across audit, reporting and finance leadership, from the month-end close to the annual forecast, with the numbers to show for it."
     },
     "metrics": [
       {
@@ -88,11 +88,11 @@
       "start": "2021",
       "end": null,
       "current": true,
-      "summary": "Lead a four-person finance team covering the month-end close, management reporting, the rolling forecast and audit support for a sample industrial supplier.",
+      "summary": "Lead a four-person finance team covering the month-end close, management reporting, the rolling forecast and audit support for a sample industrial supplier and the group entities it owns.",
       "highlights": [
-        "Cut the month-end close from nine working days to five",
-        "Replaced the annual budget with rolling quarterly forecasts",
-        "Led the move to a new ledger and reporting platform with no restatements"
+        "Own the close, the reporting and the forecast for every entity in the group",
+        "Led the finance side of a ledger and reporting migration",
+        "Mentored two analysts into senior accountant roles"
       ],
       "tech": [
         "Month-end close",
@@ -122,7 +122,7 @@
       "sortOrder": 2
     },
     {
-      "company": "Placeholder Assurance LLP (fictional)",
+      "company": "Placeholder Assurance (fictional)",
       "title": "Audit Senior",
       "start": "2014",
       "end": "2018",
@@ -235,12 +235,12 @@
       "role": "Finance manager",
       "org": "Wexcombe",
       "period": "2024",
-      "summary": "Cutting the monthly close from nine working days to five for a sample industrial supplier. Sample engagement (fictional).",
+      "summary": "Cutting the monthly close from nine working days to five for one entity of a sample group. Sample engagement (fictional).",
       "category": "Reporting and close",
       "problem": "The close took nine working days, late journals kept reopening the ledger and the leadership team saw results too late to act on them.",
       "approach": "Mapped every close task and its owner, moved recurring journals to a schedule, agreed a cut-off calendar with each department and added a short checklist review before sign-off.",
       "impact": [
-        "56% faster month-end close",
+        "44% shorter month-end close",
         "40% fewer manual journals",
         "No late board pack in 12 months"
       ],
@@ -276,7 +276,7 @@
       "role": "FP&A lead",
       "org": "Lorvane",
       "period": "2023",
-      "summary": "Replacing a yearly budget with rolling quarterly forecasts for a sample distribution business. Sample engagement (fictional).",
+      "summary": "Replacing a yearly budget with rolling quarterly forecasts for a sample group's distribution arm. Sample engagement (fictional).",
       "category": "FP&A",
       "problem": "The annual budget was out of date by March, so decisions were made on numbers nobody believed.",
       "approach": "Built a driver-based model with the commercial and operations leads, named an owner for every assumption and compared the forecast with actuals each month.",
@@ -313,7 +313,7 @@
       "role": "Finance business partner",
       "org": "Pentriss",
       "period": "2023",
-      "summary": "A review of indirect spend for a sample manufacturer, with every category given an owner. Sample engagement (fictional).",
+      "summary": "A review of indirect spend for a sample group's manufacturing arm, with every category given an owner. Sample engagement (fictional).",
       "category": "Cost control",
       "problem": "Indirect spend had grown faster than revenue for three years and nobody owned the categories.",
       "approach": "Classified a year of spend, named a budget owner for each category, benchmarked the largest suppliers and renegotiated the contracts with the biggest gaps.",
@@ -354,7 +354,7 @@
       "role": "Project accountant",
       "org": "Garrowick",
       "period": "2022",
-      "summary": "Moving the ledger and the reporting to a new platform for a sample distributor. Sample engagement (fictional).",
+      "summary": "Moving the ledger and the reporting to a new platform for a sample group's distribution arm. Sample engagement (fictional).",
       "category": "Systems",
       "problem": "The old ledger could not produce consolidated reports without a week of manual spreadsheet work.",
       "approach": "Mapped the chart of accounts, ran two parallel closes, reconciled every balance at cut-over and trained the team before go-live.",
@@ -384,7 +384,7 @@
       "role": "Finance manager",
       "org": "Sovrellan",
       "period": "2022",
-      "summary": "Building year-round audit evidence for a sample multi-site operator. Sample engagement (fictional).",
+      "summary": "Building year-round audit evidence for a sample group's multi-site operating arm. Sample engagement (fictional).",
       "category": "Audit and controls",
       "problem": "Audits needed six weeks of evidence gathering and produced the same control findings every year.",
       "approach": "Documented the key controls, assigned a reviewer to each, kept the evidence in one shared index as the work happened and closed the repeat findings first.",
@@ -420,7 +420,7 @@
       "role": "Senior accountant",
       "org": "Duskmere",
       "period": "2021",
-      "summary": "A filing calendar and review routine for a sample multi-entity business. Sample engagement (fictional).",
+      "summary": "A filing calendar and review routine for the six entities of a sample group. Sample engagement (fictional).",
       "category": "Tax and compliance",
       "problem": "Filings were tracked in several personal spreadsheets and two deadlines were missed in one year.",
       "approach": "Built one calendar of every filing with an owner and a reviewer, set reminders ahead of each date and wrote a short review step for the larger returns.",

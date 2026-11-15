@@ -160,8 +160,8 @@
           "hint": "Your part, for example Finance lead or Project accountant."
         },
         "org": {
-          "label": "Client or organisation",
-          "hint": "Shown on the card and in the client strip on the home page. Only name a client or employer you have permission to name."
+          "label": "Entity or client",
+          "hint": "The business entity or client the work was for. Shown on the card and in the strip on the home page. Only name an entity, employer or client you have permission to name."
         },
         "problem": {
           "label": "The situation",
@@ -173,7 +173,7 @@
         },
         "impact": {
           "label": "Results",
-          "hint": "One result per line, up to 8. Start with the figure, such as \"56% faster close\", so it is shown large; the first line is shown on the card. Use figures you can share."
+          "hint": "One result per line, up to 8. Start with the figure, such as \"44% shorter close\", so it is shown large; the first line is shown on the card. Use figures you can share."
         },
         "tech": {
           "label": "Methods and systems"
@@ -370,7 +370,7 @@
       "allWork": "Every engagement →",
       "downloadCv": "View my full CV",
       "linkedIn": "LinkedIn profile",
-      "clientsHeading": "Selected clients"
+      "clientsHeading": "Entities and clients supported"
     },
     "projects": {
       "title": "Engagements",
