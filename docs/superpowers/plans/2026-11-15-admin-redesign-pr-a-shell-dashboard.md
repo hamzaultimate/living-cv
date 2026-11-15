@@ -239,7 +239,6 @@ Create `tests/Portfolio.Web.Tests/Admin/AdminMenuTests.cs`:
 
 ```csharp
 using System.Text.Json.Nodes;
-using Portfolio.Data.Entities;
 using Portfolio.Web.Configuration;
 using Portfolio.Web.Services;
 using Portfolio.Web.Tests.Support;
@@ -252,7 +251,7 @@ public class AdminMenuTests
 {
     private static readonly AdminMenu Menu = new();
 
-    private static TemplateView Software(params SectionSetting[] sections) =>
+    private static TemplateView Software(params SectionOption[] sections) =>
         new TemplateResolver(new TemplateCatalog(Path.Combine(AppContext.BaseDirectory, "Templates")))
             .Resolve(new SiteOptions { TemplateKey = "software", Sections = sections.ToList() }, null);
 
@@ -326,7 +325,7 @@ public class AdminMenuTests
     [Fact]
     public void ASectionTheTemplateSwitchesOff_StaysInTheMenu_FlaggedHidden()
     {
-        var model = Menu.Build(Software(new SectionSetting { Key = "talks", Enabled = false, Shown = false }), "/admin", null);
+        var model = Menu.Build(Software(new SectionOption { Key = "talks", Enabled = false, Shown = false }), "/admin", null);
 
         var talks = Find(model, "content.talks");
         Assert.True(talks.Hidden);
@@ -588,7 +587,7 @@ public sealed class AdminMenu
 }
 ```
 
-Notes for the implementer: `Item("...", "...", "...", "")` uses an empty icon key for children (the link partial draws no icon for an empty key). `Sections = sections.ToList()` in the test assumes `SiteOptions.Sections` is a `List<SectionSetting>`; if it is another collection type, adjust that one line.
+Notes for the implementer: `Item("...", "...", "...", "")` uses an empty icon key for children (the link partial draws no icon for an empty key). `SiteOptions.Sections` is a `List<SectionOption>` (namespace `Portfolio.Web.Configuration`, verified), the web-config twin of the entity `SectionSetting`, so the unit tests build overrides with `SectionOption`.
 
 - [ ] **Step 4: Run to verify it passes**
 
@@ -1711,7 +1710,7 @@ namespace Portfolio.Web.Tests.Admin;
 
 public class AdminDashboardTests
 {
-    private static TemplateView Software(params SectionSetting[] sections) =>
+    private static TemplateView Software(params SectionOption[] sections) =>
         new TemplateResolver(new TemplateCatalog(Path.Combine(AppContext.BaseDirectory, "Templates")))
             .Resolve(new SiteOptions { TemplateKey = "software", Sections = sections.ToList() }, null);
 
@@ -1772,7 +1771,7 @@ public class AdminDashboardTests
     {
         var counts = new ContentCounts(EditorFields.Sections.ToDictionary(s => s, s => s == "experience" ? 3 : 0), 0);
 
-        var tasks = AdminDashboard.Build(Software(new SectionSetting { Key = "talks", Enabled = false, Shown = false }), State(true, "/uploads/p.jpg"), "/admin/welcome", counts).Checklist!;
+        var tasks = AdminDashboard.Build(Software(new SectionOption { Key = "talks", Enabled = false, Shown = false }), State(true, "/uploads/p.jpg"), "/admin/welcome", counts).Checklist!;
 
         Assert.DoesNotContain(tasks, t => t.Url == "/admin/welcome");
         Assert.DoesNotContain(tasks, t => t.Url == "/admin/photo");
