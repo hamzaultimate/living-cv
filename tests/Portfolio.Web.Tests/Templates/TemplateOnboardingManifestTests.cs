@@ -224,12 +224,33 @@ public class TemplateOnboardingManifestTests
         }).ToList();
     }
 
+    /// <summary>Every template the catalog loads, so a new template's accent choices are checked without touching this list.</summary>
+    public static TheoryData<string> ShippedKeys
+    {
+        get
+        {
+            var data = new TheoryData<string>();
+            foreach (var t in new TemplateCatalog(TemplatesDir).All) data.Add(t.Key);
+            return data;
+        }
+    }
+
+    [Fact]
+    public void TheAccentContrastCheck_CoversEveryTemplateInTheCatalog()
+    {
+        var keys = new TemplateCatalog(TemplatesDir).All.Select(t => t.Key).ToList();
+        var folders = Directory.EnumerateDirectories(TemplatesDir).Where(d => !Path.GetFileName(d).StartsWith('_')).Select(d => Path.GetFileName(d)!).OrderBy(x => x).ToList();
+
+        Assert.NotEmpty(keys);
+        Assert.Equal(folders, keys.OrderBy(x => x).ToList());
+    }
+
     [Theory]
-    [InlineData("software")]
-    [InlineData("healthcare")]
+    [MemberData(nameof(ShippedKeys))]
     public void EveryAccentTone_KeepsBodyTextContrast_OnItsTemplateBackgrounds(string key)
     {
         var t = Load(key);
+        Assert.NotEmpty(t.Theme.Accents);
         foreach (var accent in t.Theme.Accents)
             foreach (var (mode, tone) in new[] { ("dark", accent.Dark), ("light", accent.Light) })
             {

@@ -67,6 +67,36 @@ public class ResultsArchetypeTests
 
     // ---------------------------------------------------------------- the manifest and its files
 
+    [Fact]
+    public void NoLayoutPartialBlockOrWorkPage_NamesATemplate_ByKeyThemeOrProfession()
+    {
+        var catalog = new TemplateCatalog(G.TemplatesDir);
+        var names = catalog.All.SelectMany(t => new[] { t.Key, t.Theme.Default }).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().ToList();
+        var files = Directory.EnumerateFiles(G.Layouts, "*.cshtml", SearchOption.AllDirectories)
+            .Concat(Directory.EnumerateFiles(Path.Combine(TemplateDirs.Web, "Pages", "Shared", "Blocks"), "*.cshtml"))
+            .Concat(new[] { "Projects.cshtml", "ProjectDetail.cshtml", "Index.cshtml" }.Select(f => Path.Combine(TemplateDirs.Web, "Pages", f)))
+            .ToList();
+
+        Assert.True(files.Count >= 12);
+        Assert.True(names.Count >= 7);
+        foreach (var file in files)
+        {
+            var text = File.ReadAllText(file);
+            Assert.DoesNotMatch(@"(?i)templateKey|Theme\.Default|Definition\.(Key|Name|Profession)|\.Key\s*[!=]=", text);
+            foreach (var name in names) Assert.False(Regex.IsMatch(text, $@"[""']{Regex.Escape(name!)}[""']"), $"{Path.GetFileName(file)} names the template '{name}'");
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public void EveryResultsPreset_HidesTheTalksYouTubeField_BecauseTheLayoutNeverPlaysVideo(string key)
+    {
+        var talks = G.Definition(key).Editor.Talks;
+
+        Assert.True(talks.Fields.TryGetValue("youtubeId", out var field), $"{key} does not mention the youtubeId field");
+        Assert.True(field!.Hidden, $"{key} must hide the YouTube field");
+    }
+
     [Theory]
     [MemberData(nameof(KeyData))]
     public void ATemplateOnTheResultsArchetype_HasItsLayoutThemeStarterAndThumbnail(string key)
@@ -124,6 +154,14 @@ public class ResultsArchetypeTests
         Assert.Contains("copy.FilterAllText()", File.ReadAllText(Path.Combine(ResultsLayouts, "_Projects.cshtml")));
     }
 
+    /// <summary>A legal form (Inc, Ltd, LLC, LLP, GmbH, PLC) makes an invented name read like a registered business, whether it is a separate word or glued to the name.</summary>
+    internal static void AssertNoLegalFormSuffix(string name)
+    {
+        Assert.DoesNotMatch(@"(?i)\b(inc|ltd|llc|llp|lp|gmbh|plc)\b\.?", name);
+        Assert.DoesNotMatch(@"(?i)[a-z](llp|llc|ltd|gmbh|plc)$", name.Trim());
+        Assert.DoesNotMatch(@"[a-z](Inc|LLP|LLC|Ltd|GmbH|PLC|LP)$", name.Trim());
+    }
+
     [Theory]
     [MemberData(nameof(KeyData))]
     public void TheStarterContent_IsFictional_UsesOnlyBundledPictures_DescribesEveryOne_AndCarriesResults(string key)
@@ -143,6 +181,9 @@ public class ResultsArchetypeTests
         Assert.Contains(starter.Projects, p => !ImpactLine.Split(p.Impact[0]).HasFigure); // a result that does not start with a figure is shown whole
         Assert.True(starter.Projects.Select(p => p.Org).Where(o => !string.IsNullOrWhiteSpace(o)).Distinct().Count() >= 3, "the client strip needs a few names");
         Assert.All(starter.Experiences, e => Assert.Contains("fictional", e.Company, StringComparison.OrdinalIgnoreCase));
+        // No invented employer or client carries a legal-form suffix, apart or glued onto the name ("... LLP", "WexcombeLLP").
+        foreach (var name in starter.Experiences.Select(e => e.Company.Replace("(fictional)", "", StringComparison.OrdinalIgnoreCase).Trim()).Concat(starter.Projects.Select(p => p.Org ?? "")))
+            AssertNoLegalFormSuffix(name);
         Assert.All(starter.Projects, p => Assert.Contains("(sample)", p.Title));
         // Client names are invented wordmarks: coined single words (no address, handle, industry word or company suffix), each used only by a "(sample)" entry. The honesty lives in the
         // "(sample)" titles and the profile summary above, not in the strip.
@@ -368,9 +409,16 @@ public class ResultsArchetypeTests
         var starter = new TemplateCatalog(G.TemplatesDir).GetStarter(key)!;
 
         var home = Plain(await G.GetAsync(app.NewClient(), "/"));
+        var band = Regex.Match(home, "<ul[^>]*data-results-band.*?</ul>", RegexOptions.Singleline).Value;
 
-        Assert.Equal(starter.Profile.Metrics.Count, Regex.Matches(home, "data-metric").Count);
-        foreach (var m in starter.Profile.Metrics) { Assert.Contains(">" + m.Label + "<", home); Assert.Contains(m.Value, home); }
+        Assert.NotEmpty(band);
+        Assert.Equal(starter.Profile.Metrics.Count, Regex.Matches(band, "data-metric").Count);
+        // Each value is looked for as the figure's own text inside the band (a short value such as "5" or "0" would be found anywhere on the page), followed by its unit or the end of the figure.
+        foreach (var m in starter.Profile.Metrics)
+        {
+            Assert.Matches($@">{Regex.Escape(m.Value)}(<span[^>]*> {Regex.Escape(m.Unit ?? "")}</span>)?</p>", band);
+            Assert.Contains(">" + m.Label + "<", band);
+        }
     }
 
     [Theory]
@@ -790,11 +838,13 @@ public class ResultsArchetypeTests
         using var app = await G.SiteAsync(key, "sample");
 
         // Order is the template's own: experience, then qualifications, then the engagements, in the menu.
-        Assert.Equal(["experience", SectionRegistry.Certifications, SectionRegistry.Projects], template.Sections.Where(s => s.Enabled).Take(3).Select(s => s.Key));
+        Assert.Equal([SectionRegistry.Experience, SectionRegistry.Certifications, SectionRegistry.Projects, SectionRegistry.Skills, SectionRegistry.About, SectionRegistry.Blog, SectionRegistry.Testimonials, SectionRegistry.Contact],
+            template.Sections.Where(s => s.Enabled).Select(s => s.Key));
         var home = await G.GetAsync(app.NewClient(), "/");
         var menu = Regex.Match(home, @"<nav class=""hidden items-center gap-6 md:flex"">.*?</nav>", RegexOptions.Singleline).Value;
         var hrefs = Regex.Matches(menu, @"href=""(/[a-z]*)""").Select(m => m.Groups[1].Value).ToList();
-        Assert.Equal(["/experience", "/certifications", "/projects"], hrefs.Take(3));
+        Assert.Equal(["/experience", "/certifications", "/projects", "/skills", "/about", "/blog", "/cv"], hrefs); // the whole menu, in order (talks are off; contact has its own button)
+        Assert.Equal(["experience", "qualifications", "engagements", "skills", "about", "notes", "cv"], Regex.Matches(menu, @"<a class=""nav-link"" href=""/[a-z]*"">([^<]*)</a>").Select(m => m.Groups[1].Value)); // the desktop menu uses the short labels
 
         // Held qualifications reach the Person markup; one still being studied for does not.
         var ld = string.Concat(Regex.Matches(home, @"<script type=""application/ld(?:\+|&#x2B;)json"">(.*?)</script>", RegexOptions.Singleline).Select(m => m.Groups[1].Value));
