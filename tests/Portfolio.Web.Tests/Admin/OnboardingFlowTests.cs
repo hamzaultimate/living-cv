@@ -299,7 +299,7 @@ public class OnboardingFlowTests
         Assert.Contains("licences & registrations", html);
         Assert.Contains("Case study", html);
         Assert.Contains("Initiative", html);
-        Assert.Equal(5, Regex.Matches(html, "Before you publish").Count); // the sensitive template, the two gallery templates and the two results templates carry guidance, software does not
+        Assert.Equal(6, Regex.Matches(html, "Before you publish").Count); // the sensitive template, the two gallery templates and the three results templates carry guidance, software does not
         Assert.Contains("patient-identifiable", html);
         Assert.Contains("confidential screens", html);
         Assert.Contains(">Photographer and filmmaker</h2>", html);
@@ -309,7 +309,10 @@ public class OnboardingFlowTests
         Assert.Contains("confidential numbers", html);
         Assert.Contains(">Sales and business development lead</h2>", html);
         Assert.Contains("src=\"/admin/welcome/thumb/sales-bd\"", html);
-        Assert.Equal(6, Regex.Matches(html, "type=\"radio\" name=\"Key\"").Count);
+        Assert.Contains(">Finance and accounting professional</h2>", html);
+        Assert.Contains("src=\"/admin/welcome/thumb/finance-accounting\"", html);
+        Assert.Contains("confidential financial", html);
+        Assert.Equal(7, Regex.Matches(html, "type=\"radio\" name=\"Key\"").Count);
     }
 
     [Fact]

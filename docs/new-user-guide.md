@@ -69,7 +69,7 @@ Publish**: the draft is stored apart from the live profile, and the public pages
 showing the placeholder site meanwhile.
 
 1. **Template.** Cards grouped by profession show a thumbnail, the pages the template has, what a piece of work is
-   called, whether sample content is available and any guidance (Healthcare reminds you never to publish patient data; Design & UX and Photography & Film remind you to publish only work you have the right to show; Marketing & Content and Sales & Business Development remind you to publish only figures and client names you may share).
+   called, whether sample content is available and any guidance (Healthcare reminds you never to publish patient data; Design & UX and Photography & Film remind you to publish only work you have the right to show; Marketing & Content, Sales & Business Development and Finance & Accounting remind you to publish only figures and client names you may share; Finance & Accounting also warns against confidential financial data).
 2. **Basics.** Name, professional title, email, location (optional) and a short summary. Title and summary start
    from the template's suggestion; they are published as written, so edit them.
 3. **Photo.** Optional. The photo goes through the same checks as the Photo page (JPEG, PNG or WebP, re-encoded,
@@ -365,7 +365,7 @@ These values are the defaults for the site profile. With a database, they are co
 
 ### Template
 
-The wizard's first step picks the template; to change it later without running the wizard, go to `/admin/template`, where you pick the template that suits your profession: **Software & IT**, **Healthcare**, **Design & UX**, **Photography & Film**, **Marketing & Content** or **Sales & Business Development**.
+The wizard's first step picks the template; to change it later without running the wizard, go to `/admin/template`, where you pick the template that suits your profession: **Software & IT**, **Healthcare**, **Design & UX**, **Photography & Film**, **Marketing & Content**, **Sales & Business Development** or **Finance & Accounting**.
 Choose a card, press Preview, and the public site is shown inside the page in that template's layout, wording and
 colours, with tabs for each page and a mobile width. Nothing is saved until you press "Use ...". Switching never
 deletes content: sections the new template does not use (for example Blog posts under Healthcare) are hidden from the
@@ -381,14 +381,13 @@ look with a warm accent; Photography & Film calls it a "Series" and uses a darke
 with fictional sample content (clearly marked "sample") so you can see the layout before you add your own work. The pictures that come with the samples
 are simple generated placeholders; replace them in the project editor.
 
-**Marketing & Content and Sales & Business Development (the results layout).** These two templates lead with numbers. The top of the home page is your introduction followed by a large band of
+**Marketing & Content, Sales & Business Development and Finance & Accounting (the results layout).** These three templates lead with numbers. The top of the home page is your introduction followed by a large band of
 your **Key figures** (the Key figures page under Profile: each figure's value, unit and description, shown as big tiles; the band is hidden when you have none). Below it is a strip of **client names**
 (the "Client" field of your work entries, each name once, in the order your work appears; they are plain text, not logos), then your featured work as cards, your skills and any testimonials. Each card has a cover
 picture, the title, the client, and the **first line of the entry's Results** (the "impact" field): if that line starts with a short figure such as `+38%`, `2.1M`, `$1,200` or `10x`, the figure is
 shown large and the rest of the line beside it; a line that starts with a word is shown as written. The entry's own page lists every result line the same way above the cover, then the situation and how it was won, the tools and links and your pictures.
 So write each result with its figure first, one per line. Marketing & Content calls a piece a "Case study" and uses an ink-blue look with a magenta accent; Sales & Business Development calls it a "Deal" and uses a navy look with an emerald accent and
-wider cards. Talks are off in both and their YouTube field is hidden (video is a link, never a player, as in the gallery layout). Both show a note before you publish: only share figures and client names you are allowed to, round
-or index confidential numbers, and ask before naming a client. Both can start with fictional sample content (clearly marked "sample"; the client names are invented). The pictures that come with the samples are simple generated charts and layouts; replace them in the project editor.
+wider cards. Finance & Accounting calls a piece an "Engagement" and is **CV-first**: the menu opens with Experience and Qualifications, then Engagements, Skills, About and Notes, the hero button reads "View my full CV", the cards have shallow covers so the figures and words lead, the strip of names is headed "Entities and clients supported" (the "Entity or client" field), and the look is a restrained graphite (or paper white) with a steel-blue accent and a serif display face. Your held qualifications are also listed in the site's structured data for search engines (ones you are still studying for are not). Talks are off in all three and their YouTube field is hidden (video is a link, never a player, as in the gallery layout). All three show a note before you publish: only share figures and client names you are allowed to and ask before naming a client; Marketing & Content and Sales & Business Development also advise rounding or indexing confidential numbers, and Finance & Accounting says never to publish confidential financial data (unreleased results, client accounts, payroll or tax records). All can start with fictional sample content (clearly marked "sample"; the client names are invented). The pictures that come with the samples are simple generated charts and layouts; replace them in the project editor.
 
 **Video is a link, not a player.** The gallery and results layouts never embeds video and never loads another site's player or script. To show a film, add a link in the
 piece's links ("Watch the film") and use a still from the film as the cover picture: visitors see the still and follow the link. There is no separate poster setting; the cover picture is the still. If you

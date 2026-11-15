@@ -1,0 +1,460 @@
+{
+  "$schema": "../template.schema.json",
+  "key": "finance-accounting",
+  "name": "Finance & Accounting",
+  "profession": "Finance and accounting professional",
+  "description": "A CV-first layout for finance and accounting professionals: experience and qualifications lead the menu, with headline figures and selected engagements that show the numbers.",
+  "archetype": "results",
+  "guidance": "Only publish figures, employer names and client names you are allowed to share. Never publish confidential financial data, such as unreleased results, client accounts, payroll or tax records, and check your employer and client agreements before naming anyone.",
+  "theme": {
+    "default": "finance-accounting",
+    "themeColor": "#12151a",
+    "accents": [
+      {
+        "key": "blue",
+        "label": "Blue",
+        "dark": {
+          "accent": "#7daadd",
+          "strong": "#a8c5ec"
+        },
+        "light": {
+          "accent": "#1e4a7a",
+          "strong": "#153760"
+        }
+      },
+      {
+        "key": "teal",
+        "label": "Teal",
+        "dark": {
+          "accent": "#5fb8b0",
+          "strong": "#8fd3cc"
+        },
+        "light": {
+          "accent": "#0f6b66",
+          "strong": "#0b524e"
+        }
+      },
+      {
+        "key": "bronze",
+        "label": "Bronze",
+        "dark": {
+          "accent": "#d1a45f",
+          "strong": "#e3be86"
+        },
+        "light": {
+          "accent": "#8a5a14",
+          "strong": "#6e460c"
+        }
+      },
+      {
+        "key": "burgundy",
+        "label": "Burgundy",
+        "dark": {
+          "accent": "#d98a98",
+          "strong": "#e9b0ba"
+        },
+        "light": {
+          "accent": "#8f2a41",
+          "strong": "#701f32"
+        }
+      }
+    ]
+  },
+  "heroSuggestions": {
+    "title": "Finance and Accounting Manager",
+    "summary": "Finance and accounting professional focused on accurate reporting, strong controls and forecasts the business can act on, with a record of faster closes and clean audits."
+  },
+  "sections": [
+    {
+      "key": "experience",
+      "label": "experience"
+    },
+    {
+      "key": "certifications",
+      "label": "qualifications",
+      "shortLabel": "qualifications"
+    },
+    {
+      "key": "projects",
+      "label": "selected engagements",
+      "shortLabel": "engagements",
+      "itemLabel": "Engagement"
+    },
+    {
+      "key": "skills",
+      "label": "skills & systems",
+      "shortLabel": "skills"
+    },
+    {
+      "key": "about",
+      "label": "about"
+    },
+    {
+      "key": "blog",
+      "label": "notes",
+      "itemLabel": "Note"
+    },
+    {
+      "key": "talks",
+      "label": "talks",
+      "enabled": false
+    },
+    {
+      "key": "testimonials",
+      "label": "references"
+    },
+    {
+      "key": "contact",
+      "label": "contact"
+    }
+  ],
+  "skillGroups": [
+    "Reporting and close",
+    "FP&A",
+    "Audit and controls",
+    "Tax and compliance",
+    "Systems"
+  ],
+  "seo": {
+    "title": "{name} — {title}",
+    "description": "{name}, {title}. Experience, qualifications and selected engagements with measured results.",
+    "aboutDescription": "About {name}, {title}: the experience, qualifications and approach behind the numbers.",
+    "credentialsJsonLd": true
+  },
+  "editor": {
+    "experience": {
+      "itemLabel": "Role",
+      "fields": {
+        "company": {
+          "label": "Employer"
+        },
+        "title": {
+          "label": "Role"
+        },
+        "summary": {
+          "hint": "The scope of the role: the team, the entities or the reporting you were responsible for."
+        },
+        "highlights": {
+          "label": "Key results",
+          "hint": "One per line, up to 12. Lead with the figure, such as days saved or accuracy reached."
+        },
+        "tech": {
+          "label": "Standards and systems"
+        }
+      }
+    },
+    "skills": {
+      "itemLabel": "Skill, standard or system",
+      "fields": {
+        "name": {
+          "label": "Skill, standard or system"
+        }
+      }
+    },
+    "projects": {
+      "fields": {
+        "title": {
+          "hint": "Name the engagement, for example the process or project and the kind of organisation."
+        },
+        "role": {
+          "hint": "Your part, for example Finance lead or Project accountant."
+        },
+        "org": {
+          "label": "Entity or client",
+          "hint": "The business entity or client the work was for. Shown on the card and in the strip on the home page. Only name an entity, employer or client you have permission to name."
+        },
+        "problem": {
+          "label": "The situation",
+          "hint": "The problem or requirement and what was at stake. Plain text."
+        },
+        "approach": {
+          "label": "What I did",
+          "hint": "The work, the controls or methods used and how you checked it. Plain text. Never include confidential financial data."
+        },
+        "impact": {
+          "label": "Results",
+          "hint": "One result per line, up to 8. Start with the figure, such as \"44% shorter close\", so it is shown large; the first line is shown on the card. Use figures you can share."
+        },
+        "tech": {
+          "label": "Methods and systems"
+        },
+        "heroImage": {
+          "label": "Cover image",
+          "hint": "Shown on the engagements grid and at the top of the engagement page. JPEG, PNG or WebP. Cropped to a wide, shallow card."
+        },
+        "screenshots": {
+          "label": "Supporting images",
+          "hint": "Add pictures one at a time on the Images page, such as a chart or a process diagram. Remove confidential figures first. Each needs a description for people who cannot see it."
+        },
+        "links": {
+          "label": "Links",
+          "hint": "Where to see more, such as a published report or article. Videos are linked, never embedded."
+        },
+        "category": {
+          "hint": "An area such as Reporting, FP&A or Audit and controls. Used by the filter on the engagements page."
+        }
+      }
+    },
+    "certifications": {
+      "itemLabel": "Qualification or membership",
+      "fields": {
+        "name": {
+          "label": "Qualification, membership or course"
+        },
+        "issuer": {
+          "label": "Awarding or professional body"
+        },
+        "credentialUrl": {
+          "label": "Link to the register entry or certificate"
+        }
+      }
+    },
+    "talks": {
+      "itemLabel": "Talk",
+      "fields": {
+        "event": {
+          "label": "Event or conference"
+        },
+        "typeVideo": {
+          "label": "Recording"
+        },
+        "typeTalk": {
+          "label": "Live talk"
+        },
+        "url": {
+          "label": "Link to the recording or slides",
+          "hint": "http or https. Recordings are linked, not embedded."
+        },
+        "youtubeId": {
+          "hidden": true
+        }
+      }
+    },
+    "testimonials": {
+      "itemLabel": "Reference",
+      "fields": {
+        "quote": {
+          "label": "What they said",
+          "hint": "Plain text. Only with the person's permission."
+        },
+        "author": {
+          "label": "Who said it"
+        },
+        "authorTitle": {
+          "label": "Their role and organisation"
+        }
+      }
+    },
+    "blog": {
+      "itemLabel": "Note",
+      "fields": {
+        "title": {
+          "label": "Note title"
+        },
+        "body": {
+          "label": "Note text",
+          "hint": "Markdown. Raw HTML is shown as text, not run."
+        },
+        "cover": {
+          "hint": "JPEG, PNG or WebP. Shown at the top of the post and when it is shared."
+        }
+      }
+    },
+    "hero": {
+      "fields": {
+        "heading": {
+          "label": "Home page introduction",
+          "hint": "The first thing visitors read, above your headline figures. Plain text. Changes apply as soon as you save."
+        },
+        "eyebrow": {
+          "label": "Role line",
+          "hint": "For example your profession, sector and specialism. Plain text."
+        },
+        "lede": {
+          "label": "Introduction"
+        }
+      }
+    },
+    "metrics": {
+      "itemLabel": "Figure",
+      "fields": {
+        "heading": {
+          "label": "Headline figures",
+          "hint": "The big numbers at the top of your home page, such as days to close, forecast accuracy or savings found. Only publish figures you can share. Changes apply as soon as you save."
+        },
+        "value": {
+          "hint": "For example 98% or $1.8M."
+        },
+        "unit": {
+          "hint": "For example days or per year."
+        },
+        "label": {
+          "label": "What it measures"
+        }
+      }
+    },
+    "sections": {
+      "itemLabel": "Page",
+      "fields": {
+        "heading": {
+          "label": "Pages of your site",
+          "hint": "Choose which pages the site has, what the menu calls them and in which order. Hiding a page never deletes it. Changes apply as soon as you save."
+        },
+        "label": {
+          "label": "Menu name"
+        }
+      }
+    },
+    "about": {
+      "itemLabel": "Principle",
+      "fields": {
+        "heading": {
+          "label": "About you",
+          "hint": "Your story, how you work and what you care about. Changes apply as soon as you save."
+        },
+        "valueProps": {
+          "label": "Principles",
+          "hint": "Short statements about how you work, shown above the text."
+        },
+        "currentlyNote": {
+          "label": "Currently"
+        },
+        "focus": {
+          "label": "Areas of focus",
+          "hint": "One per line."
+        }
+      }
+    },
+    "transfer": {
+      "itemLabel": "Entry",
+      "fields": {
+        "heading": {
+          "label": "Back up and restore your portfolio",
+          "hint": "Keep your portfolio in one file, or restore one. You see what would change first, and nothing is ever removed."
+        },
+        "exportHeading": {
+          "label": "Save a copy",
+          "hint": "One file with your details and every entry, including unpublished ones. Pictures you uploaded are listed, not included."
+        },
+        "importHeading": {
+          "label": "Restore from a file",
+          "hint": "Each entry in the file is matched to one of yours by its name or title: a match is updated, anything else is added."
+        },
+        "profile": {
+          "label": "Details"
+        }
+      }
+    }
+  },
+  "starter": {
+    "file": "starter.json"
+  },
+  "copy": {
+    "layout": {
+      "footerNote": "Finance and accounting portfolio. Figures and clients are shared with permission."
+    },
+    "home": {
+      "workEyebrow": "Selected engagements",
+      "workHeading": "Engagements and the numbers behind them",
+      "workEmptyTitle": "Engagements coming soon",
+      "workEmptyBody": "Add the engagements you are proudest of. Lead with the result, then explain the situation and what you did.",
+      "testimonialsEyebrow": "References",
+      "testimonialsHeading": "What colleagues and clients say",
+      "contactHeading": "Need a steady pair of hands? Let us talk.",
+      "experienceEyebrow": "Experience",
+      "experienceHeading": "Where I have worked",
+      "credentialsEyebrow": "Qualifications",
+      "credentialsHeading": "Qualifications & memberships",
+      "skillsHeading": "Skills & systems",
+      "viewWork": "See the engagements",
+      "allWork": "Every engagement →",
+      "downloadCv": "View my full CV",
+      "linkedIn": "LinkedIn profile",
+      "clientsHeading": "Entities and clients supported"
+    },
+    "projects": {
+      "title": "Engagements",
+      "description": "Selected engagements, each with the situation, what was done and the measured result.",
+      "eyebrow": "Selected engagements",
+      "heading": "Engagements and results",
+      "lead": "Each engagement leads with the outcome: the situation, what I did and what it was worth to the business.",
+      "emptyTitle": "No engagements yet",
+      "emptyBody": "Add your first engagement with the situation, what you did and the result it delivered.",
+      "filterLabel": "Filter engagements by area",
+      "featuredBadge": "featured",
+      "problemHeading": "The situation",
+      "approachHeading": "What I did",
+      "noWriteup": "The full account of this engagement is on the way.",
+      "stackHeading": "Methods & systems",
+      "linksHeading": "More detail",
+      "proofHeading": "References & documents",
+      "screenshotsHeading": "Supporting material",
+      "imageAlt": "{title} engagement image",
+      "galleryLabel": "Engagement images",
+      "openImageLabel": "View larger image",
+      "nextItem": "Next {item}",
+      "readItem": "Read the {item} →",
+      "watchVideo": "Watch the recording ↗",
+      "filterAll": "All areas"
+    },
+    "experience": {
+      "title": "Experience",
+      "description": "{name}'s finance and accounting experience: roles, scope and results, most recent first.",
+      "eyebrow": "Experience",
+      "heading": "Where I have worked",
+      "lead": "Most recent first: the role, the scope of the work and the results that followed.",
+      "empty": "No roles have been added yet."
+    },
+    "skills": {
+      "title": "Skills & systems",
+      "description": "Finance and accounting skills grouped by area: reporting and close, FP&A, audit and controls, tax and compliance, systems.",
+      "eyebrow": "Skills & systems",
+      "heading": "What I work with",
+      "lead": "Grouped by area: the methods, standards and systems I rely on.",
+      "empty": "No skills have been added yet."
+    },
+    "certifications": {
+      "title": "Qualifications",
+      "description": "Professional qualifications and memberships: held, in progress and planned.",
+      "eyebrow": "Qualifications",
+      "heading": "Qualifications & memberships",
+      "lead": "Professional qualifications, memberships and the study that keeps them current.",
+      "emptyTitle": "Nothing listed yet",
+      "emptyBody": "Add the qualifications or memberships you would like to show.",
+      "filterLabel": "Filter by awarding body",
+      "statusEarned": "Qualified",
+      "statusInProgress": "Studying",
+      "statusPlanned": "Next up",
+      "viewCertificate": "View certificate",
+      "viewCredential": "View details →"
+    },
+    "blog": {
+      "title": "Notes",
+      "description": "Notes on reporting, controls and planning.",
+      "eyebrow": "Notes",
+      "heading": "Notes on finance",
+      "lead": "What I am learning about reporting, controls and forecasting.",
+      "empty": "Notes coming soon."
+    },
+    "talks": {
+      "title": "Talks",
+      "description": "Talks, workshops and recordings.",
+      "eyebrow": "Talks",
+      "heading": "Talks & workshops",
+      "empty": "No talks listed yet. Check back soon.",
+      "watch": "Watch the recording →"
+    },
+    "contact": {
+      "description": "Contact {name}: email, phone or LinkedIn.",
+      "heading": "Need a steady pair of hands? Let us talk.",
+      "lead": "The best ways to reach me about finance roles, interim work or advisory conversations."
+    },
+    "cv": {
+      "description": "Curriculum vitae — {name}, {title}.",
+      "experienceHeading": "Professional experience",
+      "skillsHeading": "Skills & systems",
+      "projectsHeading": "Selected engagements",
+      "certificationsHeading": "Qualifications"
+    }
+  }
+}
