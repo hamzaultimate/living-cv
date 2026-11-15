@@ -507,6 +507,7 @@ public class OnboardingFlowTests
         var owner = await fresh.SignedInClientAsync();
         var dashboard = await owner.GetStringAsync("/admin");
         Assert.Contains("Finish setting up your site", dashboard);
+        Assert.Contains("Not finished", dashboard);
         foreach (var path in new[] { "/admin/profile", "/admin/photo", "/admin/template", "/admin" })
             Assert.Equal(HttpStatusCode.OK, (await owner.GetAsync(path)).StatusCode); // the admin shell never traps an owner in the wizard
 
@@ -520,7 +521,9 @@ public class OnboardingFlowTests
         }
         var done = await other.GetStringAsync("/admin");
         Assert.DoesNotContain("Finish setting up", done);
-        Assert.Contains("Run the guided setup again", done);
+        Assert.DoesNotContain("Not finished", done);
+        Assert.Contains("Finished", done); // the status row says so
+        Assert.Contains("href=\"/admin/welcome\"", AdminShellTests.MenuOf(done)); // and the wizard stays one click away for a re-run
     }
 
     [Fact]

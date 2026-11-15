@@ -217,6 +217,18 @@ a.adm-btn { text-decoration: none; display: inline-block; }
 .adm-menu-rail { display: none; }
 .adm-menu-toggle .adm-menu-label { white-space: nowrap; }
 
+/* Dashboard */
+.adm-statusrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; margin: 0; }
+.adm-statusrow dt { font-size: .8rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--adm-muted); }
+.adm-statusrow dd { margin: .15rem 0 0; font-weight: 600; }
+.adm-checklist { margin: 0; padding-left: 1.2rem; }
+.adm-checklist li + li { margin-top: .35rem; }
+.adm-counts { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+.adm-counts a { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; padding: .6rem .8rem; border: 1px solid var(--adm-border); border-radius: .5rem; background: var(--adm-bg); color: var(--adm-text); text-decoration: none; }
+.adm-counts a:hover { border-color: var(--adm-accent); }
+.adm-count-num { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.adm-counts .adm-hint { margin: .25rem .8rem 0; }
+
 /* Page header: breadcrumb on the left, an optional action slot on the right. The page's own h1 follows it. */
 .adm-pagehead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: 1rem; }
 .adm-crumbs ol { display: flex; flex-wrap: wrap; gap: .25rem; margin: 0; padding: 0; list-style: none; font-size: .875rem; color: var(--adm-muted); }
