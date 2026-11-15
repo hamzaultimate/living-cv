@@ -5,6 +5,17 @@
 }
 <h1>Dashboard</h1>
 <p class="adm-lede">Signed in as <strong>@User.Identity?.Name</strong>.</p>
+@if (Model.Dashboard.Status is { } status)
+{
+    <section class="adm-card" aria-labelledby="status-heading">
+        <h2 id="status-heading" class="adm-sr">Site status</h2>
+        <dl class="adm-statusrow">
+            <div><dt>Setup</dt><dd>@(status.SetupPending ? "Not finished" : "Finished")</dd></div>
+            <div><dt>Template</dt><dd>@status.TemplateName</dd></div>
+            <div><dt>Public site</dt><dd><a href="/" target="_blank" rel="noopener">View your site<span class="adm-sr"> (opens in a new tab)</span></a></dd></div>
+        </dl>
+    </section>
+}
 @if (Model.SetupPending)
 {
     <section class="adm-card adm-callout" aria-labelledby="setup-heading">
@@ -18,40 +29,33 @@
         </div>
     </section>
 }
-<div class="adm-grid">
-    <a class="adm-card adm-tile" href="/admin/profile">
-        <h2>Profile</h2>
-        <p>Name, title, summary and contact links.</p>
-    </a>
-    @foreach (var (url, heading) in Model.Parts)
-    {
-        <a class="adm-card adm-tile" href="@url">
-            <h2>@heading</h2>
-            <p>Changes apply to your public site as soon as you save.</p>
-        </a>
-    }
-    <a class="adm-card adm-tile" href="/admin/content">
-        <h2>Content</h2>
-        <p>Add, edit, reorder and remove your @Model.ContentLabels.</p>
-    </a>
-    <a class="adm-card adm-tile" href="/admin/sections">
-        <h2>@Model.SectionsHeading</h2>
-        <p>Show, hide, rename and reorder each "@Model.SectionsItem". Hiding never deletes what is in it.</p>
-    </a>
-    <a class="adm-card adm-tile" href="/admin/transfer">
-        <h2>@Model.TransferHeading</h2>
-        <p>Download everything as one file, or load one. You see a preview first, and nothing is ever deleted.</p>
-    </a>
-    <a class="adm-card adm-tile" href="/admin/photo">
-        <h2>Photo</h2>
-        <p>Upload or remove the profile photo shown on the home and About pages.</p>
-    </a>
-    <a class="adm-card adm-tile" href="/admin/welcome">
-        <h2>Setup wizard</h2>
-        <p>@(Model.SetupPending ? "Pick a template, enter your details and publish." : "Run the guided setup again: template, basics, photo and accent colour. Nothing is deleted.")</p>
-    </a>
-    <a class="adm-card adm-tile" href="/admin/template">
-        <h2>Template</h2>
-        <p>Choose the layout and wording for your profession, and preview it before switching.</p>
-    </a>
-</div>
+@if (Model.Dashboard.Checklist is { Count: > 0 } todo)
+{
+    <section class="adm-card adm-attention" aria-labelledby="todo-heading">
+        <h2 id="todo-heading">Finish your site</h2>
+        <ul class="adm-checklist">
+            @foreach (var task in todo)
+            {
+                <li><a href="@task.Url">@task.Text</a></li>
+            }
+        </ul>
+    </section>
+}
+@if (Model.Dashboard.Counts is { Count: > 0 } counts)
+{
+    <section class="adm-card" aria-labelledby="counts-heading">
+        <h2 id="counts-heading">Your content</h2>
+        <ul class="adm-counts">
+            @foreach (var row in counts)
+            {
+                <li>
+                    <a href="@row.Url"><span class="adm-count-label">@row.Label</span><span class="adm-count-num">@row.Count</span></a>
+                    @if (row.Detail is { } detail)
+                    {
+                        <span class="adm-hint">@detail</span>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+}

@@ -18,7 +18,7 @@ public class SectionAccessibilityEndToEndTests
         var html = await owner.GetStringAsync(SectionsFlow.Path);
 
         ContentAccessibilityTests.AssertAccessible(SectionsFlow.Path, html);
-        Assert.Contains("<a href=\"/admin/sections\" aria-current=\"page\">Sections</a>", html);
+        Assert.Matches(@"<a [^>]*href=""/admin/sections""[^>]*aria-current=""page""", AdminShellTests.MenuOf(html)); // the menu marks the page as current
         Assert.Contains("aria-label=\"Move up: About\"", html);
         Assert.Matches(@"<button[^>]*disabled=""disabled""[^>]*aria-label=""Move up: About""", html);
         Assert.DoesNotContain("aria-label=\"Remove", html); // sections are shown, hidden and moved, never removed

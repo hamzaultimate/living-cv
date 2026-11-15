@@ -200,7 +200,8 @@ public class OnboardingSecurityTests
             Assert.Contains("noindex", response.Headers.GetValues("X-Robots-Tag").Single());
             var csp = response.Headers.GetValues("Content-Security-Policy").Single();
             Assert.Contains("default-src 'none'", csp);
-            Assert.DoesNotContain("script-src", csp);
+            Assert.Contains("script-src 'self'", csp);
+            Assert.DoesNotContain("unsafe-inline", csp);
             Assert.Equal(path == WizardFlow.Review, csp.Contains("frame-src 'self'"));
         }
     }

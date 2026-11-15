@@ -134,7 +134,7 @@ public class OnboardingAccessibilityAccentTests
         foreach (var path in WizardFlow.Pages)
         {
             var html = await owner.GetStringAsync(path);
-            Assert.DoesNotContain("<script", html);
+            Assert.DoesNotMatch(new Regex(@"<script(?![^>]*\ssrc=)"), html); // a first-party file (the menu script) is allowed; inline script never is
             Assert.DoesNotMatch(new Regex(@"\sstyle="""), html);
             Assert.DoesNotMatch(new Regex(@"\son\w+="""), html);
             Assert.DoesNotContain("<style", html);
