@@ -34,14 +34,9 @@
 .adm h2 { font-size: 1.1rem; margin: 0 0 .5rem; }
 .adm-skip { position: absolute; left: -999px; top: 0; background: var(--adm-accent); color: var(--adm-accent-text); padding: .5rem 1rem; }
 .adm-skip:focus { left: 1rem; top: 1rem; z-index: 10; }
-.adm-header { background: var(--adm-surface); border-bottom: 1px solid var(--adm-border); }
-.adm-bar { max-width: 60rem; margin: 0 auto; padding: .75rem 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.5rem; }
 .adm-brand { font-weight: 700; text-decoration: none; color: var(--adm-text) !important; }
-.adm-nav { display: flex; flex-wrap: wrap; gap: .25rem 1rem; flex: 1; }
-.adm-nav a { text-decoration: none; padding: .25rem 0; border-bottom: 2px solid transparent; }
-.adm-nav a[aria-current="page"] { border-bottom-color: var(--adm-accent); }
 .adm-signout { margin: 0; }
-.adm-main { max-width: 60rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+.adm-main { padding: 1.5rem 1.5rem 3rem; }
 .adm-lede { color: var(--adm-muted); margin-top: 0; }
 .adm-card { background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: .5rem; padding: 1.25rem; margin-bottom: 1.25rem; }
 .adm-narrow { max-width: 26rem; margin-left: auto; margin-right: auto; }
@@ -188,3 +183,63 @@ a.adm-btn { text-decoration: none; display: inline-block; }
 .adm-status-refused { color: var(--adm-error-text); }
 .adm-plain { margin: 0; padding-left: 1.1rem; }
 .adm-muted { color: var(--adm-muted); }
+
+/* Shell: left menu beside the page. The menu is a rail when data-menu="collapsed" (wide screens only). */
+.adm-shell { display: grid; grid-template-columns: 16rem minmax(0, 1fr); min-height: 100vh; }
+.adm-shell[data-menu="collapsed"] { grid-template-columns: 4.25rem minmax(0, 1fr); }
+.adm-shell-bare { display: block; }
+.adm-shell-bare .adm-main { max-width: 60rem; margin: 0 auto; }
+.adm-content { min-width: 0; }
+.adm-plainbar { padding: .75rem 1.5rem; border-bottom: 1px solid var(--adm-border); background: var(--adm-surface); }
+.adm-topbar { display: none; }
+.adm-main form { max-width: 48rem; }
+
+.adm-menu { position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: .25rem; padding: .75rem; background: var(--adm-surface); border-right: 1px solid var(--adm-border); }
+.adm-menu-head { padding: .25rem 0 .5rem; }
+.adm-menu-group { margin-bottom: .25rem; }
+.adm-menu-heading { margin: .75rem .6rem .25rem; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--adm-muted); }
+.adm-menu-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.adm-menu-foot { margin-top: auto; padding-top: .75rem; border-top: 1px solid var(--adm-border); }
+.adm .adm-menu-link { position: relative; display: flex; align-items: center; gap: .65rem; width: 100%; padding: .5rem .6rem; border: 0; border-radius: .35rem; background: none; color: var(--adm-text); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.adm .adm-menu-link:hover { background: var(--adm-bg); }
+.adm .adm-menu-link[aria-current="page"] { background: var(--adm-bg); font-weight: 600; box-shadow: inset 3px 0 0 var(--adm-accent); }
+.adm .adm-menu-link[aria-current="true"] { font-weight: 600; }
+.adm-menu-link svg { width: 1.25rem; height: 1.25rem; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.adm-menu-dim .adm-menu-label { opacity: .6; }
+.adm-menu-tag { padding: 0 .4rem; border: 1px solid var(--adm-border); border-radius: 999px; font-size: .7rem; color: var(--adm-muted); }
+.adm-menu-count { margin-left: auto; font-size: .8rem; color: var(--adm-muted); font-variant-numeric: tabular-nums; }
+.adm-menu-sub > summary { list-style: none; }
+.adm-menu-sub > summary::-webkit-details-marker { display: none; }
+.adm-menu-sub > summary .adm-chevron { margin-left: auto; display: inline-flex; transition: transform .15s; }
+.adm-menu-sub[open] > summary .adm-chevron { transform: rotate(90deg); }
+.adm-menu-sublist { margin: 2px 0 .35rem 1.1rem; padding-left: .5rem; border-left: 1px solid var(--adm-border); }
+.adm-menu-sublist .adm-menu-link { padding: .35rem .6rem; font-size: .92rem; }
+.adm-menu-rail { display: none; }
+.adm-menu-toggle .adm-menu-label { white-space: nowrap; }
+
+/* Wide screens: the rail. Labels stay in the page for screen readers and show as a tooltip on hover and focus. */
+@media (min-width: 40.0625rem) {
+  .adm-shell[data-menu="collapsed"] .adm-menu { overflow: visible; padding-inline: .5rem; }
+  .adm-shell[data-menu="collapsed"] .adm-menu-heading,
+  .adm-shell[data-menu="collapsed"] .adm-menu-tag,
+  .adm-shell[data-menu="collapsed"] .adm-menu-count,
+  .adm-shell[data-menu="collapsed"] .adm-menu-sub { display: none; }
+  .adm-shell[data-menu="collapsed"] .adm-menu-rail { display: flex; }
+  .adm-shell[data-menu="collapsed"] .adm-menu-link { justify-content: center; }
+  .adm-shell[data-menu="collapsed"] .adm-menu-label { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .adm-shell[data-menu="collapsed"] .adm-menu-toggle svg { transform: rotate(180deg); }
+  .adm-shell[data-menu="collapsed"] .adm-menu-link:hover::after,
+  .adm-shell[data-menu="collapsed"] .adm-menu-link:focus-visible::after { content: attr(data-tip); position: absolute; left: calc(100% + .5rem); top: 50%; transform: translateY(-50%); z-index: 30; padding: .25rem .55rem; border-radius: .35rem; background: var(--adm-text); color: var(--adm-bg); font-size: .8rem; white-space: nowrap; pointer-events: none; }
+}
+
+/* Narrow screens: without script the menu sits above the page; with script it is an overlay opened from a slim top bar. */
+@media (max-width: 40rem) {
+  .adm-shell, .adm-shell[data-menu="collapsed"] { display: block; }
+  .adm-menu { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--adm-border); }
+  .adm-menu-toggle { display: none; }
+  .adm-main { padding: 1rem 1rem 3rem; }
+  .adm-shell.adm-js .adm-topbar { position: sticky; top: 0; z-index: 25; display: flex; align-items: center; gap: .75rem; height: 3.25rem; padding: 0 .75rem; background: var(--adm-surface); border-bottom: 1px solid var(--adm-border); }
+  .adm-topbar .adm-menu-link { width: auto; }
+  .adm-shell.adm-js .adm-menu { display: none; position: fixed; top: 3.25rem; right: 0; bottom: 0; left: 0; z-index: 20; height: auto; overflow-y: auto; border: 0; }
+  .adm-shell.adm-js[data-menu-open="true"] .adm-menu { display: flex; }
+}

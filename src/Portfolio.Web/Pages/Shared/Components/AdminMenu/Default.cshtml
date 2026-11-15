@@ -1,0 +1,54 @@
+@using Portfolio.Web.Pages.Admin
+@model AdminMenuView
+<nav class="adm-menu" id="adm-menu" aria-label="Admin menu" data-adm-menu>
+    <div class="adm-menu-head">
+        <a class="adm-brand adm-menu-link" href="/admin" data-tip="Admin"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="@("dashboard")" /><span class="adm-menu-label">Admin</span></a>
+    </div>
+    @foreach (var group in Model.Menu.Groups)
+    {
+        <div class="adm-menu-group">
+            @if (group.Label is { } heading)
+            {
+                <p class="adm-menu-heading">@heading</p>
+            }
+            <ul class="adm-menu-list">
+                @foreach (var item in group.Items)
+                {
+                    @if (item.Children.Count == 0)
+                    {
+                        <li><partial name="/Pages/Shared/Components/AdminMenu/_MenuLink.cshtml" model="item" /></li>
+                    }
+                    else
+                    {
+                        @* The rail has no room for a sub-menu, so a parent is a plain link to its own page there; the details element is for the wide menu. *@
+                        <li class="adm-menu-parent">
+                            <a class="adm-menu-link adm-menu-rail" href="@item.Url" aria-current="@(item.ContainsCurrent ? "true" : null)" data-tip="@item.Label"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="item.Icon" /><span class="adm-menu-label">@item.Label</span></a>
+                            <details class="adm-menu-sub" open="@item.ContainsCurrent">
+                                <summary class="adm-menu-link"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="item.Icon" /><span class="adm-menu-label">@item.Label</span><span class="adm-chevron"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="@("chevron")" /></span></summary>
+                                <ul class="adm-menu-list adm-menu-sublist">
+                                    @foreach (var child in item.Children)
+                                    {
+                                        <li><partial name="/Pages/Shared/Components/AdminMenu/_MenuLink.cshtml" model="child" /></li>
+                                    }
+                                </ul>
+                            </details>
+                        </li>
+                    }
+                }
+            </ul>
+        </div>
+    }
+    <div class="adm-menu-foot">
+        <ul class="adm-menu-list">
+            <li><a class="adm-menu-link" href="/" target="_blank" rel="noopener" data-tip="View site"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="@("external")" /><span class="adm-menu-label">View site<span class="adm-sr"> (opens in a new tab)</span></span></a></li>
+            <li>
+                <form method="post" asp-page="/Admin/Logout" class="adm-signout">
+                    <button type="submit" class="adm-menu-link adm-menu-button" data-tip="Sign out"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="@("signout")" /><span class="adm-menu-label">Sign out</span></button>
+                </form>
+            </li>
+            <li>
+                <button type="button" class="adm-menu-link adm-menu-button adm-menu-toggle" data-adm-toggle aria-controls="adm-menu" aria-expanded="@(Model.Collapsed ? "false" : "true")" data-tip="Collapse menu"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="@("collapse")" /><span class="adm-menu-label">Collapse menu</span></button>
+            </li>
+        </ul>
+    </div>
+</nav>

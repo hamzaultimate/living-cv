@@ -155,20 +155,19 @@ public class ContentAccessibilityTests
     }
 
     [Fact]
-    public async Task TheAdminNavigation_PointsAtContent_AndMarksTheCurrentPage()
+    public async Task TheAdminMenu_PointsAtContent_AndMarksTheCurrentPage()
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
 
-        var hub = await owner.GetStringAsync("/admin/content");
-        var list = await owner.GetStringAsync(ContentFlow.Skills);
-        var dashboard = await owner.GetStringAsync("/admin");
+        var hub = AdminShellTests.MenuOf(await owner.GetStringAsync("/admin/content"));
+        var list = AdminShellTests.MenuOf(await owner.GetStringAsync(ContentFlow.Skills));
+        var dashboard = AdminShellTests.MenuOf(await owner.GetStringAsync("/admin"));
 
-        Assert.Contains("<a href=\"/admin/content\" aria-current=\"page\">Content</a>", hub);
-        Assert.Contains("<a href=\"/admin/content\" aria-current=\"page\">Content</a>", list);
-        Assert.Contains("<a href=\"/admin/content\">Content</a>", dashboard);
+        Assert.Matches(@"<a [^>]*href=""/admin/content""[^>]*aria-current=""page""|<a [^>]*aria-current=""page""[^>]*href=""/admin/content""", hub);
+        Assert.Matches(@"<a [^>]*href=""/admin/content/skills""[^>]*aria-current=""page""|<a [^>]*aria-current=""page""[^>]*href=""/admin/content/skills""", list);
         Assert.Contains("href=\"/admin/content\"", dashboard);
-        Assert.Contains("Add, edit, reorder and remove your experience, skills, work, certifications, talks, testimonials and blog.", dashboard);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(dashboard, "aria-current=\"page\"")); // only the dashboard link is current there
     }
 
     [Fact]

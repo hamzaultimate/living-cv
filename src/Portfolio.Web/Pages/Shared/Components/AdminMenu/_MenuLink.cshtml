@@ -1,0 +1,2 @@
+@model AdminMenuItem
+<a class="adm-menu-link@(Model.Hidden ? " adm-menu-dim" : "")" href="@Model.Url" aria-current="@(Model.IsCurrent ? "page" : null)" data-tip="@Model.Label"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="Model.Icon" /><span class="adm-menu-label">@Model.Label</span>@if (Model.Hidden) {<span class="adm-menu-tag">hidden</span>}@if (Model.Count is { } count) {<span class="adm-menu-count">@count</span>}</a>

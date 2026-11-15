@@ -65,12 +65,12 @@ public class TransferTemplateTests
         var page = await owner.GetStringAsync(TransferFlow.Page);
 
         Assert.Contains("href=\"/admin/transfer\"", dashboard);
-        Assert.Contains("<h2>Zport</h2>", dashboard);
+        Assert.Contains("Zport", Portfolio.Web.Tests.Admin.AdminShellTests.MenuOf(dashboard)); // the menu names the page in the manifest's words
         Assert.Contains("<h1 id=\"page-heading\">Zport</h1>", page);
         foreach (var word in new[] { "Zport hint.", "Zout", "Zout hint.", "Zdownload", "Zin", "Zin hint.", "Zfile", "Zapply", "Zapply hint.", "Zpreview" })
             Assert.Contains(word, page);
         AssertOnlyTheManifestsWords("the page", page);
-        AssertOnlyTheManifestsWords("the dashboard", dashboard.Replace("Download everything as one file, or load one. You see a preview first, and nothing is ever deleted.", ""));
+        AssertOnlyTheManifestsWords("the dashboard", dashboard);
         Assert.DoesNotContain("Zauth", page); // the notice is only for an authoritative start-up seeding
     }
 
