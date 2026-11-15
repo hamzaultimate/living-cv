@@ -29,7 +29,7 @@ public class RequestTemplate
         _http = http;
     }
 
-    public Task<TemplateView> GetAsync() => _view ??= LoadAsync();
+    public virtual Task<TemplateView> GetAsync() => _view ??= LoadAsync();
 
     private async Task<TemplateView> LoadAsync()
     {
