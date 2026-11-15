@@ -217,7 +217,7 @@ a.adm-btn { text-decoration: none; display: inline-block; }
 .adm-menu-group { margin-bottom: .25rem; }
 .adm-menu-heading { margin: .75rem .6rem .25rem; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--adm-muted); }
 .adm-menu-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.adm-menu-foot { margin-top: auto; padding-top: .75rem; border-top: 1px solid var(--adm-border); }
+.adm-menu-foot { position: sticky; bottom: 0; margin-top: auto; padding: .75rem 0 .25rem; border-top: 1px solid var(--adm-border); background: var(--adm-menu-bg); }
 .adm .adm-menu-link { position: relative; display: flex; align-items: center; gap: .65rem; width: 100%; padding: .5rem .6rem; border: 0; border-radius: .35rem; background: none; color: var(--adm-text); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
 .adm .adm-menu-link:hover { background: var(--adm-bg); }
 .adm .adm-menu-link[aria-current="page"] { background: var(--adm-bg); font-weight: 600; box-shadow: inset 3px 0 0 var(--adm-accent); }
@@ -232,7 +232,7 @@ a.adm-btn { text-decoration: none; display: inline-block; }
 .adm-menu-sub[open] > summary .adm-chevron { transform: rotate(90deg); }
 .adm-menu-sublist { margin: 2px 0 .35rem 1.1rem; padding-left: .5rem; border-left: 1px solid var(--adm-border); }
 .adm-menu-sublist .adm-menu-link { padding: .35rem .6rem; font-size: .92rem; }
-.adm-menu-rail { display: none; }
+.adm .adm-menu-rail { display: none; }
 .adm-menu-toggle .adm-menu-label { white-space: nowrap; }
 
 /* Needs attention: the warning pair, with text as well as colour wherever it is used. */
@@ -283,10 +283,10 @@ a.adm-btn { text-decoration: none; display: inline-block; }
 @media (max-width: 40rem) {
   .adm-shell, .adm-shell[data-menu="collapsed"] { display: block; }
   .adm-menu { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--adm-border); }
-  .adm-menu-toggle { display: none; }
+  .adm .adm-menu-toggle { display: none; }
   .adm-main { padding: 1rem 1rem 3rem; }
   .adm-shell.adm-js .adm-topbar { position: sticky; top: 0; z-index: 25; display: flex; align-items: center; gap: .75rem; height: 3.25rem; padding: 0 .75rem; background: var(--adm-menu-bg); border-bottom: 1px solid var(--adm-border); }
   .adm-topbar .adm-menu-link { width: auto; }
-  .adm-shell.adm-js .adm-menu { display: none; position: fixed; top: 3.25rem; right: 0; bottom: 0; left: 0; z-index: 20; height: auto; overflow-y: auto; border: 0; }
+  .adm-shell.adm-js .adm-menu { display: none; position: fixed; top: 3.25rem; right: 0; bottom: 0; left: 0; z-index: 20; height: auto; align-self: stretch; overflow-y: auto; border: 0; }
   .adm-shell.adm-js[data-menu-open="true"] .adm-menu { display: flex; }
 }

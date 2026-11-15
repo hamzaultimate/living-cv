@@ -72,6 +72,29 @@ public class AdminCssTests
     public void TheNewShellPieces_AreStyled(string selector) => Assert.Contains(selector + " {", Css());
 
     [Fact]
+    public void TheRailLink_IsHiddenWhileTheMenuIsExpanded_WithEnoughSpecificityToBeatTheMenuLinkRule()
+    {
+        // ".adm .adm-menu-link" sets display:flex; a bare ".adm-menu-rail" would lose to it and every parent would show twice.
+        var css = Css();
+
+        Assert.Contains(".adm .adm-menu-rail { display: none; }", css);
+        Assert.Contains(".adm-shell[data-menu=\"collapsed\"] .adm-menu-rail { display: flex; }", css);
+    }
+
+    [Fact]
+    public void OnNarrowScreens_TheCollapseButtonIsHidden_WithEnoughSpecificityToBeatTheMenuLinkRule() =>
+        Assert.Contains(".adm .adm-menu-toggle { display: none; }", Css()); // a bare ".adm-menu-toggle" loses to ".adm .adm-menu-link { display: flex }"
+
+    [Fact]
+    public void TheNarrowOverlay_StretchesTopToBottom_InsteadOfShrinkingToItsContent() =>
+        // The wide menu is "align-self: start"; a fixed overlay inherits that and would stop at its last link with the page showing beneath it.
+        Assert.Matches(@"\.adm-shell\.adm-js \.adm-menu \{[^}]*align-self: stretch;", Css());
+
+    [Fact]
+    public void TheMenuFooter_StaysInView_WhenTheMenuItselfScrolls() =>
+        Assert.Matches(@"\.adm-menu-foot \{[^}]*position: sticky;[^}]*bottom: 0;", Css());
+
+    [Fact]
     public void TheMotionAndColourSchemeHandling_IsKept()
     {
         var css = Css();

@@ -2,7 +2,7 @@
 @model AdminMenuView
 <nav class="adm-menu" id="adm-menu" aria-label="Admin menu" data-adm-menu>
     <div class="adm-menu-head">
-        <a class="adm-brand adm-menu-link" href="/admin" data-tip="Admin"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="@("dashboard")" /><span class="adm-menu-label">Admin</span></a>
+        <a class="adm-brand adm-menu-link" href="/admin" data-tip="Admin"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="@("brand")" /><span class="adm-menu-label">Admin</span></a>
     </div>
     @foreach (var group in Model.Menu.Groups)
     {

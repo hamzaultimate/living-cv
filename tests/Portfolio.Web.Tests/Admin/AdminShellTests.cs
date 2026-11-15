@@ -198,6 +198,21 @@ public class AdminShellTests
     }
 
     [Fact]
+    public async Task TheBrandAndTheDashboardLink_DoNotShareAnIcon_SoTheRailCanTellThemApart()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+
+        var menu = MenuOf(await owner.GetStringAsync("/admin"));
+
+        var brand = Regex.Match(menu, @"<a class=""adm-brand adm-menu-link""[^>]*>\s*(<svg.*?</svg>)", RegexOptions.Singleline).Groups[1].Value;
+        var dashboard = Regex.Match(menu, @"<a class=""adm-menu-link""[^>]*href=""/admin""[^>]*>\s*(<svg.*?</svg>)", RegexOptions.Singleline).Groups[1].Value;
+        Assert.NotEqual("", brand);     // both links draw an icon, so the comparison below means something
+        Assert.NotEqual("", dashboard);
+        Assert.NotEqual(brand, dashboard);
+    }
+
+    [Fact]
     public async Task TheNarrowScreenOverlay_HasItsButton_AndTheHooksTheScriptNeeds()
     {
         using var app = new AdminApp();
