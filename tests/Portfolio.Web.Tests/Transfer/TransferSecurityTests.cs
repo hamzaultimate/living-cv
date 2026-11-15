@@ -189,7 +189,7 @@ public class TransferSecurityTests
         {
             var csp = string.Join(";", response.Headers.GetValues("Content-Security-Policy"));
             var html = await response.Content.ReadAsStringAsync();
-            Assert.DoesNotContain("script-src", csp);
+            Assert.Contains("script-src 'self'", csp);
             Assert.Contains("default-src 'none'", csp);
             Assert.DoesNotContain("unsafe-inline", csp);
             Assert.DoesNotMatch(@"<script\b", html);

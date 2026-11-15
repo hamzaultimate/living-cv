@@ -152,8 +152,8 @@ public static class AdminAuth
                     ctx.Response.Headers.CacheControl = "no-store, no-cache, max-age=0";
                     ctx.Response.Headers.Pragma = "no-cache";
                     ctx.Response.Headers["X-Robots-Tag"] = "noindex, nofollow, noarchive";
-                    // These pages load only their own stylesheet and photos and run no script of their own, except the content edit forms,
-                    // which may load one first-party file (the unsaved changes warning) and nothing inline.
+                    // These pages load only their own stylesheet, photos and first-party script (the menu toggle, and the unsaved changes warning on
+                    // the edit forms) and nothing inline. The login page, which a signed-out visitor reaches, loads no script.
                     // The template page and the wizard's review step also frame the public site (same origin) to preview a template or the draft.
                     var frames = ctx.Request.Path.StartsWithSegments(TemplatePath, StringComparison.OrdinalIgnoreCase)
                                  || ctx.Request.Path.StartsWithSegments(WelcomeReviewPath, StringComparison.OrdinalIgnoreCase) ? " frame-src 'self';" : "";
@@ -183,20 +183,11 @@ public static class AdminAuth
             await next();
         });
 
-    /// <summary>Only the edit forms load a script: a first-party file that warns about unsaved changes. These are <c>/admin/content/{section}/edit[/{id}]</c>,
-    /// <c>/admin/content/projects/images/{id}</c> and the profile's block editors <c>/admin/profile/hero</c>, <c>/metrics</c> and <c>/about</c>, and the sections page <c>/admin/sections</c>.</summary>
-    internal static bool AllowsScript(PathString path)
-    {
-        if (path.StartsWithSegments(ContentPath, StringComparison.OrdinalIgnoreCase))
-            return path.Value!.Split('/', StringSplitOptions.RemoveEmptyEntries).Skip(3).FirstOrDefault() is { } page
-                   && (page.Equals("edit", StringComparison.OrdinalIgnoreCase) || page.Equals("images", StringComparison.OrdinalIgnoreCase));
-        if (path.StartsWithSegments(SectionsPath, StringComparison.OrdinalIgnoreCase)) return true;
-        return path.StartsWithSegments(ProfilePath, StringComparison.OrdinalIgnoreCase)
-               && path.Value!.Split('/', StringSplitOptions.RemoveEmptyEntries).Skip(2).FirstOrDefault() is { } part
-               && ProfileEditorParts.Any(x => part.Equals(x, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static readonly string[] ProfileEditorParts = [Services.ProfileParts.Hero, Services.ProfileParts.Metrics, Services.ProfileParts.About];
+    /// <summary>The admin area may load first-party script (<c>admin-shell.js</c> for the menu, <c>admin-unsaved.js</c> on the edit forms) and never inline script.
+    /// Only the login page, which a signed-out visitor can reach, allows none.</summary>
+    internal static bool AllowsScript(PathString path) =>
+        path.StartsWithSegments(AdminPath, StringComparison.OrdinalIgnoreCase)
+        && !path.StartsWithSegments(LoginPath, StringComparison.OrdinalIgnoreCase);
 
     private static bool IsPrivateArea(PathString path) =>
         path.StartsWithSegments(AdminPath, StringComparison.OrdinalIgnoreCase)
