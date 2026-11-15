@@ -234,6 +234,61 @@ public class AdminShellTests
     }
 
     [Fact]
+    public async Task EverySignedInPage_HasABreadcrumb_AndExactlyOneH1()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+        var seeded = await ContentFlow.SeedRowsAsync(app, pairs: true);
+        var paths = Pages.Concat(
+        [
+            $"{ContentFlow.Experience}/edit", $"{ContentFlow.Experience}/edit/{seeded.ExperienceId}", $"{ContentFlow.Experience}/delete/{seeded.ExperienceId}",
+            $"{ContentFlow.Skills}/edit", $"{ContentFlow.Skills}/delete/{seeded.SkillId}",
+            $"{ContentFlow.Projects}/edit/{seeded.ProjectId}", $"{ContentFlow.Projects}/images/{seeded.ProjectId}", $"{ContentFlow.Projects}/delete/{seeded.ProjectId}",
+            $"{ContentFlow.Certifications}/edit", $"{ContentFlow.Talks}/edit", $"{ContentFlow.Testimonials}/edit",
+            $"{ContentFlow.Blog}/edit", $"{ContentFlow.Blog}/edit/{seeded.BlogId}", $"{ContentFlow.Blog}/delete/{seeded.BlogId}",
+        ]).ToArray();
+
+        foreach (var path in paths)
+        {
+            var response = await owner.GetAsync(path);
+            Assert.True(response.StatusCode == HttpStatusCode.OK, $"{path} returned {(int)response.StatusCode}");
+            var html = await response.Content.ReadAsStringAsync();
+            var h1 = Regex.Matches(html, @"<h1[\s>]").Count;
+            Assert.True(h1 == 1, $"{path} has {h1} h1 elements");
+            Assert.Contains("<nav class=\"adm-crumbs\" aria-label=\"Breadcrumb\">", html);
+            Assert.True(Regex.Matches(html, @"<span aria-current=""page"">").Count == 1, $"{path}: the breadcrumb must end in exactly one current page");
+        }
+    }
+
+    [Fact]
+    public async Task TheBreadcrumb_FollowsTheMenu_AndThePageBelowItAppearsLast()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+
+        var html = await owner.GetStringAsync($"{ContentFlow.Projects}/edit");
+        var crumbs = Regex.Match(html, @"<nav class=""adm-crumbs"".*?</nav>", RegexOptions.Singleline).Value;
+
+        var order = new[] { "href=\"/admin\">Admin<", "href=\"/admin/content\">Content<", "href=\"/admin/content/projects\">", "<span aria-current=\"page\">" };
+        var at = order.Select(o => crumbs.IndexOf(o, StringComparison.Ordinal)).ToArray();
+        Assert.All(at, i => Assert.True(i >= 0, $"missing a crumb in: {crumbs}"));
+        Assert.Equal(at.OrderBy(i => i), at); // Admin, then Content, then Projects, then the page
+    }
+
+    [Fact]
+    public async Task TheBreadcrumb_StaysOutOfTheLoginPage()
+    {
+        using var app = new AdminApp();
+        var client = app.NewClient();
+        await app.RunSetupAsync(client);
+
+        var html = await client.GetStringAsync("/admin/login");
+
+        Assert.DoesNotContain("adm-crumbs", html);
+        Assert.Single(Regex.Matches(html, @"<h1[\s>]"));
+    }
+
+    [Fact]
     public async Task AFailedCountNeverBreaksAPage_TheMenuJustLosesItsNumbers()
     {
         using var app = new AdminApp();

@@ -192,4 +192,44 @@ public class AdminMenuTests
     [InlineData("/admin/welcome/basics", "", true)]
     public void TheCookie_IsOnlyEverComparedWithTheLiteral(string path, string? cookie, bool expected) =>
         Assert.Equal(expected, AdminMenu.IsCollapsed(path, cookie));
+
+    private static string Trail(string path, string? title = null, string? crumb = null) =>
+        string.Join(" / ", AdminMenu.Breadcrumb(Menu.Build(Software(), path, null), path, title, crumb).Select(c => c.Url is null ? $"[{c.Label}]" : c.Label));
+
+    [Fact]
+    public void TheDashboard_IsJustAdmin() => Assert.Equal("[Admin]", Trail("/admin", "Dashboard"));
+
+    [Fact]
+    public void ATopLevelPage_IsAdminThenThePage()
+    {
+        Assert.Equal("Admin / [Template]", Trail("/admin/template", "Template"));
+        Assert.Equal("Admin / [Setup wizard]", Trail("/admin/welcome", "Template"));
+    }
+
+    [Fact]
+    public void ASubMenuPage_NamesItsParent()
+    {
+        Assert.Equal("Admin / Content / [Overview]", Trail("/admin/content", "Content"));
+        Assert.Equal("Admin / Profile / [Basics]", Trail("/admin/profile", "Profile"));
+        Assert.Equal("Admin / Content / [Experience]", Trail("/admin/content/experience", "Experience"));
+    }
+
+    [Fact]
+    public void APageBelowAMenuItem_AddsItsOwnLastCrumb_AndLinksBack()
+    {
+        var projects = new EditorView(Software(), "projects").SectionLabel; // the template's word for it ("Work" in the software template), not the neutral "Projects"
+        Assert.Equal($"Admin / Content / {projects} / [Edit project]", Trail("/admin/content/projects/edit/4", "Edit project"));
+        Assert.Equal($"Admin / Content / {projects} / [Gallery]", Trail("/admin/content/projects/images/4", "Edit project", crumb: "Gallery"));
+    }
+
+    [Fact]
+    public void APageWhoseTitleIsTheItemsOwnName_IsNotRepeated() =>
+        Assert.Equal("Admin / Content / [Experience]", Trail("/admin/content/experience/", "Experience"));
+
+    [Fact]
+    public void APageOutsideTheMenu_IsAdminThenItsTitle()
+    {
+        Assert.Equal("Admin / [Somewhere]", Trail("/admin/somewhere", "Somewhere"));
+        Assert.Equal("Admin", Trail("/admin/somewhere", null));
+    }
 }

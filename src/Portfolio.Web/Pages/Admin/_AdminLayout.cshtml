@@ -12,6 +12,9 @@
     var railPage = AdminMenu.IsRailPage(path);
     // The cookie is read here so the first paint is already in the right state; the script only ever writes it.
     var collapsed = signedIn && AdminMenu.IsCollapsed(path, Context.Request.Cookies[AdminMenu.CollapsedCookie]);
+    // Admin / [parent] / [menu item] / [page]. A page below a menu item may name its own last crumb with ViewData["Crumb"]; otherwise its title is used.
+    var crumbs = menu is null ? [] : AdminMenu.Breadcrumb(menu, path, ViewData["Title"] as string, ViewData["Crumb"] as string);
+    var hasActions = IsSectionDefined("Actions");
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -41,6 +44,26 @@
                 <header class="adm-plainbar"><a class="adm-brand" href="/admin">Admin</a></header>
             }
             <main id="main-content" class="adm-main">
+                @if (crumbs.Count > 0 || hasActions)
+                {
+                    <div class="adm-pagehead">
+                        @if (crumbs.Count > 0)
+                        {
+                            <nav class="adm-crumbs" aria-label="Breadcrumb">
+                                <ol>
+                                    @foreach (var crumb in crumbs)
+                                    {
+                                        <li>@if (crumb.Url is { } url) {<a href="@url">@crumb.Label</a>} else {<span aria-current="page">@crumb.Label</span>}</li>
+                                    }
+                                </ol>
+                            </nav>
+                        }
+                        @if (hasActions)
+                        {
+                            <div class="adm-pagehead-actions">@await RenderSectionAsync("Actions")</div>
+                        }
+                    </div>
+                }
                 @if (!string.IsNullOrEmpty(flash))
                 {
                     <div class="adm-flash adm-flash-ok" role="status" aria-live="polite" tabindex="-1" autofocus="@(focusFlash && string.IsNullOrEmpty(flashError) ? "autofocus" : null)">@flash</div>
