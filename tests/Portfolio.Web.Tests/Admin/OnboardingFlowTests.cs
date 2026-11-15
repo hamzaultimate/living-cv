@@ -522,7 +522,7 @@ public class OnboardingFlowTests
         var done = await other.GetStringAsync("/admin");
         Assert.DoesNotContain("Finish setting up", done);
         Assert.DoesNotContain("Not finished", done);
-        Assert.Contains("Finished", done); // the status row says so
+        Assert.Contains("<dd>Finished</dd>", done); // the status row says so
         Assert.Contains("href=\"/admin/welcome\"", AdminShellTests.MenuOf(done)); // and the wizard stays one click away for a re-run
     }
 

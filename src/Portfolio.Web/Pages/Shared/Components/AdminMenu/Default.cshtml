@@ -47,7 +47,7 @@
                 </form>
             </li>
             <li>
-                <button type="button" class="adm-menu-link adm-menu-button adm-menu-toggle" data-adm-toggle aria-controls="adm-menu" aria-expanded="@(Model.Collapsed ? "false" : "true")" data-tip="Collapse menu"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="@("collapse")" /><span class="adm-menu-label">Collapse menu</span></button>
+                <button type="button" class="adm-menu-link adm-menu-button adm-menu-toggle" data-adm-toggle aria-controls="adm-menu" aria-expanded="@(Model.Collapsed ? "false" : "true")" data-tip="@(Model.Collapsed ? "Expand menu" : "Collapse menu")"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="@("collapse")" /><span class="adm-menu-label">@(Model.Collapsed ? "Expand menu" : "Collapse menu")</span></button>
             </li>
         </ul>
     </div>

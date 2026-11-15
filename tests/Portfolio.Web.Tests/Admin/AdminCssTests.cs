@@ -95,6 +95,19 @@ public class AdminCssTests
         Assert.Matches(@"\.adm-menu-foot \{[^}]*position: sticky;[^}]*bottom: 0;", Css());
 
     [Fact]
+    public void TheRail_OnlyStopsScrolling_WhereThereIsRoomForItsTooltips()
+    {
+        // A rail that cannot scroll cuts off its lower icons on a short screen (a landscape phone). Its tooltips need overflow to be visible, so only taller screens get that.
+        var css = Css();
+
+        Assert.Matches(@"@media \(min-width: 40\.0625rem\) and \(min-height: 34rem\) \{\s*\.adm-shell\[data-menu=""collapsed""\] \.adm-menu \{ overflow: visible; \}", css);
+        Assert.DoesNotMatch(@"\.adm-shell\[data-menu=""collapsed""\] \.adm-menu \{ overflow: visible; padding-inline", css);
+    }
+
+    [Fact]
+    public void TheOldDashboardTileStyles_AreGone() => Assert.DoesNotContain(".adm-tile", Css());
+
+    [Fact]
     public void TheMotionAndColourSchemeHandling_IsKept()
     {
         var css = Css();

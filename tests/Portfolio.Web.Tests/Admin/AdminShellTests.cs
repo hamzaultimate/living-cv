@@ -245,6 +245,9 @@ public class AdminShellTests
         var body = await script.Content.ReadAsStringAsync();
         Assert.Contains("adm-menu", body);
         Assert.Contains("Escape", body);
+        Assert.Contains("inert", body);              // the overlay keeps focus inside itself by making the page behind it inert
+        Assert.Contains("Expand menu", body);        // and the toggle's name follows what pressing it does
+        Assert.Contains("Collapse menu", body);
         Assert.DoesNotContain("innerHTML", body);
     }
 
@@ -301,6 +304,75 @@ public class AdminShellTests
 
         Assert.DoesNotContain("adm-crumbs", html);
         Assert.Single(Regex.Matches(html, @"<h1[\s>]"));
+    }
+
+    [Fact]
+    public async Task TheToggle_NamesWhatPressingItDoes_InBothStates()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+
+        async Task<string> ToggleOf(string path, string? cookie)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, path);
+            if (cookie is not null) request.Headers.Add("Cookie", cookie);
+            var html = await (await owner.SendAsync(request)).Content.ReadAsStringAsync();
+            return Regex.Match(html, @"<button[^>]*data-adm-toggle[^>]*>.*?</button>", RegexOptions.Singleline).Value;
+        }
+
+        var expanded = await ToggleOf("/admin", null);
+        var collapsed = await ToggleOf("/admin", "adm-menu=collapsed");
+        var wizard = await ToggleOf("/admin/welcome", null); // a rail page, whatever the cookie
+
+        Assert.Contains("data-tip=\"Collapse menu\"", expanded);
+        Assert.Contains(">Collapse menu<", expanded);
+        foreach (var rail in new[] { collapsed, wizard })
+        {
+            Assert.Contains("data-tip=\"Expand menu\"", rail);
+            Assert.Contains(">Expand menu<", rail);
+            Assert.DoesNotContain("Collapse", rail); // never "Collapse menu" on a button that expands
+        }
+    }
+
+    [Fact]
+    public async Task OnAPageBelowAMenuItem_TheItemIsTheCurrentSection_AndOnlyTheBreadcrumbNamesThePage()
+    {
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app);
+
+        var html = await owner.GetStringAsync($"{ContentFlow.Projects}/edit");
+
+        var menu = MenuOf(html);
+        Assert.Contains("aria-current=\"true\"", AnchorTo(menu, "/admin/content/projects")); // the section the page belongs to
+        Assert.DoesNotContain("aria-current=\"page\"", menu);                                // so a screen reader hears one current page, not two
+        Assert.Single(Regex.Matches(html, @"<span aria-current=""page"">"));              // the breadcrumb's last crumb
+    }
+
+    [Fact]
+    public async Task EveryWizardStep_AndTheImportPreview_HaveABreadcrumbAndExactlyOneH1()
+    {
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+        await WizardFlow.PickTemplateAsync(owner, "software");
+        await WizardFlow.SaveBasicsAsync(owner, WizardFlow.BasicsFields("Casey Morgan", "Specialist", "casey@owner.example", "Leeds, UK", "Specialist who keeps the lights on."));
+        var pages = new List<(string Name, string Html)>();
+        foreach (var path in WizardFlow.Pages)
+        {
+            var response = await owner.GetAsync(path);
+            Assert.True(response.StatusCode == HttpStatusCode.OK, $"{path} returned {(int)response.StatusCode}");
+            pages.Add((path, await response.Content.ReadAsStringAsync()));
+        }
+        var preview = await TransferFlow.PreviewAsync(owner, ImportHarness.Table("skills", new { name = "Fine", group = "G" }));
+        Assert.Equal(HttpStatusCode.OK, preview.StatusCode);
+        pages.Add(("the import preview", await preview.Content.ReadAsStringAsync()));
+
+        foreach (var (name, html) in pages)
+        {
+            var h1 = Regex.Matches(html, @"<h1[\s>]").Count;
+            Assert.True(h1 == 1, $"{name} has {h1} h1 elements");
+            Assert.Contains("<nav class=\"adm-crumbs\" aria-label=\"Breadcrumb\">", html);
+            Assert.True(Regex.Matches(html, @"<span aria-current=""page"">").Count == 1, $"{name}: the breadcrumb must end in exactly one current page");
+        }
     }
 
     [Fact]

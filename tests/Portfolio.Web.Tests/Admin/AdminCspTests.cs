@@ -23,6 +23,27 @@ public class AdminCspTests
     }
 
     [Theory]
+    [InlineData("/admin/login", false)]
+    [InlineData("/Admin/Login", false)]
+    [InlineData("/ADMIN/LOGIN", false)]
+    [InlineData("/admin/login/", false)]
+    [InlineData("/admin/login/anything", false)]
+    [InlineData("/admin/loginx", true)]   // not the login page, so a prefix match would be wrong
+    [InlineData("/admin/logout", true)]
+    public async Task OnlyTheLoginPageAndWhatLiesBelowIt_AllowNoScript(string path, bool allowsScript)
+    {
+        using var app = new AdminApp();
+        var client = app.NewClient();
+        Assert.Equal(HttpStatusCode.Redirect, (await app.RunSetupAsync(client)).StatusCode);
+
+        var response = await client.GetAsync(path);
+
+        var csp = string.Join(";", response.Headers.GetValues("Content-Security-Policy"));
+        Assert.Equal(allowsScript, csp.Contains("script-src 'self'"));
+        Assert.Contains("default-src 'none'", csp);
+    }
+
+    [Theory]
     [InlineData("/admin")]
     [InlineData("/admin/profile")]
     [InlineData("/admin/photo")]

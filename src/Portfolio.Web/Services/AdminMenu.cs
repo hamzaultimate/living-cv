@@ -1,9 +1,13 @@
 namespace Portfolio.Web.Services;
 
-/// <summary>One entry of the admin menu. A parent (Profile, Content) has <see cref="Children"/>; only a leaf is ever the current page.</summary>
-public sealed record AdminMenuItem(string Key, string Label, string Url, string Icon, int? Count, bool Hidden, bool IsCurrent, IReadOnlyList<AdminMenuItem> Children)
+/// <summary>
+/// One entry of the admin menu. A parent (Profile, Content) has <see cref="Children"/>; only a leaf is ever the current item.
+/// <paramref name="IsExact"/> tells the page itself from the section it belongs to: on an edit form under Projects the Projects item is current,
+/// but only on the Projects list is the path its own address, so only there is it "the current page" for a screen reader.
+/// </summary>
+public sealed record AdminMenuItem(string Key, string Label, string Url, string Icon, int? Count, bool Hidden, bool IsCurrent, bool IsExact, IReadOnlyList<AdminMenuItem> Children)
 {
-    /// <summary>True for the current page and for a parent whose sub-menu holds it, so the sub-menu is drawn open.</summary>
+    /// <summary>True for the current item and for a parent whose sub-menu holds it, so the sub-menu is drawn open.</summary>
     public bool ContainsCurrent => IsCurrent || Children.Any(c => c.IsCurrent);
 }
 
@@ -82,8 +86,9 @@ public sealed class AdminMenu
         ];
 
         var leaves = groups.SelectMany(g => g.Items).SelectMany(i => i.Children.Count > 0 ? i.Children : new[] { i });
-        var current = leaves.Where(l => Covers(l.Url, path)).OrderByDescending(l => l.Url.Length).FirstOrDefault()?.Key;
-        return new AdminMenuModel(groups.Select(g => g with { Items = g.Items.Select(i => Mark(i, current)).ToList() }).ToList());
+        var current = leaves.Where(l => Covers(l.Url, path)).OrderByDescending(l => l.Url.Length).FirstOrDefault();
+        var exact = current is not null && Normalise(path).Equals(current.Url, StringComparison.OrdinalIgnoreCase);
+        return new AdminMenuModel(groups.Select(g => g with { Items = g.Items.Select(i => Mark(i, current?.Key, exact)).ToList() }).ToList());
     }
 
     /// <summary>
@@ -113,10 +118,13 @@ public sealed class AdminMenu
     }
 
     private static AdminMenuItem Item(string key, string label, string url, string icon, int? count = null, bool hidden = false, IReadOnlyList<AdminMenuItem>? children = null) =>
-        new(key, label, url, icon, count, hidden, false, children ?? []);
+        new(key, label, url, icon, count, hidden, false, false, children ?? []);
 
-    private static AdminMenuItem Mark(AdminMenuItem item, string? current) =>
-        item with { IsCurrent = current is not null && item.Children.Count == 0 && item.Key == current, Children = item.Children.Select(c => Mark(c, current)).ToList() };
+    private static AdminMenuItem Mark(AdminMenuItem item, string? current, bool exact)
+    {
+        var isCurrent = current is not null && item.Children.Count == 0 && item.Key == current;
+        return item with { IsCurrent = isCurrent, IsExact = isCurrent && exact, Children = item.Children.Select(c => Mark(c, current, exact)).ToList() };
+    }
 
     private static string Normalise(string path) => path.Length > 1 ? path.TrimEnd('/') : path;
 

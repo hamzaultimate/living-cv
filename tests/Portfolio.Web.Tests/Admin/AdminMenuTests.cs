@@ -148,6 +148,22 @@ public class AdminMenuTests
         Assert.DoesNotContain(model.Leaves, l => l.IsCurrent);
     }
 
+    [Theory]
+    [InlineData("/admin", true)]
+    [InlineData("/admin/content/projects", true)]
+    [InlineData("/admin/content/projects/", true)]
+    [InlineData("/admin/content/projects/edit/4", false)]
+    [InlineData("/admin/transfer/confirm", false)]
+    [InlineData("/admin/welcome/review", false)]
+    public void TheCurrentItem_IsExact_OnlyWhenThePathIsItsOwnAddress(string path, bool exact)
+    {
+        // On a deeper page the item is only the section the page belongs to; the page itself is the breadcrumb's last crumb.
+        var current = Menu.Build(Software(), path, null).Leaves.Single(l => l.IsCurrent);
+
+        Assert.Equal(exact, current.IsExact);
+        Assert.DoesNotContain(Menu.Build(Software(), path, null).Leaves, l => !l.IsCurrent && l.IsExact);
+    }
+
     [Fact]
     public void TheParentOfTheCurrentItem_ContainsIt_SoItsSubMenuRendersOpen()
     {

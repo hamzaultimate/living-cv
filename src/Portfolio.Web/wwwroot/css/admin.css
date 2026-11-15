@@ -57,9 +57,6 @@
 .adm-card { background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: var(--adm-radius); box-shadow: var(--adm-shadow); padding: var(--adm-space-5); margin-bottom: var(--adm-space-5); }
 .adm-narrow { max-width: 26rem; margin-left: auto; margin-right: auto; }
 .adm-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
-.adm-tile { text-decoration: none; color: inherit !important; display: block; }
-.adm-tile:hover { border-color: var(--adm-accent); }
-.adm-tile p { margin: 0; color: var(--adm-muted); }
 .adm-field { margin-bottom: 1rem; }
 .adm-field label, .adm-legend { display: block; font-weight: 600; margin-bottom: .25rem; }
 .adm-hint { display: block; color: var(--adm-muted); font-size: .85rem; margin-top: .25rem; }
@@ -220,8 +217,7 @@ a.adm-btn { text-decoration: none; display: inline-block; }
 .adm-menu-foot { position: sticky; bottom: 0; margin-top: auto; padding: .75rem 0 .25rem; border-top: 1px solid var(--adm-border); background: var(--adm-menu-bg); }
 .adm .adm-menu-link { position: relative; display: flex; align-items: center; gap: .65rem; width: 100%; padding: .5rem .6rem; border: 0; border-radius: .35rem; background: none; color: var(--adm-text); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
 .adm .adm-menu-link:hover { background: var(--adm-bg); }
-.adm .adm-menu-link[aria-current="page"] { background: var(--adm-bg); font-weight: 600; box-shadow: inset 3px 0 0 var(--adm-accent); }
-.adm .adm-menu-link[aria-current="true"] { font-weight: 600; }
+.adm .adm-menu-link[aria-current="page"], .adm .adm-menu-link[aria-current="true"] { background: var(--adm-bg); font-weight: 600; box-shadow: inset 3px 0 0 var(--adm-accent); }
 .adm-menu-link svg { width: 1.25rem; height: 1.25rem; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 .adm-menu-dim .adm-menu-label { opacity: .6; }
 .adm-menu-tag { padding: 0 .4rem; border: 1px solid var(--adm-border); border-radius: 999px; font-size: .7rem; color: var(--adm-muted); }
@@ -266,7 +262,7 @@ a.adm-btn { text-decoration: none; display: inline-block; }
 
 /* Wide screens: the rail. Labels stay in the page for screen readers and show as a tooltip on hover and focus. */
 @media (min-width: 40.0625rem) {
-  .adm-shell[data-menu="collapsed"] .adm-menu { overflow: visible; padding-inline: .5rem; }
+  .adm-shell[data-menu="collapsed"] .adm-menu { padding-inline: .5rem; }
   .adm-shell[data-menu="collapsed"] .adm-menu-heading,
   .adm-shell[data-menu="collapsed"] .adm-menu-tag,
   .adm-shell[data-menu="collapsed"] .adm-menu-count,
@@ -277,6 +273,11 @@ a.adm-btn { text-decoration: none; display: inline-block; }
   .adm-shell[data-menu="collapsed"] .adm-menu-toggle svg { transform: rotate(180deg); }
   .adm-shell[data-menu="collapsed"] .adm-menu-link:hover::after,
   .adm-shell[data-menu="collapsed"] .adm-menu-link:focus-visible::after { content: attr(data-tip); position: absolute; left: calc(100% + .5rem); top: 50%; transform: translateY(-50%); z-index: 30; padding: .25rem .55rem; border-radius: .35rem; background: var(--adm-text); color: var(--adm-bg); font-size: .8rem; white-space: nowrap; pointer-events: none; }
+}
+
+/* The tooltips need the rail not to clip them, so it only stops scrolling where there is room for all of its icons. */
+@media (min-width: 40.0625rem) and (min-height: 34rem) {
+  .adm-shell[data-menu="collapsed"] .adm-menu { overflow: visible; }
 }
 
 /* Narrow screens: without script the menu sits above the page; with script it is an overlay opened from a slim top bar. */

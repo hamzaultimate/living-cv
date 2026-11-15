@@ -19,10 +19,19 @@
       : COOKIE + '=; path=/admin; max-age=0; SameSite=Lax' + secure;
   }
 
+  // The button names what pressing it does, in the label and in the rail's tooltip.
+  var toggleLabel = toggle.querySelector('.adm-menu-label');
+  function nameToggle(collapsed) {
+    var text = collapsed ? 'Expand menu' : 'Collapse menu';
+    toggle.setAttribute('data-tip', text);
+    if (toggleLabel) toggleLabel.textContent = text;
+  }
+
   toggle.addEventListener('click', function () {
     var collapsed = shell.getAttribute('data-menu') !== 'collapsed';
     shell.setAttribute('data-menu', collapsed ? 'collapsed' : 'expanded');
     toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    nameToggle(collapsed);
     remember(collapsed);
   });
 
@@ -30,10 +39,24 @@
   var menu = document.querySelector('[data-adm-menu]');
   if (!opener || !menu) return;
 
+  // While the overlay is open the page behind it is inert, so Tab cannot leave the overlay for content the overlay is covering.
+  var behind = [document.querySelector('.adm-content'), document.querySelector('.adm-skip')];
   function isOpen() { return shell.getAttribute('data-menu-open') === 'true'; }
   function setOpen(open) {
     shell.setAttribute('data-menu-open', open ? 'true' : 'false');
     opener.setAttribute('aria-expanded', open ? 'true' : 'false');
+    behind.forEach(function (el) {
+      if (!el) return;
+      if (open) el.setAttribute('inert', ''); else el.removeAttribute('inert');
+    });
+  }
+
+  // The overlay only exists on narrow screens: if the window widens while it is open, close it so the page is not left inert.
+  var narrow = window.matchMedia('(max-width: 40rem)');
+  if (narrow.addEventListener) {
+    narrow.addEventListener('change', function () {
+      if (!narrow.matches && isOpen()) setOpen(false);
+    });
   }
 
   opener.addEventListener('click', function () {
