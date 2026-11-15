@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Portfolio.Data;
@@ -27,7 +26,7 @@ public class PostForm
 
 // Applies the upload cap before the antiforgery check reads the body (see BodyLimitAttribute); the cover image is the only file.
 [BodyLimit]
-public partial class EditModel : ContentPageModel
+public class EditModel : ContentPageModel
 {
     public const int DescriptionMax = 300;
     public const int BodyMax = 60_000;
@@ -35,9 +34,6 @@ public partial class EditModel : ContentPageModel
     public const int TagMax = 30;
     private static readonly DateOnly EarliestDate = new(1990, 1, 1);
     private static readonly DateOnly LatestDate = new(2100, 12, 31);
-
-    [GeneratedRegex(@"^[\p{L}\p{N}.+#][\p{L}\p{N} .+#&_-]*\z", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
-    private static partial Regex TagPattern();
 
     private readonly ImageProcessor _processor;
     private readonly UploadStore _uploads;
@@ -176,7 +172,8 @@ public partial class EditModel : ContentPageModel
                 return Page();
             }
 
-            SafeMd.TryRender(body, out _); // a saved text is kept for the public page; a refused one never was
+            // A saved text is kept for the public page, from the rendering the check already made (no second parse); a refused one never was.
+            if (_checked is { } done && done.Text == body) SafeMd.Keep(body, SafeMd.Problem.None, done.Html);
             if (replacedCover != row.Cover) await Writer.DeleteUploadsAsync([replacedCover], null);
             Flash(row.Draft ? $"Saved {title} as a draft. It is not shown on your site." : $"Saved {title}. It is shown on your site.");
             return Redirect(ListUrl); // no fragment: a browser skips autofocus when the address has one, and the saved message should take focus
@@ -192,6 +189,9 @@ public partial class EditModel : ContentPageModel
 
     private static string NormaliseBody(string? body) => (body ?? "").Replace("\r\n", "\n").Replace('\r', '\n').Trim();
 
+    // The rendering the check produced for the text that passed it, kept for the public page once the post is saved (a refused or unsaved text is never kept).
+    private (string Text, string Html)? _checked;
+
     /// <summary>The text is Markdown, so tags are legal in it (they are shown as text when published); it only has to be present, within the cap and free of control characters.</summary>
     private string? CheckBody(FormCheck c)
     {
@@ -200,7 +200,12 @@ public partial class EditModel : ContentPageModel
         if (body.Length == 0) c.Error(nameof(Form.Body), $"{label} is required.");
         else if (body.Length > BodyMax) c.Error(nameof(Form.Body), $"{label} can be at most {BodyMax:N0} characters.");
         else if (ContentRules.HasControlCharacters(body, multiline: true)) c.Error(nameof(Form.Body), $"{label} contains characters that are not allowed.");
-        else if (SafeMd.TryRender(body, out _, remember: false) is var problem && problem != SafeMd.Problem.None) c.Error(nameof(Form.Body), BodyProblemMessage(problem));
+        else
+        {
+            var problem = SafeMd.TryRender(body, out var html, remember: false);
+            if (problem != SafeMd.Problem.None) c.Error(nameof(Form.Body), BodyProblemMessage(problem));
+            else _checked = (body, html);
+        }
         return body;
     }
 
@@ -235,7 +240,7 @@ public partial class EditModel : ContentPageModel
             var tag = ContentRules.Trim(raw);
             if (tag is null || tags.Contains(tag, StringComparer.OrdinalIgnoreCase)) continue;
             if (tag.Length > TagMax) c.Error(nameof(Form.Tags), $"{label}: each can be at most {TagMax} characters.");
-            else if (!TagPattern().IsMatch(tag)) c.Error(nameof(Form.Tags), $"{label}: use letters, digits, spaces and . + # & _ - only (\"{tag}\" has something else).");
+            else if (!ContentRules.IsTag(tag)) c.Error(nameof(Form.Tags), $"{label}: use letters, digits, spaces and . + # & _ - only (\"{tag}\" has something else).");
             tags.Add(tag);
         }
         if (tags.Count > MaxTags) c.Error(nameof(Form.Tags), $"{label}: at most {MaxTags}.");

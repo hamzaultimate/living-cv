@@ -1,0 +1,166 @@
+@model ProjectPage
+@inject PortfolioContentService Repo
+@inject RequestTemplate Template
+@{
+    var tpl = await Template.GetAsync();
+    var copy = tpl.Copy.Projects;
+    var work = tpl.Section(SectionRegistry.Projects);
+    var item = work.ItemLabel ?? "";
+    var p = Model.Project;
+    // The results layout never plays media: a cover or picture that is a video file is not drawn as an image or a player but listed as a plain link, next to the entry's own links.
+    var hasHero = !string.IsNullOrWhiteSpace(p.HeroImage) && !Media.IsVideo(p.HeroImage);
+    var shots = p.Screenshots.Where(s => !Media.IsVideo(s.Url)).ToList();
+    var videos = new List<(string Url, string Label)>();
+    if (Media.IsVideo(p.HeroImage) && LayoutPartials.IsLinkable(p.HeroImage)) videos.Add((p.HeroImage!, copy.WatchVideoText()));
+    foreach (var v in p.Screenshots.Where(s => Media.IsVideo(s.Url) && LayoutPartials.IsLinkable(s.Url)))
+        videos.Add((v.Url, string.IsNullOrWhiteSpace(v.Caption) ? copy.WatchVideoText() : v.Caption + " — " + copy.WatchVideoText()));
+    var results = p.Impact.Where(x => !string.IsNullOrWhiteSpace(x)).Select(ImpactLine.Split).ToList();
+    var all = await Repo.GetProjectLinksAsync();
+    var at = all.FindIndex(x => x.Id == p.Id);
+    var next = all.Count > 1 && at >= 0 ? all[(at + 1) % all.Count] : null;
+    var nextText = copy.NextItemFor(item);
+}
+<script type="application/ld+json">@Html.Raw(Model.BreadcrumbJsonLd)</script>
+<script type="application/ld+json">@Html.Raw(Model.ProjectJsonLd)</script>
+
+<article class="container-page py-16 md:py-20">
+    <a href="/projects" class="font-mono text-xs text-muted hover:text-accent">@Text($"← {work.Label}")</a>
+
+    <header class="mt-6 max-w-4xl min-w-0">
+        <p class="eyebrow">@Text(item)</p>
+        <h1 class="mt-3 break-words text-4xl font-semibold leading-[1.08] md:text-6xl">@p.Title</h1>
+        <p class="mt-3 break-words font-mono text-xs text-muted">
+            @string.Join(" · ", new[] { p.Role, p.Org, p.Period }.Where(x => !string.IsNullOrWhiteSpace(x)))
+        </p>
+        <p class="mt-5 max-w-3xl break-words text-lg text-muted">@p.Summary</p>
+    </header>
+
+    @if (results.Count > 0)
+    {
+        <!-- RESULTS: the impact lines, each led by its figure -->
+        <ul class="mt-10 grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))]" data-results-impact>
+            @foreach (var r in results)
+            {
+                <li class="min-w-0 break-words rounded-lg border border-border bg-surface p-5">
+                    @if (r.HasFigure)
+                    {
+                        <span class="block break-words font-display text-4xl font-semibold leading-none text-accent md:text-5xl">@r.Figure</span>
+                        @if (r.Rest.Length > 0)
+                        {
+                            <span class="mt-3 block break-words text-sm text-text">@r.Rest</span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="block break-words text-lg leading-snug text-text">@r.Rest</span>
+                    }
+                </li>
+            }
+        </ul>
+    }
+
+    @if (hasHero)
+    {
+        <figure class="mt-10 overflow-hidden rounded-lg border border-border">
+            <img src="@p.HeroImage" alt="@(string.IsNullOrWhiteSpace(p.HeroImageAlt) ? copy.AltFor(p.Title) : p.HeroImageAlt)" class="aspect-[16/10] w-full object-cover" width="1200" height="750" fetchpriority="high" />
+        </figure>
+    }
+
+    <div class="mt-12 grid gap-10 md:grid-cols-[1.6fr_1fr]">
+        <div class="article min-w-0 max-w-2xl break-words">
+            @if (!string.IsNullOrWhiteSpace(p.Problem))
+            {
+                <h2>@Text(copy.ProblemHeading)</h2>
+                <p>@p.Problem</p>
+            }
+            @if (!string.IsNullOrWhiteSpace(p.Approach))
+            {
+                <h2>@Text(copy.ApproachHeading)</h2>
+                <p>@p.Approach</p>
+            }
+            @if (string.IsNullOrWhiteSpace(p.Problem) && string.IsNullOrWhiteSpace(p.Approach))
+            {
+                <p class="text-muted">@Text(copy.NoWriteup)</p>
+            }
+        </div>
+
+        <aside class="min-w-0 space-y-6 break-words">
+            @if (p.Tech.Count > 0)
+            {
+                <div>
+                    <p class="eyebrow">@Text(copy.StackHeading)</p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        @foreach (var t in p.Tech)
+                        {
+                            <span class="tag max-w-full break-words">@t</span>
+                        }
+                    </div>
+                </div>
+            }
+            @if (p.Links.Count > 0 || videos.Count > 0)
+            {
+                <div>
+                    <p class="eyebrow">@Text(copy.LinksHeading)</p>
+                    <ul class="mt-3 space-y-2">
+                        @foreach (var l in p.Links)
+                        {
+                            <li><a href="@l.Url" target="_blank" rel="noopener" class="text-sm text-accent hover:text-accent-strong">@l.Label →</a></li>
+                        }
+                        @foreach (var v in videos)
+                        {
+                            <li><a href="@v.Url" target="_blank" rel="noopener" class="text-sm text-accent hover:text-accent-strong">@Text(v.Label)</a></li>
+                        }
+                    </ul>
+                </div>
+            }
+            @if (p.Proofs.Count > 0)
+            {
+                <div>
+                    <p class="eyebrow">@Text(copy.ProofHeading)</p>
+                    <ul class="mt-3 space-y-2">
+                        @foreach (var pr in p.Proofs)
+                        {
+                            <li><a href="@pr.Url" target="_blank" rel="noopener" class="text-sm text-accent hover:text-accent-strong">@pr.Label →</a></li>
+                        }
+                    </ul>
+                </div>
+            }
+        </aside>
+    </div>
+
+    @if (shots.Count > 0)
+    {
+        <section class="mt-14" data-lightbox-gallery aria-label="@copy.GalleryLabel">
+            <p class="eyebrow">@Text(copy.ScreenshotsHeading)</p>
+            <div class="mt-4 grid gap-6 sm:grid-cols-2">
+                @for (var i = 0; i < shots.Count; i++)
+                {
+                    var shot = shots[i];
+                    <figure class="min-w-0 @(i == 0 ? "sm:col-span-2" : "")">
+                        <button type="button"
+                                class="group relative block w-full overflow-hidden rounded-lg border border-border transition hover:border-accent/50"
+                                data-lightbox-item data-src="@shot.Url" data-caption="@shot.Caption" data-video="false" data-index="@i"
+                                aria-label="@copy.OpenImageLabel@(string.IsNullOrWhiteSpace(shot.Caption) ? "" : ": " + shot.Caption)">
+                            <img src="@shot.Url" alt="@(string.IsNullOrWhiteSpace(shot.Caption) ? copy.AltFor(p.Title) : shot.Caption)" loading="lazy"
+                                 class="@(i == 0 ? "aspect-[16/10]" : "aspect-[4/3]") w-full object-cover transition duration-500 group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
+                        </button>
+                        @if (!string.IsNullOrWhiteSpace(shot.Caption))
+                        {
+                            <figcaption class="mt-2 break-words text-sm text-muted" aria-hidden="true">@shot.Caption</figcaption>
+                        }
+                    </figure>
+                }
+            </div>
+        </section>
+    }
+
+    @if (next is not null)
+    {
+        <nav class="mt-16 border-t border-border/60 pt-8" aria-label="@nextText">
+            <a href="/projects/@next.Slug" class="group block">
+                <span class="eyebrow">@Text(nextText)</span>
+                <span class="mt-2 block break-words text-2xl text-text group-hover:text-accent md:text-3xl">@next.Title →</span>
+            </a>
+        </nav>
+    }
+</article>

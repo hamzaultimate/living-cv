@@ -25,11 +25,32 @@ public enum PublishOutcome
     /// <summary>An earlier step is missing or no longer valid; <see cref="PublishResult.Step"/> says which to go back to.</summary>
     Incomplete,
 
-    /// <summary>Another publish won the race. Nothing from this one was applied.</summary>
+    /// <summary>Another publish won the race: the wizard is finished. Nothing from this one was applied.</summary>
     Conflict,
+
+    /// <summary>The profile was written by something else while this publish ran, twice in a row, and the wizard is still not finished. Nothing was applied and the draft is kept; pressing Publish again is safe.</summary>
+    Changed,
+
+    /// <summary>The chosen template would leave no menu section on and nothing is on now either (<see cref="PublishResult.Detail"/> says so). Nothing was applied; the draft is kept.</summary>
+    NoMenu,
 }
 
-public sealed record PublishResult(PublishOutcome Outcome, int Step = 0, IReadOnlyList<StarterTable>? Sample = null);
+public enum SkipOutcome
+{
+    /// <summary>A first run was skipped: the placeholder profile stays and the demo content was loaded into empty tables.</summary>
+    Skipped,
+
+    /// <summary>A re-run: only the draft was discarded.</summary>
+    DraftDiscarded,
+
+    /// <summary>The wizard was already finished (published or skipped in another tab), so this request recorded nothing.</summary>
+    AlreadyFinished,
+
+    /// <summary>The profile was written by something else while the skip ran, twice in a row, and the wizard is still not finished. Nothing was recorded; skipping again is safe.</summary>
+    Changed,
+}
+
+public sealed record PublishResult(PublishOutcome Outcome, int Step = 0, IReadOnlyList<StarterTable>? Sample = null, string? Detail = null);
 
 /// <summary>
 /// The onboarding wizard's server side. Answers are saved to a draft on the profile row after every step and never touch the public
@@ -54,10 +75,14 @@ public class OnboardingService
     private readonly TimeProvider _time;
     private readonly ILogger<OnboardingService> _logger;
     private readonly string _seedDir;
+    private readonly SiteOptions _placeholder;
+    private readonly TemplateResolver _resolver;
 
     public OnboardingService(PortfolioDbContext db, ProfileEditor editor, ITemplateCatalog catalog, UploadStore store, ImageProcessor processor,
-        StarterContent starter, TimeProvider time, ILogger<OnboardingService> logger)
+        StarterContent starter, TimeProvider time, ILogger<OnboardingService> logger, IOptions<SiteOptions> placeholder, TemplateResolver resolver)
     {
+        _placeholder = placeholder.Value;
+        _resolver = resolver;
         _db = db;
         _editor = editor;
         _catalog = catalog;
@@ -79,9 +104,13 @@ public class OnboardingService
 
     /// <summary>Step 1. The template must come from the catalog (the same allow-list as the admin switcher). Wording the owner has not changed
     /// from the previous template's suggestion is dropped, so the new template's suggestion takes its place.</summary>
-    public async Task SaveTemplateAsync(TemplateDefinition template, CancellationToken ct = default)
+    /// <returns>Null when the choice was saved; otherwise the message for a template the site cannot move to (nothing was saved): with the owner's stored section choices its defaults would leave no
+    /// menu section on and no menu section is on now either (see <see cref="SectionSettings.PlanSwitch"/>, which publishing applies again).</returns>
+    public async Task<string?> SaveTemplateAsync(TemplateDefinition template, CancellationToken ct = default)
     {
         var state = await GetStateAsync(ct);
+        var plan = SectionSettings.PlanSwitch(_resolver, SiteProfileMapper.ToEntity(SiteProfileMapper.ToOptions(state.Profile)), template);
+        if (!plan.Allowed) return SectionSettings.NoMenuMessage(template.Name, plan.Target);
         var draft = state.Draft ?? new OnboardingDraft();
         if (_catalog.TryGet(draft.TemplateKey, out var previous) && previous.Key != template.Key)
         {
@@ -93,6 +122,7 @@ public class OnboardingService
         draft.TemplateKey = template.Key;
         draft.Step = Math.Max(draft.Step, 1);
         await SaveDraftAsync(state, draft, ct);
+        return null;
     }
 
     /// <summary>Step 2. <paramref name="form"/> must already have passed validation; it is cleaned of control characters here.</summary>
@@ -164,8 +194,7 @@ public class OnboardingService
         var state = await GetStateAsync(ct);
         if (state.Draft is null && string.IsNullOrEmpty(state.Profile.OnboardingDraft)) return;
         var photo = state.Draft?.PhotoDraft;
-        state.Profile.OnboardingDraft = null;
-        await TrySaveAsync(ct);
+        await WriteDraftAsync(state.Profile, null, ct);
         _store.TryDeleteDraft(photo);
     }
 
@@ -186,6 +215,9 @@ public class OnboardingService
         PublishResult? early = null;
 
         var strategy = _db.Database.CreateExecutionStrategy();
+        // A profile write that lands between the read and the write moves the stamp and fails the save. The publish depends on no form, so when the wizard is still
+        // unfinished it starts again once from the stored row; only a second loss, or a finished wizard, is reported (and says which).
+        for (var attempt = 1; ; attempt++)
         try
         {
             await strategy.ExecuteAsync(async () =>
@@ -206,6 +238,10 @@ public class OnboardingService
                 if (!BasicsForm.IsComplete(draft)) { early = new PublishResult(PublishOutcome.Incomplete, 2); return; }
                 if (!IsValidAddress(draft.SiteUrl)) { early = new PublishResult(PublishOutcome.Incomplete, 4); return; }
 
+                // The same rule as the admin's template switch: the site must keep a menu section. When the template's defaults would empty it, the menu sections on now are kept on.
+                var plan = SectionSettings.PlanSwitch(_resolver, profile, template);
+                if (!plan.Allowed) { early = new PublishResult(PublishOutcome.NoMenu, 0, null, SectionSettings.NoMenuMessage(template.Name, plan.Target)); return; }
+
                 var firstRun = profile.OnboardingCompletedAt is null;
                 if (draft.PhotoDraft is not null)
                 {
@@ -213,8 +249,9 @@ public class OnboardingService
                     usedDraftPhoto = draft.PhotoDraft;
                 }
                 replacedPhoto = profile.PhotoUrl;
-                Apply(profile, draft, template, firstRun, promoted);
+                Apply(profile, draft, template, firstRun, promoted, _placeholder);
                 profile.OnboardingDraft = null;
+                profile.ConcurrencyStamp = ProfileEditor.NewStamp();
                 profile.OnboardingCompletedAt = _time.GetUtcNow();
                 // Only a first run records an outcome: a re-run on a site that existed before the wizard must not change how that site seeds at start-up.
                 if (firstRun) profile.OnboardingOutcome = "published";
@@ -229,12 +266,16 @@ public class OnboardingService
                 await tx.CommitAsync(ct);
                 published = profile;
             });
+            break;
         }
         catch (DbUpdateConcurrencyException)
         {
             _store.TryDelete(promoted);
+            promoted = null;
             _db.ChangeTracker.Clear();
-            return new PublishResult(PublishOutcome.Conflict);
+            var unfinished = await IsUnfinishedAsync();
+            if (unfinished && attempt < 2) continue;
+            return new PublishResult(unfinished ? PublishOutcome.Changed : PublishOutcome.Conflict);
         }
         catch
         {
@@ -262,43 +303,56 @@ public class OnboardingService
     /// the Site config stays and the demo persona is loaded into any empty table (what start-up did before the wizard deferred it). On a
     /// re-run it only discards the draft. Either way no existing row is changed or removed.
     /// </summary>
-    public async Task SkipAsync(CancellationToken ct = default)
+    public async Task<SkipOutcome> SkipAsync(CancellationToken ct = default)
     {
-        string? photo = null;
-        SiteProfile? skipped = null;
-        var strategy = _db.Database.CreateExecutionStrategy();
-        try
+        for (var attempt = 1; ; attempt++)
         {
-            await strategy.ExecuteAsync(async () =>
+            string? photo = null;
+            SiteProfile? skipped = null;
+            var firstRun = false;
+            var strategy = _db.Database.CreateExecutionStrategy();
+            try
             {
-                _db.ChangeTracker.Clear();
-                skipped = null;
-                await using var tx = await _db.Database.BeginTransactionAsync(ct);
-                var profile = await _editor.LoadAsync(ct);
-                photo = OnboardingDraft.Parse(profile.OnboardingDraft)?.PhotoDraft;
-                var firstRun = profile.OnboardingCompletedAt is null;
-                profile.OnboardingDraft = null;
-                if (firstRun)
+                await strategy.ExecuteAsync(async () =>
                 {
-                    profile.OnboardingCompletedAt = _time.GetUtcNow();
-                    profile.OnboardingOutcome = "skipped";
-                    await _db.SaveChangesAsync(ct);
-                    await PortfolioSeeder.SeedAsync(_db, _seedDir, SeedMode.IfEmpty, _logger, ct);
-                    skipped = profile;
-                }
-                else await _db.SaveChangesAsync(ct);
-                await tx.CommitAsync(ct);
-            });
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            _db.ChangeTracker.Clear();
-            return; // published or skipped in another tab; nothing more to do
-        }
+                    _db.ChangeTracker.Clear();
+                    skipped = null;
+                    await using var tx = await _db.Database.BeginTransactionAsync(ct);
+                    var profile = await _editor.LoadAsync(ct);
+                    photo = OnboardingDraft.Parse(profile.OnboardingDraft)?.PhotoDraft;
+                    firstRun = profile.OnboardingCompletedAt is null;
+                    if (firstRun)
+                    {
+                        profile.OnboardingDraft = null;
+                        profile.OnboardingCompletedAt = _time.GetUtcNow();
+                        profile.OnboardingOutcome = "skipped";
+                        await _db.SaveChangesAsync(ct);
+                        await PortfolioSeeder.SeedAsync(_db, _seedDir, SeedMode.IfEmpty, _logger, ct);
+                        skipped = profile;
+                    }
+                    else await WriteDraftAsync(profile, null, ct);
+                    await tx.CommitAsync(ct);
+                });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // A profile write landed between the read and the write (or another tab finished the wizard). Like a publish, a skip depends on no form: start again once while
+                // the wizard is unfinished, and otherwise say what is true instead of claiming a skip that was not recorded.
+                _db.ChangeTracker.Clear();
+                var unfinished = await IsUnfinishedAsync();
+                if (unfinished && attempt < 2) continue;
+                return unfinished ? SkipOutcome.Changed : SkipOutcome.AlreadyFinished;
+            }
 
-        if (skipped is not null) await _editor.AfterCommitAsync(skipped);
-        _store.TryDeleteDraft(photo);
+            if (skipped is not null) await _editor.AfterCommitAsync(skipped);
+            _store.TryDeleteDraft(photo);
+            return firstRun ? SkipOutcome.Skipped : SkipOutcome.DraftDiscarded;
+        }
     }
+
+    /// <summary>True while the wizard has been neither published nor skipped. Read fresh from the database, whatever the context has tracked.</summary>
+    private async Task<bool> IsUnfinishedAsync() =>
+        await _db.SiteProfiles.AsNoTracking().AnyAsync(p => p.Id == SiteProfile.SingletonId && p.OnboardingCompletedAt == null, CancellationToken.None);
 
     // ---------------------------------------------------------------- preview
 
@@ -310,7 +364,7 @@ public class OnboardingService
         if (state.Draft is not { } draft || !_catalog.TryGet(draft.TemplateKey, out var template)) return null;
 
         var copy = SiteProfileMapper.ToEntity(SiteProfileMapper.ToOptions(state.Profile));
-        Apply(copy, draft, template, state.FirstRun, draft.PhotoDraft is null ? null : DraftPhotoPath);
+        Apply(copy, draft, template, state.FirstRun, draft.PhotoDraft is null ? null : DraftPhotoPath, _placeholder);
         return SiteProfileMapper.ToOptions(copy);
     }
 
@@ -319,8 +373,10 @@ public class OnboardingService
     /// summary, site address, accent and (when there is one) the photo. On a first run the placeholder persona that came from the Site config
     /// (hero, metrics, About text, links, phone) is replaced by a plain hero built from the owner's own answers and empty lists, so no stranger's text
     /// survives under the owner's name; on a re-run those stay as the owner edited them. Rows in other tables are never touched here.
+    /// The hero, the metrics, the About text and the identity extras (topics, phone, WhatsApp, links, other emails, light photo) are replaced only while they are still the placeholder (equal to what the Site config supplied): once the owner has
+    /// edited one of them in the admin, publishing keeps their text. <paramref name="placeholder"/> null means every part counts as untouched.
     /// </summary>
-    internal static void Apply(SiteProfile p, OnboardingDraft d, TemplateDefinition template, bool firstRun, string? photoUrl)
+    internal static void Apply(SiteProfile p, OnboardingDraft d, TemplateDefinition template, bool firstRun, string? photoUrl, SiteOptions? placeholder = null)
     {
         p.TemplateKey = template.Key;
         if (!string.IsNullOrWhiteSpace(d.OwnerName))
@@ -343,13 +399,21 @@ public class OnboardingService
 
         if (firstRun)
         {
-            p.Hero = new ProfileHero { Eyebrow = p.JobTitle, Headline = p.OwnerName, HeadlineAccent = null, Lede = p.Summary };
-            p.Metrics = [];
-            p.About = new ProfileAbout { Headline = null, Paragraphs = string.IsNullOrWhiteSpace(p.Summary) ? [] : [p.Summary] };
-            p.KnowsAbout = [];
-            p.Phone = p.WhatsApp = p.LinkedIn = p.GitHub = p.YouTube = null;
-            p.SecondaryEmails = [];
-            p.PhotoUrlLight = null;
+            var original = placeholder is null ? null : SiteProfileMapper.ToEntity(placeholder);
+            if (original is null || IsSame(p.Hero, original.Hero))
+                p.Hero = new ProfileHero { Eyebrow = p.JobTitle, Headline = p.OwnerName, HeadlineAccent = null, Lede = p.Summary };
+            if (original is null || IsSame(p.Metrics, original.Metrics)) p.Metrics = [];
+            if (original is null || IsSame(p.About, original.About))
+                p.About = new ProfileAbout { Headline = null, Paragraphs = string.IsNullOrWhiteSpace(p.Summary) ? [] : [p.Summary] };
+            // The same rule for the identity extras: a value the owner already changed in the admin is kept, and only one that is still the placeholder is cleared.
+            if (original is null || p.KnowsAbout.SequenceEqual(original.KnowsAbout)) p.KnowsAbout = [];
+            if (original is null || (p.Phone ?? "") == (original.Phone ?? "")) p.Phone = null;
+            if (original is null || (p.WhatsApp ?? "") == (original.WhatsApp ?? "")) p.WhatsApp = null;
+            if (original is null || (p.LinkedIn ?? "") == (original.LinkedIn ?? "")) p.LinkedIn = null;
+            if (original is null || (p.GitHub ?? "") == (original.GitHub ?? "")) p.GitHub = null;
+            if (original is null || (p.YouTube ?? "") == (original.YouTube ?? "")) p.YouTube = null;
+            if (original is null || p.SecondaryEmails.SequenceEqual(original.SecondaryEmails)) p.SecondaryEmails = [];
+            if (original is null || (p.PhotoUrlLight ?? "") == (original.PhotoUrlLight ?? "")) p.PhotoUrlLight = null;
             // The placeholder avatar goes; a photo the owner already uploaded (before finishing the wizard) stays.
             if (photoUrl is null && !IsUpload(p.PhotoUrl)) p.PhotoUrl = null;
         }
@@ -360,6 +424,18 @@ public class OnboardingService
             p.PhotoUrlLight = photoUrl;
         }
     }
+
+    // Equality of the stored text blocks, with an empty value and a missing one counting the same.
+    private static bool IsSame(ProfileHero a, ProfileHero b) =>
+        (a.Eyebrow ?? "") == (b.Eyebrow ?? "") && (a.Headline ?? "") == (b.Headline ?? "") && (a.HeadlineAccent ?? "") == (b.HeadlineAccent ?? "") && (a.Lede ?? "") == (b.Lede ?? "");
+
+    private static bool IsSame(List<ProfileMetric> a, List<ProfileMetric> b) =>
+        a.Count == b.Count && a.Zip(b).All(x => x.First.Value == x.Second.Value && (x.First.Unit ?? "") == (x.Second.Unit ?? "") && (x.First.Label ?? "") == (x.Second.Label ?? ""));
+
+    private static bool IsSame(ProfileAbout a, ProfileAbout b) =>
+        (a.Headline ?? "") == (b.Headline ?? "") && (a.CurrentlyNote ?? "") == (b.CurrentlyNote ?? "")
+        && a.Paragraphs.SequenceEqual(b.Paragraphs) && a.Focus.SequenceEqual(b.Focus)
+        && a.ValueProps.Count == b.ValueProps.Count && a.ValueProps.Zip(b.ValueProps).All(x => x.First.Title == x.Second.Title && x.First.Body == x.Second.Body);
 
     private static bool IsUpload(string? url) => url is not null && url.StartsWith(UploadStore.RequestPath + "/", StringComparison.Ordinal);
 
@@ -375,24 +451,30 @@ public class OnboardingService
     internal static bool IsValidAddress(string? url) =>
         !string.IsNullOrWhiteSpace(url) && url.Length <= SiteProfile.MaxLength.Url && new HttpUrlAttribute().IsValid(url);
 
-    private async Task SaveDraftAsync(OnboardingState state, OnboardingDraft draft, CancellationToken ct)
+    private Task SaveDraftAsync(OnboardingState state, OnboardingDraft draft, CancellationToken ct)
     {
         draft.UpdatedAt = _time.GetUtcNow();
-        state.Profile.OnboardingDraft = draft.ToJson();
-        await TrySaveAsync(ct);
+        return WriteDraftAsync(state.Profile, draft.ToJson(), ct);
     }
 
-    /// <summary>Saves a draft change. A concurrent publish changes the concurrency token; the answer is then simply not saved (the wizard is done).</summary>
-    private async Task TrySaveAsync(CancellationToken ct)
+    /// <summary>
+    /// Writes the draft column and nothing else. A concurrent publish changes the completion time; the answer is then simply not saved (the wizard is done).
+    /// The draft is not part of what the public site shows, so it leaves the profile's concurrency stamp alone, and the update does not name that stamp: an
+    /// answer saved while the owner edits the profile elsewhere must not be lost to a stamp that moved for an unrelated reason.
+    /// </summary>
+    // Callers must not read the draft back from the tracked entity afterwards: the update goes straight to the database and leaves the tracked copy as it was.
+    private async Task WriteDraftAsync(SiteProfile profile, string? json, CancellationToken ct)
     {
-        try
+        if (_db.Entry(profile).State == EntityState.Added)
         {
+            // The row is only now being created (nothing has served the site yet), so it is inserted with the draft in it.
+            profile.OnboardingDraft = json;
             await _db.SaveChangesAsync(ct);
+            return;
         }
-        catch (DbUpdateConcurrencyException)
-        {
-            _db.ChangeTracker.Clear();
-            _logger.LogInformation("A wizard answer was not saved because the wizard was published in the meantime.");
-        }
+        var completedAt = profile.OnboardingCompletedAt;
+        var written = await _db.SiteProfiles.Where(p => p.Id == SiteProfile.SingletonId && p.OnboardingCompletedAt == completedAt)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.OnboardingDraft, json), ct);
+        if (written == 0) _logger.LogInformation("A wizard answer was not saved because the wizard was published in the meantime.");
     }
 }

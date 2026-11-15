@@ -1,0 +1,257 @@
+// Fictional sample content for the Design & UX template. Every person, studio, client, product and award below is invented.
+// The pictures are simple generated placeholders bundled under wwwroot/img/starter/design-ux. Nothing here describes a real person or client.
+{
+  "fictional": true,
+  "profile": {
+    "ownerName": "Casey Marlowe",
+    "brandName": "Casey",
+    "role": "Product Designer · Mobile and web (sample profile)",
+    "jobTitle": "Product Designer",
+    "summary": "Sample profile (fictional). Product designer with seven years across research, interaction design and design systems, shipping mobile and web products with small cross-functional teams.",
+    "knowsAbout": ["Product design", "User research", "Interaction design", "Design systems", "Accessibility", "Prototyping"],
+    "hero": {
+      "eyebrow": "Product Designer · Mobile and web",
+      "headline": "Clear, usable products,",
+      "headlineAccent": "designed with the people who use them.",
+      "lede": "Sample profile (fictional). Seven years of research, interaction design and design systems, from first sketch to shipped release."
+    },
+    "metrics": [
+      { "value": "7", "unit": "years", "label": "designing products" },
+      { "value": "12", "unit": "", "label": "products shipped" },
+      { "value": "60+", "unit": "", "label": "usability sessions run" },
+      { "value": "3", "unit": "", "label": "design systems built" }
+    ],
+    "about": {
+      "headline": "Design that starts with the problem, not the screen.",
+      "paragraphs": [
+        "Sample profile (fictional). I am a product designer who likes the messy start of a project: talking to people, mapping what is really going wrong and sketching many bad ideas before one good one.",
+        "I work best in small teams where design, research and engineering sit together. I have led research for a transit app, rebuilt onboarding for a budgeting product and set up a shared component library for a field-service team.",
+        "This page is sample content for the Design & UX template. Replace it with your own story, and only show work you are allowed to share."
+      ],
+      "valueProps": [
+        { "title": "Research first", "body": "Interviews and testing early, so the team builds the right thing before polishing it." },
+        { "title": "Systems thinking", "body": "Components and tokens that keep a product consistent as it grows." },
+        { "title": "Accessible by default", "body": "Contrast, focus and clear language are part of the first draft, not a late fix." },
+        { "title": "Close to engineering", "body": "Prototypes and specs that make the build easier, with honest trade-offs." }
+      ],
+      "currentlyNote": "Leading design for a small mobility product and mentoring two junior designers.",
+      "focus": ["Product design", "User research", "Design systems", "Accessibility"]
+    },
+    "email": "casey.marlowe@example.org",
+    "linkedIn": "https://www.linkedin.com/in/example-casey-marlowe/",
+    "templateKey": "design-ux"
+  },
+  "experiences": [
+    {
+      "company": "Example Digital Studio (fictional)",
+      "title": "Senior Product Designer",
+      "start": "2022",
+      "end": null,
+      "current": true,
+      "summary": "Lead designer on mobile and web products for sample clients, from discovery research to shipped releases.",
+      "highlights": [
+        "Led design on four client products from brief to launch",
+        "Introduced a shared research repository and a monthly usability session",
+        "Mentored two junior designers"
+      ],
+      "tech": ["User research", "Prototyping", "Design systems", "Accessibility audits"],
+      "sortOrder": 1
+    },
+    {
+      "company": "Sample Mobility Co (fictional)",
+      "title": "Product Designer",
+      "start": "2019",
+      "end": "2022",
+      "current": false,
+      "summary": "Designed rider and driver experiences for a sample mobility app, working daily with product and engineering.",
+      "highlights": [
+        "Redesigned the trip planner and ran the follow-up testing",
+        "Built the first shared component library",
+        "Worked with support to turn complaints into design briefs"
+      ],
+      "tech": ["Journey mapping", "Wireframes", "Usability testing"],
+      "sortOrder": 2
+    },
+    {
+      "company": "Example Print Works (fictional)",
+      "title": "Junior Graphic Designer",
+      "start": "2017",
+      "end": "2019",
+      "current": false,
+      "summary": "Layout, packaging and brand work for small sample businesses before moving into digital product design.",
+      "highlights": ["Prepared print-ready artwork", "Moved the team to a shared colour and type guide"],
+      "tech": ["Layout", "Typography", "Colour"],
+      "sortOrder": 3
+    }
+  ],
+  "skills": [
+    { "name": "User interviews", "group": "Research", "sortOrder": 1 },
+    { "name": "Usability testing", "group": "Research", "sortOrder": 2 },
+    { "name": "Journey mapping", "group": "Research", "sortOrder": 3 },
+    { "name": "Interaction design", "group": "Interaction design", "sortOrder": 4 },
+    { "name": "Wireframing", "group": "Interaction design", "sortOrder": 5 },
+    { "name": "Information architecture", "group": "Interaction design", "sortOrder": 6 },
+    { "name": "Typography", "group": "Visual design", "sortOrder": 7 },
+    { "name": "Colour and contrast", "group": "Visual design", "sortOrder": 8 },
+    { "name": "Design systems", "group": "Visual design", "sortOrder": 9 },
+    { "name": "Clickable prototypes", "group": "Prototyping", "sortOrder": 10 },
+    { "name": "Design tokens", "group": "Prototyping", "sortOrder": 11 },
+    { "name": "Workshop facilitation", "group": "Collaboration", "sortOrder": 12 },
+    { "name": "Design critique", "group": "Collaboration", "sortOrder": 13 }
+  ],
+  "projects": [
+    {
+      "title": "Wayfinder trip planner (sample)",
+      "slug": "wayfinder-trip-planner",
+      "role": "Lead designer",
+      "org": "Example Transit (fictional)",
+      "period": "2023",
+      "summary": "A redesigned trip planner for a sample city transit app. Sample case study (fictional).",
+      "category": "Product design",
+      "problem": "Riders could not tell which of several routes was fastest or most reliable, and many gave up and used a different app.",
+      "approach": "Interviewed riders at stops, mapped the journey from planning to boarding, tested three paper prototypes and shipped the clearest route comparison behind a gradual rollout.",
+      "impact": [
+        "Route comparison completed 31% more often in testing",
+        "Support questions about delays fell by a fifth",
+        "Adopted as the default planner after the pilot"
+      ],
+      "tech": ["Journey mapping", "Paper prototypes", "Usability testing"],
+      "heroImage": "/img/starter/design-ux/wayfinder-trip-planner.svg",
+      "heroImageAlt": "Abstract illustration of a transit map with a highlighted route and a phone showing a list of trip options.",
+      "screenshots": [
+        { "url": "/img/starter/design-ux/wayfinder-trip-planner-1.svg", "caption": "Route comparison on a phone, with the fastest option highlighted" },
+        { "url": "/img/starter/design-ux/wayfinder-trip-planner-2.svg", "caption": "Planner map with the chosen route and live delays" }
+      ],
+      "links": [
+        { "label": "Watch the walkthrough film", "url": "https://example.org/wayfinder-walkthrough" },
+        { "label": "Open the prototype", "url": "https://example.org/wayfinder-prototype" }
+      ],
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "title": "Ledgerleaf onboarding (sample)",
+      "slug": "ledgerleaf-onboarding",
+      "role": "Product designer",
+      "org": "Sample Budget App (fictional)",
+      "period": "2022",
+      "summary": "A shorter, friendlier first-run for a sample budgeting app. Sample case study (fictional).",
+      "category": "UX research",
+      "problem": "New users dropped out during setup, before they had linked an account or seen any value.",
+      "approach": "Watched ten people set the app up, cut the steps from nine to four, moved account linking after the first win and rewrote every prompt in plain language.",
+      "impact": [
+        "Setup completion rose from 48% to 71% in the pilot",
+        "Median time to first budget under three minutes"
+      ],
+      "tech": ["Session recordings", "Content design", "A/B testing"],
+      "heroImage": "/img/starter/design-ux/ledgerleaf-onboarding.svg",
+      "heroImageAlt": "Abstract illustration of stacked setup cards, a progress bar and a ring chart.",
+      "screenshots": [
+        { "url": "/img/starter/design-ux/ledgerleaf-onboarding-1.svg", "caption": "The four-step setup with a progress bar" },
+        { "url": "/img/starter/design-ux/ledgerleaf-onboarding-2.svg", "caption": "First budget summary after setup" }
+      ],
+      "featured": true,
+      "sortOrder": 2
+    },
+    {
+      "title": "Fieldnotes design system (sample)",
+      "slug": "fieldnotes-design-system",
+      "role": "Design systems lead",
+      "org": "Example Field Services (fictional)",
+      "period": "2021",
+      "summary": "A shared component library for a sample field-service team. Sample case study (fictional).",
+      "category": "Design systems",
+      "problem": "Three apps had grown three slightly different button, form and table styles, and every release repeated the same arguments.",
+      "approach": "Audited the interfaces, agreed a small set of tokens and twelve core components with engineering, and documented usage with examples and accessibility notes.",
+      "impact": [
+        "New screens built roughly twice as fast",
+        "One set of tokens shared by all three apps"
+      ],
+      "tech": ["Design tokens", "Component library", "Documentation"],
+      "heroImage": "/img/starter/design-ux/fieldnotes-design-system.svg",
+      "heroImageAlt": "Abstract grid of interface component tiles in shades of violet.",
+      "screenshots": [
+        { "url": "/img/starter/design-ux/fieldnotes-design-system-1.svg", "caption": "Core components laid out for review" },
+        { "url": "/img/starter/design-ux/fieldnotes-design-system-2.svg", "caption": "Variants of the same components with states" }
+      ],
+      "featured": true,
+      "sortOrder": 3
+    },
+    {
+      "title": "Greenhouse dashboard (sample)",
+      "slug": "greenhouse-dashboard",
+      "role": "Visual designer",
+      "org": "Sample Garden Supplies (fictional)",
+      "period": "2020",
+      "summary": "A sales and stock dashboard for a sample plant retailer. Sample case study (fictional).",
+      "category": "Visual design",
+      "problem": "Managers exported spreadsheets every morning because the existing dashboard buried the numbers they needed.",
+      "approach": "Ranked the questions managers ask each day, gave each one a single clear chart and tuned the colours so the key figure was always readable at a glance.",
+      "impact": ["Morning spreadsheet exports stopped within a month"],
+      "tech": ["Data visualisation", "Colour systems"],
+      "heroImage": "/img/starter/design-ux/greenhouse-dashboard.svg",
+      "heroImageAlt": "Abstract dashboard with a side menu, a bar chart and a ring chart on a dark green background.",
+      "featured": false,
+      "sortOrder": 4
+    },
+    {
+      "title": "Lumen accessibility audit (sample)",
+      "slug": "lumen-accessibility-audit",
+      "role": "Accessibility specialist",
+      "org": "Sample Booking Co (fictional)",
+      "period": "2020",
+      "summary": "An accessibility review of a sample booking flow. Sample case study (fictional).",
+      "category": "Accessibility",
+      "problem": "Keyboard and screen-reader users could not complete a booking, and the team did not know where it broke.",
+      "approach": "Walked the flow with assistive technology, logged every blocker by severity and paired with engineers to fix the top issues first.",
+      "impact": ["All critical blockers fixed in two sprints"],
+      "tech": ["Screen-reader testing", "Contrast checks"],
+      "heroImage": "/img/starter/design-ux/lumen-accessibility-audit.svg",
+      "heroImageAlt": "Abstract booking form with a bold focus ring around one field and four colour contrast swatches.",
+      "featured": false,
+      "sortOrder": 5
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Excellence in Interaction Design (sample)",
+      "issuer": "Example Design Awards",
+      "status": "Earned",
+      "date": "2023",
+      "category": "Award",
+      "sortOrder": 1
+    },
+    {
+      "name": "Accessible Interface Design course (sample)",
+      "issuer": "Example Learning Academy",
+      "status": "Earned",
+      "date": "2021",
+      "category": "Course",
+      "sortOrder": 2
+    },
+    {
+      "name": "Advanced Research Methods (sample)",
+      "issuer": "Example Learning Academy",
+      "status": "InProgress",
+      "date": "2025",
+      "category": "Course",
+      "sortOrder": 3
+    }
+  ],
+  "testimonials": [
+    {
+      "quote": "Sample kind word (fictional). Casey asks the question nobody else thought to ask, then turns the answer into something the whole team can build.",
+      "author": "Sample Colleague",
+      "authorTitle": "Product Manager, Example Digital Studio",
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "quote": "Sample kind word (fictional). Clear prototypes, honest trade-offs and a design system that people actually use.",
+      "author": "Sample Engineer",
+      "authorTitle": "Engineering Lead, Example Field Services",
+      "featured": true,
+      "sortOrder": 2
+    }
+  ]
+}

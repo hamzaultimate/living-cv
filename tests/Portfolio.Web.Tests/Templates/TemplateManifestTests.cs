@@ -51,11 +51,11 @@ public class TemplateManifestTests
     }
 
     [Fact]
-    public void ShipsExactlyTheSoftwareAndHealthcareTemplates()
+    public void ShipsExactlyTheShippedTemplates()
     {
-        Assert.Equal(new[] { "healthcare", "software" }, TemplateFolders().Select(Path.GetFileName).OrderBy(x => x).ToArray());
+        Assert.Equal(new[] { "design-ux", "finance-accounting", "healthcare", "marketing-content", "photography-film", "sales-bd", "software" }, TemplateFolders().Select(Path.GetFileName).OrderBy(x => x).ToArray());
         var catalog = new TemplateCatalog(TemplatesDir);
-        Assert.Equal(new[] { "software", "healthcare" }, catalog.All.Select(t => t.Key));
+        Assert.Equal(new[] { "software", "design-ux", "finance-accounting", "healthcare", "marketing-content", "photography-film", "sales-bd" }, catalog.All.Select(t => t.Key));
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public class TemplateManifestTests
             {
                 var sw = (string?)prop.GetValue(group.GetValue(software.Copy));
                 var hc = (string?)prop.GetValue(group.GetValue(healthcare.Copy));
-                if (neutral.Contains(hc)) continue;
+                if (neutral.Contains(hc) || string.IsNullOrEmpty(hc)) continue; // optional wording is empty in both
                 Assert.True(sw != hc, $"copy.{group.Name}.{prop.Name} is identical in both templates: {hc}");
             }
     }
@@ -140,7 +140,6 @@ public class TemplateManifestTests
         Assert.Contains(Errors(t => t.Key = "Software Two"), e => e.Contains("kebab-case"));
         Assert.Contains(Errors(t => t.Key = "other"), e => e.Contains("does not match folder"));
         Assert.Contains(Errors(t => t.Archetype = "mosaic"), e => e.Contains("unknown"));
-        Assert.Contains(Errors(t => t.Archetype = "gallery"), e => e.Contains("no layout yet"));
         Assert.Contains(Errors(t => t.Sections.Add(new TemplateSection { Key = "wiki", Label = "wiki" })), e => e.Contains("'wiki'"));
         Assert.Contains(Errors(t => t.Sections.Add(new TemplateSection { Key = "about", Label = "about" })), e => e.Contains("listed twice"));
         Assert.Contains(Errors(t => t.Sections[0].Label = ""), e => e.Contains("needs a label"));
@@ -150,6 +149,24 @@ public class TemplateManifestTests
         Assert.Contains(Errors(t => t.Seo.AboutDescription = ""), e => e.Contains("seo.aboutDescription"));
         Assert.Contains(Errors(t => t.Copy.Skills.Heading = ""), e => e.Contains("copy.skills.heading is required"));
         Assert.Contains(Errors(t => t.Copy.Home.WorkHeading = "<b>x</b>"), e => e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Home.ViewWork = "<b>x</b>"), e => e.Contains("copy.home.viewWork") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Projects.NextItem = "<i>"), e => e.Contains("copy.projects.nextItem") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Home.ViewWork = "View {item}"), e => e.Contains("copy.home.viewWork") && e.Contains("{item}"));
+        Assert.Contains(Errors(t => t.Copy.Home.AllWork = "{work} {typo}"), e => e.Contains("copy.home.allWork") && e.Contains("{typo}"));
+        Assert.Contains(Errors(t => t.Copy.Projects.NextItem = "Next {work}"), e => e.Contains("copy.projects.nextItem") && e.Contains("{work}"));
+        Assert.Contains(Errors(t => t.Copy.Projects.ReadItem = "Read {name}"), e => e.Contains("copy.projects.readItem") && e.Contains("{name}"));
+        Assert.Contains(Errors(t => t.Copy.Projects.WatchVideo = "Watch {item}"), e => e.Contains("copy.projects.watchVideo") && e.Contains("no placeholders"));
+        Assert.Empty(Errors(t => { t.Copy.Home.ViewWork = "Open {work}"; t.Copy.Projects.ReadItem = "Open the {item}"; t.Copy.Projects.WatchVideo = "Watch"; }));
+        Assert.Empty(Errors(t => { t.Copy.Home.ViewWork = ""; t.Copy.Projects.ReadItem = ""; })); // the new wording keys are optional
+        Assert.Contains(Errors(t => t.Copy.Home.DownloadCv = "<b>CV</b>"), e => e.Contains("copy.home.downloadCv") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Home.LinkedIn = "<i>"), e => e.Contains("copy.home.linkedIn") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Home.ClientsHeading = "<i>"), e => e.Contains("copy.home.clientsHeading") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Projects.FilterAll = "<i>"), e => e.Contains("copy.projects.filterAll") && e.Contains("plain text"));
+        Assert.Contains(Errors(t => t.Copy.Home.DownloadCv = "Get {name}"), e => e.Contains("copy.home.downloadCv") && e.Contains("no placeholders"));
+        Assert.Contains(Errors(t => t.Copy.Home.LinkedIn = "{work}"), e => e.Contains("copy.home.linkedIn") && e.Contains("{work}"));
+        Assert.Contains(Errors(t => t.Copy.Home.ClientsHeading = "Clients of {item}"), e => e.Contains("copy.home.clientsHeading") && e.Contains("{item}"));
+        Assert.Contains(Errors(t => t.Copy.Projects.FilterAll = "All {work}"), e => e.Contains("copy.projects.filterAll") && e.Contains("{work}"));
+        Assert.Empty(Errors(t => { t.Copy.Home.DownloadCv = ""; t.Copy.Home.LinkedIn = ""; t.Copy.Home.ClientsHeading = ""; t.Copy.Projects.FilterAll = ""; }));
         Assert.Contains(Errors(t => t.Copy.Contact.Description = new string('x', 200)), e => e.Contains("copy.contact.description"));
         Assert.Contains(Errors(t => t.SkillGroups.Add("backend")), e => e.Contains("repeat"));
         Assert.Contains(Errors(t => t.Theme.ThemeColor = "navy"), e => e.Contains("themeColor"));
@@ -180,7 +197,6 @@ public class TemplateManifestTests
     {
         { "typo in a property name", n => n["archetyp"] = "showcase" },
         { "unknown archetype", n => n["archetype"] = "mosaic" },
-        { "archetype without a layout", n => n["archetype"] = "gallery" },
         { "unknown section", n => n["sections"]!.AsArray().Add(new JsonObject { ["key"] = "wiki", ["label"] = "wiki" }) },
         { "seo title too long", n => n["seo"]!["title"] = new string('x', 90) },
         { "missing copy string", n => n["copy"]!["home"]!.AsObject().Remove("workHeading") },
@@ -297,7 +313,7 @@ public class TemplateManifestTests
 
         var editor = props["editor"]!["properties"]!.AsObject();
         Assert.Equal(Names(typeof(TemplateEditor)), editor.Select(p => p.Key).OrderBy(x => x).ToArray());
-        foreach (var section in EditorFields.Sections)
+        foreach (var section in EditorFields.Sections.Concat(ProfileParts.All).Append(ProfileParts.Sections).Append(ProfileParts.Transfer))
         {
             var node = editor[section]!;
             Assert.Equal(Names(typeof(TemplateEditorSection)), node["properties"]!.AsObject().Select(p => p.Key).OrderBy(x => x).ToArray());
@@ -373,6 +389,29 @@ public class TemplateManifestTests
     [InlineData("""{ "skills": { "itemLabel": "<i>Skill</i>" } }""", "plain text")]
     [InlineData("""{ "skills": { "itemLabel": "" } }""", "itemLabel")]
     [InlineData("""{ "projects": { "fields": { "tech": { "label": "" } } } }""", "label")]
+    [InlineData("""{ "hero": { "fields": { "headline": { "hidden": true } } } }""", "cannot be hidden")]
+    [InlineData("""{ "metrics": { "fields": { "value": { "hidden": true } } } }""", "cannot be hidden")]
+    [InlineData("""{ "about": { "fields": { "headline": { "hidden": true } } } }""", "cannot be hidden")]
+    [InlineData("""{ "hero": { "fields": { "heading": { "hidden": true } } } }""", "only carries wording")]
+    [InlineData("""{ "metrics": { "fields": { "heading": { "hidden": true } } } }""", "only carries wording")]
+    [InlineData("""{ "about": { "fields": { "valuePropTitle": { "hidden": true } } } }""", "only carries wording")]
+    [InlineData("""{ "about": { "fields": { "valuePropBody": { "hidden": true } } } }""", "only carries wording")]
+    [InlineData("""{ "hero": { "fields": { "tagline": { "label": "x" } } } }""", "not a field of the hero editor")]
+    [InlineData("""{ "metrics": { "fields": { "caption": { "label": "x" } } } }""", "not a field of the metrics editor")]
+    [InlineData("""{ "about": { "fields": { "title": { "label": "x" } } } }""", "not a field of the about editor")]
+    [InlineData("""{ "hero": { "fields": { "headline": { "label": "<b>Big</b>" } } } }""", "plain text")]
+    [InlineData("""{ "metrics": { "fields": { "heading": { "hint": "see <a>" } } } }""", "plain text")]
+    [InlineData("""{ "metrics": { "itemLabel": "<i>Metric</i>" } }""", "plain text")]
+    [InlineData("""{ "about": { "itemLabel": "" } }""", "itemLabel")]
+    [InlineData("""{ "about": { "fields": { "focus": { "label": "" } } } }""", "label")]
+    [InlineData("""{ "sections": { "fields": { "shown": { "hidden": true } } } }""", "cannot be hidden")]
+    [InlineData("""{ "sections": { "fields": { "heading": { "hidden": true } } } }""", "only carries wording")]
+    [InlineData("""{ "sections": { "fields": { "locked": { "hidden": true } } } }""", "only carries wording")]
+    [InlineData("""{ "sections": { "fields": { "defaultOff": { "hidden": true } } } }""", "only carries wording")]
+    [InlineData("""{ "sections": { "fields": { "order": { "label": "x" } } } }""", "not a field of the sections editor")]
+    [InlineData("""{ "sections": { "fields": { "label": { "label": "<b>Name</b>" } } } }""", "plain text")]
+    [InlineData("""{ "sections": { "itemLabel": "<i>Page</i>" } }""", "plain text")]
+    [InlineData("""{ "sections": { "itemLabel": "" } }""", "itemLabel")]
     public void AnInvalidEditorBlock_IsRejectedByTheValidator(string editor, string expected)
     {
         var template = Load("healthcare");
@@ -402,5 +441,25 @@ public class TemplateManifestTests
         Assert.Equal("Employer or placement", healthcare.Experience.Fields["company"].Label);
         Assert.True(healthcare.Certifications.Fields["badgeImageUrl"].Hidden);
         Assert.All(new[] { software, healthcare }, e => Assert.False(e.Projects.Fields.ContainsKey("title") && e.Projects.Fields["title"].Hidden));
+        // The profile editors' wording too: each template names its hero, metrics and About page, and Healthcare leaves out what it does not use.
+        Assert.Equal("Home page hero", software.Hero.Fields["heading"].Label);
+        Assert.Equal("Headline metrics", software.Metrics.Fields["heading"].Label);
+        Assert.Equal("Key figures", healthcare.Metrics.Fields["heading"].Label);
+        Assert.Equal("Figure", healthcare.Metrics.ItemLabel);
+        Assert.True(healthcare.Hero.Fields["headlineAccent"].Hidden);
+        Assert.True(healthcare.Metrics.Fields["unit"].Hidden);
+        Assert.All(new[] { software, healthcare }, e => Assert.All(new[] { e.Hero, e.Metrics, e.About }, part => Assert.DoesNotContain(part.Fields, f => f.Value.Hidden && (f.Key is "headline" or "value" or "heading"))));
+    }
+
+    [Fact]
+    public void ASectionCannotBeBothRequiredAndOff_AndOnlyRequiredIsNewInTheSectionList()
+    {
+        var template = Load("healthcare");
+        template.Sections.First(x => x.Key == "blog").Required = true; // healthcare lists blog as enabled: false
+
+        var errors = TemplateValidator.Validate(template, "healthcare");
+
+        Assert.Contains(errors, e => e.Contains("cannot be both required and enabled: false", StringComparison.Ordinal));
+        Assert.All(new[] { Load("software"), Load("healthcare") }, t => Assert.DoesNotContain(t.Sections, x => x.Required)); // no shipped template forces a section on
     }
 }

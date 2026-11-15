@@ -52,6 +52,18 @@ public class PortfolioContentService
     public Task<List<Project>> GetProjectsAsync() =>
         QueryAsync(db => db.Projects.OrderBy(p => p.SortOrder).ToListAsync(), new List<Project>());
 
+    /// <summary>Id, address and title of every project in public order, without the owned collections: what a "next" link needs.</summary>
+    public Task<List<ProjectLink>> GetProjectLinksAsync() =>
+        QueryAsync(db => db.Projects.OrderBy(p => p.SortOrder).Select(p => new ProjectLink(p.Id, p.Slug, p.Title)).ToListAsync(), new List<ProjectLink>());
+
+    /// <summary>The distinct client names (<see cref="Project.Org"/>) of every project, in the order the projects appear: what a results home page shows as its wordmark strip.</summary>
+    public Task<List<string>> GetProjectClientsAsync() =>
+        QueryAsync(async db =>
+        {
+            var names = await db.Projects.Where(p => p.Org != null && p.Org != "").OrderBy(p => p.SortOrder).Select(p => p.Org!).ToListAsync();
+            return names.Select(n => n.Trim()).Where(n => n.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        }, new List<string>());
+
     public Task<List<Project>> GetFeaturedProjectsAsync() =>
         QueryAsync(db => db.Projects.Where(p => p.Featured).OrderBy(p => p.SortOrder).ToListAsync(), new List<Project>());
 

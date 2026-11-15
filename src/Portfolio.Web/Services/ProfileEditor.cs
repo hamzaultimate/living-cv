@@ -24,35 +24,94 @@ public class ProfileEditor
 
     public async Task<SiteProfile> LoadAsync(CancellationToken ct = default) => await LoadOrCreateAsync(ct);
 
-    public async Task SaveAsync(ProfileForm form, CancellationToken ct = default)
+    public static string NewStamp() => Guid.NewGuid().ToString("N");
+
+    /// <summary>Saves the identity form. <paramref name="seenStamp"/> is the stamp the form was loaded with: if the profile was written since, nothing is saved.</summary>
+    public Task<SaveOutcome> SaveAsync(ProfileForm form, string? seenStamp, CancellationToken ct = default) =>
+        UpdateAsync(form.ApplyTo, seenStamp, ct);
+
+    /// <summary>
+    /// Applies <paramref name="apply"/> to the stored profile and saves it under a new stamp, but only if the profile still carries <paramref name="seenStamp"/>, the stamp
+    /// the editor's form was loaded with (a missing stamp matches only a row that has never been stamped). Anything that wrote the profile in between makes the outcome a
+    /// <see cref="SaveOutcome.Conflict"/>, with nothing written. After a save the provider and the "Generated" cache follow (<see cref="AfterCommitAsync"/>).
+    /// </summary>
+    public async Task<SaveOutcome> UpdateAsync(Action<SiteProfile> apply, string? seenStamp, CancellationToken ct = default)
     {
         var profile = await LoadOrCreateAsync(ct);
-        form.ApplyTo(profile);
-        await CommitAsync(profile, ct);
+        apply(profile);
+        var entry = _db.Entry(profile);
+        // A row that is only now being created has nothing to be stale against.
+        if (entry.State != EntityState.Added) entry.Property(p => p.ConcurrencyStamp).OriginalValue = string.IsNullOrWhiteSpace(seenStamp) ? null : seenStamp;
+        profile.ConcurrencyStamp = NewStamp();
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (Exception ex) when (ex is DbUpdateConcurrencyException || (ex is DbUpdateException && SiteProfileProvider.IsDuplicateKey(ex)))
+        {
+            // Either the row changed since the form was loaded, or the row did not exist yet and something else created it first: nothing was written.
+            _db.ChangeTracker.Clear();
+            return SaveOutcome.Conflict;
+        }
+        await AfterCommitAsync(profile);
+        return SaveOutcome.Saved;
     }
 
-    /// <summary>Points the profile at a new photo (or clears it) and returns the previous value.</summary>
-    public async Task<string?> SetPhotoAsync(string? photoUrl, CancellationToken ct = default)
+    /// <summary>
+    /// A change that does not come from a form (a new photo, a new template): it has no earlier copy to be stale against, so it is applied to whatever the profile holds
+    /// now. It still replaces the stamp, so a form opened before it is refused, and it starts again from the stored row if another write lands first. After three
+    /// losses in a row it gives up with <see cref="SaveOutcome.Conflict"/> and writes nothing, so the caller can say so and clean up.
+    /// </summary>
+    private async Task<SaveOutcome> UpdateLatestAsync(Func<SiteProfile, bool> apply, CancellationToken ct)
     {
-        var profile = await LoadOrCreateAsync(ct);
-        var previous = profile.PhotoUrl;
-        // The light-theme photo that is just a copy of the photo being replaced (the wizard sets both) follows it, so it never points at the
-        // deleted file; a separate light photo the owner chose is left alone.
-        if (previous is not null && profile.PhotoUrlLight == previous) profile.PhotoUrlLight = photoUrl;
-        profile.PhotoUrl = photoUrl;
-        await CommitAsync(profile, ct);
-        return previous;
+        for (var attempt = 1; ; attempt++)
+        {
+            var profile = await LoadOrCreateAsync(ct);
+            // The rule runs on every attempt, against the row that is actually about to be written, so a write that landed in between cannot defeat it.
+            if (!apply(profile)) { _db.ChangeTracker.Clear(); return SaveOutcome.Refused; }
+            profile.ConcurrencyStamp = NewStamp();
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+            }
+            catch (Exception ex) when (ex is DbUpdateConcurrencyException || (ex is DbUpdateException && SiteProfileProvider.IsDuplicateKey(ex)))
+            {
+                _db.ChangeTracker.Clear();
+                if (attempt < 3) continue;
+                return SaveOutcome.Conflict;
+            }
+            await AfterCommitAsync(profile);
+            return SaveOutcome.Saved;
+        }
+    }
+
+    /// <summary>Points the profile at a new photo (or clears it). The outcome says whether it was written (<see cref="SaveOutcome.Conflict"/> means nothing was) and <c>Previous</c> is the photo it replaced.</summary>
+    public async Task<(SaveOutcome Outcome, string? Previous)> SetPhotoAsync(string? photoUrl, CancellationToken ct = default)
+    {
+        string? previous = null;
+        var outcome = await UpdateLatestAsync(profile =>
+        {
+            previous = profile.PhotoUrl;
+            // The light-theme photo that is just a copy of the photo being replaced (the wizard sets both) follows it, so it never points at the
+            // deleted file; a separate light photo the owner chose is left alone.
+            if (previous is not null && profile.PhotoUrlLight == previous) profile.PhotoUrlLight = photoUrl;
+            profile.PhotoUrl = photoUrl;
+            return true;
+        }, ct);
+        return (outcome, previous);
     }
 
     /// <summary>Makes <paramref name="template"/> the site's template. Takes a catalog entry rather than a key, so only a template that
     /// loaded can be chosen. Only the template choice changes: every content row stays, and sections the template does not use are
     /// hidden by the pages, not removed.</summary>
-    public async Task SetTemplateAsync(TemplateDefinition template, CancellationToken ct = default)
-    {
-        var profile = await LoadOrCreateAsync(ct);
-        profile.TemplateKey = template.Key;
-        await CommitAsync(profile, ct);
-    }
+    /// <param name="allow">Runs on the profile as it is about to be written (on every attempt) and may adjust it; false refuses the switch (<see cref="SaveOutcome.Refused"/>).</param>
+    public Task<SaveOutcome> SetTemplateAsync(TemplateDefinition template, Func<SiteProfile, bool>? allow = null, CancellationToken ct = default) =>
+        UpdateLatestAsync(profile =>
+        {
+            if (allow is not null && !allow(profile)) return false;
+            profile.TemplateKey = template.Key;
+            return true;
+        }, ct);
 
     /// <summary>Makes a change to the content rows (experience, skills, projects, certifications) show up everywhere at once: the provider's version
     /// moves on, which the "Generated" cache varies on, and the cache is evicted, so /sitemap.xml, /cv.pdf and /og.png follow without a restart.
@@ -79,12 +138,6 @@ public class ProfileEditor
         SiteProfileMapper.FitToColumns(profile);
         _db.SiteProfiles.Add(profile);
         return profile;
-    }
-
-    private async Task CommitAsync(SiteProfile profile, CancellationToken ct)
-    {
-        await _db.SaveChangesAsync(ct);
-        await AfterCommitAsync(profile);
     }
 
     /// <summary>Makes a profile that has just been committed (by this editor or by the onboarding wizard's transaction) take effect everywhere:

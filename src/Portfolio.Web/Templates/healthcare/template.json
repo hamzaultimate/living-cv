@@ -160,6 +160,55 @@
           "hint": "JPEG, PNG or WebP. Never use a photograph that could identify a patient, relative or colleague."
         }
       }
+    },
+    "hero": {
+      "fields": {
+        "heading": { "label": "Home page introduction", "hint": "The first thing visitors read. Write about your practice in general terms. Never include patient information. Changes apply as soon as you save." },
+        "eyebrow": { "label": "Role line", "hint": "For example your registration and specialty. Plain text." },
+        "headlineAccent": { "hidden": true },
+        "lede": { "label": "Professional summary" }
+      }
+    },
+    "metrics": {
+      "itemLabel": "Figure",
+      "fields": {
+        "heading": { "label": "Key figures", "hint": "Aggregate figures about your practice, such as years of experience. Never patient numbers or anything that could identify a person. Changes apply as soon as you save." },
+        "unit": { "hidden": true },
+        "label": { "label": "What it measures" }
+      }
+    },
+    "sections": {
+      "itemLabel": "Page",
+      "fields": {
+        "heading": { "label": "Pages of your site", "hint": "Choose which pages the site has, what the menu calls them and in which order. Articles and presentations are off until you switch them on. Hiding a page never deletes it. Saves apply at once." },
+        "label": { "label": "Menu name" },
+        "defaultOff": { "label": "Off until you switch it on", "hint": "Not shown by default for this profession. Think about what you would publish there first." }
+      }
+    },
+    "about": {
+      "itemLabel": "Highlight",
+      "fields": {
+        "heading": { "label": "About you", "hint": "Describe your practice and values. Never include patient information. Changes apply as soon as you save." },
+        "valueProps": { "label": "Highlights", "hint": "Short statements about how you practise, shown above the text." },
+        "currentlyNote": { "label": "Current role or interest" },
+        "focus": { "label": "Clinical focus", "hint": "One area per line." }
+      }
+    },
+    "transfer": {
+      "itemLabel": "Entry",
+      "fields": {
+        "heading": { "label": "Save and restore your portfolio", "hint": "Keep your portfolio in one file, or restore one. You see what would change first, and nothing is ever removed. Never put patient information in an entry." },
+        "exportHeading": { "label": "Save a copy", "hint": "One file with your details and every entry, including unpublished ones. Pictures you uploaded are listed, not included." },
+        "exportButton": { "label": "Download my portfolio file" },
+        "importHeading": { "label": "Restore from a file", "hint": "Each entry in the file is matched to one of yours by its name or title: a match is updated, anything else is added." },
+        "fileLabel": { "label": "Portfolio file (.json)" },
+        "applyProfile": { "label": "Also restore my details and page choices", "hint": "Left unticked, only the entries are restored. Ticked, your details, introduction, key figures, about text, template and page choices come from the file; the preview lists each change." },
+        "previewButton": { "label": "Check the file" },
+        "confirmButton": { "label": "Restore now" },
+        "discardButton": { "label": "Cancel" },
+        "profile": { "label": "Details" },
+        "authoritative": { "label": "Your content is rebuilt at every start", "hint": "This site refills its content from its seed files whenever it starts, so what you restore would be replaced. Ask whoever runs the site to change that setting first." }
+      }
     }
   },
   "starter": { "file": "starter.json" },

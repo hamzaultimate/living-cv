@@ -1,0 +1,38 @@
+/* Sales & Business Development theme: a confident deep navy (a cool paper white in light) with an emerald accent, squarer corners and wider, shallower deal cards. Besides the colour tokens, fonts and radii it sets
+   three of the four layout variables the results layout reads: --results-card-aspect (the shape of a deal card), --results-card-min (the narrowest a card may get) and --results-band-min (the narrowest a headline-figure tile may get).
+   The fourth, --results-card-max, is left at its fallback.
+   Only variables are set here, so the whole site switches look with the data-template attribute and no rebuild. Specificity beats the base :root tokens. */
+:root[data-template="sales-bd"] {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Helvetica Neue", Helvetica, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --radius-lg: 0.25rem;
+  --radius-md: 0.25rem;
+  --results-card-aspect: 3/2;
+  --results-card-min: 18rem;
+  --results-band-min: 10rem;
+}
+
+/* Dark is the default look (the base tokens do the same on :root), so it also applies before the theme script has set data-theme or when it cannot run. */
+:root[data-template="sales-bd"],
+:root[data-template="sales-bd"][data-theme="dark"] {
+  --c-bg: 10 18 30;
+  --c-surface: 17 28 45;
+  --c-surface-2: 26 40 62;
+  --c-border: 44 62 90;
+  --c-text: 240 245 250;
+  --c-muted: 160 174 192;
+  --c-accent: 52 211 153;
+  --c-accent-strong: 110 231 183;
+}
+
+:root[data-template="sales-bd"][data-theme="light"] {
+  --c-bg: 247 250 252;
+  --c-surface: 255 255 255;
+  --c-surface-2: 232 240 245;
+  --c-border: 208 220 230;
+  --c-text: 15 23 36;
+  --c-muted: 80 96 112;
+  --c-accent: 4 120 87;
+  --c-accent-strong: 6 95 70;
+}

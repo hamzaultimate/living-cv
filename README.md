@@ -38,11 +38,19 @@ testable the moment you run it. Swap in your own details to make it yours.
   across restarts. Set `Seed:Mode=Authoritative` to make the seed files the source of truth instead
   (rows are added / updated / removed to match, at every start)
 - **Owner admin** at `/admin`: one-time `/setup` (gated by a `Setup:Key`) creates the single owner account;
-  cookie sign-in with lockout, a profile editor, and photo upload (re-encoded, metadata stripped,
+  cookie sign-in with lockout, a profile editor, editors for the home page introduction, the headline metrics and the About page
+  (in your template's wording, refusing a stale tab instead of overwriting it), a sections page (`/admin/sections`) to show, hide, rename and reorder
+  the sections your template has, and photo upload (re-encoded, metadata stripped,
   stored outside `wwwroot`). See [docs/new-user-guide.md](docs/new-user-guide.md#3-claim-the-site-and-use-the-admin)
-- **Profession templates** with a live preview switcher at `/admin/template`. Two ship today:
-  **Software & IT** (case-study showcase, the original look) and **Healthcare** (credentials-first
-  layout, calm theme, guidance against publishing patient data, fictional starter content). A template
+- **Profession templates** with a live preview switcher at `/admin/template`. Seven ship today:
+  **Software & IT** (case-study showcase, the original look), **Healthcare** (credentials-first
+  layout, calm theme, guidance against publishing patient data, fictional starter content),
+  **Design & UX** and **Photography & Film** (an image-first gallery layout: a work grid of large cover pictures and a
+  case-study page per piece, each with its own theme and fictional starter content; video is a link, never an embedded
+  player, and the cover picture is what visitors see), and **Marketing & Content**, **Sales & Business Development** and **Finance & Accounting**
+  (a results layout: a large band of your key figures leads the home page, then a strip of client names and the work as
+  cards that lead with their result, each with its own theme, guidance note and fictional starter content; Finance & Accounting
+  is CV-first, with experience and qualifications first in the menu and a restrained look). A template
   sets the wording, section list and theme; switching hides sections the template does not use and
   never deletes content. See [docs/template-authoring-guide.md](docs/template-authoring-guide.md)
 - **Setup wizard** at `/admin/welcome`, opened right after `/setup` and re-runnable from the dashboard: pick a
@@ -56,6 +64,10 @@ testable the moment you run it. Swap in your own details to make it yours.
   before you leave unsaved changes, and a refusal (not a silent overwrite) when the same entry is saved from two tabs. Public
   pages, the sitemap, the CV and the share image follow every save at once, so a blank site can be built from the admin
   alone. Talks, testimonials and the blog (with drafts and a safe, server-side Markdown preview) have editors too.
+- **Export and import** at `/admin/transfer`: download the profile and every entry (drafts included) as one versioned JSON file, and load such a file
+  again after a preview that writes nothing and a separate confirm. An import matches entries by their natural keys, only adds and updates (never deletes),
+  refuses bad rows one by one with the reasons, goes through the same editors and checks as the admin pages, and keeps the profile out unless you tick it.
+  Image files are listed, not included. See [docs/new-user-guide.md](docs/new-user-guide.md#export-and-import-backup-and-moving-between-sites)
 - Health checks at `/health` (liveness) and `/health/db` (DB readiness)
 - Zero front-end build dependencies to *run* it (Tailwind is compiled during build)
 
@@ -103,7 +115,8 @@ Everything personal lives in two places — **no code changes required**:
    The demo persona a fresh database starts with comes from the JSON files in
    `src/Portfolio.Data/Seed/` (`projects`, `experiences`, `skills`, `certifications`, `talks`, `blog`, `testimonials`).
    Each file has a header comment describing its shape. They seed an empty database; to re-apply
-   edited files to a populated one, set `Seed:Mode=Authoritative` (emptying the tables does not re-seed them).
+   edited files to a populated one, set `Seed:Mode=Authoritative` (emptying the tables does not re-seed them), or build a JSON file and load it
+   at `/admin/transfer` (the same format an export writes) without touching the seed files.
 
 After the first run you can also edit the profile and upload your photo in the browser at `/admin`
 (see [Claim the site](docs/new-user-guide.md#3-claim-the-site-and-use-the-admin)); the database then
@@ -139,9 +152,11 @@ side only) and open `/setup` once. Keep `Uploads:Path` on a persistent folder. D
 ```
 src/Portfolio.Web/                ASP.NET Core Razor Pages app
   Configuration/SiteOptions.cs    Bound identity/content config ("Site" section)
-  Pages/                          Razor Pages (Pages/Admin is the owner area, Pages/Admin/Welcome the setup wizard, Pages/Setup.cshtml the one-time setup)
+  Pages/                          Razor Pages (Pages/Admin is the owner area, Pages/Admin/Welcome the setup wizard, Pages/Admin/Profile the hero / metrics / About editors, Pages/Admin/Sections the section settings, Pages/Setup.cshtml the one-time setup)
   Templates/<key>/template.json   Profession templates (manifest, optional starter.json, preview.png thumbnail); template.schema.json documents the shape
+  Pages/Shared/Layouts/<archetype>/  Layout partials per archetype (showcase, credentials, gallery, results)
   Styles/themes/<key>.css         Per-template theme variables, compiled into app.css
+  wwwroot/img/starter/<key>/      Bundled placeholder pictures used by a template's sample content
   Security/                       Owner account, cookie sign-in, setup key gate, reset-owner command
   Uploads/                        Image processing (SkiaSharp re-encode) and upload storage
   appsettings.json                Default site identity and public content

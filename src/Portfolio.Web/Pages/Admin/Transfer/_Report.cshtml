@@ -1,0 +1,92 @@
+@model ReportVm
+@using Portfolio.Web.Transfer
+@functions {
+    static string Label(RowStatus status, bool done) => status switch
+    {
+        RowStatus.Create => done ? "Added" : "Will be added",
+        RowStatus.Update => done ? "Updated" : "Will be updated",
+        RowStatus.Unchanged => "Already up to date",
+        _ => "Not imported",
+    };
+
+    static string Css(RowStatus status) => status == RowStatus.Refused ? "adm-status adm-status-refused" : "adm-status";
+}
+@{
+    var profile = Model.Profile;
+    var shown = Model.Sections.Where(s => s.Rows.Count > 0).ToList();
+    var empty = Model.Sections.Where(s => s.Rows.Count == 0).Select(s => s.Label).ToList();
+}
+@if (profile.Requested && profile.InFile)
+{
+    <h3>@profile.Label</h3>
+    <p><strong class="@Css(profile.Status)">@Label(profile.Status, Model.Done)</strong>@if (profile.Status == RowStatus.Unchanged) { <text>: it already matches the file.</text> }</p>
+    @if (profile.Changes.Count > 0)
+    {
+        <ul>
+            @foreach (var change in profile.Changes) { <li>@change</li> }
+        </ul>
+    }
+    @if (profile.Reasons.Count > 0)
+    {
+        <p>Why it is not imported:</p>
+        <ul>
+            @foreach (var reason in profile.Reasons) { <li>@reason</li> }
+        </ul>
+    }
+    @if (profile.Warnings.Count > 0)
+    {
+        <p>Notes:</p>
+        <ul>
+            @foreach (var warning in profile.Warnings) { <li>@warning</li> }
+        </ul>
+    }
+    @if (profile.InertSections.Count > 0)
+    {
+        <p>These entries in the file are for sections that the template does not have. They are not applied and never switch anything on: @string.Join(", ", profile.InertSections).</p>
+    }
+}
+@foreach (var table in shown)
+{
+    <table class="adm-table">
+        <caption>@table.Label (@table.Rows.Count in the file)</caption>
+        <thead>
+            <tr>
+                <th scope="col">No.</th>
+                <th scope="col">@table.ItemLabel</th>
+                <th scope="col">Result</th>
+                <th scope="col">Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in table.Rows)
+            {
+                <tr>
+                    <td>@row.Position</td>
+                    <th scope="row">@row.Name</th>
+                    <td><strong class="@Css(row.Status)">@Label(row.Status, Model.Done)</strong></td>
+                    <td>
+                        @if (row.Reasons.Count + row.Warnings.Count + row.ChangedFields.Count == 0) { <span class="adm-muted">@(row.Status == RowStatus.Create ? "New entry" : "No differences")</span> }
+                        else
+                        {
+                            <ul class="adm-plain">
+                                @if (row.ChangedFields.Count > 0) { <li>Changes: @string.Join(", ", row.ChangedFields)</li> }
+                                @foreach (var reason in row.Reasons.Take(8)) { <li>@reason</li> }
+                                @if (row.Reasons.Count > 8) { <li>and @(row.Reasons.Count - 8) more.</li> }
+                                @foreach (var warning in row.Warnings.Take(4)) { <li>Note: @warning</li> }
+                                @if (row.Warnings.Count > 4) { <li>and @(row.Warnings.Count - 4) more notes.</li> }
+                            </ul>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @foreach (var note in table.Notes)
+    {
+        <p class="adm-hint">@note</p>
+    }
+}
+@if (empty.Count > 0)
+{
+    <p class="adm-hint">Nothing in the file for: @string.Join(", ", empty).</p>
+}

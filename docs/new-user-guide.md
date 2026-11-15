@@ -55,9 +55,10 @@ A fresh deployment has no owner. The first person with the **setup key** claims 
    even the right key, for 15 minutes. That count is kept in the app's memory, shared by all visitors, so
    restarting the app clears it; it is a brake on guessing, not a permanent lock.
 3. You are sent to the sign-in page and, once signed in, straight into the **setup wizard** (see below).
-   Afterwards, from `/admin` you can edit the profile (`/admin/profile`) and the
-   photo (`/admin/photo`). Saving a profile takes effect immediately, including the CV PDF, the
-   share image and the sitemap.
+   Afterwards, from `/admin` you can edit the profile (`/admin/profile`: name, title, summary, contact links), the
+   home page introduction (`/admin/profile/hero`), the headline metrics (`/admin/profile/metrics`), the About page
+   (`/admin/profile/about`) and the photo (`/admin/photo`). The three text editors use your template's own words for their
+   headings and fields. Saving takes effect immediately, including the CV PDF, the share image and the sitemap.
 4. Remove `Setup__Key` from the server when you are done; it has no further use.
 
 ### The setup wizard
@@ -68,7 +69,7 @@ Publish**: the draft is stored apart from the live profile, and the public pages
 showing the placeholder site meanwhile.
 
 1. **Template.** Cards grouped by profession show a thumbnail, the pages the template has, what a piece of work is
-   called, whether sample content is available and any guidance (Healthcare reminds you never to publish patient data).
+   called, whether sample content is available and any guidance (Healthcare reminds you never to publish patient data; Design & UX and Photography & Film remind you to publish only work you have the right to show; Marketing & Content, Sales & Business Development and Finance & Accounting remind you to publish only figures and client names you may share; Finance & Accounting also warns against confidential financial data).
 2. **Basics.** Name, professional title, email, location (optional) and a short summary. Title and summary start
    from the template's suggestion; they are published as written, so edit them.
 3. **Photo.** Optional. The photo goes through the same checks as the Photo page (JPEG, PNG or WebP, re-encoded,
@@ -82,8 +83,9 @@ Publishing applies everything in one transaction and refreshes the sitemap, CV a
 twice, or replaying the request, changes nothing the second time.
 
 On the first run, publishing replaces the placeholder profile that came from the `Site` section of
-`appsettings.json` (hero text, metrics, About text, links, phone) with your answers: those parts stay empty until you
-fill them in `/admin/profile`. If you edited the `Site` section before the first run and want to keep those values,
+`appsettings.json` (hero text, metrics, About text, links, phone) with your answers: the metrics and the About page start
+with your summary only, and you fill in the rest at `/admin/profile/metrics` and `/admin/profile/about`. A part you have
+already edited there before you publish is kept as you wrote it: only the parts that are still the placeholder are replaced. If you edited the `Site` section before the first run and want to keep those values,
 choose **Skip setup** instead. Skipping keeps the placeholder profile exactly as it is and loads the demo content into
 any empty table, which is what a new install did before the wizard existed.
 
@@ -112,7 +114,7 @@ can be an internal host name: check it before publishing (or configure forwarded
 Run the wizard again any time from the dashboard (**Setup wizard**). A re-run starts from what the site says now,
 changes only the template, your basics, address, accent colour and photo, and never touches your hero, About text,
 metrics or content rows. If you change your name on a re-run the short name (header wordmark) follows it, but the home
-page headline built on the first run does not: edit it in `/admin/profile`. An unchanged name leaves an edited short name alone. A site that existed before the wizard was added counts as already set up and is not sent
+page headline built on the first run does not: edit it in `/admin/profile/hero`. An unchanged name leaves an edited short name alone. A site that existed before the wizard was added counts as already set up and is not sent
 into it; an unfinished wizard only shows a prompt on the dashboard and never blocks any other admin page.
 
 Sign-in locks for 15 minutes after 5 consecutive failures (any user name counts, because there is
@@ -202,8 +204,87 @@ so a restart does not refill a table you emptied. Only `Seed:Mode=Authoritative`
 for the seed files to be the source of truth.
 
 **Backups.** Your content is in the database and your uploaded images are in `Uploads:Path`; back up both (a database
-backup alone restores the entries but not the images they point at). A one-file export and import of all content is planned
-as the next step of this work.
+backup alone restores the entries but not the images they point at). For a portable copy of the content itself, use the one-file
+export described under [Export and import](#export-and-import-backup-and-moving-between-sites) (it lists the image files it uses, but does not contain them).
+
+### Your home page introduction, metrics and About page
+
+Three more editors sit next to the profile page and are named in your template's words (Software & IT says "Home page hero",
+"Headline metrics" and "About page"; Healthcare says "Home page introduction", "Key figures" and "About you"). They are linked from the
+dashboard and from `/admin/profile`.
+
+| Editor | Address | What you set |
+|---|---|---|
+| Home page introduction | `/admin/profile/hero` | the headline (required), a short line above it, a highlighted part of the headline and an introduction |
+| Headline metrics | `/admin/profile/metrics` | up to 8 figures, each a value (required), a unit and a label. Move up / Move down / Remove / Add buttons change the rows on the page; nothing is saved until you press Save |
+| About page | `/admin/profile/about` | the page headline (required), paragraphs (blank line between them, up to 10), up to 6 value cards (title and text), a "currently" note and up to 30 focus areas, one per line |
+
+All of it is plain text: anything that looks like a tag (`<b>`, `<script>`) is refused, never run, and the public pages print what you
+type as text. A template can leave a field off the form (Healthcare has no unit on its figures and no highlighted headline part): whatever is
+already stored in a field you cannot see is kept, never erased by a save. If the same page is open in two tabs, or the setup wizard publishes
+while you are editing, the second save is refused with a message that says nothing was saved, and your typing stays on the page so you can reload
+and apply it again. The wizard's first publish replaces only the placeholder parts: a hero, metrics or About text you have already edited is kept.
+
+### Choosing which sections your site shows
+
+`/admin/sections` (named "Site sections" in Software & IT and "Pages of your site" in Healthcare) lists the sections your template has, in the order the menu shows them.
+For each you can switch it on or off, give it your own name in the menu (leave the box empty for the template's name) and move it up or down; **Save** writes everything at once.
+
+- **Hiding never deletes anything.** A hidden section disappears from the menu, the home page, the sitemap, the search-engine markup and the CV, and its page answers "not found",
+  but every entry stays and comes back when you switch it on. Healthcare starts with Articles and Presentations off; you can switch them on here.
+- **Only your template's sections.** You cannot add a section the template does not have, and a template can mark a section as always on (none of the shipped ones does).
+  At least one section that has its own page must stay on, and two sections cannot share a name (compared without regard to case). Names are plain text, at most 40 characters.
+- **The order** is the order of the menu (and of the pages in the sitemap). Blocks on the home page keep their fixed positions; they only follow whether their section is on.
+- **What is stored.** Only what differs from your template, plus every choice you have already made: an unchanged page stores nothing on a fresh site, a name equal to the template's is dropped,
+  and a section you switched on or off stays recorded as your choice (even when it later equals the template's default), so it is never forgotten by a later save. Sections you never touched
+  follow whichever template is in use. A switch of template keeps your choices; the template page lists the sections a switch would show again. If the new template's defaults would leave no section in the menu
+  (for example your site shows only a section the new template has off by default), the menu sections that are on now stay on and are saved as your choice, and the page says so; the same applies when the setup wizard changes the template.
+  A switch is refused only when nothing is on even now. **Once you have made a choice for a section it cannot be reset to "follow the template"**: it stays as you set it (you can switch it either way). Saving this page under another template stores what differs from *that* template.
+- **Limits to know.** Moving Contact or Testimonials has no effect on the menu (Contact is a fixed button, last in the mobile menu, and Testimonials is a block on the home page); those rows say so.
+  Renaming a section changes its name in the menu and in the links back to it, not the headings, page titles or breadcrumbs of the page itself, which come from the template.
+  A name may not match another section's name or short menu name, or the fixed "CV" entry, and may not contain invisible characters (a zero-width joiner or non-joiner between letters, as in Persian or Urdu names and emoji, is fine, and an emoji selector right after a symbol or digit; flag tag sequences, selectors anywhere else and names with nothing visible are refused). Names are compared without joiners, so a hidden joiner cannot make a duplicate.
+- As on the other editors, a save from a page that was open before something else changed the profile is refused with a message that says nothing was saved.
+
+### Export and import (backup and moving between sites)
+
+`/admin/transfer` (named "Backup and portability" in Software & IT and "Save and restore your portfolio" in Healthcare; linked from the dashboard and the content hub) downloads
+everything you have written as **one JSON file** and loads such a file again. It replaces hand-editing the seed files.
+
+**Export.** The button downloads `site-export-<date>.json`: your profile (name, contact details, home page introduction, headline metrics, About text, template, accent colour and
+the choices you made on the sections page, including choices for sections your current template does not list), every experience entry, skill, work entry (with its links, gallery images and proofs),
+credential, talk, testimonial and blog post (**drafts included**, with the cover's description), and a list of the uploaded image files they use. It never contains passwords, stamps or database ids, and the file is indented and
+in a fixed order, so two exports of the same data are the same file. **Image files are not in it**: the list says which `/uploads/...` files the data points at and whether each is on this site now. Back up
+`Uploads:Path` too, and put the files back before importing if you want the pictures. Exporting changes nothing, so it is a plain download link.
+
+**Import** is always two steps, so you see everything before anything is written:
+
+1. Choose the file (a `.json` file of up to 2 MB). Tick **Also apply the profile** if you want the profile in the file to replace yours as well; left unticked, only the entries are imported. Press **Preview**.
+2. The preview lists, table by table and row by row, what would happen: **Will be added**, **Will be updated**, **Already up to date** or **Not imported**, with the reasons and any notes (an image that was left out, an entry
+   for a section your template does not have). **Nothing has been written yet.** Press **Apply** to write it, or **Discard**. A preview can be applied once, only from the session that made it, and for 10 minutes; after that, preview again.
+
+What the import does, and does not do:
+
+- **It never deletes.** It only adds and updates. An entry you have that the file does not name stays exactly as it is.
+- **Matching.** A row in the file is the same entry as one you have when its key matches, without regard to case: a skill by its name, a credential by its name, a role by organisation + title, a work entry by its address name (built from the
+  title when the file gives none, so loading the same file twice never adds a second copy), a post by its address name, a talk by its title, a testimonial by its author + the first 40 characters of its quote. A match is **updated**
+  (fields the file does not mention are kept; a field the file sets to `null` is cleared) and anything else is **added**. If the file names the same entry twice, the first is used and the later ones are not imported.
+- **Each row stands alone.** A row that does not pass the same checks as its editor (required fields, lengths, plain text only, web addresses only, dates, a post's Markdown limits) is **not imported** and the reasons are listed; the other rows go on. When you press Apply, every row that is valid is applied.
+- **Order.** The order of the rows in the file sets the order on your site (within a skill's group); entries the file does not name follow after them. Talks and posts are ordered by date, so the file's order means nothing for them.
+- **Images.** In an image field (photo, work cover, gallery picture, post cover) only an uploaded file (`/uploads/...`) that is already on this site, or a picture that ships with the site (`/img/...`, `/proofs/...`), is kept. A web address or an upload that is not here is
+  left out and the preview says so; it **never removes an image you already have** (the stored image and its description stay; a gallery stays as it is if the file's list names a picture that cannot be kept). Only a field the file sets to `null` is cleared. Links and a credential's badge address may still be web addresses. Image files themselves are never written by an import.
+- **The profile** (only if ticked) is applied as one piece, through the same checks as the profile pages, and only if it has not changed since the preview; otherwise none of it is applied and nothing is overwritten. The file's template is applied
+  if you have it installed (an unknown template refuses the whole profile; it is never guessed), so importing a profile can switch your template, and the preview says so. Section choices are applied for the sections your template lists; settings for sections it does not list
+  are shown as "not applied" and never switch anything on. An accent colour your template does not offer is left as it is. The import is refused for the profile if it would leave no section in the menu.
+- **Changed since the preview.** If you (or another tab) change an entry between the preview and Apply, that entry is not updated and the page says so; nothing is overwritten.
+- **Limits.** 2 MB, nesting at most 32 levels, and at most 100 roles, 500 skills, 200 work entries, 200 credentials, 300 talks, 200 testimonials and 300 posts per file; a file over a limit is refused whole. A file that is not UTF-8 JSON, has a property written
+  twice in one object, has a missing, wrong or newer `schemaVersion` (this version reads 1), or is cut off is refused whole with a message. Properties this version does not read are ignored and counted in the preview.
+- **Seed:Mode=Authoritative.** If your site is set to rebuild its content from the seed files at every start, the page says so: an import would be replaced at the next start. Change that setting first if you want to keep imported content.
+
+**Writing a file by hand.** A minimal file is `{ "schemaVersion": 1, "content": { "skills": [ { "name": "Go", "group": "Backend" } ] } }`. Use an export as the reference for every field name. Dates are text (`2021`, `Mar 2021`, `2021-03`; a post's date
+is `yyyy-MM-dd`), a certification's `status` is `Earned`, `InProgress` or `Planned`, a talk's `type` is `Video` or `Talk`, and a post that does not say `draft` is a draft.
+
+**Moving to another template or site.** Import the file there. Without the tick, the entries come across and the other site keeps its own profile and template; a template hides what it does not use and never deletes it, so entries for a section the new template
+lacks are kept and show if you switch to a template that has it.
 
 ### Forgot the password
 
@@ -280,16 +361,38 @@ Edit the `Site` section in [src/Portfolio.Web/appsettings.json](../src/Portfolio
 - links such as GitHub, LinkedIn, and email
 - the profile photo URL
 
-These values are the defaults for the site profile. With a database, they are copied into a profile row on first run and that row is used afterwards; edit the `Site` section before the first run, or set `Seed:Mode=Authoritative` to re-apply it on every start. Be careful with that second option once you use `/admin`: Authoritative overwrites the stored profile from the config on the first read after each start, which discards edits made in `/admin/profile`, and it replaces the photo URL, leaving an uploaded photo file in the uploads folder with nothing pointing at it. Once you have an owner account you can change all of these in the browser at `/admin/profile` instead.
+These values are the defaults for the site profile. With a database, they are copied into a profile row on first run and that row is used afterwards; edit the `Site` section before the first run, or set `Seed:Mode=Authoritative` to re-apply it on every start. Be careful with that second option once you use `/admin`: Authoritative overwrites the stored profile from the config on the first read after each start, which discards edits made in `/admin/profile`, its hero, metrics and About pages and the section settings (shown, hidden, renamed and reordered sections), and it replaces the photo URL, leaving an uploaded photo file in the uploads folder with nothing pointing at it. Once you have an owner account you can change all of these in the browser at `/admin/profile` instead.
 
 ### Template
 
-The wizard's first step picks the template; to change it later without running the wizard, go to `/admin/template`, where you pick the template that suits your profession: **Software & IT** or **Healthcare**.
+The wizard's first step picks the template; to change it later without running the wizard, go to `/admin/template`, where you pick the template that suits your profession: **Software & IT**, **Healthcare**, **Design & UX**, **Photography & Film**, **Marketing & Content**, **Sales & Business Development** or **Finance & Accounting**.
 Choose a card, press Preview, and the public site is shown inside the page in that template's layout, wording and
 colours, with tabs for each page and a mobile width. Nothing is saved until you press "Use ...". Switching never
 deletes content: sections the new template does not use (for example Blog posts under Healthcare) are hidden from the
 navigation, sitemap and CV, their pages answer 404, and everything returns if you switch back. The page shows what
 stays hidden but kept. Healthcare shows a reminder never to publish patient-identifiable information.
+
+**Design & UX and Photography & Film (the gallery layout).** These two templates lead with pictures. The home page has a short introduction and a grid of
+your featured work: each card is a large cover picture with the title, a one-line summary and a few tags underneath, and the whole card opens that piece. The
+work page shows every piece in the same grid, with filter chips when you have used more than one category. Each piece opens as a case-study page: a wide cover,
+your outcomes, the brief and process, the tools and links, then your pictures, which open in a viewer you can page through. A piece with no cover picture gets a
+plain tile with its initials, so nothing looks broken while you are still adding images. Design & UX calls a piece a "Case study" and uses a quiet neutral
+look with a warm accent; Photography & Film calls it a "Series" and uses a darker gallery look, square corners and a denser grid of wider cards. Both can start
+with fictional sample content (clearly marked "sample") so you can see the layout before you add your own work. The pictures that come with the samples
+are simple generated placeholders; replace them in the project editor.
+
+**Marketing & Content, Sales & Business Development and Finance & Accounting (the results layout).** These three templates lead with numbers. The top of the home page is your introduction followed by a large band of
+your **Key figures** (the Key figures page under Profile: each figure's value, unit and description, shown as big tiles; the band is hidden when you have none). Below it is a strip of **client names**
+(the "Client" field of your work entries, each name once, in the order your work appears; they are plain text, not logos), then your featured work as cards, your skills and any testimonials. Each card has a cover
+picture, the title, the client, and the **first line of the entry's Results** (the "impact" field): if that line starts with a short figure such as `+38%`, `2.1M`, `$1,200` or `10x`, the figure is
+shown large and the rest of the line beside it; a line that starts with a word is shown as written. The entry's own page lists every result line the same way above the cover, then the situation and how it was won, the tools and links and your pictures.
+So write each result with its figure first, one per line. Marketing & Content calls a piece a "Case study" and uses an ink-blue look with a magenta accent; Sales & Business Development calls it a "Deal" and uses a navy look with an emerald accent and
+wider cards. Finance & Accounting calls a piece an "Engagement" and is **CV-first**: the menu opens with Experience and Qualifications, then Engagements, Skills, About and Notes, the hero button reads "View my full CV", the cards have shallow covers so the figures and words lead, the strip of names is headed "Entities and clients supported" (the "Entity or client" field), and the look is a restrained graphite (or paper white) with a steel-blue accent and a serif display face. Your held qualifications are also listed in the site's structured data for search engines (ones you are still studying for are not). Talks are off in all three and their YouTube field is hidden (video is a link, never a player, as in the gallery layout). All three show a note before you publish: only share figures and client names you are allowed to and ask before naming a client; Marketing & Content and Sales & Business Development also advise rounding or indexing confidential numbers, and Finance & Accounting says never to publish confidential financial data (unreleased results, client accounts, payroll or tax records). All can start with fictional sample content (clearly marked "sample"; the client names are invented). The pictures that come with the samples are simple generated charts and layouts; replace them in the project editor.
+
+**Video is a link, not a player.** The gallery and results layouts never embeds video and never loads another site's player or script. To show a film, add a link in the
+piece's links ("Watch the film") and use a still from the film as the cover picture: visitors see the still and follow the link. There is no separate poster setting; the cover picture is the still. If you
+use a video file itself as the cover or as a gallery picture, the layout does not play it: the card shows a plain tile with a "Watch" link to the file, and the case-study page lists the file as a link (the picture's caption, then "Watch ..." as the link text). The project editor only uploads pictures, so such a link comes from an imported file or older content; for a film you add yourself, use the links field.
+The template's YouTube field is hidden. Nothing you entered is removed either way.
 
 Previews only work while you are signed in as the owner; visitors and search engines never see them. The preview
 address is `/?preview=<template key>` and is marked noindex.
@@ -322,7 +425,9 @@ The seeded content lives in [src/Portfolio.Data/Seed](../src/Portfolio.Data/Seed
 
 ### Images
 
-Easiest: upload your photo at `/admin/photo` (see above). Alternatively add images under [src/Portfolio.Web/wwwroot/img](../src/Portfolio.Web/wwwroot/img) and point the `Site:PhotoUrl` setting to them. With no photo the home page shows a monogram of your initials.
+For work pictures, use the project editor (`/admin/content/projects`): a cover picture on the project form and further pictures one at a time on its Images page. Every picture you upload needs a description, which becomes its alt text for people who cannot see it. Pictures are re-encoded on upload, so very large originals are reduced to 1600 pixels on the long side.
+
+Easiest for your own photo: upload it at `/admin/photo` (see above). Alternatively add images under [src/Portfolio.Web/wwwroot/img](../src/Portfolio.Web/wwwroot/img) and point the `Site:PhotoUrl` setting to them. With no photo the home page shows a monogram of your initials.
 
 ### SEO and analytics
 

@@ -142,6 +142,10 @@
           "enabled": {
             "type": "boolean",
             "default": true
+          },
+          "required": {
+            "type": "boolean",
+            "description": "True for a section the owner cannot switch off on the sections page. Cannot be combined with enabled: false. Shipped templates leave it off."
           }
         }
       }
@@ -260,6 +264,26 @@
             },
             "skillsHeading": {
               "type": "string"
+            },
+            "viewWork": {
+              "type": "string",
+              "description": "Optional. Gallery home button to the work grid; {work} is the work section's label. Default: View {work}."
+            },
+            "allWork": {
+              "type": "string",
+              "description": "Optional. Gallery home link to the full work page; {work} is the work section's label. Default: All {work} →."
+            },
+            "downloadCv": {
+              "type": "string",
+              "description": "Optional. Results hero button to the CV page. Default: Download CV."
+            },
+            "linkedIn": {
+              "type": "string",
+              "description": "Optional. Results hero button to the LinkedIn profile. Default: LinkedIn."
+            },
+            "clientsHeading": {
+              "type": "string",
+              "description": "Optional. Heading of the results home page's strip of client names. Default: Worked with."
             }
           }
         },
@@ -344,6 +368,22 @@
             },
             "openImageLabel": {
               "type": "string"
+            },
+            "nextItem": {
+              "type": "string",
+              "description": "Optional. Gallery case-study 'next' link and its navigation's name; {item} is what one entry is called. Default: Next {item}."
+            },
+            "readItem": {
+              "type": "string",
+              "description": "Optional. Gallery work card cue; {item} is what one entry is called. Default: Read {item} →."
+            },
+            "watchVideo": {
+              "type": "string",
+              "description": "Optional. Label of a link to a video file when the video has no caption. Default: Watch the video ↗."
+            },
+            "filterAll": {
+              "type": "string",
+              "description": "Optional. Label of the show-everything chip of the results work page's category filter. Default: All."
             }
           }
         },
@@ -938,6 +978,255 @@
                   "cover",
                   "body",
                   "draft"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "hero": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The editor for the home page introduction (/admin/profile/hero).",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "Not used by this editor; accepted so every block has the same shape."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Required fields can be relabelled but not hidden. The wording-only keys (heading, valuePropTitle, valuePropBody) carry words, not controls: 'heading' is the page title (label) and the line under it (hint).",
+              "propertyNames": {
+                "enum": [
+                  "heading",
+                  "eyebrow",
+                  "headline",
+                  "headlineAccent",
+                  "lede"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The editor for the headline metrics (/admin/profile/metrics).",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one metric row is called in buttons and headings (\"Add metric\")."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Required fields can be relabelled but not hidden. The wording-only keys (heading, valuePropTitle, valuePropBody) carry words, not controls: 'heading' is the page title (label) and the line under it (hint).",
+              "propertyNames": {
+                "enum": [
+                  "heading",
+                  "value",
+                  "unit",
+                  "label"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "about": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The editor for the About page (/admin/profile/about).",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one value card is called in buttons and headings (\"Add card\")."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Required fields can be relabelled but not hidden. The wording-only keys (heading, valuePropTitle, valuePropBody) carry words, not controls: 'heading' is the page title (label) and the line under it (hint).",
+              "propertyNames": {
+                "enum": [
+                  "heading",
+                  "headline",
+                  "paragraphs",
+                  "valueProps",
+                  "valuePropTitle",
+                  "valuePropBody",
+                  "currentlyNote",
+                  "focus"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sections": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The editor for the sections page (/admin/sections): which sections show, their names and their order.",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one section is called in messages (\"Keep at least one section that has its own page switched on\")."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. 'shown' cannot be hidden. The wording-only keys (heading, locked, defaultOff, noOrder) carry words: 'heading' is the page title (label) and the line under it (hint); 'locked' and 'defaultOff' are the notes on a section that cannot be switched off and on one the template has off by default.",
+              "propertyNames": {
+                "enum": [
+                  "heading",
+                  "label",
+                  "shown",
+                  "locked",
+                  "defaultOff",
+                  "noOrder"
+                ]
+              },
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Replaces the field's label. Plain text."
+                  },
+                  "hint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Replaces the short help text under the field. Plain text."
+                  },
+                  "hidden": {
+                    "type": "boolean",
+                    "description": "Leave the field off the form. A value already stored in it is never changed or removed."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "transfer": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The wording of the export and import page (/admin/transfer). Every field only carries words, so none can be hidden.",
+          "properties": {
+            "itemLabel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "What one entry is called in messages of the page. Optional: the other editors' words are used for the entries themselves."
+            },
+            "fields": {
+              "type": "object",
+              "description": "Overrides by field key. Every key is wording only: heading (page title and intro), exportHeading, exportButton, importHeading, fileLabel, applyProfile, previewButton, confirmButton, discardButton, profile (what messages call the owner's profile) and authoritative (the notice when start-up seeding would overwrite an import).",
+              "propertyNames": {
+                "enum": [
+                  "heading",
+                  "exportHeading",
+                  "exportButton",
+                  "importHeading",
+                  "fileLabel",
+                  "applyProfile",
+                  "previewButton",
+                  "confirmButton",
+                  "discardButton",
+                  "profile",
+                  "authoritative"
                 ]
               },
               "additionalProperties": {

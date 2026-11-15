@@ -26,7 +26,7 @@ public sealed class FakeClock : TimeProvider
 }
 
 /// <summary>
-/// Runs a test's action once, just before the next save that writes ordered content (a row's position or a list stamp), then lets that save go on.
+/// Runs a test's action once, just before the next save that writes ordered content (a row's position or a list stamp) or the profile row, then lets that save go on.
 /// The action is another complete request, so a test can make two requests overlap: both have read the list before either has written.
 /// </summary>
 internal sealed class OrderedSaveHook : Microsoft.EntityFrameworkCore.Diagnostics.SaveChangesInterceptor
@@ -41,7 +41,7 @@ internal sealed class OrderedSaveHook : Microsoft.EntityFrameworkCore.Diagnostic
         if (_app.BeforeOrderedSave is not null && eventData.Context is { } ctx)
         {
             ctx.ChangeTracker.DetectChanges();
-            var writesOrder = ctx.ChangeTracker.Entries().Any(e => e.Entity is Portfolio.Data.Entities.IStampedContent && e.State is EntityState.Added or EntityState.Modified);
+            var writesOrder = ctx.ChangeTracker.Entries().Any(e => e.Entity is Portfolio.Data.Entities.IStampedContent or Portfolio.Data.Entities.SiteProfile && e.State is EntityState.Added or EntityState.Modified);
             var hook = writesOrder ? Interlocked.Exchange(ref _app.BeforeOrderedSaveField, null) : null;
             if (hook is not null) await hook();
         }
@@ -85,8 +85,17 @@ public sealed class AdminApp : WebApplicationFactory<Program>
 
     internal Func<Task>? BeforeOrderedSaveField;
 
-    /// <summary>Runs once, in the middle of the next request that saves ordered content, right before its save (see <see cref="OrderedSaveHook"/>).</summary>
+    /// <summary>Runs once, in the middle of the next request that saves ordered content or the profile, right before its save (see <see cref="OrderedSaveHook"/>).</summary>
     public Func<Task>? BeforeOrderedSave { get => BeforeOrderedSaveField; set => BeforeOrderedSaveField = value; }
+
+    /// <summary>Runs <paramref name="outer"/>; right before it saves, <paramref name="inner"/> runs to completion as another request, so the two overlap.</summary>
+    public async Task<T> OverlapAsync<T>(Func<Task<T>> outer, Func<Task> inner)
+    {
+        BeforeOrderedSave = inner;
+        var result = await outer();
+        Assert.Null(BeforeOrderedSave); // the other request really ran in the middle of this one
+        return result;
+    }
     public string UploadsPath { get; } = Directory.CreateTempSubdirectory("lcv-uploads-").FullName;
 
     public AdminApp() : this(SetupKey, null)

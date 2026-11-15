@@ -15,6 +15,9 @@ public enum SaveOutcome
 
     /// <summary>The database refused the row for a unique key (a project address taken by a request that ran at the same time).</summary>
     Duplicate,
+
+    /// <summary>A rule refused the change on the row as it is now (for example a template switch that would leave no menu section); nothing was written.</summary>
+    Refused,
 }
 
 /// <summary>
@@ -58,8 +61,9 @@ public class ContentEditor
     /// </summary>
     public static int FirstOrder(IEnumerable<int> orders) => orders.DefaultIfEmpty(2).Min() - 1;
 
-    /// <summary>Saves the pending changes and, if they were written, refreshes the caches.</summary>
-    public async Task<SaveOutcome> CommitAsync(CancellationToken ct)
+    /// <summary>Saves the pending changes and, if they were written, refreshes the caches. <paramref name="refreshCaches"/> false is for a caller that writes many rows in a row and
+    /// refreshes once at the end (<see cref="ProfileEditor.AfterContentCommitAsync"/>), as the import does.</summary>
+    public async Task<SaveOutcome> CommitAsync(CancellationToken ct, bool refreshCaches = true)
     {
         try
         {
@@ -75,7 +79,7 @@ public class ContentEditor
             _db.ChangeTracker.Clear();
             return SaveOutcome.Duplicate;
         }
-        await _profile.AfterContentCommitAsync();
+        if (refreshCaches) await _profile.AfterContentCommitAsync();
         return SaveOutcome.Saved;
     }
 

@@ -190,6 +190,7 @@ public class SiteProfileProvider : ISiteProfileProvider
         {
             SiteProfileMapper.CopyTo(_defaults.Value, row);
             SiteProfileMapper.FitToColumns(row);
+            row.ConcurrencyStamp = ProfileEditor.NewStamp(); // a form opened before this overwrite is stale
             await db.SaveChangesAsync(ct);
             _logger.LogInformation("Site profile overwritten from the Site config section (Seed:Mode=Authoritative).");
         }

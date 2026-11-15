@@ -14,6 +14,9 @@ public static class AdminAuth
 {
     public const string StampClaim = "lcv:stamp";
     public const string SignedInClaim = "lcv:signed-in";
+
+    /// <summary>A random id for one sign-in, so something held for a session (an import preview) belongs to that sign-in and no other, even one made in the same second.</summary>
+    public const string SessionClaim = "lcv:sid";
     public static readonly TimeSpan MaxSessionAge = TimeSpan.FromHours(12);
     public const string LoginPath = "/admin/login";
     public const string AdminPath = "/admin";
@@ -21,6 +24,8 @@ public static class AdminAuth
     public const string WelcomePath = "/admin/welcome";
     public const string WelcomeReviewPath = "/admin/welcome/review";
     public const string ContentPath = "/admin/content";
+    public const string ProfilePath = "/admin/profile";
+    public const string SectionsPath = "/admin/sections";
 
     public static IServiceCollection AddOwnerAuth(this IServiceCollection services, IWebHostEnvironment env)
     {
@@ -101,6 +106,7 @@ public static class AdminAuth
             new Claim(ClaimTypes.Name, account.UserName),
             new Claim(StampClaim, account.SecurityStamp),
             new Claim(SignedInClaim, signedInAt.ToUnixTimeSeconds().ToString()),
+            new Claim(SessionClaim, Guid.NewGuid().ToString("N")),
         ], CookieAuthenticationDefaults.AuthenticationScheme);
         return new ClaimsPrincipal(identity);
     }
@@ -177,10 +183,20 @@ public static class AdminAuth
             await next();
         });
 
-    /// <summary>Only the pages whose path is <c>/admin/content/{section}/edit[/{id}]</c> or <c>/admin/content/projects/images/{id}</c> load a script: a first-party file that warns about unsaved changes.</summary>
-    internal static bool AllowsScript(PathString path) =>
-        path.StartsWithSegments(ContentPath, StringComparison.OrdinalIgnoreCase)
-        && path.Value!.Split('/', StringSplitOptions.RemoveEmptyEntries).Skip(3).FirstOrDefault() is { } page && (page.Equals("edit", StringComparison.OrdinalIgnoreCase) || page.Equals("images", StringComparison.OrdinalIgnoreCase));
+    /// <summary>Only the edit forms load a script: a first-party file that warns about unsaved changes. These are <c>/admin/content/{section}/edit[/{id}]</c>,
+    /// <c>/admin/content/projects/images/{id}</c> and the profile's block editors <c>/admin/profile/hero</c>, <c>/metrics</c> and <c>/about</c>, and the sections page <c>/admin/sections</c>.</summary>
+    internal static bool AllowsScript(PathString path)
+    {
+        if (path.StartsWithSegments(ContentPath, StringComparison.OrdinalIgnoreCase))
+            return path.Value!.Split('/', StringSplitOptions.RemoveEmptyEntries).Skip(3).FirstOrDefault() is { } page
+                   && (page.Equals("edit", StringComparison.OrdinalIgnoreCase) || page.Equals("images", StringComparison.OrdinalIgnoreCase));
+        if (path.StartsWithSegments(SectionsPath, StringComparison.OrdinalIgnoreCase)) return true;
+        return path.StartsWithSegments(ProfilePath, StringComparison.OrdinalIgnoreCase)
+               && path.Value!.Split('/', StringSplitOptions.RemoveEmptyEntries).Skip(2).FirstOrDefault() is { } part
+               && ProfileEditorParts.Any(x => part.Equals(x, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static readonly string[] ProfileEditorParts = [Services.ProfileParts.Hero, Services.ProfileParts.Metrics, Services.ProfileParts.About];
 
     private static bool IsPrivateArea(PathString path) =>
         path.StartsWithSegments(AdminPath, StringComparison.OrdinalIgnoreCase)

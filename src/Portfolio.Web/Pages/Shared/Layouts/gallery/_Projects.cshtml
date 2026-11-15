@@ -1,0 +1,47 @@
+@model ProjectsPage
+@inject RequestTemplate Template
+@{
+    var tpl = await Template.GetAsync();
+    var copy = tpl.Copy.Projects;
+    var categories = Model.Projects
+        .Select(p => p.Category)
+        .Where(c => !string.IsNullOrWhiteSpace(c))
+        .Select(c => c!.Trim())
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(c => c)
+        .ToList();
+}
+<script type="application/ld+json">@Html.Raw(Model.BreadcrumbJsonLd)</script>
+
+<section class="container-page py-16 md:py-20">
+    <p class="eyebrow">@Text(copy.Eyebrow)</p>
+    <h1 class="mt-3 break-words text-3xl md:text-5xl">@Text(copy.Heading)</h1>
+    <p class="lead">@Text(copy.Lead)</p>
+
+    @if (Model.Projects.Count == 0)
+    {
+        <div class="mt-10 rounded-lg border border-border bg-surface-2/70 p-8 text-sm text-muted">
+            <p class="font-mono text-xs uppercase tracking-[0.2em] text-accent">@Text(copy.EmptyTitle)</p>
+            <p class="mt-3 max-w-2xl">@Text(copy.EmptyBody)</p>
+        </div>
+    }
+    else
+    {
+        @if (categories.Count > 1)
+        {
+            <div class="mt-10 flex flex-wrap gap-2" data-project-filter role="group" aria-label="@copy.FilterLabel">
+                <button type="button" class="filter-chip is-active max-w-full break-words" data-filter="all" aria-pressed="true">All</button>
+                @foreach (var c in categories)
+                {
+                    <button type="button" class="filter-chip max-w-full break-words" data-filter="@c" aria-pressed="false">@c</button>
+                }
+            </div>
+        }
+        <div class="mt-10 grid gap-x-6 gap-y-12 grid-cols-[repeat(auto-fit,minmax(min(100%,var(--gallery-card-min,17rem)),1fr))]" data-project-grid>
+            @foreach (var p in Model.Projects)
+            {
+                @await Html.PartialAsync("Layouts/gallery/_WorkCard", new WorkCard(p, ShowFeatured: true, HeadingLevel: 2))
+            }
+        </div>
+    }
+</section>

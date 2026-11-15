@@ -291,15 +291,28 @@ public class OnboardingFlowTests
 
         Assert.Contains(">Software engineer</h2>", html);
         Assert.Contains(">Healthcare professional</h2>", html);
+        Assert.Contains(">Product designer</h2>", html);
+        Assert.Contains("src=\"/admin/welcome/thumb/design-ux\"", html);
         Assert.Contains("src=\"/admin/welcome/thumb/software\"", html);
         Assert.Contains("src=\"/admin/welcome/thumb/healthcare\"", html);
         Assert.Contains("<strong>Pages:</strong> about, experience, work, skills, certifications, blog, talks, testimonials, contact", html);
         Assert.Contains("licences & registrations", html);
         Assert.Contains("Case study", html);
         Assert.Contains("Initiative", html);
-        Assert.Single(Regex.Matches(html, "Before you publish")); // only the sensitive template carries guidance
+        Assert.Equal(6, Regex.Matches(html, "Before you publish").Count); // the sensitive template, the two gallery templates and the three results templates carry guidance, software does not
         Assert.Contains("patient-identifiable", html);
-        Assert.Equal(2, Regex.Matches(html, "type=\"radio\" name=\"Key\"").Count);
+        Assert.Contains("confidential screens", html);
+        Assert.Contains(">Photographer and filmmaker</h2>", html);
+        Assert.Contains("src=\"/admin/welcome/thumb/photography-film\"", html);
+        Assert.Contains(">Marketing and content strategist</h2>", html);
+        Assert.Contains("src=\"/admin/welcome/thumb/marketing-content\"", html);
+        Assert.Contains("confidential numbers", html);
+        Assert.Contains(">Sales and business development lead</h2>", html);
+        Assert.Contains("src=\"/admin/welcome/thumb/sales-bd\"", html);
+        Assert.Contains(">Finance and accounting professional</h2>", html);
+        Assert.Contains("src=\"/admin/welcome/thumb/finance-accounting\"", html);
+        Assert.Contains("confidential financial", html);
+        Assert.Equal(7, Regex.Matches(html, "type=\"radio\" name=\"Key\"").Count);
     }
 
     [Fact]

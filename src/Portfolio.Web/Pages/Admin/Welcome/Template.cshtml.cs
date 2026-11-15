@@ -44,7 +44,13 @@ public class WelcomeTemplateModel : WelcomePageModel
             return Page();
         }
 
-        await Onboarding.SaveTemplateAsync(chosen, ct);
+        if (await Onboarding.SaveTemplateAsync(chosen, ct) is { } refused)
+        {
+            ModelState.AddModelError(nameof(Key), refused);
+            SelectedKey = Template.Key;
+            Groups = Cards();
+            return Page();
+        }
         return RedirectToPage("/Admin/Welcome/Basics");
     }
 

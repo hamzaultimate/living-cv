@@ -1,0 +1,63 @@
+@page "/admin/sections"
+@model Portfolio.Web.Pages.Admin.SectionsModel
+@using Portfolio.Web.Pages.Admin.Content
+@using Portfolio.Web.Pages.Admin.Profile
+@{
+    var v = Model.View;
+    var f = Model.Form;
+    ViewData["Title"] = v.Heading;
+}
+<h1 id="page-heading">@v.Heading</h1>
+<p class="adm-lede">@v.Hint("heading")</p>
+<partial name="_Guidance" model="v" />
+@if (Model.Status is not null)
+{
+    <div class="adm-flash adm-flash-ok" role="status" aria-live="polite">@Model.Status</div>
+}
+
+<form method="post" asp-page="/Admin/Sections" novalidate data-unsaved-warning data-has-errors="@(Model.StartsDirty ? "true" : "false")">
+    <partial name="_ErrorSummary" />
+    <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
+    @* Pressing Enter in a text box sends the first button of the form, so Save comes first, before any row button. *@
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @v.Heading</button>
+        <a class="adm-btn" href="/admin">Cancel</a>
+    </div>
+    @for (var i = 0; i < f.Rows.Count; i++)
+    {
+        var row = f.Rows[i];
+        var template = Model.TemplateRow(row);
+        var name = Model.NameOf(row);
+        <fieldset class="adm-fieldset">
+            <legend>@name</legend>
+            <input type="hidden" name="Form.Rows[@i].Key" value="@row.Key" />
+            <partial name="_Field" model="@(Model.Field("label", $"Rows[{i}].Label", row.Label, maxLength: ProfileParts.SectionLabelMax, withHint: i == 0))" />
+            @if (template?.Required == true)
+            {
+                <p class="adm-hint">@v.Label("locked"). @v.Hint("locked")</p>
+            }
+            else
+            {
+                var noteId = template is { Enabled: false } ? $"Form_Rows_{i}__Enabled-default" : null;
+                <partial name="_Field" model="@Model.Toggle(i, row, noteId)" />
+                @if (noteId is not null)
+                {
+                    <p id="@noteId" class="adm-hint">@v.Label("defaultOff"). @v.Hint("defaultOff")</p>
+                }
+            }
+            @if (template is not null && (template.Key == SectionRegistry.Contact || SectionRegistry.PathFor(template.Key) is null))
+            {
+                @* The contact button and the home blocks have fixed places: moving this row changes nothing in the menu. *@
+                <p class="adm-hint">@v.Label("noOrder"). @v.Hint("noOrder")</p>
+            }
+            <partial name="_RowButtons" model="@(new RowButtonsVm(i, f.Rows.Count, name, Model.FocusId, CanRemove: false))" />
+        </fieldset>
+    }
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @v.Heading</button>
+        <a class="adm-btn" href="/admin">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+    <script src="~/js/admin-unsaved.js" defer asp-append-version="true"></script>
+}

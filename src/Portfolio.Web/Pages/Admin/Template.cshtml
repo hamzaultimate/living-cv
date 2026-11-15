@@ -55,6 +55,18 @@
             These stay in the database and reappear if you switch to a template that uses them.
         </p>
     }
+    @if (Model.Reappearing.Count > 0)
+    {
+        <p class="adm-callout"><strong>Shown again:</strong> @string.Join(", ", Model.Reappearing). They are on under this template, and their content was kept.</p>
+    }
+    @if (!isCurrent && Model.SwitchRefused)
+    {
+        <p class="adm-callout" role="note"><strong>Cannot be switched to yet:</strong> with your saved section choices this template would show no section in the menu, and none of the sections that are on now exist in it. Switch one of its sections on at <a href="/admin/sections">Sections</a> first.</p>
+    }
+    else if (!isCurrent && Model.SwitchKeeps.Count > 0)
+    {
+        <p class="adm-callout" role="note"><strong>Kept on:</strong> @string.Join(", ", Model.SwitchKeeps). This template shows them off by default, so they stay on if you switch (they are saved as your choice) and the menu is not left empty.</p>
+    }
     <nav class="adm-tabs" aria-label="Preview page">
         @foreach (var (path, label) in Model.PreviewPages)
         {

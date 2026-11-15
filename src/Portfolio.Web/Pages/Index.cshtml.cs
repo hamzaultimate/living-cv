@@ -26,6 +26,9 @@ public class IndexModel : PageModel
 
     public List<Skill> Skills { get; private set; } = new();
 
+    /// <summary>The client names of the owner's work, for layouts that show a wordmark strip.</summary>
+    public List<string> Clients { get; private set; } = new();
+
     public async Task OnGetAsync()
     {
         var tpl = await _template.GetAsync();
@@ -37,7 +40,9 @@ public class IndexModel : PageModel
             Certifications = await _repo.GetCertificationsAsync();
         if (credentialsLayout && tpl.IsEnabled(SectionRegistry.Experience))
             RecentRoles = (await _repo.GetExperiencesAsync()).Take(3).ToList();
-        if (credentialsLayout && tpl.IsEnabled(SectionRegistry.Skills))
+        if (Archetypes.ShowsSkillsOnHome(tpl.Archetype) && tpl.IsEnabled(SectionRegistry.Skills))
             Skills = await _repo.GetSkillsAsync();
+        if (Archetypes.ShowsClientsOnHome(tpl.Archetype) && tpl.IsEnabled(SectionRegistry.Projects))
+            Clients = await _repo.GetProjectClientsAsync();
     }
 }

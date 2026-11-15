@@ -1,0 +1,30 @@
+@page "/admin/profile/hero"
+@model Portfolio.Web.Pages.Admin.Profile.HeroModel
+@using Portfolio.Web.Pages.Admin.Content
+@{
+    var v = Model.View;
+    var f = Model.Form;
+    ViewData["Title"] = v.Heading;
+}
+<h1 id="page-heading">@v.Heading</h1>
+<p class="adm-lede">@v.Hint("heading")</p>
+<partial name="_Guidance" model="v" />
+
+<form method="post" asp-page="/Admin/Profile/Hero" novalidate data-unsaved-warning data-has-errors="@(Model.StartsDirty ? "true" : "false")">
+    <partial name="_ErrorSummary" />
+    <input type="hidden" name="Form.Stamp" value="@f.Stamp" />
+    <fieldset class="adm-fieldset">
+        <legend>@v.Heading</legend>
+        <partial name="_Field" model="@(Model.Field("eyebrow", nameof(f.Eyebrow), f.Eyebrow, maxLength: ProfileParts.HeroMax))" />
+        <partial name="_Field" model="@(Model.Field("headline", nameof(f.Headline), f.Headline, maxLength: ProfileParts.HeroMax))" />
+        <partial name="_Field" model="@(Model.Field("headlineAccent", nameof(f.HeadlineAccent), f.HeadlineAccent, maxLength: ProfileParts.HeroMax))" />
+        <partial name="_Field" model="@(Model.Field("lede", nameof(f.Lede), f.Lede, FieldKind.Textarea, ProfileParts.LedeMax, rows: 4))" />
+    </fieldset>
+    <div class="adm-actions">
+        <button type="submit" class="adm-btn adm-btn-primary">Save @v.Heading</button>
+        <a class="adm-btn" href="/admin">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+    <script src="~/js/admin-unsaved.js" defer asp-append-version="true"></script>
+}

@@ -2,6 +2,8 @@
 @using Portfolio.Web.Pages.Admin.Content
 @{
     var invalid = Model.Errors.Count > 0;
+    // A page that moves focus to a control after a row button names its id here.
+    var focus = ViewData["FocusId"] as string == Model.Id ? "autofocus" : null;
 }
 @if (!Model.Visible)
 {
@@ -23,10 +25,10 @@ else
         @switch (Model.Kind)
         {
             case FieldKind.Textarea:
-                <textarea id="@Model.Id" name="@Model.Name" rows="@Model.Rows" maxlength="@Model.MaxLength" required="@Model.Required" aria-invalid="@(invalid ? "true" : null)" aria-describedby="@(Model.DescribedBy.Length > 0 ? Model.DescribedBy : null)">@Model.Value</textarea>
+                <textarea autofocus="@focus" id="@Model.Id" name="@Model.Name" rows="@Model.Rows" maxlength="@Model.MaxLength" required="@Model.Required" aria-invalid="@(invalid ? "true" : null)" aria-describedby="@(Model.DescribedBy.Length > 0 ? Model.DescribedBy : null)">@Model.Value</textarea>
                 break;
             case FieldKind.Select:
-                <select id="@Model.Id" name="@Model.Name" required="@Model.Required" aria-invalid="@(invalid ? "true" : null)" aria-describedby="@(Model.DescribedBy.Length > 0 ? Model.DescribedBy : null)">
+                <select autofocus="@focus" id="@Model.Id" name="@Model.Name" required="@Model.Required" aria-invalid="@(invalid ? "true" : null)" aria-describedby="@(Model.DescribedBy.Length > 0 ? Model.DescribedBy : null)">
                     @foreach (var (value, text) in Model.Options)
                     {
                         <option value="@value" selected="@(value == Model.Value)">@text</option>
@@ -34,7 +36,7 @@ else
                 </select>
                 break;
             default:
-                <input type="@(Model.Kind == FieldKind.Url ? "url" : "text")" id="@Model.Id" name="@Model.Name" value="@Model.Value" maxlength="@Model.MaxLength" required="@Model.Required"
+                <input autofocus="@focus" type="@(Model.Kind == FieldKind.Url ? "url" : "text")" id="@Model.Id" name="@Model.Name" value="@Model.Value" maxlength="@Model.MaxLength" required="@Model.Required"
                        list="@Model.ListId" autocomplete="@(Model.Autocomplete ?? "off")" inputmode="@(Model.Kind == FieldKind.Url ? "url" : null)"
                        aria-invalid="@(invalid ? "true" : null)" aria-describedby="@(Model.DescribedBy.Length > 0 ? Model.DescribedBy : null)" />
                 break;
