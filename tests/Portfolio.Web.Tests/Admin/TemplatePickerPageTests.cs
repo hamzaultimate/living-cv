@@ -95,7 +95,7 @@ public class TemplatePickerAdminPageTests
     }
 
     [Fact]
-    public async Task ThePreviewFrame_HasATitle_AndTheThumbnailAsItsFallbackContent()
+    public async Task ThePreviewFrame_HasATitleAndNoContent_AndAStaticPictureLinkFollowsIt()
     {
         using var app = new AdminApp();
         var owner = await app.SignedInClientAsync();
@@ -103,7 +103,33 @@ public class TemplatePickerAdminPageTests
         var html = Plain(await owner.GetStringAsync("/admin/template?show=healthcare"));
 
         Assert.Matches(@"<iframe class=""adm-preview adm-picker-frame""[^>]* title=""Preview of the Healthcare template""", html);
-        Assert.Contains("src=\"/admin/welcome/thumb/healthcare\"", html);
+        // Browsers never show an iframe's children, so the frame must be empty.
+        Assert.Matches(@"<iframe\b[^>]*></iframe>", html);
+        var frame = html[html.IndexOf("<iframe", StringComparison.Ordinal)..html.IndexOf("</iframe>", StringComparison.Ordinal)];
+        Assert.DoesNotContain("<img", frame);
+        Assert.DoesNotContain("<div", frame);
+        // The picture is a visible link after the frame instead.
+        Assert.Contains("href=\"/admin/welcome/thumb/healthcare\"", html);
+        Assert.Matches(@"<a href=""/admin/welcome/thumb/healthcare""[^>]*target=""_blank""", html);
+        Assert.Contains("See a static picture of the home page", html);
+    }
+
+    [Fact]
+    public async Task ATemplateWithoutAThumbnail_ShowsNoStaticPictureLink()
+    {
+        var dir = TemplateDirs.WithExtra("plain", n => n["name"] = "Plain");
+        try
+        {
+            using var app = AdminApp.WithTemplates(dir);
+            var owner = await app.SignedInClientAsync();
+
+            var html = Plain(await owner.GetStringAsync("/admin/template?show=plain"));
+
+            Assert.Contains("<h2 id=\"picker-heading\">Plain", html);
+            Assert.DoesNotContain("static picture", html);
+            Assert.DoesNotContain("/admin/welcome/thumb/plain", html);
+        }
+        finally { Directory.Delete(dir, recursive: true); }
     }
 }
 

@@ -56,17 +56,11 @@
             <a href="@Model.MobileUrl" aria-current="@(Model.Mobile ? "true" : null)">mobile</a> ·
             <a href="@Model.PreviewUrl" target="_blank" rel="noopener">open in a new tab</a>
         </p>
-        <iframe class="adm-preview adm-picker-frame@(Model.Mobile ? " adm-preview-mobile" : "")" src="@Model.PreviewUrl"
-                title="Preview of the @t.Name template" referrerpolicy="same-origin">
-            @if (Model.ThumbUrl is not null)
-            {
-                <img class="adm-thumb" src="@Model.ThumbUrl" width="1200" height="800" alt="Preview of the @t.Name template: the home page of a sample site." />
-            }
-            else
-            {
-                <div class="adm-thumb adm-thumb-fallback" aria-hidden="true">@t.Name</div>
-            }
-        </iframe>
+        <iframe class="adm-preview adm-picker-frame@(Model.Mobile ? " adm-preview-mobile" : "")" src="@Model.PreviewUrl" title="Preview of the @t.Name template" referrerpolicy="same-origin"></iframe>
+        @if (Model.ThumbUrl is not null)
+        {
+            <p class="adm-hint adm-picker-thumb">Preview not loading? <a href="@Model.ThumbUrl" target="_blank" rel="noopener">See a static picture of the home page</a>.</p>
+        }
 
         <div class="adm-picker-facts">
             <p class="adm-included"><strong>Pages:</strong> @(string.Join(", ", Model.Details.Pages))</p>
