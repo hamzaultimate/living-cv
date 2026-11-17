@@ -188,7 +188,8 @@ public class OnboardingFlowTests
 
         Assert.Contains(">Keep Healthcare and continue</button>", template); // the template step opens on the draft's template and offers to keep it
         Assert.DoesNotContain(">Use Healthcare and continue</button>", template);
-        Assert.Single(Regex.Matches(template, @"</a><span class=""adm-pill"">Selected</span>"));
+        Assert.Single(Regex.Matches(template, @"<span class=""adm-pill"">Selected</span></a>"));
+        Assert.Matches(@"aria-current=""true"">Healthcare<span class=""adm-sr"">, </span><span class=""adm-pill"">Selected</span></a>", template);
         Assert.Contains("value=\"Resume Person\"", basics);
         Assert.Contains("value=\"Bristol\"", basics);
         Assert.Contains("https://resume.example", review);

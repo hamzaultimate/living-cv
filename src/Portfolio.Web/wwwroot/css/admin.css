@@ -97,7 +97,7 @@
 /* Template picker (admin/template and setup wizard step 1): names box on the right, live preview and details in the centre.
    The names box comes first in the markup (so keyboard order is choose, then look) and is placed on the right by the grid. */
 .adm-picker { display: grid; grid-template-columns: minmax(0, 1fr) 16rem; grid-template-areas: "detail names"; gap: var(--adm-space-5); align-items: start; padding: var(--adm-space-4); }
-.adm-picker-names { grid-area: names; position: sticky; top: var(--adm-space-3); max-height: calc(100vh - 12rem); overflow-y: auto; padding: var(--adm-space-3); border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm); background: var(--adm-bg); }
+.adm-picker-names { grid-area: names; position: sticky; top: var(--adm-space-3); max-height: calc(100vh - 18rem); overflow-y: auto; padding: var(--adm-space-3); border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm); background: var(--adm-bg); }
 .adm-picker-names summary { cursor: pointer; font-weight: 600; }
 .adm-picker-names ul { list-style: none; margin: 0 0 var(--adm-space-3); padding: 0; }
 .adm-picker-names li { margin: 0; }
@@ -112,6 +112,7 @@
 .adm-picker-action { display: flex; flex-wrap: wrap; align-items: center; gap: var(--adm-space-2) var(--adm-space-3); margin: 0; }
 .adm-picker-action .adm-hint { margin: 0; }
 .adm-picker .adm-preview { height: clamp(16rem, calc(100vh - 32rem), 44rem); min-height: 0; }
+.adm-picker-frame:focus-visible { outline: 3px solid var(--adm-accent); outline-offset: 2px; }
 .adm-picker-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0 var(--adm-space-5); margin-top: var(--adm-space-3); }
 .adm-picker-facts p { margin: var(--adm-space-1) 0; }
 @media (max-width: 40rem) {

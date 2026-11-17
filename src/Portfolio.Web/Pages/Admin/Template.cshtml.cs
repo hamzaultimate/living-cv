@@ -82,7 +82,7 @@ public class TemplateModel : AdminPageModel
         var picker = TemplatePickerBuilder.Build(_catalog, new TemplatePickerInput("/admin/template", selected, TemplatePickerBuilder.PagesOf(view), Tab, Size, currentKey, "In use"));
         Picker = picker with
         {
-            Action = isCurrent ? null : new PickerAction("/Admin/Template", selected.Key, label, refused ? "Not available yet: see the note under the preview." : null),
+            Action = isCurrent ? null : new PickerAction("/Admin/Template", selected.Key, label, refused ? "Not available yet: this template would leave your menu without a section. Switch one of its sections on at Sections first." : null),
             Notes = notes,
         };
     }

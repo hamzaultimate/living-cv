@@ -45,7 +45,9 @@ public class TemplatePickerAdminPageTests
 
         Assert.Equal(Catalog.All.Count, Regex.Matches(html, @"href=""/admin/template\?show=[a-z-]+&size=mobile""").Count);
         foreach (var profession in Catalog.All.Select(t => t.Profession).Distinct()) Assert.Contains($">{profession}</h3>", html);
-        Assert.Single(Regex.Matches(html, @"</a><span class=""adm-pill"">In use</span>"));
+        Assert.Single(Regex.Matches(html, @"<span class=""adm-pill"">In use</span></a>"));
+        Assert.DoesNotMatch(@"</a><span class=""adm-pill"">", html); // a tag sits inside its link, so it is part of the link's name
+        Assert.Contains("<a href=\"/admin/template?show=software&size=mobile\">Software & IT<span class=\"adm-sr\">, </span><span class=\"adm-pill\">In use</span></a>", html);
         Assert.Contains("<a href=\"/admin/template?show=healthcare&size=mobile\" aria-current=\"true\">Healthcare</a>", html);
         Assert.Contains("<details class=\"adm-picker-names\">", html);
         Assert.Contains("<nav aria-label=\"Templates\">", html);
@@ -90,6 +92,7 @@ public class TemplatePickerAdminPageTests
             Assert.Contains("aria-describedby=\"picker-action-reason\"", html);
             Assert.Contains("id=\"picker-action-reason\"", html);
             Assert.Contains("<strong>Cannot be switched to yet:</strong>", html);
+            Assert.Contains("would leave your menu without a section", html); // the disabled button states its own reason
         }
         finally { Directory.Delete(dir, recursive: true); }
     }
@@ -133,7 +136,7 @@ public class TemplatePickerAdminPageTests
     }
 }
 
-/// <summary>admin.css is one hand-written file; the picker's layout rules must exist and must not rely on inline style.</summary>
+/// <summary>admin.css is one hand-written file; the picker's layout rules (names on the right, collapsing below 40rem, an internal scroll that leaves room for the page header) and its frame's keyboard focus ring must exist.</summary>
 public class TemplatePickerCssTests
 {
     private static string Css()
@@ -156,6 +159,8 @@ public class TemplatePickerCssTests
         Assert.Contains(".adm-picker-names::details-content { content-visibility: visible;", css);
         Assert.Matches(new Regex(@"@media \(max-width: 40rem\) \{\s*\.adm-picker \{"), css);
         Assert.Contains("overflow-y: auto", css); // the names box scrolls inside itself
+        Assert.Contains("max-height: calc(100vh - 18rem)", css); // and leaves room for the page header, so the last names are reachable at 1280 by 800
+        Assert.Matches(@"\.adm-picker-frame:focus-visible\s*\{\s*outline:\s*3px solid var\(--adm-accent\);\s*outline-offset:\s*2px;", css);
     }
 }
 
@@ -215,7 +220,8 @@ public class TemplatePickerWizardTests
         var other = Plain(await owner.GetStringAsync($"{WizardFlow.Template}?show=software"));
 
         Assert.Contains(">Keep Healthcare and continue</button>", chosen);
-        Assert.Single(Regex.Matches(chosen, @"</a><span class=""adm-pill"">Selected</span>"));
+        Assert.Single(Regex.Matches(chosen, @"<span class=""adm-pill"">Selected</span></a>"));
+        Assert.Contains("<a href=\"/admin/welcome?show=healthcare&size=desktop\" aria-current=\"true\">Healthcare<span class=\"adm-sr\">, </span><span class=\"adm-pill\">Selected</span></a>", chosen);
         Assert.Contains($">Use {Catalog.Get("software").Name} and continue</button>", other);
         Assert.DoesNotContain(">Keep ", other);
         Assert.Contains("<a href=\"/admin/welcome?show=healthcare&size=desktop\"", other); // the names box links back to the chosen one
@@ -247,7 +253,9 @@ public class TemplatePickerWizardTests
         var response = await WizardFlow.PickTemplateAsync(owner, "no-such-template");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("Choose one of the templates.", await response.Content.ReadAsStringAsync());
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Choose one of the templates.", body);
+        Assert.Contains("id=\"picker-heading\"", body); // a usable picker came back with the message
         Assert.Null(await WizardFlow.DraftAsync(app));
     }
 

@@ -17,7 +17,7 @@
                 <ul aria-labelledby="group-@(group.Entries[0].Key)">
                     @foreach (var entry in group.Entries)
                     {
-                        <li><a href="@entry.Url" aria-current="@(entry.IsSelected ? "true" : null)">@entry.Name</a>@if (entry.Tag is not null) {<span class="adm-pill">@entry.Tag</span>}</li>
+                        <li><a href="@entry.Url" aria-current="@(entry.IsSelected ? "true" : null)">@(entry.Name)@if (entry.Tag is not null) {<span class="adm-sr">, </span><span class="adm-pill">@entry.Tag</span>}</a></li>
                     }
                 </ul>
             }
