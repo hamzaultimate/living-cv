@@ -33,7 +33,7 @@ Copied from the spec (sections 2, 3 and 5), plus repo rules.
 7. **Wizard "selected" tag.** "Selected" marks the draft's template only. With no draft (first run) nothing is tagged, the preview shows the default template and the button reads "Use Software and continue". A draft on the shown template gives "Keep X and continue".
 8. **Admin host, refused switch.** The button is disabled with a short reason beside it, and the existing "Cannot be switched to yet:" note stays (tests pin its text). The POST still refuses on its own; the disabled button is a convenience.
 9. **`Review.cshtml.cs` keeps its own copy of the preview-pages expression.** PR C rebuilds that page; touching it here would widen the diff for no gain.
-10. **Preview height is provisional.** The iframe height is `clamp(16rem, calc(100vh - 28rem), 44rem)` so criterion 10 (no page scroll at 1280 by 800) can hold. Visual fit cannot be asserted in a test, so Task 4 Step 3 checks it in a browser and may tune that one number.
+10. **Preview height is provisional.** The iframe height is `clamp(16rem, calc(100vh - 32rem), 44rem)` so criterion 10 (no page scroll at 1280 by 800) can hold. It was tuned from `28rem` to `32rem` after the browser pass: the name, tabs, width links and the action fit in 800px; the details strip is reached by scrolling (see criterion 10 as amended). Visual fit cannot be asserted in a test, so Task 4 Step 3 checks it in a browser and may tune that one number.
 11. **Old CSS is removed in Task 3,** once the wizard stops using it: `.adm-templates*`, `.adm-template[...]`, `.adm-pick*`. The two tests that name `.adm-pick` are updated to `.adm-choice`, which the accent radios still use.
 
 ## File Structure
@@ -1346,7 +1346,7 @@ Run the `quality-reviewer` agent on `git diff origin/develop...HEAD` with the ac
 
 | Criterion | Where it is checked |
 |---|---|
-| 10. Choosing a name shows live preview and details without page scrolling at 1280 by 800, on both hosts | Preview and details content: `EveryTemplate_CanBeSelectedAndPreviewed_WithItsOwnDetails`, `EveryTemplate_CanBeSelectedAndPreviewed_OnTheWizardStep`. No-scroll fit: manual, Task 4 Step 3 |
+| 10. Choosing a name shows the name, layout, live preview, page tabs, width links and action button without page scrolling at 1280 by 800, on both hosts; the details strip is reached by scrolling | Preview and details content: `EveryTemplate_CanBeSelectedAndPreviewed_WithItsOwnDetails`, `EveryTemplate_CanBeSelectedAndPreviewed_OnTheWizardStep`. No-scroll fit: manual, Task 4 Step 3 |
 | 11. Every catalog template can be selected and previewed on both hosts | The two Theory tests above, one row per catalog template, so a new template is covered automatically |
 | 12. Unknown `show` falls back to the current template | `AnUnknownShow_FallsBackToTheGivenTemplate`, `TheTab_OnlyEverSelectsAPageOfTheList`, `TheSize_IsOneOfTwoWidths_...` (unit); existing `TheSwitcher_IgnoresUntrustedShowAndTabValues` (admin); `AnUnknownShow_FallsBackToTheTemplateTheDraftNames` (wizard) |
 | 13. `/admin/template` keeps the hidden, reappearing and kept-on notes and disables the switch with a reason | Existing `SectionSettingsTests` (note text, unchanged), `TheSwitcher_ShowsTheGuidanceForSensitiveTemplates_AndWhatStaysHidden`, new `WhenASwitchWouldEmptyTheMenu_TheButtonIsDisabled_AndGivesAReason` |
@@ -1362,7 +1362,7 @@ Run the `quality-reviewer` agent on `git diff origin/develop...HEAD` with the ac
 
 ## Self-review
 
-**Spec coverage.** 5.1 layout: Task 2 (partial and CSS: names box on the right with an internal scroll, header, preview with tabs and width switch as links, details strip, narrow `<details>` with the selected name in its summary, thumbnail as frame fallback). 5.2 two hosts: Task 2 (Switch, "In use", the three notes, the refusal reason with a disabled button) and Task 3 (Use or Keep, "Selected", no extra notes). 5.3 units: Task 1 (`TemplatePickerModel` and `TemplatePickerBuilder`, one place for grouping and details; untrusted `show`, `tab`, `size`). Criteria 10 to 14: see the table. Nothing in section 5 lacks a task.
+**Spec coverage.** 5.1 layout: Task 2 (partial and CSS: names box on the right with an internal scroll, header, preview with tabs and width switch as links, details strip, narrow `<details>` with the selected name in its summary, thumbnail as a static-picture link under the frame). 5.2 two hosts: Task 2 (Switch, "In use", the three notes, the refusal reason with a disabled button) and Task 3 (Use or Keep, "Selected", no extra notes). 5.3 units: Task 1 (`TemplatePickerModel` and `TemplatePickerBuilder`, one place for grouping and details; untrusted `show`, `tab`, `size`). Criteria 10 to 14: see the table. Nothing in section 5 lacks a task.
 
 **Placeholder scan.** No "TBD", "TODO" or "add appropriate handling". Two conditional instructions are deliberate and actionable: Task 3 Step 8 says how to treat an unexpected failing test, and Task 4 Step 3 names the single CSS number to tune.
 
