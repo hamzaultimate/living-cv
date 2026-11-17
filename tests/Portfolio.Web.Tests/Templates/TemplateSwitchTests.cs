@@ -258,8 +258,8 @@ public class TemplateSwitchTests
         Assert.Contains("Talks (", html);
         Assert.Contains("src=\"/?preview=healthcare\"", html);
         Assert.Contains("In use", html);
-        Assert.Contains("Use Healthcare", html);
-        Assert.DoesNotContain("Use Software", html);
+        Assert.Contains("Switch to Healthcare", html);
+        Assert.DoesNotContain("Switch to Software", html);
     }
 
     [Fact]

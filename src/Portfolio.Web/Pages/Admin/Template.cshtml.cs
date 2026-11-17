@@ -23,14 +23,15 @@ public class TemplateModel : AdminPageModel
         _db = db;
     }
 
-    /// <summary>The template to preview. Untrusted: it only ever selects a catalog entry (see <see cref="ITemplateCatalog.TryGet"/>).</summary>
+    /// <summary>The template to preview. Untrusted: it only ever selects a catalog entry (see <see cref="TemplatePickerBuilder.Select"/>).</summary>
     [BindProperty(SupportsGet = true, Name = "show")]
     public string? Show { get; set; }
 
-    /// <summary>Which page the preview opens on. Untrusted: it only ever selects one of <see cref="PreviewPages"/>.</summary>
+    /// <summary>Which page the preview opens on. Untrusted: it only ever selects one of the preview pages.</summary>
     [BindProperty(SupportsGet = true, Name = "tab")]
     public string? Tab { get; set; }
 
+    /// <summary>"mobile" or anything else (desktop).</summary>
     [BindProperty(SupportsGet = true, Name = "size")]
     public string? Size { get; set; }
 
@@ -38,40 +39,52 @@ public class TemplateModel : AdminPageModel
     [BindProperty]
     public string? Key { get; set; }
 
-    public IReadOnlyCollection<TemplateDefinition> Templates => _catalog.All;
-
-    public string CurrentKey { get; private set; } = TemplateCatalog.DefaultKey;
-    public TemplateDefinition Selected { get; private set; } = null!;
-    public IReadOnlyList<(string Path, string Label)> PreviewPages { get; private set; } = [];
-    public string PreviewPath { get; private set; } = "/";
-    public bool Mobile => string.Equals(Size, "mobile", StringComparison.Ordinal);
-
-    /// <summary>Sections of the selected template that stay hidden although the site has content for them, with how much content.</summary>
-    public IReadOnlyList<(string Label, int Count)> HiddenContent { get; private set; } = [];
-
-    public string PreviewUrl => $"{PreviewPath}?{RequestTemplate.PreviewParameter}={Uri.EscapeDataString(Selected.Key)}";
+    /// <summary>What the shared picker partial renders, with this page's Switch action and notes added.</summary>
+    public TemplatePickerModel Picker { get; private set; } = null!;
 
     public async Task OnGetAsync(CancellationToken ct)
     {
         var profile = await _editor.LoadAsync(ct);
-        CurrentKey = _catalog.Get(profile.TemplateKey).Key;
-        Selected = _catalog.TryGet(Show, out var chosen) ? chosen : _catalog.Get(CurrentKey);
+        var currentKey = _catalog.Get(profile.TemplateKey).Key;
+        var selected = TemplatePickerBuilder.Select(_catalog, Show, currentKey);
+        var isCurrent = selected.Key == currentKey;
 
-        var view = _resolver.Resolve(SiteProfileMapper.ToOptions(profile), Selected.Key);
-        if (Selected.Key != CurrentKey)
+        var view = _resolver.Resolve(SiteProfileMapper.ToOptions(profile), selected.Key);
+        IReadOnlyList<string> keeps = [];
+        IReadOnlyList<string> reappearing = [];
+        var refused = false;
+        if (!isCurrent)
         {
             // What a switch would do, decided exactly as the POST decides it but on a detached copy (nothing is written): sections kept on, or a refusal.
-            var plan = SectionSettings.PlanSwitch(_resolver, SiteProfileMapper.ToEntity(SiteProfileMapper.ToOptions(profile)), Selected);
-            SwitchKeeps = plan.Kept;
-            SwitchRefused = !plan.Allowed;
+            var plan = SectionSettings.PlanSwitch(_resolver, SiteProfileMapper.ToEntity(SiteProfileMapper.ToOptions(profile)), selected);
+            keeps = plan.Kept;
+            refused = !plan.Allowed;
             view = plan.Target; // the preview shows the menu the switch would leave
             // Sections the switch would bring back: on under the selected template, off under the current one (their content was kept all along).
-            var now = _resolver.Resolve(SiteProfileMapper.ToOptions(profile), CurrentKey);
-            Reappearing = view.Sections.Where(s => s.Enabled && !now.IsEnabled(s.Key)).Select(s => Cap(s.Label)).ToList();
+            var now = _resolver.Resolve(SiteProfileMapper.ToOptions(profile), currentKey);
+            reappearing = view.Sections.Where(s => s.Enabled && !now.IsEnabled(s.Key)).Select(s => Cap(s.Label)).ToList();
         }
-        PreviewPages = [("/", "Home"), .. view.NavLinks(mobile: true).Select(l => (l.Path, l.Path == "/cv" ? "CV" : Cap(l.Label)))];
-        PreviewPath = PreviewPages.Select(p => p.Path).FirstOrDefault(p => p == Tab) ?? "/";
-        HiddenContent = await HiddenContentAsync(view, ct);
+        var hidden = await HiddenContentAsync(view, ct);
+
+        var notes = new List<PickerNote>();
+        var label = $"Switch to {selected.Name}";
+        if (!isCurrent)
+            notes.Add(new PickerNote("Preview only.", $"Nothing is saved or visible to visitors until you choose \"{label}\"."));
+        if (hidden.Count > 0)
+            notes.Add(new PickerNote("Hidden but kept:", $"{string.Join(", ", hidden.Select(h => $"{h.Label} ({h.Count})"))}. These stay in the database and reappear if you switch to a template that uses them."));
+        if (reappearing.Count > 0)
+            notes.Add(new PickerNote("Shown again:", $"{string.Join(", ", reappearing)}. They are on under this template, and their content was kept."));
+        if (!isCurrent && refused)
+            notes.Add(new PickerNote("Cannot be switched to yet:", "with your saved section choices this template would show no section in the menu, and none of the sections that are on now exist in it. Switch one of its sections on first.", "/admin/sections", "Open Sections"));
+        else if (!isCurrent && keeps.Count > 0)
+            notes.Add(new PickerNote("Kept on:", $"{string.Join(", ", keeps)}. This template shows them off by default, so they stay on if you switch (they are saved as your choice) and the menu is not left empty."));
+
+        var picker = TemplatePickerBuilder.Build(_catalog, new TemplatePickerInput("/admin/template", selected, TemplatePickerBuilder.PagesOf(view), Tab, Size, currentKey, "In use"));
+        Picker = picker with
+        {
+            Action = isCurrent ? null : new PickerAction("/Admin/Template", selected.Key, label, refused ? "Not available yet: see the note under the preview." : null),
+            Notes = notes,
+        };
     }
 
     public async Task<IActionResult> OnPostAsync(CancellationToken ct)
@@ -110,17 +123,6 @@ public class TemplateModel : AdminPageModel
         Flash($"Switched to the {template.Name} template. Nothing was deleted: sections it does not use are hidden, and come back if you switch again.");
         return RedirectToPage();
     }
-
-    private static bool HasMenuSection(TemplateView view) => SectionSettings.HasMenuSection(view);
-
-    /// <summary>Sections that are off now and would be on after switching to the selected template.</summary>
-    public IReadOnlyList<string> Reappearing { get; private set; } = [];
-
-    /// <summary>Menu sections that stay on, as saved choices, if the selected template is switched to (the new template's defaults would otherwise empty the menu).</summary>
-    public IReadOnlyList<string> SwitchKeeps { get; private set; } = [];
-
-    /// <summary>True when the selected template cannot be switched to: its defaults would leave no menu section and nothing that is on now can be kept.</summary>
-    public bool SwitchRefused { get; private set; }
 
     private async Task<IReadOnlyList<(string Label, int Count)>> HiddenContentAsync(TemplateView view, CancellationToken ct)
     {
