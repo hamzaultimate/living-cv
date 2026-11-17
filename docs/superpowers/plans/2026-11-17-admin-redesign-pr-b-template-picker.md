@@ -28,7 +28,7 @@ Copied from the spec (sections 2, 3 and 5), plus repo rules.
 2. **Where the action button sits.** Spec 5.1 does not place it. It goes in the centre header beside the template name so it is visible without scrolling. Notes and the "before you publish" guidance go in the details strip.
 3. **Names box is first in the DOM, right on screen.** CSS grid areas place it on the right. Keyboard and screen-reader order is names, then preview, which is the order a person acts in. Below 40rem the same order is the visual order.
 4. **Narrow-screen collapse uses `::details-content`.** The names box is a `<details>` rendered closed. At 40rem and wider, inside `@supports selector(::details-content)`, CSS forces its content visible and hides the summary. A browser without `::details-content` keeps the summary visible and the list collapsed behind it: still fully usable, just one click more. No script is involved.
-5. **The thumbnail is the iframe's fallback content** (spec 5.1). A browser that renders iframes never shows it, so in practice it only appears for clients without iframe support. It is kept because the spec asks for it and `/admin/welcome/thumb/{key}` stays covered by tests.
+5. **The thumbnail is a visible link under the frame** (owner decision after the Task 2 review; spec 5.1 said "fallback content"). The first version put an `<img>` inside the `<iframe>`, which no browser displays. The picker now shows `Preview not loading? See a static picture of the home page.` under the frame, linking (new tab) to `/admin/welcome/thumb/{key}`, only for a template that ships a `preview.png`. Nothing is rendered inside the `<iframe>`. The `.adm-thumb*` styles and the `<img>` are gone from the picker; Task 3 removes the unused CSS.
 6. **Headings.** The page `h1` is unchanged. The picker adds one visually hidden `h2` ("Templates") over the names box, profession headings as `h3`, and the selected template's name as `h2`. Criterion 7 (one `h1` per page) still holds.
 7. **Wizard "selected" tag.** "Selected" marks the draft's template only. With no draft (first run) nothing is tagged, the preview shows the default template and the button reads "Use Software and continue". A draft on the shown template gives "Keep X and continue".
 8. **Admin host, refused switch.** The button is disabled with a short reason beside it, and the existing "Cannot be switched to yet:" note stays (tests pin its text). The POST still refuses on its own; the disabled button is a convenience.
@@ -923,7 +923,7 @@ public class TemplatePickerWizardTests
 
         Assert.Contains($"<h2 id=\"picker-heading\">{t.Name}", html);
         Assert.Contains($"src=\"/?preview={key}\"", html);
-        Assert.Contains($"src=\"/admin/welcome/thumb/{key}\"", html);
+        Assert.Contains($"href=\"/admin/welcome/thumb/{key}\"", html);
         Assert.Contains($">Use {t.Name} and continue</button>", html);
         Assert.Contains($"<strong>Pages:</strong> {string.Join(", ", t.Sections.Where(s => s.Enabled && s.Key != SectionRegistry.Contact).Select(s => s.Label))}, contact", html);
         if (string.IsNullOrWhiteSpace(t.Guidance)) Assert.DoesNotContain("Before you publish", html);
@@ -1010,7 +1010,7 @@ public class TemplatePickerWizardTests
     }
 
     [Fact]
-    public async Task ATemplateWithoutAThumbnail_ShowsItsNameInsteadInTheFrameFallback()
+    public async Task ATemplateWithoutAThumbnail_OffersNoStaticPictureLink()
     {
         var dir = TemplateDirs.WithExtra("plain", n => n["name"] = "Plain");
         try
@@ -1020,8 +1020,8 @@ public class TemplatePickerWizardTests
 
             var html = await owner.GetStringAsync($"{WizardFlow.Template}?show=plain");
 
-            Assert.Contains("adm-thumb adm-thumb-fallback", html);
             Assert.DoesNotContain("/admin/welcome/thumb/plain", html);
+            Assert.DoesNotContain("static picture", html);
         }
         finally { Directory.Delete(dir, recursive: true); }
     }
@@ -1052,12 +1052,12 @@ public class TemplatePickerWizardTests
         Assert.Contains("Initiative", healthcare);
         Assert.Contains("patient-identifiable", healthcare);
         Assert.Single(Regex.Matches(healthcare, "Before you publish")); // only the selected template's guidance is on the page
-        Assert.Contains("src=\"/admin/welcome/thumb/healthcare\"", healthcare);
+        Assert.Contains("href=\"/admin/welcome/thumb/healthcare\"", healthcare);
         Assert.Equal(1, Regex.Matches(healthcare, "name=\"Key\"").Count);
     }
 ```
 
-and in `ATemplateWithoutAThumbnail_GetsADataDrivenCard` (now line ~318) change the request line `var html = await owner.GetStringAsync(WizardFlow.Template);` to `var html = await owner.GetStringAsync(WizardFlow.Template + "?show=plain");`. Its assertions stay as they are.
+and rewrite `ATemplateWithoutAThumbnail_GetsADataDrivenCard` (now line ~318) as `ATemplateWithoutAThumbnail_OffersNoStaticPictureLink`: change the request line `var html = await owner.GetStringAsync(WizardFlow.Template);` to `var html = await owner.GetStringAsync(WizardFlow.Template + "?show=plain");`, drop the two assertions about `adm-thumb adm-thumb-fallback` and `>Plain</div>`, add `Assert.DoesNotContain("static picture", html);`, and keep `Assert.DoesNotContain("/admin/welcome/thumb/plain", html);` and the `NotFound` check on `GET /admin/welcome/thumb/plain`.
 
 (b) `tests/Portfolio.Web.Tests/Templates/ArchetypeTemplateFlowTests.cs` lines 64-65: replace
 
@@ -1073,7 +1073,7 @@ with
         Assert.Contains($">{template.Profession}</h3>", step);
 ```
 
-Lines 66-68 (`src="/admin/welcome/thumb/{key}"`, `value="{key}"`, `template.Name`) stay: the selected template's thumbnail is the iframe fallback and its key is the hidden `Key` value.
+Line 66 (`src="/admin/welcome/thumb/{key}"`) becomes `Assert.Contains($"href=\"/admin/welcome/thumb/{key}\"", step);`: the thumbnail is now a link under the frame. Lines 67-68 (`value="{key}"`, `template.Name`) stay: the key is the hidden `Key` value. The lines that fetch `/admin/welcome/thumb/{key}` directly and check `image/png` stay.
 
 (c) `tests/Portfolio.Web.Tests/Admin/OnboardingAccessibilityAccentTests.cs`: line 121 `Assert.Contains("<legend>Choose a template</legend>", template);` becomes `Assert.Contains("<nav aria-label=\"Templates\">", template);` (the fieldset and legend parity check at lines 125-126 stays); line 183 `Assert.Contains(".adm-pick input[type=\"radio\"]:focus-visible", css);` becomes `Assert.Contains(".adm-choice input[type=\"radio\"]:focus-visible", css);`.
 
@@ -1243,6 +1243,13 @@ In `src/Portfolio.Web/wwwroot/css/admin.css`:
 .adm-pick p { margin: .25rem 0; }
 ```
 
+2b. Also delete these two lines (the picker no longer renders an image or a name placeholder), and delete the width assertion at `OnboardingAccessibilityAccentTests.cs:186`, `Assert.Matches(new Regex(@"\.adm-thumb \{[^}]*width: 100%"), css);`:
+
+```css
+.adm-thumb { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; border: 1px solid var(--adm-border); border-radius: .35rem; background: var(--adm-bg); }
+.adm-thumb-fallback { display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.25rem; color: var(--adm-muted); }
+```
+
 3. Replace these three lines (they mix `.adm-pick` and `.adm-choice` selectors)
 
 ```css
@@ -1296,8 +1303,8 @@ Ship `Templates/<key>/preview.png`, 1200 x 800, under about 600 KB: a real scree
 that template (dark mode, sample content) works well. The template picker finds it through the catalog by key
 (`ITemplateCatalog.GetPreviewImagePath`) and serves it from `/admin/welcome/thumb/<key>`, owner-only: the key must be in the
 catalog and the file name is fixed, so nothing in the request becomes a path. It is not a static file and needs no manifest
-field. The picker's main view is the live public site in a frame; the thumbnail is only that frame's fallback content. A template
-without one still works: the template name stands in for the picture.
+field. The picker's main view is the live public site in a frame; the thumbnail is offered as a "static picture" link under the
+frame, for when the preview does not load. A template without one still works: the link is simply not shown.
 ```
 
 - [ ] **Step 2: Run the real build and the whole suite**
@@ -1362,4 +1369,4 @@ Run the `quality-reviewer` agent on `git diff origin/develop...HEAD` with the ac
 
 **Placeholder scan.** No "TBD", "TODO" or "add appropriate handling". Two conditional instructions are deliberate and actionable: Task 3 Step 8 says how to treat an unexpected failing test, and Task 4 Step 3 names the single CSS number to tune.
 
-**Type consistency.** `Select`, `PagesOf` and `Build` have the same signatures in Task 1, Task 2 (`TemplateModel`) and Task 3 (`WelcomeTemplateModel`). `TemplatePickerInput` is built positionally in the same order everywhere: base path, selected, pages, tab, size, marked key, mark label. `PickerAction(Page, Key, Label, DisabledReason)` and `PickerNote(Heading, Text, LinkUrl, LinkText)` are used with those argument orders in both hosts. The ids `picker-heading` and `picker-action-reason`, the classes `adm-picker-names`, `adm-pill`, `adm-thumb adm-thumb-fallback` and the strings asserted by tests all come from the partial in Task 2 Step 4.
+**Type consistency.** `Select`, `PagesOf` and `Build` have the same signatures in Task 1, Task 2 (`TemplateModel`) and Task 3 (`WelcomeTemplateModel`). `TemplatePickerInput` is built positionally in the same order everywhere: base path, selected, pages, tab, size, marked key, mark label. `PickerAction(Page, Key, Label, DisabledReason)` and `PickerNote(Heading, Text, LinkUrl, LinkText)` are used with those argument orders in both hosts. The ids `picker-heading` and `picker-action-reason`, the classes `adm-picker-names`, `adm-pill`, `adm-picker-thumb` and the strings asserted by tests all come from the partial in Task 2 Step 4.
