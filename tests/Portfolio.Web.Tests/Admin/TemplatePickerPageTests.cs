@@ -267,6 +267,19 @@ public class TemplatePickerWizardTests
     }
 
     [Fact]
+    public async Task TheWizardStep_HasNoExtraNotes()
+    {
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+
+        var html = Plain(await owner.GetStringAsync($"{WizardFlow.Template}?show=healthcare"));
+
+        Assert.DoesNotContain("Preview only", html);
+        Assert.DoesNotContain("role=\"note\"", html);
+        Assert.Contains("Before you publish", html); // the template's own guidance is not a host note and stays
+    }
+
+    [Fact]
     public async Task ATemplateWithoutAThumbnail_OffersNoStaticPictureLink()
     {
         var dir = TemplateDirs.WithExtra("plain", n => n["name"] = "Plain");

@@ -302,7 +302,7 @@ public class OnboardingFlowTests
         Assert.Contains("patient-identifiable", healthcare);
         Assert.Single(Regex.Matches(healthcare, "Before you publish")); // only the selected template's guidance is on the page
         Assert.Contains("href=\"/admin/welcome/thumb/healthcare\"", healthcare);
-        Assert.Equal(1, Regex.Matches(healthcare, "name=\"Key\"").Count);
+        Assert.Single(Regex.Matches(healthcare, "name=\"Key\""));
     }
 
     [Fact]
