@@ -23,6 +23,7 @@ public static class AdminAuth
     public const string TemplatePath = "/admin/template";
     public const string WelcomePath = "/admin/welcome";
     public const string WelcomeReviewPath = "/admin/welcome/review";
+    public const string WelcomeTemplatePath = "/admin/welcome";
     public const string ContentPath = "/admin/content";
     public const string ProfilePath = "/admin/profile";
     public const string SectionsPath = "/admin/sections";
@@ -154,8 +155,10 @@ public static class AdminAuth
                     ctx.Response.Headers["X-Robots-Tag"] = "noindex, nofollow, noarchive";
                     // These pages load only their own stylesheet, photos and first-party script (the menu toggle, and the unsaved changes warning on
                     // the edit forms) and nothing inline. The login page, which a signed-out visitor reaches, loads no script.
-                    // The template page and the wizard's review step also frame the public site (same origin) to preview a template or the draft.
+                    // The template page, the wizard's template step (exactly /admin/welcome, not the steps under it) and the wizard's review step also
+                    // frame the public site (same origin) to preview a template or the draft.
                     var frames = ctx.Request.Path.StartsWithSegments(TemplatePath, StringComparison.OrdinalIgnoreCase)
+                                 || string.Equals(ctx.Request.Path.Value?.TrimEnd('/'), WelcomeTemplatePath, StringComparison.OrdinalIgnoreCase)
                                  || ctx.Request.Path.StartsWithSegments(WelcomeReviewPath, StringComparison.OrdinalIgnoreCase) ? " frame-src 'self';" : "";
                     ctx.Response.Headers.ContentSecurityPolicy =
                         $"default-src 'none'; style-src 'self';{(AllowsScript(ctx.Request.Path) ? " script-src 'self';" : "")} img-src 'self'; form-action 'self';{frames} frame-ancestors 'none'; base-uri 'none'";

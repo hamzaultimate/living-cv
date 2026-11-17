@@ -158,3 +158,128 @@ public class TemplatePickerCssTests
         Assert.Contains("overflow-y: auto", css); // the names box scrolls inside itself
     }
 }
+
+/// <summary>The shared template picker on wizard step 1: every template selectable, saved to the draft only through the action button.</summary>
+public class TemplatePickerWizardTests
+{
+    private static readonly TemplateCatalog Catalog = new(Path.Combine(AppContext.BaseDirectory, "Templates"));
+
+    public static IEnumerable<object[]> Keys => Catalog.All.Select(t => new object[] { t.Key });
+
+    private static string Plain(string html) => WebUtility.HtmlDecode(html);
+
+    [Theory]
+    [MemberData(nameof(Keys))]
+    public async Task EveryTemplate_CanBeSelectedAndPreviewed_OnTheWizardStep(string key)
+    {
+        var t = Catalog.Get(key);
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+
+        var html = Plain(await owner.GetStringAsync($"{WizardFlow.Template}?show={key}"));
+
+        Assert.Contains($"<h2 id=\"picker-heading\">{t.Name}", html);
+        Assert.Contains($"src=\"/?preview={key}\"", html);
+        Assert.Contains($"href=\"/admin/welcome/thumb/{key}\"", html);
+        Assert.Contains($">Use {t.Name} and continue</button>", html);
+        Assert.Contains($"<strong>Pages:</strong> {string.Join(", ", t.Sections.Where(s => s.Enabled && s.Key != SectionRegistry.Contact).Select(s => s.Label))}, contact", html);
+        if (string.IsNullOrWhiteSpace(t.Guidance)) Assert.DoesNotContain("Before you publish", html);
+        else Assert.Contains(t.Guidance, html);
+    }
+
+    [Fact]
+    public async Task BrowsingNeverSaves_AndTheActionButtonSavesTheChoiceToTheDraft()
+    {
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+
+        await owner.GetStringAsync($"{WizardFlow.Template}?show=healthcare&Key=healthcare");
+        Assert.Null(await WizardFlow.DraftAsync(app));
+
+        var posted = await WizardFlow.PickTemplateAsync(owner, "healthcare");
+
+        Assert.Equal("/admin/welcome/basics", WizardFlow.Where(posted));
+        Assert.Equal("healthcare", (await WizardFlow.DraftAsync(app))!.TemplateKey);
+    }
+
+    [Fact]
+    public async Task TheChosenTemplate_IsTaggedSelected_AndOffersKeep_WhileOthersOfferUse()
+    {
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+        var before = Plain(await owner.GetStringAsync($"{WizardFlow.Template}?show=healthcare"));
+        Assert.DoesNotContain("adm-pill\">Selected<", before); // nothing is chosen until there is a draft
+        await WizardFlow.PickTemplateAsync(owner, "healthcare");
+
+        var chosen = Plain(await owner.GetStringAsync($"{WizardFlow.Template}?show=healthcare"));
+        var other = Plain(await owner.GetStringAsync($"{WizardFlow.Template}?show=software"));
+
+        Assert.Contains(">Keep Healthcare and continue</button>", chosen);
+        Assert.Single(Regex.Matches(chosen, @"</a><span class=""adm-pill"">Selected</span>"));
+        Assert.Contains($">Use {Catalog.Get("software").Name} and continue</button>", other);
+        Assert.DoesNotContain(">Keep ", other);
+        Assert.Contains("<a href=\"/admin/welcome?show=healthcare&size=desktop\"", other); // the names box links back to the chosen one
+    }
+
+    [Theory]
+    [InlineData("nope")]
+    [InlineData("%22%3E%3Cscript%3E")]
+    [InlineData("../software")]
+    public async Task AnUnknownShow_FallsBackToTheTemplateTheDraftNames(string show)
+    {
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+        await WizardFlow.PickTemplateAsync(owner, "healthcare");
+
+        var html = await owner.GetStringAsync($"{WizardFlow.Template}?show={show}&tab=//evil.example/x");
+
+        Assert.Contains("src=\"/?preview=healthcare\"", html);
+        Assert.DoesNotContain("evil.example", html);
+        Assert.DoesNotContain("<script>", html);
+    }
+
+    [Fact]
+    public async Task APostedKeyOutsideTheCatalog_IsRefused_AndTheDraftIsUntouched()
+    {
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+
+        var response = await WizardFlow.PickTemplateAsync(owner, "no-such-template");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Choose one of the templates.", await response.Content.ReadAsStringAsync());
+        Assert.Null(await WizardFlow.DraftAsync(app));
+    }
+
+    [Fact]
+    public async Task OnlyTheTemplateStepAndTheReviewStep_MayFrameThePublicSite()
+    {
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+        await WizardFlow.PickTemplateAsync(owner, "software");
+        await WizardFlow.SaveBasicsAsync(owner);
+        static string Csp(HttpResponseMessage r) => string.Join(";", r.Headers.GetValues("Content-Security-Policy"));
+
+        Assert.Contains("frame-src 'self'", Csp(await owner.GetAsync(WizardFlow.Template)));
+        Assert.Contains("frame-src 'self'", Csp(await owner.GetAsync(WizardFlow.Review)));
+        Assert.DoesNotContain("frame-src", Csp(await owner.GetAsync(WizardFlow.Basics)));
+        Assert.DoesNotContain("frame-src", Csp(await owner.GetAsync(WizardFlow.Photo)));
+    }
+
+    [Fact]
+    public async Task ATemplateWithoutAThumbnail_OffersNoStaticPictureLink()
+    {
+        var dir = TemplateDirs.WithExtra("plain", n => n["name"] = "Plain");
+        try
+        {
+            using var app = AdminApp.WithTemplates(dir);
+            var owner = await app.SignedInClientAsync();
+
+            var html = await owner.GetStringAsync($"{WizardFlow.Template}?show=plain");
+
+            Assert.DoesNotContain("/admin/welcome/thumb/plain", html);
+            Assert.DoesNotContain("static picture", html);
+        }
+        finally { Directory.Delete(dir, recursive: true); }
+    }
+}
