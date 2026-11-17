@@ -1159,11 +1159,8 @@ public class WelcomeTemplateModel : WelcomePageModel
         var label = selected.Key == chosenKey ? $"Keep {selected.Name} and continue" : $"Use {selected.Name} and continue";
 
         var picker = TemplatePickerBuilder.Build(Catalog, new TemplatePickerInput("/admin/welcome", selected, TemplatePickerBuilder.PagesOf(view), Tab, Size, chosenKey, "Selected"));
-        Picker = picker with
-        {
-            Action = new PickerAction("/Admin/Welcome/Template", selected.Key, label),
-            Notes = [new PickerNote("Preview only.", $"Your choice is saved to the setup draft when you choose \"{label}\". Visitors see nothing until you publish.")],
-        };
+        // Spec 5.2: the wizard host has no extra notes (owner decision after the Task 3 review), so only the action is added.
+        Picker = picker with { Action = new PickerAction("/Admin/Welcome/Template", selected.Key, label) };
     }
 }
 ```
