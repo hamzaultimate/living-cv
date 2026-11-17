@@ -111,7 +111,7 @@
 .adm-picker-head .adm-hint { margin-top: 0; }
 .adm-picker-action { display: flex; flex-wrap: wrap; align-items: center; gap: var(--adm-space-2) var(--adm-space-3); margin: 0; }
 .adm-picker-action .adm-hint { margin: 0; }
-.adm-picker .adm-preview { height: clamp(16rem, calc(100vh - 28rem), 44rem); min-height: 0; }
+.adm-picker .adm-preview { height: clamp(16rem, calc(100vh - 32rem), 44rem); min-height: 0; }
 .adm-picker-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0 var(--adm-space-5); margin-top: var(--adm-space-3); }
 .adm-picker-facts p { margin: var(--adm-space-1) 0; }
 @media (max-width: 40rem) {
