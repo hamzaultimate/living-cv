@@ -204,15 +204,16 @@ layout partials exists in the generated `wwwroot/css/app.css`.
 The admin switcher frames the real public pages as `/?preview=<key>`. It works only for a signed-in owner with a valid
 session, only for keys in the catalog, and only on GET requests for public pages. The response is `noindex`
 (header and meta), `no-store`, never output-cached, carries no analytics script and is not in the sitemap; nothing is saved until the owner presses
-"Use ...". Anyone else gets the normal page, indistinguishable from one without the parameter.
+"Switch to ...". Anyone else gets the normal page, indistinguishable from one without the parameter.
 
 ### Thumbnail
 
 Ship `Templates/<key>/preview.png`, 1200 x 800, under about 600 KB: a real screenshot of the home page of a running site in
-that template (dark mode, sample content) works well. The wizard finds it through the catalog by key
+that template (dark mode, sample content) works well. The template picker finds it through the catalog by key
 (`ITemplateCatalog.GetPreviewImagePath`) and serves it from `/admin/welcome/thumb/<key>`, owner-only: the key must be in the
 catalog and the file name is fixed, so nothing in the request becomes a path. It is not a static file and needs no manifest
-field. A template without one still works: its card shows the template name instead of a picture.
+field. The picker's main view is the live public site in a frame; the thumbnail is offered as a "static picture" link under the
+frame, for when the preview does not load. A template without one still works: the link is simply not shown.
 
 ### Draft preview
 
