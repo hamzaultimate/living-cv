@@ -79,24 +79,28 @@ public sealed class NoMarkupAttribute : ValidationAttribute
     public override bool IsValid(object? value) => value is not string s || (!s.Contains('<') && !s.Contains('>'));
 }
 
-/// <summary>The wizard's Basics step. Lengths come from the profile columns, so a value that validates here always fits.</summary>
+/// <summary>
+/// The wizard's Basics step as typed. Only the hard rules are bound here (length limits and no markup characters), so any half-finished step can be saved.
+/// Whether the answers are complete is a separate question asked at publishing: <see cref="Missing"/> and <see cref="IsComplete"/>.
+/// Lengths come from the profile columns, so a value that passes here always fits.
+/// </summary>
 public class BasicsForm
 {
     public const int SummaryMax = 600;
 
-    [Required(ErrorMessage = "Enter your name."), StringLength(SiteProfile.MaxLength.OwnerName), NoMarkup, Display(Name = "Name")]
+    [StringLength(SiteProfile.MaxLength.OwnerName), NoMarkup, Display(Name = "Name")]
     public string? OwnerName { get; set; }
 
-    [Required(ErrorMessage = "Enter your professional title."), StringLength(SiteProfile.MaxLength.JobTitle), NoMarkup, Display(Name = "Professional title")]
+    [StringLength(SiteProfile.MaxLength.JobTitle), NoMarkup, Display(Name = "Professional title")]
     public string? JobTitle { get; set; }
 
-    [Required(ErrorMessage = "Enter an email address."), StringLength(300), EmailAddress(ErrorMessage = "Enter a valid email address."), Display(Name = "Email")]
+    [StringLength(300), Display(Name = "Email")]
     public string? Email { get; set; }
 
     [StringLength(SiteProfile.MaxLength.Location), NoMarkup, Display(Name = "Location")]
     public string? Location { get; set; }
 
-    [Required(ErrorMessage = "Write a short summary."), StringLength(SummaryMax), Display(Name = "Short summary")]
+    [StringLength(SummaryMax), Display(Name = "Short summary")]
     public string? Summary { get; set; }
 
     /// <summary>The values as stored: trimmed, with line breaks and other control characters turned into spaces.</summary>

@@ -97,15 +97,15 @@ public class OnboardingAccessibilityAccentTests
         var (app, owner) = await ReadyAsync();
         using var _ = app;
 
-        var html = await (await WizardFlow.SaveBasicsAsync(owner, WizardFlow.BasicsFields(email: "nope"))).Content.ReadAsStringAsync();
+        var html = await (await WizardFlow.SaveBasicsAsync(owner, WizardFlow.BasicsFields(name: "<b>Jordan</b>"))).Content.ReadAsStringAsync();
 
         Assert.Matches(new Regex(@"<div id=""error-summary""[^>]*role=""alert""[^>]*tabindex=""-1""[^>]*autofocus"), html);
         Assert.Matches(new Regex(@"<h1 id=""step-heading"" tabindex=""-1"">"), html);
         Assert.Single(Regex.Matches(html, @"\sautofocus\b"));
-        var email = Tags(html, "input").Single(t => Attr(t, "id") == "Form_Email");
-        Assert.Equal("true", Attr(email, "aria-invalid"));
-        Assert.Contains("Enter a valid email address.", html);
-        Assert.Matches(new Regex(@"aria-describedby=""email-hint Form_Email-error"""), html);
+        var name = Tags(html, "input").Single(t => Attr(t, "id") == "Form_OwnerName");
+        Assert.Equal("true", Attr(name, "aria-invalid"));
+        Assert.Contains("Use plain text only", html);
+        Assert.Matches(new Regex(@"aria-describedby=""name-hint Form_OwnerName-error"""), html);
     }
 
     [Fact]

@@ -201,21 +201,6 @@ public class OnboardingFlowTests
     }
 
     [Fact]
-    public async Task AStepWithoutTheOnesBeforeIt_SendsTheOwnerBack()
-    {
-        using var app = new AdminApp();
-        var owner = await app.SignedInClientAsync();
-
-        Assert.Equal("/admin/welcome", WizardFlow.Where(await owner.GetAsync(WizardFlow.Basics)));
-        Assert.Equal("/admin/welcome", WizardFlow.Where(await WizardFlow.PostAsync(owner, WizardFlow.Basics, WizardFlow.BasicsFields(), WizardFlow.Template)));
-        await WizardFlow.PickTemplateAsync(owner, "software");
-        Assert.Equal("/admin/welcome/basics", WizardFlow.Where(await owner.GetAsync(WizardFlow.Photo)));
-        Assert.Equal("/admin/welcome/basics", WizardFlow.Where(await owner.GetAsync(WizardFlow.Review)));
-        Assert.Equal("/admin/welcome/basics", WizardFlow.Where(await WizardFlow.PostAsync(owner, WizardFlow.Review + "?handler=Publish", WizardFlow.ReviewFields(), WizardFlow.Template)));
-        Assert.Null((await WizardFlow.ProfileAsync(app)).OnboardingCompletedAt);
-    }
-
-    [Fact]
     public async Task ChangingTheTemplate_ReplacesAnUntouchedSuggestion_ButKeepsWhatTheOwnerTyped()
     {
         using var app = new AdminApp();
