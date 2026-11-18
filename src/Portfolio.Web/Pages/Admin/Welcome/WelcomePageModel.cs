@@ -4,18 +4,13 @@ using Portfolio.Web.Services;
 namespace Portfolio.Web.Pages.Admin.Welcome;
 
 /// <summary>
-/// Shared by the four wizard steps: the saved draft, the template it names, the step list for the progress indicator, and the two
-/// actions every step offers (leave without publishing, start over). Every handler here is a POST; a GET only ever reads.
+/// Shared by the four wizard steps: the saved draft, the template the wizard shows, the status of each step for the indicator, where a save goes next
+/// (<see cref="Leave"/>), and the two actions every step offers (leave without publishing, start over). Every handler here is a POST; a GET only ever reads.
 /// </summary>
 public abstract class WelcomePageModel : AdminPageModel
 {
-    public static readonly IReadOnlyList<(int Number, string Label, string Path)> Steps =
-    [
-        (1, "Template", "/admin/welcome"),
-        (2, "Basics", "/admin/welcome/basics"),
-        (3, "Photo", "/admin/welcome/photo"),
-        (4, "Review and launch", "/admin/welcome/review"),
-    ];
+    /// <summary>The four steps. Kept so existing callers keep compiling; <see cref="WizardProgress.Steps"/> is the one list.</summary>
+    public static IReadOnlyList<(int Number, string Label, string Path)> Steps => WizardProgress.Steps;
 
     protected WelcomePageModel(OnboardingService onboarding, ITemplateCatalog catalog)
     {
@@ -28,26 +23,42 @@ public abstract class WelcomePageModel : AdminPageModel
 
     public abstract int CurrentStep { get; }
 
+    /// <summary>The step the owner asked to go to: an indicator button, or the card's Continue. Untrusted: it is only ever clamped to one of the four steps (<see cref="WizardProgress.ClampStep"/>).</summary>
+    [BindProperty(Name = "goto")]
+    public string? Goto { get; set; }
+
+    /// <summary>The label of the card's Continue button; null when the step has its own (the template step's Use button, the review step's Publish).</summary>
+    public virtual string? ContinueLabel => null;
+
     public OnboardingState State { get; private set; } = null!;
 
-    /// <summary>The template the draft names (steps 2 to 4), or the saved site's template before one is chosen.</summary>
+    /// <summary>The template the wizard shows: the draft's, else the saved site's, else the default on a first run (<see cref="OnboardingService.TemplateFor"/>).</summary>
     public TemplateDefinition Template { get; private set; } = null!;
+
+    /// <summary>Each step's status, computed from the draft alone.</summary>
+    public IReadOnlyList<StepStatus> Progress { get; private set; } = [];
 
     public bool FirstRun => State.FirstRun;
     public OnboardingDraft? Draft => State.Draft;
-    public string StepLabel => Steps[CurrentStep - 1].Label;
+    public string StepLabel => WizardProgress.Steps[CurrentStep - 1].Label;
 
-    /// <summary>The furthest step the owner may open: the next unsaved step (the photo is optional, so once the basics are saved the review is open too).</summary>
+    /// <summary>The step after this one; the last step is its own next.</summary>
+    public int NextStep => Math.Min(CurrentStep + 1, OnboardingService.LastStep);
+
+    /// <summary>The furthest step the owner may open: the next unsaved step (the photo is optional, so once the basics are saved the review is open too). Removed with <see cref="RequireStep"/> once every step is converted.</summary>
     public int Reachable => Draft is null ? 1 : Draft.Step >= 2 ? OnboardingService.LastStep : Draft.Step + 1;
 
     protected async Task LoadAsync(CancellationToken ct)
     {
         State = await Onboarding.GetStateAsync(ct);
-        var key = Draft?.TemplateKey ?? (FirstRun ? TemplateCatalog.DefaultKey : State.Profile.TemplateKey);
-        Template = Catalog.Get(key);
+        Template = Onboarding.TemplateFor(State);
+        Progress = Onboarding.ProgressOf(State.Draft);
     }
 
-    /// <summary>Sends the owner back to an earlier step whose answers are missing, so a step is never shown without what it builds on.</summary>
+    /// <summary>Where a save goes next: the step <see cref="Goto"/> asked for, else the step after this one. A local path from a fixed list, never the posted value.</summary>
+    protected IActionResult Leave() => Redirect(WizardProgress.Steps[WizardProgress.ClampStep(Goto, NextStep) - 1].Path);
+
+    /// <summary>Sends the owner back to an earlier step whose answers are missing, so a step is never shown without what it builds on. Removed once every step is converted.</summary>
     protected IActionResult? RequireStep(int saved)
     {
         if (Draft is null || !Catalog.TryGet(Draft.TemplateKey, out _) || Draft.Step < saved)

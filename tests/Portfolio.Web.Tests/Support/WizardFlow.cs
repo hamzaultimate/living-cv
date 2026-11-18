@@ -46,6 +46,21 @@ public static class WizardFlow
     public static Task<HttpResponseMessage> PublishAsync(HttpClient client, Dictionary<string, string>? fields = null) =>
         PostAsync(client, Review + "?handler=Publish", fields ?? ReviewFields(), Review);
 
+    /// <summary>Posts a step's form the way the step indicator does: the step's own fields plus <c>goto</c>. The template step has no fields of its own; its form is the Jump handler.</summary>
+    public static Task<HttpResponseMessage> JumpAsync(HttpClient client, string page, int to, Dictionary<string, string>? fields = null)
+    {
+        var all = new Dictionary<string, string>(fields ?? []) { ["goto"] = to.ToString() };
+        return PostAsync(client, page == Template ? Template + "?handler=Jump" : page, all, page);
+    }
+
+    /// <summary>The value of every submit button tied to the step's form, in page order: the hidden default first, then the four steps, then the card's Continue when it has one.</summary>
+    public static IReadOnlyList<string> StepValues(string html) =>
+        Regex.Matches(html, @"<button type=""submit"" form=""wizard-form"" name=""goto"" value=""(\d)""").Select(m => m.Groups[1].Value).ToList();
+
+    /// <summary>The status words in the indicator, in step order.</summary>
+    public static IReadOnlyList<string> StepStates(string html) =>
+        Regex.Matches(html, @"<span class=""adm-step-state"">([^<]+)</span>").Select(m => m.Groups[1].Value).ToList();
+
     public static async Task<HttpResponseMessage> UploadPhotoAsync(HttpClient client, byte[] bytes, string fileName = "me.jpg", string contentType = "image/jpeg")
     {
         var token = await AdminApp.GetTokenAsync(client, Photo);
