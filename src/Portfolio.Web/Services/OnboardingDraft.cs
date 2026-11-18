@@ -52,6 +52,9 @@ public sealed class OnboardingDraft
 
     public string ToJson() => JsonSerializer.Serialize(this, Json);
 
+    /// <summary>A copy that can be changed without touching the original (the review page checks a draft with the address as shown).</summary>
+    public OnboardingDraft Clone() => (OnboardingDraft)MemberwiseClone();
+
     /// <summary>The draft stored on the profile, or null when there is none or it cannot be read (treated as no draft).</summary>
     public static OnboardingDraft? Parse(string? json)
     {
@@ -103,11 +106,54 @@ public class BasicsForm
         Location = ProfileForm.Line(Location), Summary = ProfileForm.Line(Summary),
     };
 
-    /// <summary>True when the stored values pass the same rules as the form (used before publishing, since a draft is data like any other).</summary>
-    public static bool IsComplete(OnboardingDraft d)
+    /// <summary>True when every one of the five basics is empty (nothing has been typed on the step yet).</summary>
+    public static bool AllEmpty(OnboardingDraft d) =>
+        new[] { d.OwnerName, d.JobTitle, d.Email, d.Location, d.Summary }.All(string.IsNullOrWhiteSpace);
+
+    /// <summary>The fields that would stop a publish, by lower-case name and in form order: a required one that is empty, an email that is not an address, or text that breaks a hard rule.
+    /// Empty for a complete draft. A draft is data like any other, so this is asked again before publishing.</summary>
+    public static IReadOnlyList<string> Missing(OnboardingDraft? d)
     {
-        var form = new BasicsForm { OwnerName = d.OwnerName, JobTitle = d.JobTitle, Email = d.Email, Location = d.Location, Summary = d.Summary };
-        return Validator.TryValidateObject(form, new ValidationContext(form), null, validateAllProperties: true);
+        var rules = PublishRules.From(d ?? new OnboardingDraft());
+        var results = new List<ValidationResult>();
+        Validator.TryValidateObject(rules, new ValidationContext(rules), results, validateAllProperties: true);
+        return results.SelectMany(r => r.MemberNames).Distinct().Select(Describe).ToList();
+    }
+
+    /// <summary>True when the stored values pass the publish rules.</summary>
+    public static bool IsComplete(OnboardingDraft d) => Missing(d).Count == 0;
+
+    private static string Describe(string member) => member switch
+    {
+        nameof(OwnerName) => "name",
+        nameof(JobTitle) => "professional title",
+        nameof(Email) => "email",
+        nameof(Location) => "location",
+        _ => "short summary",
+    };
+
+    /// <summary>The completeness rules, applied to what a draft holds. Kept apart from the form so a half-typed step can still be saved.</summary>
+    private sealed class PublishRules
+    {
+        [Required, StringLength(SiteProfile.MaxLength.OwnerName), NoMarkup]
+        public string? OwnerName { get; init; }
+
+        [Required, StringLength(SiteProfile.MaxLength.JobTitle), NoMarkup]
+        public string? JobTitle { get; init; }
+
+        [Required, StringLength(300), EmailAddress]
+        public string? Email { get; init; }
+
+        [StringLength(SiteProfile.MaxLength.Location), NoMarkup]
+        public string? Location { get; init; }
+
+        [Required, StringLength(SummaryMax)]
+        public string? Summary { get; init; }
+
+        public static PublishRules From(OnboardingDraft d) => new()
+        {
+            OwnerName = d.OwnerName, JobTitle = d.JobTitle, Email = d.Email, Location = d.Location, Summary = d.Summary,
+        };
     }
 }
 
