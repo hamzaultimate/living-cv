@@ -326,3 +326,6 @@ a.adm-btn { text-decoration: none; display: inline-block; }
 .adm-draft-saved { margin: 0 0 var(--adm-space-3); font-size: .85rem; color: var(--adm-muted); }
 .adm-wizard-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--adm-space-3); margin-top: var(--adm-space-5); padding-top: var(--adm-space-4); border-top: 1px solid var(--adm-border); }
 .adm-wizard-bar .adm-wizard-exit { margin-top: 0; }
+.adm-photo-step { display: grid; grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); gap: var(--adm-space-5); align-items: start; }
+.adm-photo-step h2 { margin-top: 0; }
+@media (max-width: 40rem) { .adm-photo-step { grid-template-columns: 1fr; } }

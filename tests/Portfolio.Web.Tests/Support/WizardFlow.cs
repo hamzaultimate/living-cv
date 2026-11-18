@@ -71,6 +71,20 @@ public static class WizardFlow
         return await client.PostAsync(Photo + "?handler=Upload", content);
     }
 
+    /// <summary>Posts the photo step's form the way the indicator does: no handler, a <c>goto</c> and, optionally, a chosen file.</summary>
+    public static async Task<HttpResponseMessage> JumpFromPhotoAsync(HttpClient client, int to, byte[]? file = null, string fileName = "me.jpg")
+    {
+        var token = await AdminApp.GetTokenAsync(client, Photo);
+        var content = new MultipartFormDataContent { { new StringContent(token), "__RequestVerificationToken" }, { new StringContent(to.ToString()), "goto" } };
+        if (file is not null)
+        {
+            var part = new ByteArrayContent(file);
+            part.Headers.ContentType = MediaTypeHeaderValue.Parse("image/jpeg");
+            content.Add(part, "Photo", fileName);
+        }
+        return await client.PostAsync(Photo, content);
+    }
+
     /// <summary>Runs /setup, signs in the way the redirect says and returns the client sitting on the wizard.</summary>
     public static async Task<HttpClient> FirstRunClientAsync(AdminApp app)
     {
