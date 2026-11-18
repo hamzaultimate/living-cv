@@ -122,7 +122,7 @@ One shared partial, `_TemplatePicker`, rendered inside a card:
 - Centre bottom: details strip. Pages included, what a piece of work is called, whether sample content is offered, and the template's "before you publish" guidance.
 - Below 40rem the names box moves above the preview inside a `<details>` whose summary shows the selected name.
 
-The static thumbnail endpoint is kept and used only as the preview's fallback content.
+The static thumbnail endpoint is kept. The picker offers it as a 'Preview not loading? See a static picture of the home page' link under the preview, for templates that ship a thumbnail (an image inside an iframe is never rendered by browsers).
 
 ### 5.2 Two hosts
 
@@ -215,7 +215,7 @@ Shell (PR A)
 
 Template picker (PR B)
 
-10. On both hosts, choosing a name shows that template's live preview and details in the centre without scrolling the page at 1280 by 800.
+10. On both hosts, choosing a name shows that template's name, layout, live preview, page tabs, width links and action button in the centre without scrolling the page at 1280 by 800; the details strip under the preview is reached by scrolling.
 11. Every catalog template can be selected and previewed on both hosts.
 12. An unknown `show` value falls back to the current template.
 13. `/admin/template` still shows the hidden, reappearing and kept-on notes, and disables the switch with a reason when it would empty the menu.

@@ -84,10 +84,7 @@
 @media (max-width: 40rem) { .adm-row, .adm-row-2 { grid-template-columns: 1fr; } }
 .adm-field textarea.adm-tall { min-height: 12rem; }
 
-/* Template switcher */
-.adm-templates { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); margin-bottom: 1.25rem; }
-.adm-templates .adm-card { margin-bottom: 0; }
-.adm-template[aria-current="true"] { border-color: var(--adm-accent); box-shadow: 0 0 0 1px var(--adm-accent); }
+/* Pills, callouts, preview tabs and frame (the template picker and the wizard review step) */
 .adm-pill { display: inline-block; margin-left: .4rem; padding: .05rem .5rem; font-size: .75rem; font-weight: 600; border-radius: 999px; background: var(--adm-ok-bg); color: var(--adm-ok-text); vertical-align: middle; }
 .adm-callout { padding: .6rem .8rem; border-left: 4px solid var(--adm-accent); background: var(--adm-bg); border-radius: .25rem; }
 .adm-tabs { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin: .75rem 0; }
@@ -96,6 +93,39 @@
 .adm-tabs a[aria-current="page"] { border-bottom-color: var(--adm-accent); }
 .adm-preview { display: block; width: 100%; height: 70vh; min-height: 24rem; border: 1px solid var(--adm-border); border-radius: .35rem; background: #fff; }
 .adm-preview-mobile { width: 390px; max-width: 100%; margin: 0 auto; }
+
+/* Template picker (admin/template and setup wizard step 1): names box on the right, live preview and details in the centre.
+   The names box comes first in the markup (so keyboard order is choose, then look) and is placed on the right by the grid. */
+.adm-picker { display: grid; grid-template-columns: minmax(0, 1fr) 16rem; grid-template-areas: "detail names"; gap: var(--adm-space-5); align-items: start; padding: var(--adm-space-4); }
+.adm-picker-names { grid-area: names; position: sticky; top: var(--adm-space-3); max-height: calc(100vh - 18rem); overflow-y: auto; padding: var(--adm-space-3); border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm); background: var(--adm-bg); }
+.adm-picker-names summary { cursor: pointer; font-weight: 600; }
+.adm-picker-names ul { list-style: none; margin: 0 0 var(--adm-space-3); padding: 0; }
+.adm-picker-names li { margin: 0; }
+.adm-picker-names li a { display: block; padding: var(--adm-space-1) var(--adm-space-2); border-radius: var(--adm-radius-sm); text-decoration: none; color: inherit; }
+.adm-picker-names li a:hover { background: var(--adm-surface); }
+.adm-picker-names li a[aria-current="true"] { background: var(--adm-surface); box-shadow: inset 3px 0 0 var(--adm-accent); font-weight: 600; }
+.adm-picker-names .adm-group-heading { margin: var(--adm-space-3) 0 var(--adm-space-1); font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: var(--adm-muted); }
+.adm-picker-detail { grid-area: detail; min-width: 0; }
+.adm-picker-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--adm-space-3); }
+.adm-picker-head h2 { margin: 0; }
+.adm-picker-head .adm-hint { margin-top: 0; }
+.adm-picker-action { display: flex; flex-wrap: wrap; align-items: center; gap: var(--adm-space-2) var(--adm-space-3); margin: 0; }
+.adm-picker-action .adm-hint { margin: 0; }
+.adm-picker .adm-preview { height: clamp(16rem, calc(100vh - 32rem), 44rem); min-height: 0; }
+.adm-picker-frame:focus-visible { outline: 3px solid var(--adm-accent); outline-offset: 2px; }
+.adm-picker-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0 var(--adm-space-5); margin-top: var(--adm-space-3); }
+.adm-picker-facts p { margin: var(--adm-space-1) 0; }
+@media (max-width: 40rem) {
+  .adm-picker { grid-template-columns: 1fr; grid-template-areas: "names" "detail"; }
+  .adm-picker-names { position: static; max-height: none; }
+}
+/* The names box is a <details>. Wide screens keep it open beside the preview and hide its summary; a browser without ::details-content keeps the summary, so the list is one click away. */
+@media (min-width: 40.01rem) {
+  @supports selector(::details-content) {
+    .adm-picker-names::details-content { content-visibility: visible; display: block; }
+    .adm-picker-names summary { display: none; }
+  }
+}
 
 /* Onboarding wizard */
 .adm-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
@@ -109,15 +139,9 @@
 .adm-step-count { display: block; font-size: .85rem; font-weight: 600; color: var(--adm-muted); }
 .adm-flash[tabindex="-1"]:focus { outline: 3px solid var(--adm-accent); outline-offset: 2px; }
 .adm-group-heading { margin: .5rem 0; }
-.adm-pick { display: flex; flex-direction: column; gap: .5rem; }
-.adm-pick:focus-within { border-color: var(--adm-accent); box-shadow: 0 0 0 1px var(--adm-accent); }
-.adm-pick-head { display: flex; align-items: center; gap: .6rem; }
-.adm-pick-head label, .adm-choice label { font-weight: 600; margin: 0; }
-.adm-pick input[type="radio"], .adm-choice input[type="radio"] { width: 1.25rem; height: 1.25rem; accent-color: var(--adm-accent); flex: none; }
-.adm-pick input[type="radio"]:focus-visible, .adm-choice input[type="radio"]:focus-visible { outline: 3px solid var(--adm-accent); outline-offset: 2px; }
-.adm-pick p { margin: .25rem 0; }
-.adm-thumb { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; border: 1px solid var(--adm-border); border-radius: .35rem; background: var(--adm-bg); }
-.adm-thumb-fallback { display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.25rem; color: var(--adm-muted); }
+.adm-choice label { font-weight: 600; margin: 0; }
+.adm-choice input[type="radio"] { width: 1.25rem; height: 1.25rem; accent-color: var(--adm-accent); flex: none; }
+.adm-choice input[type="radio"]:focus-visible { outline: 3px solid var(--adm-accent); outline-offset: 2px; }
 .adm-included { font-size: .9rem; }
 .adm-optional { font-weight: 400; color: var(--adm-muted); }
 .adm-choices { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; margin-bottom: 1rem; }

@@ -61,9 +61,9 @@ public class ArchetypeTemplateFlowTests
         using var app = new AdminApp();
         var owner = await WizardFlow.FirstRunClientAsync(app);
 
-        var step = Plain(await owner.GetStringAsync(WizardFlow.Template));
-        Assert.Contains($">{template.Profession}</h2>", step);
-        Assert.Contains($"src=\"/admin/welcome/thumb/{key}\"", step);
+        var step = Plain(await owner.GetStringAsync($"{WizardFlow.Template}?show={key}"));
+        Assert.Contains($">{template.Profession}</h3>", step);
+        Assert.Contains($"href=\"/admin/welcome/thumb/{key}\"", step);
         Assert.Contains($"value=\"{key}\"", step);
         Assert.Contains(template.Name, step);
         var thumb = await owner.GetAsync($"/admin/welcome/thumb/{key}");
