@@ -81,6 +81,14 @@ public static class WizardFlow
 
     public static async Task<OnboardingDraft?> DraftAsync(AdminApp app) => OnboardingDraft.Parse((await ProfileAsync(app)).OnboardingDraft);
 
+    /// <summary>The stored draft, or null when there is no profile row or no draft (a read that cannot fail on a site nothing has written to yet).</summary>
+    public static async Task<OnboardingDraft?> DraftOrNullAsync(AdminApp app)
+    {
+        using var db = app.CreateDbContext();
+        var json = await db.SiteProfiles.AsNoTracking().Select(p => p.OnboardingDraft).SingleOrDefaultAsync();
+        return OnboardingDraft.Parse(json);
+    }
+
     /// <summary>The columns the public site reads, as one string, to prove a step left them alone.</summary>
     public static string PublicFingerprint(SiteProfile p) =>
         string.Join("|", p.TemplateKey, p.OwnerName, p.BrandName, p.Role, p.JobTitle, p.Url, p.Summary, p.Location, p.Email, p.PhotoUrl, p.AccentColor,
