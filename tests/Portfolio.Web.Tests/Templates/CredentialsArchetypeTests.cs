@@ -16,7 +16,7 @@ namespace Portfolio.Web.Tests.Templates;
 public class CredentialsArchetypeTests
 {
     /// <summary>Every template on the credentials archetype.</summary>
-    public static readonly string[] Keys = ["healthcare"];
+    public static readonly string[] Keys = ["healthcare", "education"];
 
     public static TheoryData<string> KeyData => new(Keys);
 
@@ -69,6 +69,31 @@ public class CredentialsArchetypeTests
             LongTitle: "Advanced Clinical Practitioner in Paediatric Intensive Care and Retrieval Medicine",
             GuidancePhrase: "Never publish patient-identifiable information",
             Foreign: null),
+        ["education"] = new Wording(
+            Home: ["Teaching qualifications &amp; registration", "Teaching experience", "Teaching skills", "Curriculum &amp; initiatives", "References", "Sample profile (fictional)"],
+            About: ["Careful planning and inclusive classrooms"],
+            Experience: ["Teaching experience", "where I have taught"],
+            Projects: ["Curriculum &amp; initiatives", "Read initiative"],
+            DetailSlug: "reading-for-pleasure-programme",
+            Detail: ["Initiative", "Methods &amp; resources", "Aim", "Approach"],
+            Skills: ["Teaching skills", "Pastoral and inclusion", "Technology"],
+            Certifications: ["Qualifications, registration &amp; training", "Current", "Qualifications"],
+            Cv: ["Teaching experience", "Qualifications &amp; registration", "Curriculum &amp; initiatives"],
+            Contact: ["Please do not send pupil information", "teaching roles, mentoring or collaboration"],
+            NavLabels: [">about<", ">qualifications<", ">experience<", ">skills<", ">initiatives<", ">cv<"],
+            FooterNote: "contains no pupil information",
+            MissingBackLink: "← Back to curriculum &amp; initiatives",
+            EmptyPages:
+            [
+                ("/projects", "No initiatives yet"),
+                ("/experience", "No roles have been added yet."),
+                ("/skills", "No skills have been added yet."),
+                ("/certifications", "No qualifications yet"),
+            ],
+            EmptyHome: "Initiatives coming soon",
+            LongTitle: "Advanced Skills Practitioner in Inclusive Education and Learning Support",
+            GuidancePhrase: "Never publish pupil-identifiable information",
+            Foreign: new Regex(@"(?i)clinical|patients?|nurs(?:e|es|ing)|healthcare|hospital|wards?", RegexOptions.Compiled)),
     };
 
     internal static string TemplatesDir => Path.Combine(AppContext.BaseDirectory, "Templates");
@@ -257,5 +282,174 @@ public class CredentialsArchetypeTests
         var home = await GetAsync(client, "/");
         Assert.Contains(w.EmptyHome, home.Html);
         Assert.DoesNotMatch(DemoSite.SoftwareWording, DemoSite.WithoutScripts(home.Html));
+    }
+
+    // ---------------------------------------------------------------- the manifest, theme, starter and thumbnail
+
+    private static string ThemeCss(string key) => File.ReadAllText(Path.Combine(TemplateDirs.Web, "Styles", "themes", Definition(key).Theme.Default! + ".css"));
+
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public void ATemplateOnTheCredentialsArchetype_HasItsThemeStarterAndThumbnail(string key)
+    {
+        var catalog = new TemplateCatalog(TemplatesDir);
+        var template = catalog.Get(key);
+
+        Assert.Equal(key, template.Key);
+        Assert.Equal(Archetypes.Credentials, template.Archetype);
+        Assert.Contains(Archetypes.Credentials, Archetypes.Implemented);
+        Assert.True(template.Sensitive, $"{key} must be sensitive: its content can identify people other than the owner");
+        Assert.False(string.IsNullOrWhiteSpace(template.Guidance));
+        Assert.True(template.Seo.CredentialsJsonLd, $"{key} must publish held qualifications in its structured data");
+        Assert.NotNull(catalog.GetPreviewImagePath(key));
+        Assert.NotNull(catalog.GetStarter(key));
+        Assert.Empty(TemplateValidator.Validate(template, key));
+
+        var css = ThemeCss(key);
+        var theme = template.Theme.Default!;
+        Assert.Contains($":root[data-template=\"{theme}\"][data-theme=\"light\"]", css);
+        Assert.Contains($":root[data-template=\"{theme}\"][data-theme=\"dark\"]", css);
+        foreach (var token in new[] { "--c-bg", "--c-surface", "--c-surface-2", "--c-border", "--c-text", "--c-muted", "--c-accent", "--c-accent-strong" })
+            Assert.Equal(2, Regex.Matches(css, Regex.Escape(token) + ":").Count); // once for dark, once for light
+    }
+
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public void EveryCredentialsPreset_HidesTheTalksYouTubeField_BecauseNoLayoutPlaysVideoForIt(string key)
+    {
+        Assert.True(Definition(key).Editor.Talks.Fields.TryGetValue("youtubeId", out var field), $"{key} does not mention the youtubeId field");
+        Assert.True(field!.Hidden, $"{key} must hide the YouTube field");
+    }
+
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public void TheStarterContent_IsFictional_UsesOnlyBundledPictures_AndNamesNoPerson(string key)
+    {
+        var starter = new TemplateCatalog(TemplatesDir).GetStarter(key)!;
+
+        Assert.True(starter.Fictional);
+        Assert.Contains("fictional", starter.Profile.Summary, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("example.org", starter.Profile.Email);
+        Assert.NotEmpty(starter.Projects);
+        Assert.Contains(starter.Projects, p => p.Featured);
+        Assert.All(starter.Projects, p => Assert.Contains("(sample)", p.Title));
+        Assert.All(starter.Experiences, e => Assert.Contains("fictional", e.Company, StringComparison.OrdinalIgnoreCase));
+        foreach (var name in starter.Experiences.Select(e => e.Company.Replace("(fictional)", "", StringComparison.OrdinalIgnoreCase).Trim())
+                     .Concat(starter.Projects.Select(p => (p.Org ?? "").Replace("(fictional)", "", StringComparison.OrdinalIgnoreCase).Trim())))
+            ResultsArchetypeTests.AssertNoLegalFormSuffix(name);
+        Assert.All(starter.Projects, p => Assert.All(p.Links, l => Assert.StartsWith("https://example.org/", l.Url)));
+
+        // Pictures: bundled under the template's own folder, described, small, and nothing that needs a font, a script or a download.
+        var images = new List<string>();
+        foreach (var p in starter.Projects.Where(p => !string.IsNullOrWhiteSpace(p.HeroImage)))
+        {
+            Assert.False(string.IsNullOrWhiteSpace(p.HeroImageAlt), $"{p.Slug} cover has no description");
+            images.Add(p.HeroImage!);
+            foreach (var shot in p.Screenshots)
+            {
+                Assert.False(string.IsNullOrWhiteSpace(shot.Caption), $"{p.Slug} has a picture without a description");
+                images.Add(shot.Url);
+            }
+        }
+        foreach (var url in images)
+        {
+            Assert.StartsWith($"/img/starter/{key}/", url);
+            var file = Path.Combine(TemplateDirs.Web, "wwwroot", url.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+            Assert.True(File.Exists(file), $"{url} is not bundled under wwwroot");
+            Assert.True(new FileInfo(file).Length < 60 * 1024, $"{url} is larger than a starter placeholder should be");
+            Assert.DoesNotMatch(@"(?i)<script|<text|<image|https?://(?!www\.w3\.org)", File.ReadAllText(file));
+        }
+        Assert.Equal(images.Count, images.Distinct().Count());
+
+        // No entry names a pupil, student or child: a heuristic for a capitalised name straight after one of those words.
+        var text = File.ReadAllText(Path.Combine(TemplatesDir, key, "starter.json"));
+        Assert.DoesNotMatch(@"\b(?:[Pp]upil|[Ss]tudent|[Cc]hild|[Ll]earner)s?\s+(?:named\s+)?[A-Z][a-z]{2,}\b", text);
+    }
+
+    // ---------------------------------------------------------------- structured data and editor guidance
+
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task OnlyHeldQualifications_AreListedAsCredentials_InThePersonMarkup(string key)
+    {
+        var starter = new TemplateCatalog(TemplatesDir).GetStarter(key)!;
+        using var app = new AdminApp();
+        await DemoSite.ApplyStarterAsync(app, key);
+
+        var home = await app.NewClient().GetStringAsync("/");
+
+        Assert.Contains("hasCredential", home);
+        var markup = home[home.IndexOf("hasCredential", StringComparison.Ordinal)..];
+        markup = markup[..markup.IndexOf("</script>", StringComparison.Ordinal)];
+        var held = starter.Certifications.Where(c => c.Status == CertificationStatus.Earned).ToList();
+        var notHeld = starter.Certifications.Where(c => c.Status != CertificationStatus.Earned).ToList();
+        Assert.NotEmpty(held);
+        Assert.NotEmpty(notHeld); // the starter must have a course in progress or planned, or this proves nothing
+        foreach (var c in held) Assert.Contains(System.Text.Json.JsonEncodedText.Encode(c.Name).ToString(), markup);
+        foreach (var c in notHeld) Assert.DoesNotContain(System.Text.Json.JsonEncodedText.Encode(c.Name).ToString(), markup);
+    }
+
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task TheGuidance_IsShownOnEveryEditor_OfASensitiveCredentialsTemplate(string key)
+    {
+        var phrase = Wordings[key].GuidancePhrase;
+        using var app = new AdminApp();
+        var owner = await ContentFlow.BlankSiteAsync(app, key);
+        await ContentFlow.SeedRowsAsync(app);
+
+        foreach (var path in new[]
+                 {
+                     "/admin/content", ContentFlow.Experience, ContentFlow.Experience + "/edit", ContentFlow.Skills, ContentFlow.Skills + "/edit",
+                     ContentFlow.Projects, ContentFlow.Projects + "/edit", ContentFlow.Certifications, ContentFlow.Certifications + "/edit",
+                     ContentFlow.Talks, ContentFlow.Talks + "/edit", ContentFlow.Testimonials, ContentFlow.Testimonials + "/edit",
+                     ContentFlow.Blog, ContentFlow.Blog + "/edit",
+                 })
+        {
+            var html = WebUtility.HtmlDecode(await owner.GetStringAsync(path));
+            Assert.Contains(phrase, html);
+            Assert.Contains("Before you publish", html);
+        }
+    }
+
+    // ---------------------------------------------------------------- Education
+
+    [Fact]
+    public void Education_ListsItsSections_QualificationsFirst_WithArticlesAndWorkshopsOff()
+    {
+        var template = Definition("education");
+
+        Assert.Equal("School teacher", template.Profession);
+        Assert.Equal(new[] { "about", "certifications", "experience", "skills", "projects", "blog", "talks", "testimonials", "contact" }, template.Sections.Select(s => s.Key));
+        Assert.Equal(new[] { "blog", "talks" }, template.Sections.Where(s => !s.Enabled).Select(s => s.Key));
+        Assert.Equal("qualifications", template.Sections.Single(s => s.Key == "certifications").ShortLabel);
+        Assert.Equal("Initiative", template.Sections.Single(s => s.Key == "projects").ItemLabel);
+        Assert.Equal(new[] { "Teaching and learning", "Curriculum and assessment", "Pastoral and inclusion", "Technology", "Languages" }, template.SkillGroups);
+        Assert.Contains("Never publish pupil-identifiable information", template.Guidance);
+    }
+
+    [Fact]
+    public async Task Education_MenuFollowsTheSectionOrder()
+    {
+        using var app = new AdminApp();
+        await DemoSite.ApplyStarterAsync(app, "education");
+
+        var nav = (await GetAsync(app.NewClient(), "/")).Html;
+
+        var positions = new[] { ">about<", ">qualifications<", ">experience<", ">skills<", ">initiatives<", ">cv<" }.Select(l => nav.IndexOf(l, StringComparison.Ordinal)).ToList();
+        Assert.DoesNotContain(-1, positions);
+        Assert.Equal(positions.OrderBy(p => p), positions);
+    }
+
+    [Fact]
+    public void Education_UsesItsOwnDistinctTheme_NotHealthcares()
+    {
+        var education = Definition("education");
+        var healthcare = Definition("healthcare");
+
+        Assert.NotEqual(healthcare.Theme.Default, education.Theme.Default);
+        Assert.NotEqual(healthcare.Theme.Accents.Select(a => a.Key), education.Theme.Accents.Select(a => a.Key));
+        Assert.Equal(new[] { "green", "terracotta", "blue", "gold" }, education.Theme.Accents.Select(a => a.Key));
+        Assert.NotEqual(healthcare.Theme.ThemeColor, education.Theme.ThemeColor);
     }
 }
