@@ -1,0 +1,357 @@
+// Fictional sample content for the Product & Project Management template. Every person, employer, client, release and figure below is invented.
+// The pictures are simple generated placeholders bundled under wwwroot/img/starter/product-management.
+{
+  "fictional": true,
+  "profile": {
+    "ownerName": "Tomasz Rhee",
+    "brandName": "Tomasz",
+    "role": "Product Manager · Discovery, delivery and outcomes (sample profile)",
+    "jobTitle": "Product Manager",
+    "summary": "Sample profile (fictional). Product manager with eight years of shipping products, focused on finding the real customer problem, aligning the teams around it and measuring what changed.",
+    "knowsAbout": [
+      "Product discovery",
+      "Roadmapping",
+      "Delivery planning",
+      "Stakeholder alignment",
+      "Product metrics",
+      "Programme management"
+    ],
+    "hero": {
+      "eyebrow": "Product Management · Discovery, delivery and outcomes",
+      "headline": "Real problems, clear goals,",
+      "headlineAccent": "outcomes that can be measured.",
+      "lede": "Sample profile (fictional). Eight years of taking products from a vague problem to a shipped result, with the teams aligned along the way and the numbers to show what changed."
+    },
+    "metrics": [
+      {
+        "value": "8",
+        "unit": "yrs",
+        "label": "Shipping products"
+      },
+      {
+        "value": "11",
+        "unit": "",
+        "label": "Releases led"
+      },
+      {
+        "value": "+22",
+        "unit": "%",
+        "label": "Activation after the onboarding redesign"
+      },
+      {
+        "value": "4",
+        "unit": "",
+        "label": "Teams aligned per release"
+      }
+    ],
+    "about": {
+      "headline": "Good products start with a well-understood problem.",
+      "paragraphs": [
+        "Sample profile (fictional). I am a product manager who spends the first weeks listening: to customers, to support, to the people who build the thing. Once the problem is clear, I write it down so every team can point at the same goal.",
+        "I began in project delivery, moved into product and now lead releases that cross several teams. I have rebuilt an onboarding flow, run a billing migration without a single missed invoice run and reset a roadmap that had stopped being believed.",
+        "This page is sample content for the Product & Project Management template. Replace it with your own story, and only share figures, employer names and roadmaps you are allowed to."
+      ],
+      "valueProps": [
+        {
+          "title": "Problems before solutions",
+          "body": "A written problem statement and a goal before any feature is planned."
+        },
+        {
+          "title": "Honest roadmaps",
+          "body": "Now, next and later, with the reasons for each and what would change them."
+        },
+        {
+          "title": "Teams that stay aligned",
+          "body": "Short updates, clear owners and decisions written down where everyone can find them."
+        },
+        {
+          "title": "Outcomes over output",
+          "body": "Every release has a measure agreed in advance and reviewed after launch."
+        }
+      ],
+      "currentlyNote": "Leading the growth team at a small subscription business and studying for a delivery certificate.",
+      "focus": [
+        "Product discovery",
+        "Roadmapping",
+        "Release delivery",
+        "Product metrics"
+      ]
+    },
+    "email": "tomasz@example.org",
+    "linkedIn": "https://www.linkedin.com/in/example-tomasz-rhee/",
+    "templateKey": "product-management"
+  },
+  "experiences": [
+    {
+      "company": "Fenwick Works (fictional)",
+      "title": "Senior Product Manager",
+      "start": "2021",
+      "end": null,
+      "current": true,
+      "summary": "Lead the growth and billing teams of a sample subscription business, from discovery through launch and the review that follows.",
+      "highlights": [
+        "Own the roadmap and the release plan for two product teams",
+        "Led the onboarding redesign and the billing migration",
+        "Mentored two associate product managers into full roles"
+      ],
+      "tech": [
+        "Roadmapping",
+        "Discovery interviews",
+        "Release planning",
+        "Metrics reviews"
+      ],
+      "sortOrder": 1
+    },
+    {
+      "company": "Aldermere Trust (fictional)",
+      "title": "Project Manager",
+      "start": "2016",
+      "end": "2021",
+      "current": false,
+      "summary": "Delivered systems and service projects for a sample membership organisation, from the business case to the handover.",
+      "highlights": [
+        "Delivered nine projects on the agreed scope and date",
+        "Introduced a single weekly status note for all stakeholders",
+        "Ran the move of the support team to a shared request portal"
+      ],
+      "tech": [
+        "Project planning",
+        "Risk register",
+        "Stakeholder reporting"
+      ],
+      "sortOrder": 2
+    }
+  ],
+  "skills": [
+    {
+      "name": "Customer interviews",
+      "group": "Discovery",
+      "sortOrder": 1
+    },
+    {
+      "name": "Problem framing",
+      "group": "Discovery",
+      "sortOrder": 2
+    },
+    {
+      "name": "Roadmapping",
+      "group": "Delivery",
+      "sortOrder": 3
+    },
+    {
+      "name": "Release planning",
+      "group": "Delivery",
+      "sortOrder": 4
+    },
+    {
+      "name": "Risk management",
+      "group": "Delivery",
+      "sortOrder": 5
+    },
+    {
+      "name": "Stakeholder updates",
+      "group": "Stakeholders",
+      "sortOrder": 6
+    },
+    {
+      "name": "Negotiating scope",
+      "group": "Stakeholders",
+      "sortOrder": 7
+    },
+    {
+      "name": "Success measures",
+      "group": "Metrics",
+      "sortOrder": 8
+    },
+    {
+      "name": "Funnel analysis",
+      "group": "Metrics",
+      "sortOrder": 9
+    },
+    {
+      "name": "Planning and tracking tools",
+      "group": "Tools",
+      "sortOrder": 10
+    }
+  ],
+  "projects": [
+    {
+      "title": "Onboarding redesign (sample)",
+      "slug": "onboarding-redesign",
+      "role": "Product manager",
+      "org": "Halvorne",
+      "period": "2024",
+      "summary": "Rebuilding the first-week experience of a sample subscription product so more new customers reach their first success. Sample engagement (fictional).",
+      "category": "Growth",
+      "problem": "Four in ten new customers left before finishing setup, and nobody could say at which step they were lost.",
+      "approach": "Interviewed recent customers, mapped the setup steps, removed two that nobody needed, rewrote the rest in plain words and released the new flow to a tenth of customers before everyone.",
+      "impact": [
+        "22% more customers active after the first week",
+        "Setup shortened from nine steps to five"
+      ],
+      "tech": [
+        "Customer interviews",
+        "Funnel analysis",
+        "Staged release"
+      ],
+      "heroImage": "/img/starter/product-management/onboarding-redesign.svg",
+      "heroImageAlt": "Abstract illustration of a stepped funnel narrowing to a highlighted bar, beside two small cards.",
+      "screenshots": [
+        {
+          "url": "/img/starter/product-management/onboarding-redesign-1.svg",
+          "caption": "The redesign work on a board, from discovery to release"
+        },
+        {
+          "url": "/img/starter/product-management/onboarding-redesign-2.svg",
+          "caption": "Customers reaching each setup step, before and after"
+        }
+      ],
+      "links": [
+        {
+          "label": "Onboarding redesign summary",
+          "url": "https://example.org/onboarding-redesign-summary"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "title": "Billing migration programme (sample)",
+      "slug": "billing-migration",
+      "role": "Programme lead",
+      "org": "Brindlecott",
+      "period": "2023",
+      "summary": "Moving a sample business to a new billing platform across four teams without disturbing a single invoice run. Sample engagement (fictional).",
+      "category": "Delivery",
+      "problem": "The old billing system could not support new plans, and a rushed move risked wrong invoices for every customer.",
+      "approach": "Split the move into five stages with an owner for each, ran two billing cycles in parallel, agreed the go and no-go checks with finance and held a short daily check-in through the cut-over.",
+      "impact": [
+        "0 missed or incorrect invoice runs through the move",
+        "New plans available three weeks after cut-over"
+      ],
+      "tech": [
+        "Programme plan",
+        "Parallel run",
+        "Go and no-go checklist"
+      ],
+      "heroImage": "/img/starter/product-management/billing-migration.svg",
+      "heroImageAlt": "Abstract illustration of a timeline with milestone dots above rows of staged horizontal bars.",
+      "screenshots": [
+        {
+          "url": "/img/starter/product-management/billing-migration-1.svg",
+          "caption": "The five stages on one plan, with the parallel run highlighted"
+        }
+      ],
+      "links": [
+        {
+          "label": "Migration plan overview",
+          "url": "https://example.org/billing-migration-overview"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 2
+    },
+    {
+      "title": "Roadmap reset (sample)",
+      "slug": "roadmap-reset",
+      "role": "Product manager",
+      "org": "Wenlowe",
+      "period": "2022",
+      "summary": "Replacing a long feature list with a now, next and later roadmap for a sample platform team. Sample engagement (fictional).",
+      "category": "Strategy",
+      "problem": "The roadmap had forty items and no order, so every team assumed their own request was next.",
+      "approach": "Grouped requests by the customer problem behind them, agreed three goals with leadership, ranked the work against those goals and published the reasoning with each item.",
+      "impact": [
+        "Forty items reduced to nine, each tied to a goal",
+        "Quarterly planning shortened from three weeks to one"
+      ],
+      "tech": [
+        "Goal setting",
+        "Prioritisation",
+        "Roadmap review"
+      ],
+      "heroImage": "/img/starter/product-management/roadmap-reset.svg",
+      "heroImageAlt": "Abstract illustration of three columns of cards, the first column highlighted.",
+      "links": [
+        {
+          "label": "Roadmap approach",
+          "url": "https://example.org/roadmap-reset-approach"
+        }
+      ],
+      "featured": true,
+      "sortOrder": 3
+    },
+    {
+      "title": "Self-service support portal (sample)",
+      "slug": "support-portal",
+      "role": "Project manager",
+      "org": "Kestrelbay",
+      "period": "2020",
+      "summary": "Giving members a searchable help portal so common questions no longer need a conversation. Sample engagement (fictional).",
+      "category": "Platform",
+      "problem": "The support team answered the same twenty questions all week, and members waited days for simple answers.",
+      "approach": "Analysed a quarter of requests, wrote answers for the most common, added search and a clear route to a person, then reviewed the unanswered searches every month.",
+      "impact": [
+        "35% fewer repeat questions reaching the team",
+        "Median reply time cut from two days to four hours"
+      ],
+      "tech": [
+        "Request analysis",
+        "Content plan",
+        "Monthly review"
+      ],
+      "heroImage": "/img/starter/product-management/support-portal.svg",
+      "heroImageAlt": "Abstract illustration of a search bar above a grid of six small cards.",
+      "links": [
+        {
+          "label": "Portal project summary",
+          "url": "https://example.org/support-portal-summary"
+        }
+      ],
+      "featured": false,
+      "sortOrder": 4
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Certified Product Manager (sample)",
+      "issuer": "Example Delivery Institute",
+      "status": "Earned",
+      "date": "2019",
+      "category": "Certification",
+      "sortOrder": 1
+    },
+    {
+      "name": "Delivery Practitioner Certificate (sample)",
+      "issuer": "Example Delivery Institute",
+      "status": "InProgress",
+      "date": "2026",
+      "category": "Certification",
+      "sortOrder": 2
+    },
+    {
+      "name": "Product Analytics course (sample)",
+      "issuer": "Example Learning Academy",
+      "status": "Planned",
+      "date": "2027",
+      "category": "Course",
+      "sortOrder": 3
+    }
+  ],
+  "testimonials": [
+    {
+      "quote": "Sample reference (fictional). Tomasz made the goal so clear that four teams stopped arguing about the plan and started building it.",
+      "author": "Sample Director",
+      "authorTitle": "Director of Engineering, Fenwick Works",
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "quote": "Sample reference (fictional). Calm through a risky migration, honest about what was not working and always quick to write the decision down.",
+      "author": "Sample Colleague",
+      "authorTitle": "Head of Finance, Aldermere Trust",
+      "featured": true,
+      "sortOrder": 2
+    }
+  ]
+}
