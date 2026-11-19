@@ -1,0 +1,185 @@
+// Fictional sample content for the Education template. Every person, school, awarding body and
+// qualification below is invented. Nothing here describes a real person, school or pupil.
+{
+  "fictional": true,
+  "profile": {
+    "ownerName": "Taylor Ashdown",
+    "brandName": "Taylor",
+    "role": "Primary School Teacher · Upper primary (sample profile)",
+    "jobTitle": "Primary School Teacher",
+    "summary": "Sample profile (fictional). Primary school teacher with nine years across upper primary classes, experienced in curriculum planning, inclusive teaching, assessment and mentoring student teachers.",
+    "knowsAbout": ["Primary education", "Curriculum planning", "Inclusive teaching", "Formative assessment", "Mentoring student teachers"],
+    "hero": {
+      "eyebrow": "Primary School Teacher · Upper primary",
+      "headline": "Well-planned lessons",
+      "headlineAccent": "where every learner can succeed.",
+      "lede": "Sample profile (fictional). Nine years in upper primary classrooms: careful planning, clear feedback and a calm, inclusive approach."
+    },
+    "metrics": [
+      { "value": "9", "unit": "years", "label": "teaching" },
+      { "value": "3", "unit": "", "label": "schools" },
+      { "value": "2", "unit": "", "label": "curriculum initiatives led" },
+      { "value": "40+", "unit": "hours", "label": "mentoring student teachers" }
+    ],
+    "about": {
+      "headline": "Careful planning and inclusive classrooms, one lesson at a time.",
+      "paragraphs": [
+        "Sample profile (fictional). I am a primary school teacher working with upper primary classes. My practice is built on careful planning, clear and kind feedback, and classrooms where every learner can take part.",
+        "I enjoy sharing what works. I have supported student teachers through their placements and led two small curriculum initiatives, one on reading for pleasure and one on mathematics mastery.",
+        "This page is sample content for the Education template. Replace it with your own details, and never add anything that could identify a pupil."
+      ],
+      "valueProps": [
+        { "title": "Inclusive by design", "body": "Lessons planned so that every learner can access the learning and be challenged by it." },
+        { "title": "Clear feedback", "body": "Short, specific next steps that learners understand and act on." },
+        { "title": "Sharing practice", "body": "Mentoring student teachers and sharing planning with colleagues." },
+        { "title": "Working with families", "body": "Open, respectful communication that keeps families informed." }
+      ],
+      "currentlyNote": "Studying for a postgraduate certificate in inclusive education while mentoring two student teachers.",
+      "focus": ["Inclusive teaching", "Reading and writing", "Mathematics mastery", "Mentoring student teachers"]
+    },
+    "email": "taylor.sample@example.org",
+    "linkedIn": "https://www.linkedin.com/in/example-taylor-ashdown/",
+    "templateKey": "education"
+  },
+  "experiences": [
+    {
+      "company": "Example Primary School (fictional)",
+      "title": "Class Teacher, Upper Primary",
+      "start": "2022",
+      "end": null,
+      "current": true,
+      "summary": "Teaching a mixed-ability upper primary class across the full curriculum, with responsibility for reading across the school.",
+      "highlights": [
+        "Led the school's reading for pleasure programme",
+        "Mentor to two student teachers each year",
+        "Contributed to the school improvement plan for English"
+      ],
+      "tech": [],
+      "sortOrder": 1
+    },
+    {
+      "company": "Sample Hill Academy (fictional)",
+      "title": "Class Teacher and Mathematics Lead",
+      "start": "2019",
+      "end": "2022",
+      "current": false,
+      "summary": "Taught a lower upper primary class and led mathematics for the year group.",
+      "highlights": [
+        "Piloted a mastery approach to number across the year group",
+        "Ran termly staff training on planning and assessment"
+      ],
+      "tech": [],
+      "sortOrder": 2
+    },
+    {
+      "company": "Demo Valley Junior School (fictional)",
+      "title": "Newly Qualified Teacher",
+      "start": "2017",
+      "end": "2019",
+      "current": false,
+      "summary": "Induction programme with a class of her own from the first term, supported by a mentor and a reduced timetable.",
+      "highlights": ["Completed the induction programme on schedule"],
+      "tech": [],
+      "sortOrder": 3
+    }
+  ],
+  "skills": [
+    { "name": "Lesson planning", "group": "Teaching and learning", "sortOrder": 1 },
+    { "name": "Differentiation", "group": "Teaching and learning", "sortOrder": 2 },
+    { "name": "Questioning and feedback", "group": "Teaching and learning", "sortOrder": 3 },
+    { "name": "Classroom routines", "group": "Teaching and learning", "sortOrder": 4 },
+    { "name": "Guided reading", "group": "Curriculum and assessment", "sortOrder": 1 },
+    { "name": "Mathematics mastery", "group": "Curriculum and assessment", "sortOrder": 2 },
+    { "name": "Formative assessment", "group": "Curriculum and assessment", "sortOrder": 3 },
+    { "name": "Moderation", "group": "Curriculum and assessment", "sortOrder": 4 },
+    { "name": "Inclusive practice", "group": "Pastoral and inclusion", "sortOrder": 1 },
+    { "name": "Behaviour for learning", "group": "Pastoral and inclusion", "sortOrder": 2 },
+    { "name": "Working with families", "group": "Pastoral and inclusion", "sortOrder": 3 },
+    { "name": "Safeguarding practice", "group": "Pastoral and inclusion", "sortOrder": 4 },
+    { "name": "Interactive whiteboard", "group": "Technology", "sortOrder": 1 },
+    { "name": "Digital learning platform", "group": "Technology", "sortOrder": 2 },
+    { "name": "Online assessment tools", "group": "Technology", "sortOrder": 3 },
+    { "name": "English (native)", "group": "Languages", "sortOrder": 1 },
+    { "name": "French (conversational)", "group": "Languages", "sortOrder": 2 }
+  ],
+  "projects": [
+    {
+      "title": "Reading for pleasure programme (sample)",
+      "slug": "reading-for-pleasure-programme",
+      "role": "Lead",
+      "org": "Example Primary School (fictional)",
+      "period": "2024",
+      "summary": "A whole-school programme to make reading for pleasure part of every week. Sample initiative (fictional).",
+      "category": "Curriculum",
+      "problem": "Reading for pleasure was patchy between classes, and few books went home.",
+      "approach": "Refreshed the class libraries, timetabled a weekly reading session, trained colleagues to recommend books and run short discussions, and started a simple borrowing record.",
+      "impact": ["Weekly borrowing rose from about half the school to nearly nine in ten", "The weekly session is now timetabled in every class"],
+      "tech": ["Class libraries", "Reading records", "Staff training"],
+      "heroImage": "/img/starter/education/reading-for-pleasure-programme.svg",
+      "heroImageAlt": "Abstract illustration of two shelves of colourful books.",
+      "screenshots": [
+        { "url": "/img/starter/education/reading-for-pleasure-programme-1.svg", "caption": "An open book, the emblem the programme used on its posters" }
+      ],
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "title": "Mathematics mastery pilot (sample)",
+      "slug": "mathematics-mastery-pilot",
+      "role": "Contributor",
+      "org": "Sample Hill Academy (fictional)",
+      "period": "2022",
+      "summary": "A year-group pilot of a mastery approach to number, shared with the rest of the school. Sample initiative (fictional).",
+      "category": "Curriculum",
+      "problem": "Number fluency varied widely and teaching approaches differed between classes.",
+      "approach": "Agreed a shared sequence of small steps, planned lessons together, used short fluency checks and reviewed the results each half term.",
+      "impact": ["Fluency check scores rose across the year group", "The approach was shared at a whole-staff training day"],
+      "tech": ["Fluency checks", "Shared planning", "Concrete resources"],
+      "heroImage": "/img/starter/education/mathematics-mastery-pilot.svg",
+      "heroImageAlt": "Abstract illustration of a grid of tiles with a few highlighted, beside a rising set of bars.",
+      "featured": true,
+      "sortOrder": 2
+    },
+    {
+      "title": "Outdoor learning day (sample)",
+      "slug": "outdoor-learning-day",
+      "role": "Organiser",
+      "org": "Example Primary School (fictional)",
+      "period": "2025",
+      "summary": "A termly day of cross-curricular lessons held outdoors. Sample initiative (fictional).",
+      "category": "Enrichment",
+      "problem": "Few lessons took place outdoors, and some topics were hard to bring to life in a classroom.",
+      "approach": "Mapped outdoor tasks to the curriculum, completed risk assessments with the leadership team and trained colleagues to lead each station.",
+      "impact": ["Every class took part in the first two days", "Staff feedback asked for the day to become a termly event"],
+      "tech": ["Risk assessment", "Curriculum mapping", "Station planning"],
+      "heroImage": "/img/starter/education/outdoor-learning-day.svg",
+      "heroImageAlt": "Abstract illustration of green hills, a low sun and two trees.",
+      "featured": false,
+      "sortOrder": 3
+    }
+  ],
+  "certifications": [
+    { "name": "Qualified Teacher registration (sample)", "issuer": "Example Teaching Council", "status": "Earned", "date": "2017", "category": "Registration", "sortOrder": 1 },
+    { "name": "Bachelor of Education (sample)", "issuer": "Example University College", "status": "Earned", "date": "2016", "category": "Degree", "sortOrder": 2 },
+    { "name": "Safeguarding and child protection training", "issuer": "Example Local Authority", "status": "Earned", "date": "2025", "category": "Mandatory training", "sortOrder": 3 },
+    { "name": "Paediatric first aid", "issuer": "Example First Aid Training", "status": "Earned", "date": "2024", "category": "Mandatory training", "sortOrder": 4 },
+    { "name": "Postgraduate Certificate in Inclusive Education (sample)", "issuer": "Example Institute of Education", "status": "InProgress", "date": "2026", "category": "Postgraduate", "sortOrder": 5 },
+    { "name": "Mentor and Coaching Programme (sample)", "issuer": "Example Institute of Education", "status": "Planned", "category": "Professional development", "sortOrder": 6 }
+  ],
+  "testimonials": [
+    {
+      "quote": "Sample reference (fictional). Taylor plans with great care and is a calm, encouraging colleague; student teachers ask to be placed in their class.",
+      "author": "Sample Colleague",
+      "authorTitle": "Head Teacher, Example Primary School",
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "quote": "Sample reference (fictional). Their mathematics pilot changed how our whole year group teaches number, and they shared it generously.",
+      "author": "Demo Colleague",
+      "authorTitle": "Deputy Head, Sample Hill Academy",
+      "featured": true,
+      "sortOrder": 2
+    }
+  ]
+}
