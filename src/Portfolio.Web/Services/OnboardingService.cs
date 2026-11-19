@@ -100,6 +100,16 @@ public class OnboardingService
         return new OnboardingState(profile, OnboardingDraft.Parse(profile.OnboardingDraft));
     }
 
+    /// <summary>The template the wizard shows for this state: the draft's own, else the saved site's, else the default on a first run. An unknown key falls back like any catalog lookup.</summary>
+    public TemplateDefinition TemplateFor(OnboardingState state) =>
+        _catalog.Get(state.Draft?.TemplateKey ?? (state.FirstRun ? TemplateCatalog.DefaultKey : state.Profile.TemplateKey));
+
+    /// <summary>The four steps' status for the indicator.</summary>
+    public IReadOnlyList<StepStatus> ProgressOf(OnboardingDraft? draft) => WizardProgress.Compute(draft, _catalog);
+
+    /// <summary>The "Ready to publish?" lines for a draft (pass a copy with the address as shown to count what the owner can see).</summary>
+    public PublishChecklist ChecklistFor(OnboardingDraft? draft) => WizardProgress.Checklist(draft, _catalog);
+
     // ---------------------------------------------------------------- steps
 
     /// <summary>Step 1. The template must come from the catalog (the same allow-list as the admin switcher). Wording the owner has not changed
@@ -112,7 +122,9 @@ public class OnboardingService
         var plan = SectionSettings.PlanSwitch(_resolver, SiteProfileMapper.ToEntity(SiteProfileMapper.ToOptions(state.Profile)), template);
         if (!plan.Allowed) return SectionSettings.NoMenuMessage(template.Name, plan.Target);
         var draft = state.Draft ?? new OnboardingDraft();
-        if (_catalog.TryGet(draft.TemplateKey, out var previous) && previous.Key != template.Key)
+        // The template the owner was shown until now: the draft's, else the one the pages prefilled from (TemplateFor), so wording they never wrote is dropped even when the draft had no template yet.
+        var previous = TemplateFor(state);
+        if (previous.Key != template.Key)
         {
             if (string.IsNullOrWhiteSpace(draft.JobTitle) || draft.JobTitle == previous.HeroSuggestions.Title) draft.JobTitle = null;
             if (string.IsNullOrWhiteSpace(draft.Summary) || draft.Summary == previous.HeroSuggestions.Summary) draft.Summary = null;
@@ -125,7 +137,18 @@ public class OnboardingService
         return null;
     }
 
-    /// <summary>Step 2. <paramref name="form"/> must already have passed validation; it is cleaned of control characters here.</summary>
+    /// <summary>Leaving step 1 without pressing Use keeps the template the owner was looking at: the draft's if it has one, else the one <see cref="TemplateFor"/> shows (the site's, or the default on a first run).
+    /// Never changes a template that is already in the draft.</summary>
+    /// <returns>Null when the draft has a template now; otherwise the refusal from <see cref="SaveTemplateAsync"/>.</returns>
+    public async Task<string?> KeepTemplateAsync(CancellationToken ct = default)
+    {
+        var state = await GetStateAsync(ct);
+        if (state.Draft is { } draft && _catalog.TryGet(draft.TemplateKey, out _)) return null;
+        return await SaveTemplateAsync(TemplateFor(state), ct);
+    }
+
+    /// <summary>Step 2. Saves whatever was typed, complete or not: only the hard rules apply (the page checks them), and completeness is asked at publishing. The values are cleaned of control
+    /// characters here, and a blank one is stored as null.</summary>
     public async Task SaveBasicsAsync(BasicsForm form, CancellationToken ct = default)
     {
         var state = await GetStateAsync(ct);
@@ -172,11 +195,13 @@ public class OnboardingService
         _store.TryDeleteDraft(name);
     }
 
-    /// <summary>Step 4 choices. An accent must be one the draft's template offers, content one of the known kinds; anything else is refused.</summary>
+    /// <summary>Step 4 choices, saved under the hard rules only: an accent must be one the template offers, content one of the known kinds. The address is stored as typed (cleaned); whether it is a valid
+    /// address is asked at publishing. Works before a template is chosen, checking against <see cref="TemplateFor"/>.</summary>
     public async Task<bool> SaveChoicesAsync(ReviewForm form, CancellationToken ct = default)
     {
         var state = await GetStateAsync(ct);
-        if (state.Draft is not { } draft || !_catalog.TryGet(draft.TemplateKey, out var template)) return false;
+        var draft = state.Draft ?? new OnboardingDraft();
+        var template = TemplateFor(state);
         var accent = string.IsNullOrWhiteSpace(form.Accent) ? null : form.Accent.Trim();
         if (accent is not null && !template.Theme.Accents.Any(a => string.Equals(a.Key, accent, StringComparison.Ordinal))) return false;
         if (!StarterChoice.IsKnown(form.Content) || (form.Content == StarterChoice.Sample && !StarterContent.Offers(template))) return false;
@@ -356,15 +381,15 @@ public class OnboardingService
 
     // ---------------------------------------------------------------- preview
 
-    /// <summary>The site as it would look once published (identity, template, accent and draft photo), for the owner's draft preview. Null without a draft.
-    /// Sample rows are not part of it: they are added at publish.</summary>
+    /// <summary>The site as it would look once published (identity, template, accent and draft photo), for the owner's draft preview. Each draft field that has a value is applied and the saved profile's value
+    /// stays for any field still empty, so a half-finished draft previews too, on <see cref="TemplateFor"/> until a template is chosen. Null only without a draft. Sample rows are not part of it: they are added at publish.</summary>
     public async Task<SiteOptions?> DraftPreviewAsync(CancellationToken ct = default)
     {
         var state = await GetStateAsync(ct);
-        if (state.Draft is not { } draft || !_catalog.TryGet(draft.TemplateKey, out var template)) return null;
+        if (state.Draft is not { } draft) return null;
 
         var copy = SiteProfileMapper.ToEntity(SiteProfileMapper.ToOptions(state.Profile));
-        Apply(copy, draft, template, state.FirstRun, draft.PhotoDraft is null ? null : DraftPhotoPath, _placeholder);
+        Apply(copy, draft, TemplateFor(state), state.FirstRun, draft.PhotoDraft is null ? null : DraftPhotoPath, _placeholder);
         return SiteProfileMapper.ToOptions(copy);
     }
 
@@ -393,7 +418,8 @@ public class OnboardingService
         }
         if (!string.IsNullOrWhiteSpace(d.Email)) p.Email = d.Email;
         if (!string.IsNullOrWhiteSpace(d.Summary)) p.Summary = d.Summary;
-        if (d.Step >= 2) p.Location = d.Location;
+        // An empty location clears the saved one only once the basics are complete (always so at publishing): a half-typed draft never blanks it. A typed location always applies.
+        if (!string.IsNullOrWhiteSpace(d.Location) || BasicsForm.IsComplete(d)) p.Location = d.Location;
         if (!string.IsNullOrWhiteSpace(d.SiteUrl)) p.Url = d.SiteUrl;
         p.AccentColor = template.Theme.Accents.Any(a => a.Key == d.AccentKey) ? d.AccentKey : null;
 
