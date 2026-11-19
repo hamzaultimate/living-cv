@@ -1,4 +1,4 @@
-# Data & Analytics and Product / Project Management on the Showcase layout
+# Data & Analytics and Product & Project Management on the Showcase layout
 
 Date: 2026-11-19
 Status: design approved in brainstorming
@@ -7,7 +7,7 @@ Delivery: one pull request (Phase 5, item 4 of the numbered list in `docs/templa
 
 ## 1. Goal
 
-Add two templates, Data & Analytics and Product / Project Management, as data-only presets on the existing Showcase layout, the one Software & IT uses. Each site leads with its work and the numbers behind it, in the owner's own profession's words.
+Add two templates, Data & Analytics and Product & Project Management, as data-only presets on the existing Showcase layout, the one Software & IT uses. Each site leads with its work and the numbers behind it, in the owner's own profession's words.
 
 ## 2. Decisions made
 
@@ -29,7 +29,7 @@ Add two templates, Data & Analytics and Product / Project Management, as data-on
 
 ## 4. The presets
 
-| | Data & Analytics | Product / Project Management |
+| | Data & Analytics | Product & Project Management |
 |---|---|---|
 | Key | `data-analytics` | `product-management` |
 | Profession | Data analyst or scientist | Product or project manager |
@@ -52,7 +52,7 @@ Shared rules for both:
 
 ## 5. Acceptance criteria
 
-1. Both keys appear in the template catalog, the wizard's template step and the admin template picker, each with its thumbnail, and pass manifest validation.
+1. Both keys appear in the template catalog, the wizard's template step (each with its thumbnail) and the admin template picker (which lists it with a live preview, not a thumbnail), and pass manifest validation.
 2. Every public route renders in the template's own wording with no Software, Healthcare, Gallery, Results or Education wording, and a section the template leaves off answers 404.
 3. The home page is the Showcase layout and the menu follows the section order in section 4.
 4. Every text and accent token meets 4.5:1 in light and dark, including the four accent choices.
@@ -81,11 +81,11 @@ Each criterion maps to an automated test, or to a manual check where it is visua
 
 ## 8. How a person sees the change
 
-Sign in at `/admin/login`. Open Appearance, Template (or Tools, Setup wizard, step 1) and choose Data & Analytics or Product / Project Management. Publish the sample content from the wizard, then open `/`, `/projects`, `/experience` and `/cv`.
+Sign in at `/admin/login`. Open Appearance, Template (or Tools, Setup wizard, step 1) and choose Data & Analytics or Product & Project Management. Publish the sample content from the wizard, then open `/`, `/projects`, `/experience` and `/cv`.
 
 ## 9. Risks
 
 - The wording guards reject another template's nouns, so a natural word may be forbidden. Mitigation: the final wording is checked against every guard list in the plan before the subagents start.
-- The Showcase hero's "GitHub" button and waveform backdrop suit Software better than Product / Project Management. Mitigation: recorded as a known gap; a copy-key change is a separate, shared change.
+- The Showcase hero's "GitHub" button and waveform backdrop suit Software better than Product & Project Management. Mitigation: recorded as a known gap; a copy-key change is a separate, shared change.
 - Two worktrees edit the same catalog-wide tests if a subagent strays outside its files. Mitigation: file ownership is stated in each brief and checked on merge.
 - Stacking on an unmerged branch. Mitigation: rebase onto `develop` after the Finance PR merges; the overlap is the shared test lists and `app.css`.
