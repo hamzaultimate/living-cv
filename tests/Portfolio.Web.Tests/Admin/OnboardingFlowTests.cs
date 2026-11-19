@@ -312,7 +312,11 @@ public class OnboardingFlowTests
         Assert.Contains(">Finance and accounting professional</h2>", html);
         Assert.Contains("src=\"/admin/welcome/thumb/finance-accounting\"", html);
         Assert.Contains("confidential financial", html);
-        Assert.Equal(7, Regex.Matches(html, "type=\"radio\" name=\"Key\"").Count);
+        Assert.Contains(">Data analyst or scientist</h2>", html);
+        Assert.Contains("src=\"/admin/welcome/thumb/data-analytics\"", html);
+        Assert.Contains(">Product or project manager</h2>", html);
+        Assert.Contains("src=\"/admin/welcome/thumb/product-management\"", html);
+        Assert.Equal(9, Regex.Matches(html, "type=\"radio\" name=\"Key\"").Count);
     }
 
     [Fact]

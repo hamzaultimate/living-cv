@@ -60,6 +60,7 @@ Create `tests/Portfolio.Web.Tests/Templates/ShowcaseArchetypeTests.cs`:
 using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Portfolio.Data.Entities;
 using Portfolio.Web.Services;
 using Portfolio.Web.Tests.Support;
 using Xunit;
