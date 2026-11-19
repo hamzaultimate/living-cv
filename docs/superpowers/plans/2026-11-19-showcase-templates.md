@@ -1,4 +1,4 @@
-# Data & Analytics and Product / Project Management Implementation Plan
+# Data & Analytics and Product & Project Management Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -17,7 +17,7 @@
 - Every `copy` string is plain text (no `<` or `>`), differs from Software's wording unless it is in this neutral list: `Skills`, `Experience`, `Links`, `featured`, `View certificate`, `Curriculum vitae — {name}, {title}.`, `Selected work`. The serialised copy must not match `\.NET|GitHub|software|developer|clinical|patient|licen[cs]e`. The serialised editor block must not match `(?i)tech stack|throughput|uptime|\brps\b|distributed|\.NET|case stud`.
 - SEO: `seo.title` at most 65 characters and `seo.description` / `seo.aboutDescription` at most 160 once expanded; word them so they read correctly for any title.
 - Contrast: every text and accent token at least 4.5:1 on bg, surface and surface-2 in light and dark, including all four accent choices, and bg on accent. `ThemeStylesheetTests` and the accent-contrast test decide; adjust a hex value until they pass.
-- Starter content is fictional: `"fictional": true`, the profile summary contains the word "fictional", `example.org` email and links, every project title contains `(sample)`, every employer contains `(fictional)`, no employer or client name carries a legal-form suffix (Inc, Ltd, LLC, LLP, LP, GmbH, PLC, apart or glued on), every cover has `heroImageAlt`, every extra picture has a caption, every picture is a site path under `/img/starter/<key>/`.
+- Starter content is fictional: `"fictional": true`, the profile summary contains the word "fictional", `example.org` email and links, every project title contains `(sample)`, every employer name begins `Example`, `Sample`, `Placeholder` or `Demo` and ends `(fictional)` (the same employer named in a testimonial attribution also carries `(fictional)`), no employer or client name carries a legal-form suffix (Inc, Ltd, LLC, LLP, LP, GmbH, PLC, apart or glued on), every cover has `heroImageAlt`, every extra picture has a caption, every picture is a site path under `/img/starter/<key>/`.
 - Starter pictures are generated SVG: under 60 KB each, no `<script>`, no `<text>`, no `<image>`, no `http` address except the `www.w3.org` namespace. Do not download images.
 - The committed `src/Portfolio.Web/wwwroot/css/app.css` is CI output built from LF sources. A local `dotnet build` on Windows rewrites it with different bytes. **Never commit it from a subagent**: run `git checkout -- src/Portfolio.Web/wwwroot/css/app.css` before every commit. The lead rebuilds it in Task 4.
 - Commit messages end with the line `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Never push, merge to another branch or deploy.
@@ -33,7 +33,7 @@
 | `tests/Portfolio.Web.Tests/Admin/OnboardingFlowTests.cs` (modify) | Task 1 | Wizard card headings, thumbnails, card count |
 | `src/Portfolio.Web/Styles/app.css` (modify), `Styles/themes/data-analytics.css`, `Styles/themes/product-management.css` (create as stubs) | Task 1 | Theme imports, so the build resolves them |
 | `src/Portfolio.Web/Templates/data-analytics/{template.json,starter.json}`, `Styles/themes/data-analytics.css`, `wwwroot/img/starter/data-analytics/*.svg` | Task 2 | Data & Analytics |
-| `src/Portfolio.Web/Templates/product-management/{template.json,starter.json}`, `Styles/themes/product-management.css`, `wwwroot/img/starter/product-management/*.svg` | Task 3 | Product / Project Management |
+| `src/Portfolio.Web/Templates/product-management/{template.json,starter.json}`, `Styles/themes/product-management.css`, `wwwroot/img/starter/product-management/*.svg` | Task 3 | Product & Project Management |
 | `Templates/<key>/preview.png`, `wwwroot/css/app.css`, `README.md`, `docs/template-authoring-guide.md`, `docs/templates-and-onboarding-plan.md` | Task 4 | Thumbnails, built stylesheet, docs |
 
 ---
@@ -500,11 +500,11 @@ Create `template.json` starting from `Templates/software/template.json` (same ke
       "lead": "Grouped by what they are used for.", "empty": "Tools and methods will appear here once they are added."
     },
     "certifications": {
-      "title": "Certifications", "description": "Courses and certifications completed, in progress and planned.",
-      "eyebrow": "Certifications", "heading": "Courses and certifications",
+      "title": "Courses & credentials", "description": "Courses and certifications completed, in progress and planned.",
+      "eyebrow": "Courses & credentials", "heading": "Courses and certifications",
       "lead": "What is completed, what is in progress and what is next.",
       "emptyTitle": "No certifications listed", "emptyBody": "Add courses or certifications to show your learning.",
-      "filterLabel": "Filter certifications by issuer",
+      "filterLabel": "Filter courses and certifications by issuer",
       "statusEarned": "Completed", "statusInProgress": "Studying", "statusPlanned": "Next up",
       "viewCertificate": "View certificate", "viewCredential": "View details →"
     },
@@ -550,14 +550,14 @@ Create `starter.json` in the shape of `Templates/finance-accounting/starter.json
 |---|---|
 | Profile | owner "Imani Vale", title "Data Analyst", summary says it is fictional sample content, `email` `imani@example.org`, 4 metrics: `6 yrs "Working with data"`, `14 "" "Analyses delivered"`, `-18 % "Forecast error after the rebuild"`, `30 + "Weekly dashboard users"` |
 | Projects (all titles end with "(sample)") | 1. `forecast-rebuild` "Demand forecast rebuild", category "Forecasting", featured, org "Tarnwick", 2 captioned screenshots. 2. `churn-drivers` "Churn drivers study", category "Customer analytics", featured, org "Olliberry", 1 captioned screenshot. 3. `dashboard-rollout` "Operations dashboard rollout", category "Reporting", featured, org "Sundrel". 4. `comment-clustering` "Survey comment clustering", category "Text analysis", not featured, org "Pennagrove". Each has `problem`, `approach`, 2 `impact` lines, `tech` (tools), a `heroImage` and `heroImageAlt`, and one link to `https://example.org/...` |
-| Experience | 2 roles, employers "Larkspur Group (fictional)" and "Mossfield Council (fictional)" |
+| Experience | 2 roles, employers "Example Data Studio (fictional)" and "Sample Regional Council (fictional)" |
 | Skills | 10 skills spread over the 5 `skillGroups` |
-| Certifications | 3: one completed, one in progress, one planned, issuers invented ("Example Statistics Society"), `example.org` credential links |
+| Certifications | 3: one completed, one in progress, one planned, issuers invented ("Example Statistics Society"). No `credentialUrl` (a shipped-template test forbids an address there) |
 | Testimonials | 2, fictional authors, featured |
 
 - [ ] **Step 3: Write the starter pictures**
 
-Write a throwaway script in your scratchpad (not in the repo) that writes 8 SVG files into `src/Portfolio.Web/wwwroot/img/starter/data-analytics/`: one cover per project (`forecast-rebuild.svg`, `churn-drivers.svg`, `dashboard-rollout.svg`, `comment-clustering.svg`) and three screenshots (`forecast-rebuild-1.svg`, `forecast-rebuild-2.svg`, `churn-drivers-1.svg`). Each is a 1200 x 750 `viewBox` with a gradient background and simple chart-like shapes (bars, a polyline, a donut built from circles and paths) in the teal family. No text, no script, each under 60 KB. Point every `heroImage` and screenshot `url` at `/img/starter/data-analytics/<file>.svg`.
+Write a throwaway script in your scratchpad (not in the repo) that writes 7 SVG files into `src/Portfolio.Web/wwwroot/img/starter/data-analytics/`: one cover per project (`forecast-rebuild.svg`, `churn-drivers.svg`, `dashboard-rollout.svg`, `comment-clustering.svg`) and three screenshots (`forecast-rebuild-1.svg`, `forecast-rebuild-2.svg`, `churn-drivers-1.svg`). Each is a 1200 x 750 `viewBox` with a gradient background and simple chart-like shapes (bars, a polyline, a donut built from circles and paths) in the teal family. No text, no script, each under 60 KB. Point every `heroImage` and screenshot `url` at `/img/starter/data-analytics/<file>.svg`.
 
 - [ ] **Step 4: Write the theme**
 
@@ -603,7 +603,7 @@ Report: the commit hash, the branch, the exact test commands run with their pass
 
 ---
 
-### Task 3: Product / Project Management (subagent B, own worktree)
+### Task 3: Product & Project Management (subagent B, own worktree)
 
 Dispatch in the same message as Task 2, with the same settings and the same first-line instruction.
 
@@ -657,7 +657,7 @@ Create `template.json` starting from `Templates/software/template.json` (same ke
   "skillGroups": ["Discovery", "Delivery", "Stakeholders", "Metrics", "Tools"],
   "seo": {
     "title": "{name} — {title}",
-    "description": "{name}, {title}. Shipped work, the outcomes it produced and how the team got there.",
+    "description": "{name}, {title}. Releases, the outcomes they produced and how the team got there.",
     "aboutDescription": "About {name}, {title}: how products and projects get from problem to measured outcome."
   },
   "copy": {
@@ -696,11 +696,11 @@ Create `template.json` starting from `Templates/software/template.json` (same ke
       "lead": "Grouped by the part of the work they serve.", "empty": "Skills will appear here once they are added."
     },
     "certifications": {
-      "title": "Certifications", "description": "Courses and certifications held, in progress and planned.",
-      "eyebrow": "Certifications", "heading": "Courses and certifications",
+      "title": "Courses & certifications", "description": "Courses and certifications held, in progress and planned.",
+      "eyebrow": "Courses and credentials", "heading": "Courses and certifications",
       "lead": "What is held, what is in progress and what is next.",
       "emptyTitle": "No certifications listed", "emptyBody": "Add courses or certifications to show your learning.",
-      "filterLabel": "Filter certifications by issuer",
+      "filterLabel": "Filter courses and certifications by issuer",
       "statusEarned": "Certified", "statusInProgress": "Studying", "statusPlanned": "Next up",
       "viewCertificate": "View certificate", "viewCredential": "View details →"
     },
@@ -746,14 +746,14 @@ Create `starter.json` in the shape of `Templates/finance-accounting/starter.json
 |---|---|
 | Profile | owner "Tomasz Rhee", title "Product Manager", summary says it is fictional sample content, `email` `tomasz@example.org`, 4 metrics: `8 yrs "Shipping products"`, `11 "" "Releases led"`, `+22 % "Activation after the onboarding redesign"`, `4 "" "Teams aligned per release"` |
 | Projects (all titles end with "(sample)") | 1. `onboarding-redesign` "Onboarding redesign", category "Growth", featured, org "Halvorne", 2 captioned screenshots. 2. `billing-migration` "Billing migration programme", category "Delivery", featured, org "Brindlecott", 1 captioned screenshot. 3. `roadmap-reset` "Roadmap reset", category "Strategy", featured, org "Wenlowe". 4. `support-portal` "Self-service support portal", category "Platform", not featured, org "Kestrelbay". Each has `problem`, `approach`, 2 `impact` lines, `tech` (tools), a `heroImage` and `heroImageAlt`, and one link to `https://example.org/...` |
-| Experience | 2 roles, employers "Fenwick Works (fictional)" and "Aldermere Trust (fictional)" |
+| Experience | 2 roles, employers "Example Product Works (fictional)" and "Sample Delivery Co (fictional)" |
 | Skills | 10 skills spread over the 5 `skillGroups` |
-| Certifications | 3: one certified, one in progress, one planned, issuers invented ("Example Delivery Institute"), `example.org` credential links |
+| Certifications | 3: one certified, one in progress, one planned, issuers invented ("Example Delivery Institute"). No `credentialUrl` (a shipped-template test forbids an address there) |
 | Testimonials | 2, fictional authors, featured |
 
 - [ ] **Step 3: Write the starter pictures**
 
-Write a throwaway script in your scratchpad (not in the repo) that writes 8 SVG files into `src/Portfolio.Web/wwwroot/img/starter/product-management/`: covers `onboarding-redesign.svg`, `billing-migration.svg`, `roadmap-reset.svg`, `support-portal.svg` and screenshots `onboarding-redesign-1.svg`, `onboarding-redesign-2.svg`, `billing-migration-1.svg`. Each is a 1200 x 750 `viewBox` with a warm gradient background and simple product-like shapes (a kanban board of rounded rectangles, a timeline of dots on a line, a stepped funnel) in the amber and slate family. No text, no script, each under 60 KB. Point every `heroImage` and screenshot `url` at `/img/starter/product-management/<file>.svg`.
+Write a throwaway script in your scratchpad (not in the repo) that writes 7 SVG files into `src/Portfolio.Web/wwwroot/img/starter/product-management/`: covers `onboarding-redesign.svg`, `billing-migration.svg`, `roadmap-reset.svg`, `support-portal.svg` and screenshots `onboarding-redesign-1.svg`, `onboarding-redesign-2.svg`, `billing-migration-1.svg`. Each is a 1200 x 750 `viewBox` with a warm gradient background and simple product-like shapes (a kanban board of rounded rectangles, a timeline of dots on a line, a stepped funnel) in the amber and slate family. No text, no script, each under 60 KB. Point every `heroImage` and screenshot `url` at `/img/starter/product-management/<file>.svg`.
 
 - [ ] **Step 4: Write the theme**
 
@@ -823,14 +823,14 @@ Expected: build succeeds. `git diff --stat -- src/Portfolio.Web/wwwroot/css/app.
 
 - [ ] **Step 3: Take the thumbnails**
 
-Use the `run` skill to start the app, sign in, open `/admin/template`, switch to Data & Analytics, publish its sample content from the wizard, then capture `/` in dark mode at exactly 1200 x 800 with the `superpowers-chrome:browsing` skill. Save it as `src/Portfolio.Web/Templates/data-analytics/preview.png`. Repeat for Product / Project Management. Each file is over 30 KB and under about 600 KB. Switch the site back to Software afterwards.
+Use the `run` skill to start the app, sign in, open `/admin/template`, switch to Data & Analytics, publish its sample content from the wizard, then capture `/` in dark mode at exactly 1200 x 800 with the `superpowers-chrome:browsing` skill. Save it as `src/Portfolio.Web/Templates/data-analytics/preview.png`. Repeat for Product & Project Management. Each file is over 30 KB and under about 600 KB. Switch the site back to Software afterwards.
 Run: `dotnet test tests/Portfolio.Web.Tests --filter "FullyQualifiedName~TheThumbnail_IsARealScreenshotOfTheRightSize"`. Expected: all thumbnail cases pass, including the four existing archetypes' and the two new ones.
 
 - [ ] **Step 4: Update the docs**
 
 - `README.md`: change "Seven ship today" to "Nine ship today" and add after the Finance sentence: "**Data & Analytics** and **Product & Project Management** use the same showcase layout as Software & IT, each with its own wording, theme, accent choices and fictional starter content."
 - `docs/template-authoring-guide.md` line 16: add "`showcase` (Software & IT, Data & Analytics, Product & Project Management)". Add under section 5 a short "Adding a showcase template" paragraph: add the key to `ShowcaseArchetypeTests.Keys`, the hard-coded lists in `TemplateManifestTests`, the wizard card counts in `OnboardingFlowTests`, write the manifest, starter, theme, pictures and a real screenshot thumbnail; the layout needs no change; the hero's "LinkedIn", "GitHub" and "Download CV" words and the waveform backdrop are fixed and shared with Software.
-- `docs/templates-and-onboarding-plan.md`: set item 4 to "Done (pending independent review)", replace the three "What remains in Phase 5" paragraphs' Data & Analytics and Product / Project Management clause with "none; Education is in `feature/phase-5d-education-template`", and add a "Phase 5 step 4" notes section with the branch, the two keys, the known gap (Showcase hero words and backdrop), the test results from Step 5 and the real-browser findings from Step 6.
+- `docs/templates-and-onboarding-plan.md`: set item 4 to "Done (pending independent review)", replace the three "What remains in Phase 5" paragraphs' Data & Analytics and Product & Project Management clause with "none; Education is in `feature/phase-5d-education-template`", and add a "Phase 5 step 4" notes section with the branch, the two keys, the known gap (Showcase hero words and backdrop), the test results from Step 5 and the real-browser findings from Step 6.
 Commit: `git commit -am "docs: record the showcase templates"` (with the Co-Authored-By line).
 
 - [ ] **Step 5: Run the whole suite on an LF export**
