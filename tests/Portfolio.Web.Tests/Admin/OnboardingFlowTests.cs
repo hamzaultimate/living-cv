@@ -186,8 +186,10 @@ public class OnboardingFlowTests
         var basics = await second.GetStringAsync(WizardFlow.Basics);
         var review = await second.GetStringAsync(WizardFlow.Review);
 
-        Assert.Matches(new Regex("id=\"tpl-healthcare\"[^>]*checked"), template);
-        Assert.DoesNotMatch(new Regex("id=\"tpl-software\"[^>]*checked"), template);
+        Assert.Contains(">Keep Healthcare and continue</button>", template); // the template step opens on the draft's template and offers to keep it
+        Assert.DoesNotContain(">Use Healthcare and continue</button>", template);
+        Assert.Single(Regex.Matches(template, @"<span class=""adm-pill"">Selected</span></a>"));
+        Assert.Matches(@"aria-current=""true"">Healthcare<span class=""adm-sr"">, </span><span class=""adm-pill"">Selected</span></a>", template);
         Assert.Contains("value=\"Resume Person\"", basics);
         Assert.Contains("value=\"Bristol\"", basics);
         Assert.Contains("https://resume.example", review);
@@ -282,41 +284,30 @@ public class OnboardingFlowTests
     }
 
     [Fact]
-    public async Task TheTemplateStep_ShowsCardsGroupedByProfession_WithThumbnailsAndWhatIsIncluded()
+    public async Task TheTemplateStep_ListsEveryTemplateByProfession_AndShowsOnlyTheSelectedOnesDetails()
     {
         using var app = new AdminApp();
         var owner = await app.SignedInClientAsync();
 
         var html = WebUtility.HtmlDecode(await owner.GetStringAsync(WizardFlow.Template));
 
-        Assert.Contains(">Software engineer</h2>", html);
-        Assert.Contains(">Healthcare professional</h2>", html);
-        Assert.Contains(">Product designer</h2>", html);
-        Assert.Contains("src=\"/admin/welcome/thumb/design-ux\"", html);
-        Assert.Contains("src=\"/admin/welcome/thumb/software\"", html);
-        Assert.Contains("src=\"/admin/welcome/thumb/healthcare\"", html);
-        Assert.Contains("<strong>Pages:</strong> about, experience, work, skills, certifications, blog, talks, testimonials, contact", html);
-        Assert.Contains("licences & registrations", html);
-        Assert.Contains("Case study", html);
-        Assert.Contains("Initiative", html);
-        Assert.Equal(6, Regex.Matches(html, "Before you publish").Count); // the sensitive template, the two gallery templates and the three results templates carry guidance, software does not
-        Assert.Contains("patient-identifiable", html);
-        Assert.Contains("confidential screens", html);
-        Assert.Contains(">Photographer and filmmaker</h2>", html);
-        Assert.Contains("src=\"/admin/welcome/thumb/photography-film\"", html);
-        Assert.Contains(">Marketing and content strategist</h2>", html);
-        Assert.Contains("src=\"/admin/welcome/thumb/marketing-content\"", html);
-        Assert.Contains("confidential numbers", html);
-        Assert.Contains(">Sales and business development lead</h2>", html);
-        Assert.Contains("src=\"/admin/welcome/thumb/sales-bd\"", html);
-        Assert.Contains(">Finance and accounting professional</h2>", html);
-        Assert.Contains("src=\"/admin/welcome/thumb/finance-accounting\"", html);
-        Assert.Contains("confidential financial", html);
-        Assert.Equal(7, Regex.Matches(html, "type=\"radio\" name=\"Key\"").Count);
+        foreach (var profession in new[] { "Software engineer", "Healthcare professional", "Product designer", "Photographer and filmmaker", "Marketing and content strategist", "Sales and business development lead", "Finance and accounting professional" })
+            Assert.Contains($">{profession}</h3>", html);
+        Assert.Equal(7, Regex.Matches(html, @"href=""/admin/welcome\?show=[a-z-]+&size=desktop""").Count);
+        Assert.Contains("<strong>Pages:</strong> about, experience, work, skills, certifications, blog, talks, testimonials, contact", html); // the default template, software
+        Assert.DoesNotContain("Before you publish", html); // software carries no guidance, and no other template's details are on the page
+
+        var healthcare = WebUtility.HtmlDecode(await owner.GetStringAsync(WizardFlow.Template + "?show=healthcare"));
+        Assert.Contains("licences & registrations", healthcare);
+        Assert.Contains("Initiative", healthcare);
+        Assert.Contains("patient-identifiable", healthcare);
+        Assert.Single(Regex.Matches(healthcare, "Before you publish")); // only the selected template's guidance is on the page
+        Assert.Contains("href=\"/admin/welcome/thumb/healthcare\"", healthcare);
+        Assert.Single(Regex.Matches(healthcare, "name=\"Key\""));
     }
 
     [Fact]
-    public async Task ATemplateWithoutAThumbnail_GetsADataDrivenCard()
+    public async Task ATemplateWithoutAThumbnail_OffersNoStaticPictureLink()
     {
         var dir = TemplateDirs.WithExtra("plain", n => n["name"] = "Plain");
         try
@@ -324,10 +315,9 @@ public class OnboardingFlowTests
             using var app = AdminApp.WithTemplates(dir);
             var owner = await app.SignedInClientAsync();
 
-            var html = await owner.GetStringAsync(WizardFlow.Template);
+            var html = await owner.GetStringAsync(WizardFlow.Template + "?show=plain");
 
-            Assert.Contains("adm-thumb adm-thumb-fallback", html);
-            Assert.Contains(">Plain</div>", html);
+            Assert.DoesNotContain("static picture", html);
             Assert.DoesNotContain("/admin/welcome/thumb/plain", html);
             Assert.Equal(HttpStatusCode.NotFound, (await owner.GetAsync("/admin/welcome/thumb/plain")).StatusCode);
         }
@@ -510,6 +500,7 @@ public class OnboardingFlowTests
         var owner = await fresh.SignedInClientAsync();
         var dashboard = await owner.GetStringAsync("/admin");
         Assert.Contains("Finish setting up your site", dashboard);
+        Assert.Contains("Not finished", dashboard);
         foreach (var path in new[] { "/admin/profile", "/admin/photo", "/admin/template", "/admin" })
             Assert.Equal(HttpStatusCode.OK, (await owner.GetAsync(path)).StatusCode); // the admin shell never traps an owner in the wizard
 
@@ -523,7 +514,9 @@ public class OnboardingFlowTests
         }
         var done = await other.GetStringAsync("/admin");
         Assert.DoesNotContain("Finish setting up", done);
-        Assert.Contains("Run the guided setup again", done);
+        Assert.DoesNotContain("Not finished", done);
+        Assert.Contains("<dd>Finished</dd>", done); // the status row says so
+        Assert.Contains("href=\"/admin/welcome\"", AdminShellTests.MenuOf(done)); // and the wizard stays one click away for a re-run
     }
 
     [Fact]

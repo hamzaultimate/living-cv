@@ -243,7 +243,7 @@ public class ContentSecurityTests
     }
 
     [Fact]
-    public async Task OnlyTheEditForms_MayLoadAScript_AndNothingIsEverInline()
+    public async Task EveryAdminPage_MayLoadFirstPartyScript_ButNothingIsEverInline()
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
@@ -253,8 +253,7 @@ public class ContentSecurityTests
         {
             var response = await owner.GetAsync(path);
             var csp = string.Join(";", response.Headers.GetValues("Content-Security-Policy"));
-            var isEdit = path.Contains("/edit") || path.Contains("/images/") || ProfileFlow.Parts.Contains(path) || path == SectionsFlow.Path; // the forms that carry the unsaved changes warning
-            Assert.Equal(isEdit, csp.Contains("script-src 'self'"));
+            Assert.Contains("script-src 'self'", csp);
             Assert.DoesNotContain("unsafe-inline", csp);
             Assert.DoesNotContain("unsafe-eval", csp);
             Assert.Contains("default-src 'none'", csp);
