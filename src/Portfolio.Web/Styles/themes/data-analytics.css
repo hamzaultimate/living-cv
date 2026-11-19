@@ -1,1 +1,33 @@
-/* Data & Analytics theme: written in Task 2. */
+/* Data & Analytics theme: a deep blue-green dark mode (a cool near-white in light) with a teal accent, a plain sans display face and modest corners, so the page reads like a clean analysis report.
+   Only variables are set here, so the whole site switches look with the data-template attribute and no rebuild. Specificity beats the base :root tokens. */
+:root[data-template="data-analytics"] {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --radius-lg: 0.5rem;
+  --radius-md: 0.375rem;
+}
+
+/* Dark is the default look (the base tokens do the same on :root), so it also applies before the theme script has set data-theme or when it cannot run. */
+:root[data-template="data-analytics"],
+:root[data-template="data-analytics"][data-theme="dark"] {
+  --c-bg: 12 20 24;
+  --c-surface: 18 29 34;
+  --c-surface-2: 26 40 46;
+  --c-border: 44 62 70;
+  --c-text: 232 242 244;
+  --c-muted: 150 172 178;
+  --c-accent: 45 212 191;
+  --c-accent-strong: 94 234 212;
+}
+
+:root[data-template="data-analytics"][data-theme="light"] {
+  --c-bg: 246 250 250;
+  --c-surface: 255 255 255;
+  --c-surface-2: 232 242 242;
+  --c-border: 205 220 222;
+  --c-text: 15 30 36;
+  --c-muted: 74 96 104;
+  --c-accent: 15 118 110;
+  --c-accent-strong: 17 94 89;
+}

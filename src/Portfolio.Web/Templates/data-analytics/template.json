@@ -1,0 +1,379 @@
+{
+  "$schema": "../template.schema.json",
+  "key": "data-analytics",
+  "name": "Data & Analytics",
+  "profession": "Data analyst or scientist",
+  "description": "Showcase for data analysts, scientists and analytics engineers: projects with the question, the method and the measured result.",
+  "archetype": "showcase",
+  "theme": {
+    "default": "data-analytics",
+    "themeColor": "#0c1418",
+    "accents": [
+      {
+        "key": "teal",
+        "label": "Teal",
+        "dark": {
+          "accent": "#2dd4bf",
+          "strong": "#5eead4"
+        },
+        "light": {
+          "accent": "#0f766e",
+          "strong": "#115e59"
+        }
+      },
+      {
+        "key": "indigo",
+        "label": "Indigo",
+        "dark": {
+          "accent": "#818cf8",
+          "strong": "#a5b4fc"
+        },
+        "light": {
+          "accent": "#4338ca",
+          "strong": "#3730a3"
+        }
+      },
+      {
+        "key": "orange",
+        "label": "Orange",
+        "dark": {
+          "accent": "#fb923c",
+          "strong": "#fdba74"
+        },
+        "light": {
+          "accent": "#c2410c",
+          "strong": "#9a3412"
+        }
+      },
+      {
+        "key": "rose",
+        "label": "Rose",
+        "dark": {
+          "accent": "#fb7185",
+          "strong": "#fda4af"
+        },
+        "light": {
+          "accent": "#be123c",
+          "strong": "#9f1239"
+        }
+      }
+    ]
+  },
+  "heroSuggestions": {
+    "title": "Data Analyst",
+    "summary": "Data analyst who turns messy data into clear answers, building reliable pipelines, models and dashboards that people use to decide."
+  },
+  "sections": [
+    {
+      "key": "about",
+      "label": "about"
+    },
+    {
+      "key": "experience",
+      "label": "experience"
+    },
+    {
+      "key": "projects",
+      "label": "projects",
+      "itemLabel": "Analysis"
+    },
+    {
+      "key": "skills",
+      "label": "tools & methods",
+      "shortLabel": "tools"
+    },
+    {
+      "key": "certifications",
+      "label": "certifications",
+      "shortLabel": "certs"
+    },
+    {
+      "key": "blog",
+      "label": "notes",
+      "itemLabel": "Note"
+    },
+    {
+      "key": "talks",
+      "label": "talks",
+      "enabled": false
+    },
+    {
+      "key": "testimonials",
+      "label": "testimonials"
+    },
+    {
+      "key": "contact",
+      "label": "contact"
+    }
+  ],
+  "skillGroups": [
+    "Analysis & statistics",
+    "Data engineering",
+    "Visualisation",
+    "Machine learning",
+    "Languages & tools"
+  ],
+  "seo": {
+    "title": "{name} — {title}",
+    "description": "{name}, {title}. Analyses, models and dashboards, with the question asked and the result measured.",
+    "aboutDescription": "About {name}, {title}: the questions asked, the methods used and the results measured."
+  },
+  "editor": {
+    "experience": {
+      "itemLabel": "Role",
+      "fields": {
+        "company": {
+          "label": "Employer"
+        },
+        "title": {
+          "label": "Job title"
+        },
+        "tech": {
+          "label": "Tools and methods"
+        },
+        "summary": {
+          "hint": "Describe the questions you owned. Never include client data, personal data or material under NDA."
+        }
+      }
+    },
+    "skills": {
+      "itemLabel": "Skill"
+    },
+    "projects": {
+      "fields": {
+        "category": {
+          "hint": "A subject area such as Forecasting. Used by the filter on the Projects page."
+        },
+        "tech": {
+          "label": "Tools"
+        },
+        "problem": {
+          "hint": "Never include client data, personal data or material under NDA."
+        },
+        "approach": {
+          "hint": "Never include client data, personal data or material under NDA."
+        }
+      }
+    },
+    "certifications": {
+      "itemLabel": "Certification"
+    },
+    "talks": {
+      "itemLabel": "Talk",
+      "fields": {
+        "event": {
+          "label": "Event or conference"
+        },
+        "typeVideo": {
+          "label": "Recording"
+        },
+        "typeTalk": {
+          "label": "Live talk"
+        },
+        "url": {
+          "label": "Link to the recording or slides",
+          "hint": "http or https. Recordings are linked, not embedded."
+        },
+        "youtubeId": {
+          "hidden": true
+        }
+      }
+    },
+    "testimonials": {
+      "itemLabel": "Testimonial",
+      "fields": {
+        "authorTitle": {
+          "label": "Role and company"
+        }
+      }
+    },
+    "blog": {
+      "itemLabel": "Note",
+      "fields": {
+        "body": {
+          "label": "Note text"
+        },
+        "draft": {
+          "label": "Keep as a draft (not public)"
+        }
+      }
+    },
+    "hero": {
+      "fields": {
+        "heading": {
+          "label": "Home page hero",
+          "hint": "The headline block at the top of your home page. Plain text. Changes apply as soon as you save."
+        },
+        "eyebrow": {
+          "hint": "A short line above the headline, such as your title and focus. Plain text."
+        },
+        "lede": {
+          "label": "Intro"
+        }
+      }
+    },
+    "metrics": {
+      "itemLabel": "Metric",
+      "fields": {
+        "heading": {
+          "label": "Headline metrics",
+          "hint": "Numbers shown under the hero, such as rows processed or forecast accuracy. Only publish figures you can defend. Changes apply as soon as you save."
+        },
+        "value": {
+          "hint": "For example 18 or 2.4M."
+        },
+        "unit": {
+          "hint": "For example % or hours."
+        }
+      }
+    },
+    "sections": {
+      "itemLabel": "Section",
+      "fields": {
+        "heading": {
+          "label": "Site sections",
+          "hint": "Choose which pages the site has, what the menu calls them and in which order. Hiding a page never deletes its content. Changes apply as soon as you save."
+        },
+        "label": {
+          "label": "Menu name"
+        }
+      }
+    },
+    "about": {
+      "itemLabel": "Card",
+      "fields": {
+        "heading": {
+          "label": "About page"
+        },
+        "currentlyNote": {
+          "label": "\"Currently\" note"
+        },
+        "focus": {
+          "label": "Focus areas",
+          "hint": "One per line, for example the methods you are working with now."
+        }
+      }
+    },
+    "transfer": {
+      "fields": {
+        "heading": {
+          "label": "Backup and portability",
+          "hint": "Download all your content as one JSON file, or load one. You see a preview first; nothing is written until you confirm, and an import never deletes anything."
+        },
+        "exportHeading": {
+          "label": "Export",
+          "hint": "One JSON file with the profile and every entry, drafts included. Uploaded images are not in it, but the file lists the ones it uses."
+        },
+        "importHeading": {
+          "label": "Import",
+          "hint": "Entries are matched to yours by name, address name or title: a match is updated, anything else is added."
+        },
+        "profile": {
+          "label": "Profile"
+        }
+      }
+    }
+  },
+  "starter": {
+    "file": "starter.json"
+  },
+  "copy": {
+    "layout": {
+      "footerNote": "Data, analysis and insight."
+    },
+    "home": {
+      "workEyebrow": "Selected analyses",
+      "workHeading": "Projects and results",
+      "workEmptyTitle": "Featured analyses coming soon",
+      "workEmptyBody": "Once you add your featured projects, the question, the method and the result of each will appear here.",
+      "testimonialsEyebrow": "Kind words",
+      "testimonialsHeading": "Feedback from stakeholders",
+      "contactHeading": "Have a question the data could answer?",
+      "experienceEyebrow": "Experience",
+      "experienceHeading": "Where I've worked with data",
+      "credentialsEyebrow": "Learning and credentials",
+      "credentialsHeading": "Courses and certifications",
+      "skillsHeading": "Tools and methods"
+    },
+    "projects": {
+      "title": "Projects",
+      "description": "Data projects: the question, the method and the measured result.",
+      "eyebrow": "Selected analyses",
+      "heading": "Projects and results",
+      "lead": "Each project states the question, how it was answered and what changed because of it.",
+      "emptyTitle": "No analyses yet",
+      "emptyBody": "Add your first project to show the question, the method and the result.",
+      "filterLabel": "Filter projects by subject",
+      "featuredBadge": "featured",
+      "problemHeading": "The question",
+      "approachHeading": "Method",
+      "noWriteup": "A full write-up of this analysis is on the way.",
+      "stackHeading": "Tools",
+      "linksHeading": "Links",
+      "proofHeading": "Evidence",
+      "screenshotsHeading": "Charts and dashboards",
+      "imageAlt": "{title} chart",
+      "galleryLabel": "Charts and dashboards",
+      "openImageLabel": "Open chart"
+    },
+    "experience": {
+      "title": "Experience",
+      "description": "{name}'s data and analytics experience, most recent first.",
+      "eyebrow": "Experience",
+      "heading": "Where I've worked with data",
+      "lead": "Most recent first: the questions I owned and what the work changed.",
+      "empty": "Experience will appear here once it is added."
+    },
+    "skills": {
+      "title": "Tools & methods",
+      "description": "Tools and methods by area: analysis, data engineering, visualisation and machine learning.",
+      "eyebrow": "Tools & methods",
+      "heading": "Tools and methods",
+      "lead": "Grouped by what they are used for.",
+      "empty": "Tools and methods will appear here once they are added."
+    },
+    "certifications": {
+      "title": "Courses & credentials",
+      "description": "Courses and certifications completed, in progress and planned.",
+      "eyebrow": "Courses & credentials",
+      "heading": "Courses and certifications",
+      "lead": "What is completed, what is in progress and what is next.",
+      "emptyTitle": "No certifications listed",
+      "emptyBody": "Add courses or certifications to show your learning.",
+      "filterLabel": "Filter courses and certifications by issuer",
+      "statusEarned": "Completed",
+      "statusInProgress": "Studying",
+      "statusPlanned": "Next up",
+      "viewCertificate": "View certificate",
+      "viewCredential": "View details →"
+    },
+    "blog": {
+      "title": "Notes",
+      "description": "Notes on analysis, modelling and communicating results.",
+      "eyebrow": "Notes",
+      "heading": "Notes on data",
+      "lead": "What I am learning about analysis, modelling and communicating results.",
+      "empty": "Notes coming soon."
+    },
+    "talks": {
+      "title": "Talks",
+      "description": "Talks, workshops and recordings.",
+      "eyebrow": "Talks",
+      "heading": "Talks & workshops",
+      "empty": "No talks listed yet. Check back soon.",
+      "watch": "Watch the recording →"
+    },
+    "contact": {
+      "description": "Contact {name}: email, phone or LinkedIn.",
+      "heading": "Have a question the data could answer?",
+      "lead": "The best ways to reach me about analysis, modelling or reporting work."
+    },
+    "cv": {
+      "description": "Curriculum vitae — {name}, {title}.",
+      "experienceHeading": "Professional experience",
+      "skillsHeading": "Tools & methods",
+      "projectsHeading": "Projects and results",
+      "certificationsHeading": "Courses and certifications"
+    }
+  }
+}
