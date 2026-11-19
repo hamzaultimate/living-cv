@@ -188,7 +188,7 @@ public class OnboardingSecurityTests
     }
 
     [Fact]
-    public async Task WizardResponses_ArePrivate_NoStore_AndOnlyTheReviewStepMayFrameTheSite()
+    public async Task WizardResponses_ArePrivate_NoStore_AndOnlyTheTemplateAndReviewStepsMayFrameTheSite()
     {
         using var app = new AdminApp();
         var owner = await DraftedAsync(app);
@@ -200,8 +200,9 @@ public class OnboardingSecurityTests
             Assert.Contains("noindex", response.Headers.GetValues("X-Robots-Tag").Single());
             var csp = response.Headers.GetValues("Content-Security-Policy").Single();
             Assert.Contains("default-src 'none'", csp);
-            Assert.DoesNotContain("script-src", csp);
-            Assert.Equal(path == WizardFlow.Review, csp.Contains("frame-src 'self'"));
+            Assert.Contains("script-src 'self'", csp);
+            Assert.DoesNotContain("unsafe-inline", csp);
+            Assert.Equal(path is WizardFlow.Template or WizardFlow.Review, csp.Contains("frame-src 'self'"));
         }
     }
 

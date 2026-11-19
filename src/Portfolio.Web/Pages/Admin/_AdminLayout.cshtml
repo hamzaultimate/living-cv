@@ -1,11 +1,20 @@
+@using Portfolio.Web.Security
+@inject AdminChrome Chrome
 @{
     var title = ViewData["Title"] as string ?? "Admin";
     var signedIn = User.Identity?.IsAuthenticated == true;
     var flash = TempData[AdminPageModel.FlashKey] as string;
     var flashError = TempData[AdminPageModel.FlashErrorKey] as string;
-    var current = ViewContext.RouteData.Values["page"] as string ?? "";
     // After a redirect the message takes focus so a screen reader reads it; only pages that ask for it (the content editors) do this.
     var focusFlash = ViewData["FocusFlash"] is true;
+    var path = Context.Request.Path.Value ?? "/admin";
+    var menu = signedIn ? await Chrome.MenuAsync(path, Context.RequestAborted) : null;
+    var railPage = AdminMenu.IsRailPage(path);
+    // The cookie is read here so the first paint is already in the right state; the script only ever writes it.
+    var collapsed = signedIn && AdminMenu.IsCollapsed(path, Context.Request.Cookies[AdminMenu.CollapsedCookie]);
+    // Admin / [parent] / [menu item] / [page]. A page below a menu item may name its own last crumb with ViewData["Crumb"]; otherwise its title is used.
+    var crumbs = menu is null ? [] : AdminMenu.Breadcrumb(menu, path, ViewData["Title"] as string, ViewData["Crumb"] as string);
+    var hasActions = IsSectionDefined("Actions");
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -20,38 +29,57 @@
 </head>
 <body class="adm">
     <a href="#main-content" class="adm-skip">Skip to content</a>
-    <header class="adm-header">
-        <div class="adm-bar">
-            <a class="adm-brand" href="/admin">Admin</a>
-            @if (signedIn)
+    <div class="adm-shell@(signedIn ? "" : " adm-shell-bare")" data-adm-shell data-menu="@(collapsed ? "collapsed" : "expanded")" data-rail-page="@(railPage ? "true" : "false")">
+        @if (menu is not null)
+        {
+            <div class="adm-topbar">
+                <button type="button" class="adm-menu-link adm-menu-button adm-topbar-button" data-adm-open aria-controls="adm-menu" aria-expanded="false"><partial name="/Pages/Admin/_AdminIcon.cshtml" model="@("menu")" /><span class="adm-menu-label">Menu</span></button>
+                <a class="adm-brand" href="/admin">Admin</a>
+            </div>
+            @await Component.InvokeAsync("AdminMenu", new { menu, collapsed })
+        }
+        <div class="adm-content">
+            @if (menu is null)
             {
-                <nav class="adm-nav" aria-label="Admin">
-                    <a href="/admin" aria-current="@(current == "/Admin/Index" ? "page" : null)">Dashboard</a>
-                    <a href="/admin/profile" aria-current="@(current == "/Admin/Profile" || current.StartsWith("/Admin/Profile/") ? "page" : null)">Profile</a>
-                    <a href="/admin/photo" aria-current="@(current == "/Admin/Photo" ? "page" : null)">Photo</a>
-                    <a href="/admin/content" aria-current="@(current.StartsWith("/Admin/Content/") ? "page" : null)">Content</a>
-                    <a href="/admin/sections" aria-current="@(current == "/Admin/Sections" ? "page" : null)">Sections</a>
-                    <a href="/admin/template" aria-current="@(current == "/Admin/Template" ? "page" : null)">Template</a>
-                    <a href="/admin/welcome" aria-current="@(current.StartsWith("/Admin/Welcome/") ? "page" : null)">Setup</a>
-                    <a href="/" target="_blank" rel="noopener">View site</a>
-                </nav>
-                <form method="post" asp-page="/Admin/Logout" class="adm-signout">
-                    <button type="submit" class="adm-btn adm-btn-quiet">Sign out</button>
-                </form>
+                <header class="adm-plainbar"><a class="adm-brand" href="/admin">Admin</a></header>
             }
+            <main id="main-content" class="adm-main">
+                @if (crumbs.Count > 0 || hasActions)
+                {
+                    <div class="adm-pagehead">
+                        @if (crumbs.Count > 0)
+                        {
+                            <nav class="adm-crumbs" aria-label="Breadcrumb">
+                                <ol>
+                                    @foreach (var crumb in crumbs)
+                                    {
+                                        <li>@if (crumb.Url is { } url) {<a href="@url">@crumb.Label</a>} else {<span aria-current="page">@crumb.Label</span>}</li>
+                                    }
+                                </ol>
+                            </nav>
+                        }
+                        @if (hasActions)
+                        {
+                            <div class="adm-pagehead-actions">@await RenderSectionAsync("Actions")</div>
+                        }
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(flash))
+                {
+                    <div class="adm-flash adm-flash-ok" role="status" aria-live="polite" tabindex="-1" autofocus="@(focusFlash && string.IsNullOrEmpty(flashError) ? "autofocus" : null)">@flash</div>
+                }
+                @if (!string.IsNullOrEmpty(flashError))
+                {
+                    <div class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus="@(focusFlash ? "autofocus" : null)">@flashError</div>
+                }
+                @RenderBody()
+            </main>
         </div>
-    </header>
-    <main id="main-content" class="adm-main">
-        @if (!string.IsNullOrEmpty(flash))
-        {
-            <div class="adm-flash adm-flash-ok" role="status" aria-live="polite" tabindex="-1" autofocus="@(focusFlash && string.IsNullOrEmpty(flashError) ? "autofocus" : null)">@flash</div>
-        }
-        @if (!string.IsNullOrEmpty(flashError))
-        {
-            <div class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus="@(focusFlash ? "autofocus" : null)">@flashError</div>
-        }
-        @RenderBody()
-    </main>
+    </div>
+    @if (signedIn && AdminAuth.AllowsScript(Context.Request.Path))
+    {
+        <script src="~/js/admin-shell.js" asp-append-version="true" defer></script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

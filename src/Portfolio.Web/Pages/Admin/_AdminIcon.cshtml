@@ -1,0 +1,52 @@
+@model string
+@* Inline SVG only: the admin CSP allows no inline style. Drawn on a 24-unit grid; stroke and size come from admin.css. An empty key draws nothing. *@
+@if (!string.IsNullOrEmpty(Model))
+{
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        @switch (Model)
+        {
+            case "dashboard":
+                <rect x="3" y="3" width="7" height="9" rx="1" /><rect x="14" y="3" width="7" height="5" rx="1" /><rect x="14" y="12" width="7" height="9" rx="1" /><rect x="3" y="16" width="7" height="5" rx="1" />
+                break;
+            case "brand":
+                <rect x="3" y="3" width="18" height="18" rx="4" /><path d="M8 16l4-8 4 8M9.5 13h5" />
+                break;
+            case "profile":
+                <circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+                break;
+            case "content":
+                <path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4M9 12h6M9 16h6" />
+                break;
+            case "template":
+                <rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M9 9v11" />
+                break;
+            case "sections":
+                <path d="M4 6h16M4 12h16M4 18h10" />
+                break;
+            case "wizard":
+                <path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z" /><path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8z" />
+                break;
+            case "transfer":
+                <path d="M7 4v14M3 14l4 4 4-4" /><path d="M17 20V6M13 10l4-4 4 4" />
+                break;
+            case "external":
+                <path d="M14 4h6v6M20 4l-9 9" /><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+                break;
+            case "signout":
+                <path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4" /><path d="M16 8l4 4-4 4M20 12H9" />
+                break;
+            case "collapse":
+                <path d="M11 6l-6 6 6 6M19 6l-6 6 6 6" />
+                break;
+            case "menu":
+                <path d="M4 6h16M4 12h16M4 18h16" />
+                break;
+            case "chevron":
+                <path d="M9 6l6 6-6 6" />
+                break;
+            default:
+                <circle cx="12" cy="12" r="3" />
+                break;
+        }
+    </svg>
+}

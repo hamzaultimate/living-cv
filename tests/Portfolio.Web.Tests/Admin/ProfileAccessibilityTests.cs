@@ -93,14 +93,19 @@ public class ProfileAccessibilityTests
     }
 
     [Fact]
-    public async Task TheAdminNavigation_MarksTheProfileForItsSubPages_AndTheDashboardLinksToThem()
+    public async Task TheAdminMenu_MarksTheProfileSubPage_OpensItsSubMenu_AndTheDashboardLinksToThem()
     {
         using var app = new AdminApp();
         var owner = await ContentFlow.BlankSiteAsync(app);
 
         foreach (var path in ProfileFlow.Parts)
-            Assert.Contains("<a href=\"/admin/profile\" aria-current=\"page\">Profile</a>", await owner.GetStringAsync(path));
-        var dashboard = await owner.GetStringAsync("/admin");
+        {
+            var menu = AdminShellTests.MenuOf(await owner.GetStringAsync(path));
+            // The sub-page itself is the current item, and the Profile sub-menu that holds it (the first one) is drawn open.
+            Assert.Matches($@"<a [^>]*href=""{System.Text.RegularExpressions.Regex.Escape(path)}""[^>]*aria-current=""page""", menu);
+            Assert.True(System.Text.RegularExpressions.Regex.Match(menu, @"<details class=""adm-menu-sub""( open=""open"")?>").Groups[1].Success, $"{path}: the Profile sub-menu is closed");
+        }
+        var dashboard = await owner.GetStringAsync("/admin"); // the menu on the dashboard links to every profile page
         foreach (var path in ProfileFlow.Parts) Assert.Contains($"href=\"{path}\"", dashboard);
         var identity = await owner.GetStringAsync(ProfileFlow.Identity);
         foreach (var path in ProfileFlow.Parts) Assert.Contains($"href=\"{path}\"", identity);

@@ -189,10 +189,10 @@ public class TransferSecurityTests
         {
             var csp = string.Join(";", response.Headers.GetValues("Content-Security-Policy"));
             var html = await response.Content.ReadAsStringAsync();
-            Assert.DoesNotContain("script-src", csp);
+            Assert.Contains("script-src 'self'", csp);
             Assert.Contains("default-src 'none'", csp);
             Assert.DoesNotContain("unsafe-inline", csp);
-            Assert.DoesNotMatch(@"<script\b", html);
+            Assert.DoesNotMatch(@"<script(?![^>]*\ssrc=)", html); // a first-party file is allowed, never inline script
             Assert.DoesNotMatch(@"\son[a-z]+\s*=", html);
             Assert.DoesNotContain("javascript:", html);
             Assert.Contains("no-store", string.Join(",", response.Headers.GetValues("Cache-Control")));

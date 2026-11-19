@@ -59,8 +59,9 @@ describe what you changed and why.
   manifest's `editor` block (`EditorFields` holds the neutral defaults); never decide wording or visibility by template key. A new editable
   entity needs a `ConcurrencyStamp` (`IOrderedContent`) and an additive migration. Any write that can change the positions in a list (a move, a new
   entry, a change of group) must also take the section's list stamp: call `ContentEditor.BeginOrderChangeAsync(section)` before reading the positions
-  the write is computed from (or `MoveAsync`, which checks the stamp the page posted); a new section only needs its key, no schema change. Admin pages run no inline script: the one exception is the
-  first-party `wwwroot/js/admin-unsaved.js` on the edit forms (the admin CSP allows `script-src 'self'` there only, see `AdminAuth.AllowsScript`).
+  the write is computed from (or `MoveAsync`, which checks the stamp the page posted); a new section only needs its key, no schema change. Admin pages run no inline script. Signed-in admin pages load
+  the first-party `wwwroot/js/admin-shell.js` (the menu), and the edit forms also `wwwroot/js/admin-unsaved.js`; the admin CSP allows
+  `script-src 'self'` on every admin path except the login page (see `AdminAuth.AllowsScript`).
 - Never trust an upload: go through `ImageProcessor` and `UploadStore`, which sniff the bytes, re-encode,
   and generate the file name. The owner account is created only by `/setup` and reset only by
   `dotnet run --project src/Portfolio.Web -- reset-owner`; do not add other account paths.

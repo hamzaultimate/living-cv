@@ -54,7 +54,7 @@ testable the moment you run it. Swap in your own details to make it yours.
   sets the wording, section list and theme; switching hides sections the template does not use and
   never deletes content. See [docs/template-authoring-guide.md](docs/template-authoring-guide.md)
 - **Setup wizard** at `/admin/welcome`, opened right after `/setup` and re-runnable from the dashboard: pick a
-  template (cards with thumbnail and what is included), enter your basics (title and summary are suggested by the
+  template (names grouped by profession, with a live preview and what is included), enter your basics (title and summary are suggested by the
   template), optionally add a photo, then review a live draft preview, choose an accent colour and starter content
   (blank, or fictional sample entries) and publish. Progress is saved per step, nothing is public until you publish,
   and a fresh database goes to a live site without editing any config file.
