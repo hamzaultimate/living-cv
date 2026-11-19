@@ -385,6 +385,8 @@ public class CredentialsArchetypeTests
         var notHeld = starter.Certifications.Where(c => c.Status != CertificationStatus.Earned).ToList();
         Assert.NotEmpty(held);
         Assert.NotEmpty(notHeld); // the starter must have a course in progress or planned, or this proves nothing
+        Assert.Contains(notHeld, c => c.Status == CertificationStatus.InProgress); // a course under way must not be listed as held
+        Assert.Contains(notHeld, c => c.Status == CertificationStatus.Planned);    // nor one only planned
         foreach (var c in held) Assert.Contains(System.Text.Json.JsonEncodedText.Encode(c.Name).ToString(), markup);
         foreach (var c in notHeld) Assert.DoesNotContain(System.Text.Json.JsonEncodedText.Encode(c.Name).ToString(), markup);
     }
