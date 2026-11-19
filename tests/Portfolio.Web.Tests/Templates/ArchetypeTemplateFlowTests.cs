@@ -10,18 +10,25 @@ using Xunit;
 namespace Portfolio.Web.Tests.Templates;
 
 /// <summary>
-/// The admin and cross-cutting paths for every template on an archetype that lays out its own work pages (gallery and results), through data only: wizard, preview,
+/// The admin and cross-cutting paths for every template on an archetype other than Software and Healthcare (gallery, results and the showcase presets), through data only: wizard, preview,
 /// switching, section settings, sitemap and structured data, export and import, and a blank wizard-finished site end to end. Driven by
-/// <see cref="GalleryArchetypeTests.Keys"/> and <see cref="ResultsArchetypeTests.Keys"/>: a further template on either archetype is covered by adding its key there.
+/// <see cref="GalleryArchetypeTests.Keys"/>, <see cref="ResultsArchetypeTests.Keys"/> and <see cref="ShowcaseArchetypeTests.Keys"/>: a further template is covered by adding its key there.
 /// </summary>
 public class ArchetypeTemplateFlowTests
 {
-    public static readonly string[] Keys = [.. GalleryArchetypeTests.Keys, .. ResultsArchetypeTests.Keys];
+    public static readonly string[] Keys = [.. GalleryArchetypeTests.Keys, .. ResultsArchetypeTests.Keys, .. ShowcaseArchetypeTests.Keys];
 
     public static TheoryData<string> KeyData => new(Keys);
 
-    /// <summary>What marks one work card in the archetype's own layout.</summary>
-    private static string Card(string key) => Definition(key).Archetype == Archetypes.Results ? "data-results-card" : "<article class=\"group relative";
+    /// <summary>What marks one work card in the archetype's own layout (the showcase presets use the shared work page, so its card).</summary>
+    private static string Card(string key) =>
+        Definition(key).Archetype == Archetypes.Results ? "data-results-card"
+        : Definition(key).Archetype == Archetypes.Showcase ? "<article class=\"card group flex flex-col\""
+        : "<article class=\"group relative";
+
+    /// <summary>What marks a case-study page in the archetype's own layout.</summary>
+    private static string DetailMarker(string key) =>
+        Definition(key).Archetype == Archetypes.Showcase ? "<article class=\"container-page py-16 md:py-20\">" : "Next ";
 
     private static string TemplatesDir => Path.Combine(AppContext.BaseDirectory, "Templates");
     private static TemplateDefinition Definition(string key) => new TemplateCatalog(TemplatesDir).Get(key);
@@ -115,7 +122,7 @@ public class ArchetypeTemplateFlowTests
             Assert.Contains("noindex", html);
             Assert.Contains("no-store", preview.Headers.CacheControl?.ToString() ?? "");
             Assert.Contains("Telemetry", html); // the same rows, drawn by the gallery layout
-            if (path != "/") Assert.Contains(path == "/projects" ? Card(key) : "Next ", html);
+            if (path != "/") Assert.Contains(path == "/projects" ? Card(key) : DetailMarker(key), html);
 
             // A visitor asking for the same thing gets the saved (software) page, unchanged.
             var plain = await (await visitor.GetAsync($"{path}?preview={key}")).Content.ReadAsStringAsync();
