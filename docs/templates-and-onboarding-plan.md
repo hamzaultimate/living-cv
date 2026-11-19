@@ -534,13 +534,13 @@ download with `nosniff`). Two exports of the same data are byte-identical apart 
 **What remains.** Phase 5 (more templates) and 6 (CV output per template) are untouched. The unique-index gap for names that the editors share (two simultaneous creates of one skill name) is still known; the import re-checks keys at confirm but has the same theoretical race.
 
 ### Phase 5: Remaining templates and archetypes
-**Status: step 1 done** (gallery, Design & UX, Photography & Film; pending independent review). **Step 2 done** (results layout, Marketing & Content, Sales & Business Development; pending independent review). **Step 3 done** (Finance & Accounting on the results layout; pending independent review): this "step 3" is the third piece of work in the order they were done (step 2 left Finance as a preset on the results layout), not item 3 of the numbered list below. Item 3 of that list, Education on the Credentials layout, and item 4, Data & Analytics and Product / Project Management on Showcase, are not started. Notes are in "Phase 5 step 1", "Phase 5 step 2" and "Phase 5 step 3" below.
+**Status: step 1 done** (gallery, Design & UX, Photography & Film; pending independent review). **Step 2 done** (results layout, Marketing & Content, Sales & Business Development; pending independent review). **Step 3 done** (Finance & Accounting on the results layout; pending independent review): this "step 3" is the third piece of work in the order they were done (step 2 left Finance as a preset on the results layout), not item 3 of the numbered list below. **Step 4 done** (Data & Analytics and Product & Project Management on the Showcase layout, item 4 of the list; independent review done and its findings fixed). Item 3 of that list, Education on the Credentials layout, is in progress on `feature/phase-5d-education-template` (design committed, nothing built). Notes are in "Phase 5 step 1", "Phase 5 step 2", "Phase 5 step 3" and "Phase 5 step 4" below.
 
 Build one archetype per step, then the presets that use it:
 1. Gallery layout, then Design & UX, Photography/Creative. **Done.**
 2. Results layout, then Marketing, Sales, Finance. **Done** (Finance & Accounting was a preset only, see "Phase 5 step 3").
 3. Credentials layout (already proven by Healthcare), then Education. **Not started.**
-4. Data & Analytics and Product/Project Management on the Showcase layout. **Not started.**
+4. Data & Analytics and Product/Project Management on the Showcase layout. **Done** (see "Phase 5 step 4").
 Each template needs a preset, theme, starter content, thumbnail, and a11y/contrast check.
 
 #### Phase 5 step 1: gallery archetype, Design & UX, Photography & Film (done, pending independent review)
@@ -683,6 +683,27 @@ The gallery work shows the pattern for the new Results archetype: partials plus 
 18. **Not verified in the browser pass:** SQL Server and real migrations; a real uploaded profile photo; the other templates' figure bands and home pages beyond status and byte comparison; the content of `/cv.pdf` and `/og.png`; screen-reader output.
 
 **What remains in Phase 5.** Education on the existing Credentials layout (a preset only, plus tests added to the Credentials checks); Data & Analytics and Product / Project Management on the existing Showcase layout (presets only).
+
+#### Phase 5 step 4: Data & Analytics and Product & Project Management on the showcase layout (done, review findings fixed)
+
+**Scope.** Two data-only presets on the existing Showcase layout, the one Software & IT uses: keys `data-analytics` and `product-management`. No C# change, no Razor change, no migration, no CSP change, no new script, no new copy key. `/cv`, `/cv.pdf` and `/og.png` keep the Software look (Phase 6). Design: `docs/superpowers/specs/2026-11-19-showcase-templates-design.md`; plan: `docs/superpowers/plans/2026-11-19-showcase-templates.md`. Branch `feature/phase-5e-showcase-templates`, stacked on `feature/phase-5c-finance-template` (open the pull request against that branch, or rebase onto `develop` once Finance merges).
+
+**What shipped.** For each: a manifest (Data & Analytics: projects, item "Analysis", tools & methods, notes; Product & Project Management: shipped work, item "Release", skills & methods, writing), fictional starter content, a theme (teal on deep blue-green; amber on warm charcoal) with four accent choices, seven generated SVG pictures and a real thumbnail. Talks are off and the `youtubeId` field is hidden. Neither is `sensitive`; the editors warn against client data, personal data and confidential roadmaps. `ShowcaseArchetypeTests.Keys` holds both keys and the admin flows in `ArchetypeTemplateFlowTests` run for them.
+
+**Verified.**
+1. Full suite on an LF export of `HEAD`: 2430 tests, 2428 passed. The two failures, `SoftwareParityTests.DemoPersona_RendersByteForByteLikeTheSnapshots` and `OnboardingAccessibilityAccentTests.WithNoAccentPicked_ThePublicPageHasNoAccentOverride`, fail identically on the parent commit `4c94c99` in the same setup: on Windows the Razor output carries CRLF, so an LF export does not cure them (they are expected to pass on Linux CI; that was not run here).
+2. Mutation tests, each caught by the test meant for it: a dropped copy string, swapped sections, a washed-out accent, talks switched on, a legal suffix on a client name, the YouTube field un-hidden, Software wording in the copy; and after the review, a real-sounding employer name and the word "patient" in a sample quote.
+3. Independent `quality-reviewer` pass over `4c94c99..HEAD`: no change to `src/` beyond data, theme CSS and the stylesheet import; the generated `app.css` differs by exactly the two new theme rule sets; all SVGs are inert; contrast passes (closest pair 4.54:1). Its findings (employer names that read like real organisations, org-name shape rules, no rendered-wording test, headers on two pages only, two assertions that could not fail, spec wording) were fixed or recorded.
+4. Real-browser pass on a running site (LocalDB, throwaway databases, since dropped): the setup wizard offers all nine templates, pre-fills each template's title and summary and shows its four accent choices; publishing sample content works for both; every public page of both templates returns 200 with one `h1`, no skipped heading level and no missing `alt`; `/talks` is 404 and absent from the sitemap; no horizontal overflow at 390 or 768 px (Product & Project Management: home, projects, case study, CV at 390; home and projects at 768. Data & Analytics: home, projects, case study, certifications at 390; home and projects at 768); keyboard order and a visible accent-coloured focus outline on desktop (Product & Project Management); the admin sections, hero, transfer and project editors in the template's words; a valid export; switching to Software restores its base look and wording with every row kept, and switching on to Data & Analytics works. Light mode of Product & Project Management was looked at once.
+
+**Known gaps.**
+- The Showcase hero's "LinkedIn", "GitHub" and "Download CV" buttons and its waveform backdrop are fixed in the layout and shared with Software; making them manifest wording is a separate change, as it was for the results layout.
+- Not done: the before and after render of 14 routes for the other seven templates (by construction nothing they render changed, and their suites pass); a test of the rendered public menu order (only the manifest order and the admin rows are asserted); round trips with every template other than Software; keyboard and light-mode passes for Data & Analytics; SQL Server (no migration); screen-reader output.
+- A starter certification may not carry a `credentialUrl` (a shipped-template test forbids an address there), so the starters list none.
+- The starter cover pictures are dark tiles in light mode as well.
+- The default hero titles ("Data Analyst", "Product Manager") do not cover data scientists or project managers, as with Software and Healthcare.
+
+**What remains in Phase 5.** Education on the existing Credentials layout (a preset only, plus tests added to the Credentials checks), in progress on its own branch.
 
 ### Phase 6: CV output per template
 - QuestPDF layout variants per archetype (section order and labels from the preset). HTML `/cv`
