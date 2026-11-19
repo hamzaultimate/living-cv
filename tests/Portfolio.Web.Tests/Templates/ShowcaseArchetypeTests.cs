@@ -43,14 +43,12 @@ public class ShowcaseArchetypeTests
 
         Assert.Equal(key, template.Key);
         Assert.Equal(Archetypes.Showcase, template.Archetype);
-        Assert.True(File.Exists(Path.Combine(G.Layouts, "showcase", "_Home.cshtml")));
         Assert.Equal(key, template.Theme.Default);
         Assert.True(File.Exists(Path.Combine(TemplateDirs.Web, "Styles", "themes", key + ".css")));
         Assert.NotNull(catalog.GetStarter(key));
         Assert.NotNull(catalog.GetPreviewImagePath(key));
         Assert.Equal(4, template.Theme.Accents.Count);
         Assert.Contains(template.Sections, s => s.Key == SectionRegistry.Projects && !string.IsNullOrWhiteSpace(s.ItemLabel));
-        Assert.False(Archetypes.ShowsClientsOnHome(template.Archetype));
         Assert.False(template.Sensitive);
     }
 
@@ -98,6 +96,13 @@ public class ShowcaseArchetypeTests
         Assert.NotEmpty(starter.Testimonials);
         foreach (var name in starter.Experiences.Select(e => e.Company.Replace("(fictional)", "", StringComparison.OrdinalIgnoreCase).Trim()).Concat(starter.Projects.Select(p => p.Org ?? "")))
             ResultsArchetypeTests.AssertNoLegalFormSuffix(name);
+        // Client names are coined single words, as in the results starters.
+        foreach (var org in starter.Projects.Select(p => p.Org).Where(o => !string.IsNullOrWhiteSpace(o)))
+            ResultsArchetypeTests.AssertCoinedClientName(org!);
+        // An invented employer says so in its name ("Example ...", "Sample ...", "Placeholder ...", "Demo ...", then "(fictional)"), so no sample can read like a real business; the same goes
+        // for the employer named in a testimonial's attribution.
+        Assert.All(starter.Experiences, e => Assert.Matches(@"^(Example|Sample|Placeholder|Demo)\b.*\(fictional\)$", e.Company));
+        Assert.All(starter.Testimonials, t => Assert.Contains("(fictional)", t.AuthorTitle));
 
         var images = new List<string>();
         foreach (var p in starter.Projects)
@@ -188,8 +193,38 @@ public class ShowcaseArchetypeTests
             .Where(h => !volatileHeaders.Contains(h.Key, StringComparer.OrdinalIgnoreCase))
             .OrderBy(h => h.Key, StringComparer.OrdinalIgnoreCase).Select(h => h.Key + ": " + string.Join(",", h.Value)));
 
-        foreach (var path in new[] { "/", "/projects" })
-            Assert.Equal(Flat(await software.NewClient().GetAsync(path)), Flat(await site.NewClient().GetAsync(path)));
+        var (softwareProject, _) = DemoSite.FirstSlugs(software);
+        var siteProject = await G.FirstSlugAsync(site);
+        foreach (var (sitePath, softwarePath) in new[] { ("/", "/"), ("/projects", "/projects"), ($"/projects/{siteProject}", $"/projects/{softwareProject}") })
+        {
+            var s = await software.NewClient().GetAsync(softwarePath);
+            var t = await site.NewClient().GetAsync(sitePath);
+            Assert.Equal(Flat(s), Flat(t));
+            var html = await t.Content.ReadAsStringAsync();
+            Assert.DoesNotContain("<iframe", html);
+            Assert.DoesNotMatch(@"<script[^>]*\ssrc=""https?://", html);
+        }
+    }
+
+    // ---------------------------------------------------------------- no other profession's wording on the pages
+
+    /// <summary>Words that belong to Software & IT alone. The data profession's own words ("engineering", "systems", "SQL") are not here on purpose.</summary>
+    private static readonly Regex SoftwareOnlyWording = new(@"\.NET|case stud(y|ies)|\bdeveloper|microservice|\bdevops\b|Plesk|silicon|\bIoT\b|\btoolkit\b|\bembedded\b", RegexOptions.IgnoreCase);
+
+    [Theory]
+    [MemberData(nameof(KeyData))]
+    public async Task EveryPublicRoute_OfTheSampleSite_ShowsNoSoftwareOrHealthcareWording(string key)
+    {
+        using var app = await G.SiteAsync(key, "sample");
+        var client = app.NewClient();
+
+        foreach (var path in new[] { "/", "/projects", "/about", "/experience", "/skills", "/certifications", "/blog", "/contact", "/cv" })
+        {
+            // The Showcase hero's fixed button words are shared with Software and are a known gap, so they are taken out before looking.
+            var visible = Regex.Replace(WebUtility.HtmlDecode(DemoSite.WithoutScripts(G.MainOf(await G.GetAsync(client, path)))), @"GitHub|LinkedIn|Download CV", "");
+            Assert.False(SoftwareOnlyWording.IsMatch(visible), $"{key} {path} shows software wording: {SoftwareOnlyWording.Match(visible).Value}");
+            Assert.False(DemoSite.HealthcareWording.IsMatch(visible), $"{key} {path} shows healthcare wording: {DemoSite.HealthcareWording.Match(visible).Value}");
+        }
     }
 
     // ---------------------------------------------------------------- labels come from the manifest

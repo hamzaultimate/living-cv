@@ -123,6 +123,8 @@ public class ArchetypeTemplateFlowTests
             Assert.Contains("no-store", preview.Headers.CacheControl?.ToString() ?? "");
             Assert.Contains("Telemetry", html); // the same rows, drawn by the gallery layout
             if (path != "/") Assert.Contains(path == "/projects" ? Card(key) : DetailMarker(key), html);
+            // The showcase marker is also in the other archetypes' case-study partials, so a showcase key must also lack their "Next" navigation and result tiles.
+            if (path != "/" && template.Archetype == Archetypes.Showcase) { Assert.DoesNotContain("Next ", html); Assert.DoesNotContain("data-results", html); }
 
             // A visitor asking for the same thing gets the saved (software) page, unchanged.
             var plain = await (await visitor.GetAsync($"{path}?preview={key}")).Content.ReadAsStringAsync();
