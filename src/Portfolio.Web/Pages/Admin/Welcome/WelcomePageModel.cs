@@ -9,9 +9,6 @@ namespace Portfolio.Web.Pages.Admin.Welcome;
 /// </summary>
 public abstract class WelcomePageModel : AdminPageModel
 {
-    /// <summary>The four steps. Kept so existing callers keep compiling; <see cref="WizardProgress.Steps"/> is the one list.</summary>
-    public static IReadOnlyList<(int Number, string Label, string Path)> Steps => WizardProgress.Steps;
-
     protected WelcomePageModel(OnboardingService onboarding, ITemplateCatalog catalog)
     {
         Onboarding = onboarding;

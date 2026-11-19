@@ -170,4 +170,39 @@ public class WizardFrameTests
 
         Assert.Equal(before, WizardFlow.PublicFingerprint(await WizardFlow.ProfileAsync(app)));
     }
+
+    private static string ContinueSetupHref(string dashboard) =>
+        Regex.Match(dashboard, @"<a class=""adm-btn adm-btn-primary"" href=""([^""]+)"">Continue setup</a>").Groups[1].Value;
+
+    [Fact]
+    public async Task ContinueSetup_OpensTheFirstStep_WithNoDraft()
+    {
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+
+        Assert.Equal("/admin/welcome", ContinueSetupHref(await owner.GetStringAsync("/admin")));
+    }
+
+    [Fact]
+    public async Task ContinueSetup_OpensTheBasics_AfterOnlyATemplate_AndWhileTheyAreIncomplete()
+    {
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+        await WizardFlow.PickTemplateAsync(owner, "software");
+        Assert.Equal("/admin/welcome/basics", ContinueSetupHref(await owner.GetStringAsync("/admin")));
+
+        await WizardFlow.JumpAsync(owner, WizardFlow.Basics, 1, new() { ["Form.OwnerName"] = "Half Done" });
+        Assert.Equal("/admin/welcome/basics", ContinueSetupHref(await owner.GetStringAsync("/admin")));
+    }
+
+    [Fact]
+    public async Task ContinueSetup_SkipsTheOptionalPhoto_AndOpensTheReview_OnceTheBasicsAreDone()
+    {
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+        await WizardFlow.PickTemplateAsync(owner, "software");
+        await WizardFlow.SaveBasicsAsync(owner);
+
+        Assert.Equal("/admin/welcome/review", ContinueSetupHref(await owner.GetStringAsync("/admin")));
+    }
 }

@@ -197,7 +197,7 @@ public class OnboardingFlowTests
         Assert.Matches(new Regex("id=\"content-sample\"[^>]*checked"), review);
         var dashboard = await second.GetStringAsync("/admin");
         Assert.Contains("Finish setting up", dashboard);
-        Assert.Contains("href=\"/admin/welcome/photo\"", dashboard); // resumes at the first step that is not saved yet... after basics that is the photo
+        Assert.Contains("href=\"/admin/welcome/review\"", dashboard); // resumes at the first step that is neither done nor optional: the photo is optional, so after the basics that is the review
     }
 
     [Fact]

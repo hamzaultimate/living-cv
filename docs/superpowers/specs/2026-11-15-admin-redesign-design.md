@@ -146,7 +146,7 @@ Each step is one card:
 
 - Top: step indicator, and "Draft saved at HH:mm" from the draft's `UpdatedAt` when a draft exists.
 - Middle: the step's content.
-- Bottom: "Start over" (when a draft exists) and "Skip setup" or "Leave without publishing" on the left; one "Continue" button on the right. The Back button is removed.
+- Bottom: "Start over" (when a draft exists) and "Skip setup" or "Leave without publishing" on the left; one "Continue" button on the right. The Back button is removed. On the Template step the picker's own "Use [name] and continue" is the Continue button, and on the Review step "Publish my site" is.
 
 The existing live region and heading focus behaviour in `_WizardHeader` are kept: focus goes to the step heading on load, or to the error summary when the page has errors.
 
