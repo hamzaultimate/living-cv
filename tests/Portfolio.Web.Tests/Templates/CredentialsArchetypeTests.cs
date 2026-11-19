@@ -93,7 +93,7 @@ public class CredentialsArchetypeTests
             EmptyHome: "Initiatives coming soon",
             LongTitle: "Advanced Skills Practitioner in Inclusive Education and Learning Support",
             GuidancePhrase: "Never publish pupil-identifiable information",
-            Foreign: new Regex(@"(?i)clinical|patients?|nurs(?:e|es|ing)|healthcare|hospital|wards?", RegexOptions.Compiled)),
+            Foreign: new Regex(@"(?i)\bclinical\b|\bpatients?\b|\bnurs(?:e|es|ing)\b|\bhealthcare\b|\bhospital\b|\bwards?\b", RegexOptions.Compiled)),
     };
 
     internal static string TemplatesDir => Path.Combine(AppContext.BaseDirectory, "Templates");
