@@ -48,14 +48,14 @@ Add Education, a template for school teachers, on the existing Credentials layou
 7. Switching to Education and back to Software deletes nothing and restores Software exactly; row counts are identical after round trips with every other template.
 8. Export from Education imports into every other template and back, with unknown section keys left inert.
 9. Public response headers equal Software's, and the Software parity snapshots pass unedited.
-10. A before and after render of the 14 routes for Software, Healthcare, Gallery, Marketing, Sales and Finance is identical after normalising asset fingerprints.
+10. A before and after render of 14 routes for Software, Healthcare, Design & UX, Photography & Film, Marketing & Content, Sales & BD and Finance & Accounting, in two content modes each (the demo seed switched to the template, and the template's own starter), is identical after normalising asset fingerprints. The comparison is taken from a clean export of the base commit and of the branch head, with a scratch test that is not committed.
 11. Starter names follow the existing shape rules, including the legal-form suffix rule, and no starter text names a pupil.
 
 ## 6. Testing
 
 Each criterion maps to an automated test, or to a manual check where it is visual.
 
-- **Credentials keyed list.** Add `CredentialsArchetypeTests.Keys = ["healthcare", "education"]` and make the Healthcare-named rendering checks in `TemplateRenderingTests` run over it. `DemoSite.HealthcareWording` becomes a per-key wording guard, as the Gallery and Results lists already work. The Healthcare assertions keep their strength.
+- **Credentials keyed list.** Add `CredentialsArchetypeTests.Keys = ["healthcare", "education"]`. The six Healthcare-named rendering checks in `TemplateRenderingTests` (every route, disabled sections, project images, meta descriptions, missing item, empty site) move into that class as theories driven by a per-key wording table, with Healthcare's strings carried over unchanged. `DemoSite.HealthcareWording` is a guard for **Software** pages and stays as it is: it contains "initiative", "registration" and "references", which Education uses legitimately. The per-key guard for a Credentials template is its own `Foreign` pattern. `ArchetypeTemplateFlowTests` also runs over the Credentials keys, with the card marker and the "Next" link made archetype-aware (the Credentials layout has no work-page partials, so `/projects` uses the shared markup).
 - **Existing lists extended.** `TemplateManifestTests` (folder list and catalog order), `OnboardingFlowTests` (card and guidance counts), the stylesheet-coverage test, and the accent-contrast test (which already runs for every template in the catalog).
 - **New guards.** The guidance appears on every editor for a `sensitive` template; the held-only credentials markup; the starter has no legal-form suffix and no pupil-identifying shape.
 - **Mutation testing.** In a scratch copy, break each new guard (hide a heading, drop `credentialsJsonLd`, swap two sections, lower an accent below 4.5:1, add a suffix to a name) and confirm a test fails.
@@ -71,3 +71,4 @@ Sign in at `/admin/login`. Open Appearance, Template (or Tools, Setup wizard, st
 - Tests for the Credentials layout are Healthcare-named today. Generalising them risks weakening a Healthcare check. Mitigation: keep the same assertions, drive them from a keyed list, and mutation-test.
 - The starter could look like real people or schools. Mitigation: invented persona, "(fictional)" and "(sample)" marks, coined or generic names, and the existing shape rules, with a test.
 - Stacking on an unmerged branch. Mitigation: rebase onto `develop` after the Finance PR merges; the only overlap is the shared test lists and `app.css`.
+- The Credentials layout was only ever exercised by Healthcare, so the flow checks may expose an assumption that only held for it. Mitigation: run the flow checks for Healthcare alone first (Task 3 of the plan), so a failure is attributed to the checks and not to Education.
