@@ -26,6 +26,7 @@ public class WelcomeBasicsModel : WelcomePageModel
         await LoadAsync(ct);
 
         // What the owner typed wins; then, for a site that is already set up, what it says now; the template's suggestion fills what is still empty.
+        // (A blank field is stored as null, the same as one never typed, so a field the owner cleared is filled again here. SaveTemplateAsync relies on that to swap suggestions.)
         var profile = State.Profile;
         var existing = !FirstRun;
         var draft = Draft ?? new OnboardingDraft();

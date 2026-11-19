@@ -10,8 +10,9 @@
         @foreach (var step in Model.Progress)
         {
             var current = step.Number == Model.CurrentStep;
-            <li aria-current="@(current ? "step" : null)" class="adm-step adm-step-@(step.State.ToString().ToLowerInvariant())">
-                <button type="submit" form="wizard-form" name="goto" value="@step.Number" class="adm-step-btn">
+            @* The current step is a button too, so aria-current sits on the button: that is what a keyboard or screen-reader user lands on. *@
+            <li class="adm-step adm-step-@(step.State.ToString().ToLowerInvariant())@(current ? " adm-step-current" : "")">
+                <button type="submit" form="wizard-form" name="goto" value="@step.Number" class="adm-step-btn" aria-current="@(current ? "step" : null)">
                     <span class="adm-step-num">@step.Number</span> @step.Label
                     <span class="adm-step-state">@step.Text</span>
                 </button>

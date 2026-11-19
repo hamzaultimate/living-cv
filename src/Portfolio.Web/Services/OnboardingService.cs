@@ -122,7 +122,9 @@ public class OnboardingService
         var plan = SectionSettings.PlanSwitch(_resolver, SiteProfileMapper.ToEntity(SiteProfileMapper.ToOptions(state.Profile)), template);
         if (!plan.Allowed) return SectionSettings.NoMenuMessage(template.Name, plan.Target);
         var draft = state.Draft ?? new OnboardingDraft();
-        if (_catalog.TryGet(draft.TemplateKey, out var previous) && previous.Key != template.Key)
+        // The template the owner was shown until now: the draft's, else the one the pages prefilled from (TemplateFor), so wording they never wrote is dropped even when the draft had no template yet.
+        var previous = TemplateFor(state);
+        if (previous.Key != template.Key)
         {
             if (string.IsNullOrWhiteSpace(draft.JobTitle) || draft.JobTitle == previous.HeroSuggestions.Title) draft.JobTitle = null;
             if (string.IsNullOrWhiteSpace(draft.Summary) || draft.Summary == previous.HeroSuggestions.Summary) draft.Summary = null;

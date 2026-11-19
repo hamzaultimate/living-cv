@@ -67,7 +67,7 @@ public class OnboardingAccessibilityAccentTests
             Assert.True(list.Success, WizardFlow.Pages[i]);
             Assert.Equal(4, Regex.Matches(list.Value, "<li\\b").Count);
             Assert.Single(Regex.Matches(list.Value, "aria-current=\"step\""));
-            Assert.Matches(new Regex($@"<li aria-current=""step"" class=""adm-step adm-step-[a-z]+"">\s*<button type=""submit"" form=""wizard-form"" name=""goto"" value=""{current[i]}"" class=""adm-step-btn"">\s*<span class=""adm-step-num"">{current[i]}</span>"), list.Value);
+            Assert.Matches(new Regex($@"<li class=""adm-step adm-step-[a-z]+ adm-step-current"">\s*<button type=""submit"" form=""wizard-form"" name=""goto"" value=""{current[i]}"" class=""adm-step-btn"" aria-current=""step"">\s*<span class=""adm-step-num"">{current[i]}</span>"), list.Value);
             Assert.Contains("<nav aria-label=\"Setup progress\">", html);
             Assert.Matches(new Regex($@"<div id=""wizard-status"" class=""adm-sr"" role=""status"" aria-live=""polite"" aria-atomic=""true"">Step {current[i]} of 4: "), html);
             Assert.Contains("<main id=\"main-content\"", html);

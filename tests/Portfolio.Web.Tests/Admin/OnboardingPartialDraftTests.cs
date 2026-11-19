@@ -94,6 +94,39 @@ public class OnboardingPartialDraftTests
     }
 
     [Fact]
+    public async Task ChoosingATemplate_ReplacesTheSuggestionsTheOwnerWasShown_EvenWhenTheDraftHadNoTemplateYet()
+    {
+        using var app = new AdminApp();
+        await ContentFlow.BlankSiteAsync(app); // the site is on software; a draft made now has no template, so Basics was prefilled from software
+        var catalog = app.Services.GetRequiredService<ITemplateCatalog>();
+        var software = catalog.Get("software").HeroSuggestions;
+        await WithServiceAsync(app, async s => { await s.SaveBasicsAsync(new BasicsForm { OwnerName = "Jordan", JobTitle = software.Title, Summary = software.Summary }); return 0; });
+
+        await WithServiceAsync(app, async s => await s.SaveTemplateAsync(catalog.Get("healthcare")));
+
+        var draft = await WizardFlow.DraftOrNullAsync(app);
+        Assert.Equal("healthcare", draft!.TemplateKey);
+        Assert.Null(draft.JobTitle); // software's wording is not carried into the healthcare draft as if the owner wrote it
+        Assert.Null(draft.Summary);
+        Assert.Equal("Jordan", draft.OwnerName);
+    }
+
+    [Fact]
+    public async Task ChoosingATemplate_KeepsWordingTheOwnerWrote_WhenTheDraftHadNoTemplateYet()
+    {
+        using var app = new AdminApp();
+        await ContentFlow.BlankSiteAsync(app);
+        var catalog = app.Services.GetRequiredService<ITemplateCatalog>();
+        await WithServiceAsync(app, async s => { await s.SaveBasicsAsync(new BasicsForm { JobTitle = "Ward Sister", Summary = "My own words." }); return 0; });
+
+        await WithServiceAsync(app, async s => await s.SaveTemplateAsync(catalog.Get("healthcare")));
+
+        var draft = await WizardFlow.DraftOrNullAsync(app);
+        Assert.Equal("Ward Sister", draft!.JobTitle);
+        Assert.Equal("My own words.", draft.Summary);
+    }
+
+    [Fact]
     public async Task ThePreview_AppliesEachFieldThatHasAValue_AndKeepsTheSavedValueForTheRest()
     {
         using var app = new AdminApp();

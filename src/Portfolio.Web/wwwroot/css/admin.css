@@ -131,7 +131,7 @@
 .adm-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .adm-steps { list-style: none; margin: 0 0 1.25rem; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
 .adm-steps li { flex: 1 1 8rem; padding: 0; border: 1px solid var(--adm-border); border-radius: .35rem; background: var(--adm-surface); color: var(--adm-muted); }
-.adm-steps li[aria-current="step"] { border-color: var(--adm-accent); color: var(--adm-text); font-weight: 600; box-shadow: 0 0 0 1px var(--adm-accent); }
+.adm-steps li.adm-step-current { border-color: var(--adm-accent); color: var(--adm-text); font-weight: 600; box-shadow: 0 0 0 1px var(--adm-accent); }
 .adm-step-btn { display: block; width: 100%; padding: .5rem .75rem; border: 0; border-radius: .35rem; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .adm-step-btn:focus-visible { outline: 3px solid var(--adm-accent); outline-offset: 2px; }
 .adm-step-state { display: inline-block; margin-left: 2rem; font-size: .75rem; font-weight: 500; color: var(--adm-muted); }
@@ -341,3 +341,5 @@ a.adm-btn { text-decoration: none; display: inline-block; }
 .adm-ready-todo .adm-state { background: var(--adm-warn-bg); color: var(--adm-warn-text); }
 .adm-ready-optional .adm-state { background: var(--adm-bg); color: var(--adm-muted); border-color: var(--adm-border); }
 @media (max-width: 40rem) { .adm-review { grid-template-columns: 1fr; } }
+.adm-linkbtn { padding: 0; border: 0; background: none; font: inherit; color: var(--adm-accent); text-decoration: underline; cursor: pointer; }
+.adm-linkbtn:focus-visible { outline: 3px solid var(--adm-accent); outline-offset: 2px; }

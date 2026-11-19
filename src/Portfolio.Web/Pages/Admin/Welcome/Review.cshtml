@@ -25,7 +25,8 @@
                             <strong>@line.Label</strong>
                             <span class="adm-state">@state</span>
                             <span>@line.Detail</span>
-                            <a href="@line.Path">@(line.Done ? "Change" : "Fix")<span class="adm-sr"> @line.Label.ToLowerInvariant()</span></a>
+                            @* A button, not a link: following it saves what was typed in the form below, like the indicator does. *@
+                            <button type="submit" form="wizard-form" name="goto" value="@WizardProgress.Steps.First(s => s.Path == line.Path).Number" class="adm-linkbtn">@(line.Done ? "Change" : "Fix")<span class="adm-sr"> @line.Label.ToLowerInvariant()</span></button>
                         </li>
                     }
                 </ul>

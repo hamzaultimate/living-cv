@@ -120,6 +120,18 @@ public class WizardBasicsJumpTests
     }
 
     [Fact]
+    public async Task WhenNothingHasBeenTypedYet_TheTemplatesSuggestionsStillFillTheTitleAndSummary()
+    {
+        using var app = new AdminApp();
+        var owner = await app.SignedInClientAsync();
+        await WizardFlow.PickTemplateAsync(owner, "software");
+
+        var html = await owner.GetStringAsync(WizardFlow.Basics);
+
+        Assert.Contains("value=\"Software Engineer\"", Regex.Match(html, @"<input[^>]*id=""Form_JobTitle""[^>]*>").Value);
+    }
+
+    [Fact]
     public async Task TheStatus_ChangesFromToDo_ToNeedsAttention_ToDone_AsTheBasicsFillIn()
     {
         using var app = new AdminApp();

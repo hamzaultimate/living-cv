@@ -71,8 +71,9 @@ public class WizardReviewTests
         var list = Regex.Match(html, @"<ul class=""adm-readiness"">.*?</ul>", RegexOptions.Singleline).Value;
 
         Assert.Equal(4, Regex.Matches(list, "<li\\b").Count);
-        foreach (var path in new[] { "/admin/welcome", "/admin/welcome/basics", "/admin/welcome/photo", "/admin/welcome/review" })
-            Assert.Contains($"href=\"{path}\"", list);
+        // Buttons, not links: following one saves what was typed in the form beside it, like the indicator does.
+        Assert.Equal(["1", "2", "3", "4"], Regex.Matches(list, @"<button type=""submit"" form=""wizard-form"" name=""goto"" value=""(\d)""").Select(m => m.Groups[1].Value));
+        Assert.DoesNotContain("<a ", list);
         Assert.Contains(">Optional</span>", list);
         Assert.Contains("To do", list);
     }

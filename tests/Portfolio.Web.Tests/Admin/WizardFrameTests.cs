@@ -14,8 +14,6 @@ public class WizardFrameTests
     {
         using var app = new AdminApp();
         var owner = await app.SignedInClientAsync();
-        await WizardFlow.PickTemplateAsync(owner, "software"); // until each later step stops gating on the earlier ones, give them a draft to open on
-        await WizardFlow.SaveBasicsAsync(owner);
 
         foreach (var (page, next) in new[] { (WizardFlow.Template, "2"), (WizardFlow.Basics, "3"), (WizardFlow.Photo, "4"), (WizardFlow.Review, "4") })
         {
@@ -49,7 +47,8 @@ public class WizardFrameTests
         var html = await owner.GetStringAsync(WizardFlow.Template);
 
         Assert.Single(Regex.Matches(html, "aria-current=\"step\""));
-        Assert.Matches(@"<li aria-current=""step"" class=""adm-step adm-step-todo"">\s*<button type=""submit"" form=""wizard-form"" name=""goto"" value=""1"" class=""adm-step-btn"">", html);
+        // The current step is a focusable button, so it carries aria-current itself: that is what a keyboard or screen-reader user lands on.
+        Assert.Matches(@"<li class=""adm-step adm-step-todo adm-step-current"">\s*<button type=""submit"" form=""wizard-form"" name=""goto"" value=""1"" class=""adm-step-btn"" aria-current=""step"">", html);
     }
 
     [Fact]
