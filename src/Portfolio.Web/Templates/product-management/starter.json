@@ -83,7 +83,7 @@
   },
   "experiences": [
     {
-      "company": "Fenwick Works (fictional)",
+      "company": "Example Product Works (fictional)",
       "title": "Senior Product Manager",
       "start": "2021",
       "end": null,
@@ -103,7 +103,7 @@
       "sortOrder": 1
     },
     {
-      "company": "Aldermere Trust (fictional)",
+      "company": "Sample Delivery Co (fictional)",
       "title": "Project Manager",
       "start": "2016",
       "end": "2021",
@@ -181,7 +181,7 @@
       "role": "Product manager",
       "org": "Halvorne",
       "period": "2024",
-      "summary": "Rebuilding the first-week experience of a sample subscription product so more new customers reach their first success. Sample engagement (fictional).",
+      "summary": "Rebuilding the first-week experience of a sample subscription product so more new customers reach their first success. Sample release (fictional).",
       "category": "Growth",
       "problem": "Four in ten new customers left before finishing setup, and nobody could say at which step they were lost.",
       "approach": "Interviewed recent customers, mapped the setup steps, removed two that nobody needed, rewrote the rest in plain words and released the new flow to a tenth of customers before everyone.",
@@ -221,7 +221,7 @@
       "role": "Programme lead",
       "org": "Brindlecott",
       "period": "2023",
-      "summary": "Moving a sample business to a new billing platform across four teams without disturbing a single invoice run. Sample engagement (fictional).",
+      "summary": "Moving a sample business to a new billing platform across four teams without disturbing a single invoice run. Sample release (fictional).",
       "category": "Delivery",
       "problem": "The old billing system could not support new plans, and a rushed move risked wrong invoices for every customer.",
       "approach": "Split the move into five stages with an owner for each, ran two billing cycles in parallel, agreed the go and no-go checks with finance and held a short daily check-in through the cut-over.",
@@ -257,7 +257,7 @@
       "role": "Product manager",
       "org": "Wenlowe",
       "period": "2022",
-      "summary": "Replacing a long feature list with a now, next and later roadmap for a sample platform team. Sample engagement (fictional).",
+      "summary": "Replacing a long feature list with a now, next and later roadmap for a sample platform team. Sample release (fictional).",
       "category": "Strategy",
       "problem": "The roadmap had forty items and no order, so every team assumed their own request was next.",
       "approach": "Grouped requests by the customer problem behind them, agreed three goals with leadership, ranked the work against those goals and published the reasoning with each item.",
@@ -287,7 +287,7 @@
       "role": "Project manager",
       "org": "Kestrelbay",
       "period": "2020",
-      "summary": "Giving members a searchable help portal so common questions no longer need a conversation. Sample engagement (fictional).",
+      "summary": "Giving members a searchable help portal so common questions no longer need a conversation. Sample release (fictional).",
       "category": "Platform",
       "problem": "The support team answered the same twenty questions all week, and members waited days for simple answers.",
       "approach": "Analysed a quarter of requests, wrote answers for the most common, added search and a clear route to a person, then reviewed the unanswered searches every month.",
@@ -314,7 +314,7 @@
   ],
   "certifications": [
     {
-      "name": "Certified Product Manager (sample)",
+      "name": "Product Management Certificate (sample)",
       "issuer": "Example Delivery Institute",
       "status": "Earned",
       "date": "2019",
@@ -340,16 +340,16 @@
   ],
   "testimonials": [
     {
-      "quote": "Sample reference (fictional). Tomasz made the goal so clear that four teams stopped arguing about the plan and started building it.",
+      "quote": "Sample feedback (fictional). Tomasz made the goal so clear that four teams stopped arguing about the plan and started building it.",
       "author": "Sample Director",
-      "authorTitle": "Director of Engineering, Fenwick Works",
+      "authorTitle": "Director of Engineering, Example Product Works (fictional)",
       "featured": true,
       "sortOrder": 1
     },
     {
-      "quote": "Sample reference (fictional). Calm through a risky migration, honest about what was not working and always quick to write the decision down.",
+      "quote": "Sample feedback (fictional). Calm through a risky migration, honest about what was not working and always quick to write the decision down.",
       "author": "Sample Colleague",
-      "authorTitle": "Head of Finance, Aldermere Trust",
+      "authorTitle": "Head of Finance, Sample Delivery Co (fictional)",
       "featured": true,
       "sortOrder": 2
     }

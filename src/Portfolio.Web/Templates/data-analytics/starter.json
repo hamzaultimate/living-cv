@@ -55,7 +55,7 @@
   },
   "experiences": [
     {
-      "company": "Larkspur Group (fictional)",
+      "company": "Example Data Studio (fictional)",
       "title": "Senior Data Analyst",
       "start": "2022",
       "end": null,
@@ -70,7 +70,7 @@
       "sortOrder": 1
     },
     {
-      "company": "Mossfield Council (fictional)",
+      "company": "Sample Regional Council (fictional)",
       "title": "Data Analyst",
       "start": "2019",
       "end": "2022",
@@ -228,14 +228,14 @@
     {
       "quote": "Sample feedback (fictional). Imani rebuilt our forecast and, just as importantly, showed us how to read its error. The buying team trusts the numbers again.",
       "author": "Sample Director",
-      "authorTitle": "Head of Buying, Larkspur Group",
+      "authorTitle": "Head of Buying, Sample Retail Co (fictional)",
       "featured": true,
       "sortOrder": 1
     },
     {
-      "quote": "Sample feedback (fictional). Clear about what the data could and could not say, and patient in explaining it to people who were not analysts.",
+      "quote": "Sample feedback (fictional). Clear about what the data could and could not say, and generous with their time explaining it to people who were not analysts.",
       "author": "Sample Manager",
-      "authorTitle": "Services Manager, Mossfield Council",
+      "authorTitle": "Services Manager, Sample Public Service (fictional)",
       "featured": true,
       "sortOrder": 2
     }
