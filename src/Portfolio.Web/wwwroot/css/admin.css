@@ -329,3 +329,15 @@ a.adm-btn { text-decoration: none; display: inline-block; }
 .adm-photo-step { display: grid; grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); gap: var(--adm-space-5); align-items: start; }
 .adm-photo-step h2 { margin-top: 0; }
 @media (max-width: 40rem) { .adm-photo-step { grid-template-columns: 1fr; } }
+.adm-review { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: var(--adm-space-5); align-items: start; }
+.adm-review h2 { margin-top: 0; }
+.adm-review-preview .adm-preview { height: clamp(18rem, calc(100vh - 22rem), 44rem); min-height: 0; }
+.adm-serp { padding: var(--adm-space-4); border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm); background: var(--adm-bg); }
+.adm-serp h3 { margin: 0 0 var(--adm-space-2); font-size: .95rem; color: var(--adm-muted); }
+.adm-readiness { list-style: none; margin: 0 0 var(--adm-space-4); padding: 0; }
+.adm-readiness li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .6rem; padding: .4rem 0; border-bottom: 1px solid var(--adm-border); }
+.adm-state { display: inline-block; padding: 0 .45rem; border-radius: .25rem; font-size: .75rem; font-weight: 600; border: 1px solid transparent; }
+.adm-ready-done .adm-state { background: var(--adm-ok-bg); color: var(--adm-ok-text); }
+.adm-ready-todo .adm-state { background: var(--adm-warn-bg); color: var(--adm-warn-text); }
+.adm-ready-optional .adm-state { background: var(--adm-bg); color: var(--adm-muted); border-color: var(--adm-border); }
+@media (max-width: 40rem) { .adm-review { grid-template-columns: 1fr; } }

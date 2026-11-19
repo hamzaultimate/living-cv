@@ -339,6 +339,7 @@ public class OnboardingSecurityTests
         Assert.Null(await WizardFlow.DraftAsync(app));
     }
 
+    // Hard rules only: an accent or content kind the template does not offer is refused on every save. An address that is not a valid address is a completeness rule; see IncompleteAddresses.
     public static TheoryData<string, string, string> BadChoices() => new()
     {
         { "https://ok.example", "emerald", StarterChoice.Blank },        // an accent the healthcare template does not offer
@@ -349,11 +350,6 @@ public class OnboardingSecurityTests
         { "https://ok.example", new string('a', 41), StarterChoice.Blank },
         { "https://ok.example", "", "everything" },
         { "https://ok.example", "", "" },
-        { "javascript:alert(1)", "", StarterChoice.Blank },
-        { "ftp://example.org/x", "", StarterChoice.Blank },
-        { "/relative", "", StarterChoice.Blank },
-        { "https://user:pass@example.org", "", StarterChoice.Blank },
-        { "", "", StarterChoice.Blank },
     };
 
     [Theory]
@@ -373,6 +369,36 @@ public class OnboardingSecurityTests
         Assert.Equal(before, await SnapshotAsync(app));
         Assert.Null((await WizardFlow.ProfileAsync(app)).OnboardingCompletedAt);
         Assert.Null((await WizardFlow.DraftAsync(app))!.AccentKey);
+    }
+
+    // Completeness rule: an address that is empty or not an http(s) address is saved as typed, so the owner can jump away, and refused at publishing.
+    public static TheoryData<string> IncompleteAddresses() => new()
+    {
+        "javascript:alert(1)",
+        "ftp://example.org/x",
+        "/relative",
+        "https://user:pass@example.org",
+        "",
+    };
+
+    [Theory]
+    [MemberData(nameof(IncompleteAddresses))]
+    public async Task AnAddressThatIsNotAValidAddress_IsSavedAsTyped_ButNeverPublished(string url)
+    {
+        using var app = new AdminApp();
+        var owner = await DraftedAsync(app);
+        var before = WizardFlow.PublicFingerprint(await WizardFlow.ProfileAsync(app));
+        var fields = WizardFlow.ReviewFields(url);
+
+        var save = await WizardFlow.SaveChoicesAsync(owner, fields);
+        var publish = await WizardFlow.PublishAsync(owner, fields);
+
+        Assert.Equal(HttpStatusCode.Redirect, save.StatusCode); // saved: only publishing asks for a valid address
+        Assert.Equal("/admin/welcome/review", WizardFlow.Where(publish));
+        var after = await WizardFlow.ProfileAsync(app);
+        Assert.Null(after.OnboardingCompletedAt);
+        Assert.Equal(before, WizardFlow.PublicFingerprint(after));
+        Assert.DoesNotContain("href=\"javascript:", await owner.GetStringAsync(WizardFlow.Review));
     }
 
     [Fact]

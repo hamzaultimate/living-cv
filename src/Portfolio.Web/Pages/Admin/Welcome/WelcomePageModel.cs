@@ -45,9 +45,6 @@ public abstract class WelcomePageModel : AdminPageModel
     /// <summary>The step after this one; the last step is its own next.</summary>
     public int NextStep => Math.Min(CurrentStep + 1, OnboardingService.LastStep);
 
-    /// <summary>The furthest step the owner may open: the next unsaved step (the photo is optional, so once the basics are saved the review is open too). Removed with <see cref="RequireStep"/> once every step is converted.</summary>
-    public int Reachable => Draft is null ? 1 : Draft.Step >= 2 ? OnboardingService.LastStep : Draft.Step + 1;
-
     protected async Task LoadAsync(CancellationToken ct)
     {
         State = await Onboarding.GetStateAsync(ct);
@@ -57,17 +54,6 @@ public abstract class WelcomePageModel : AdminPageModel
 
     /// <summary>Where a save goes next: the step <see cref="Goto"/> asked for, else the step after this one. A local path from a fixed list, never the posted value.</summary>
     protected IActionResult Leave() => Redirect(WizardProgress.Steps[WizardProgress.ClampStep(Goto, NextStep) - 1].Path);
-
-    /// <summary>Sends the owner back to an earlier step whose answers are missing, so a step is never shown without what it builds on. Removed once every step is converted.</summary>
-    protected IActionResult? RequireStep(int saved)
-    {
-        if (Draft is null || !Catalog.TryGet(Draft.TemplateKey, out _) || Draft.Step < saved)
-        {
-            FlashError(saved <= 1 ? "Choose a template first." : "Fill in your basics first.");
-            return RedirectToPage(saved <= 1 ? "/Admin/Welcome/Template" : "/Admin/Welcome/Basics");
-        }
-        return null;
-    }
 
     /// <summary>Leaves the wizard without publishing (see <see cref="OnboardingService.SkipAsync"/>).</summary>
     public async Task<IActionResult> OnPostSkipAsync(CancellationToken ct)

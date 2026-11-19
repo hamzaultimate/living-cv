@@ -164,7 +164,8 @@ public class BasicsForm
 /// <summary>The review step's choices.</summary>
 public class ReviewForm
 {
-    [Required(ErrorMessage = "Enter the address your site will be published at."), StringLength(SiteProfile.MaxLength.Url), HttpUrl, Display(Name = "Site address")]
+    /// <summary>Only the length is a hard rule. Whether it is a valid address is asked at publishing (<see cref="OnboardingService.IsValidAddress"/>).</summary>
+    [StringLength(SiteProfile.MaxLength.Url), Display(Name = "Site address")]
     public string? SiteUrl { get; set; }
 
     /// <summary>An accent key, or empty for the template's own colour. Checked against the template's list by the service.</summary>

@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Portfolio.Web.Configuration;
 using Portfolio.Web.Security;
 using Portfolio.Web.Services;
-using Portfolio.Web.Uploads;
 
 namespace Portfolio.Web.Pages.Admin.Welcome;
 
@@ -10,18 +9,19 @@ namespace Portfolio.Web.Pages.Admin.Welcome;
 [BodyLimit(16 * 1024)]
 public class WelcomeReviewModel : WelcomePageModel
 {
+    /// <summary>The preview tab that shows the search-result card in place of the page.</summary>
+    public const string SearchTab = "search";
+
     private readonly TemplateResolver _resolver;
     private readonly StarterContent _starter;
     private readonly Portfolio.Data.PortfolioDbContext _db;
-    private readonly UploadStore _store;
 
     public WelcomeReviewModel(OnboardingService onboarding, ITemplateCatalog catalog, TemplateResolver resolver, StarterContent starter,
-        Portfolio.Data.PortfolioDbContext db, UploadStore store) : base(onboarding, catalog)
+        Portfolio.Data.PortfolioDbContext db) : base(onboarding, catalog)
     {
         _resolver = resolver;
         _starter = starter;
         _db = db;
-        _store = store;
     }
 
     public override int CurrentStep => 4;
@@ -29,7 +29,7 @@ public class WelcomeReviewModel : WelcomePageModel
     [BindProperty]
     public ReviewForm Form { get; set; } = new();
 
-    /// <summary>Which page the preview opens on. Untrusted: it only ever selects one of <see cref="PreviewPages"/>.</summary>
+    /// <summary>Which preview tab is open. Untrusted: it only ever selects one of <see cref="PreviewPages"/>, or <see cref="SearchTab"/>.</summary>
     [BindProperty(SupportsGet = true, Name = "tab")]
     public string? Tab { get; set; }
 
@@ -43,11 +43,19 @@ public class WelcomeReviewModel : WelcomePageModel
 
     public IReadOnlyList<(string Path, string Label)> PreviewPages { get; private set; } = [];
     public string PreviewPath { get; private set; } = "/";
+
+    /// <summary>True when the search-result tab is open: the card replaces the preview frame.</summary>
+    public bool ShowSearch { get; private set; }
+
+    /// <summary>The value the width links keep in <c>tab</c>: the search tab, or the page being previewed.</summary>
+    public string ActiveTab => ShowSearch ? SearchTab : PreviewPath;
+
     public IReadOnlyList<StarterTable> Sample { get; private set; } = [];
     public string SearchTitle { get; private set; } = "";
     public string SearchDescription { get; private set; } = "";
-    public bool HasDraftPhoto => Draft?.PhotoDraft is not null && _store.TryResolveDraft(Draft.PhotoDraft, out _, out _);
-    public long PhotoVersion => Draft?.UpdatedAt.UtcTicks ?? 0;
+
+    /// <summary>The "Ready to publish?" lines, counting the saved draft with the address as it is shown in the form.</summary>
+    public PublishChecklist Checklist { get; private set; } = null!;
 
     public string PreviewUrl =>
         $"{PreviewPath}?{RequestTemplate.PreviewParameter}={Uri.EscapeDataString(Template.Key)}&{RequestTemplate.DraftParameter}=1";
@@ -55,38 +63,38 @@ public class WelcomeReviewModel : WelcomePageModel
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
         await LoadAsync(ct);
-        if (RequireStep(2) is { } back) return back;
 
         Form = new ReviewForm
         {
             // The address is the one thing the owner cannot be expected to know is wrong: a new install still carries the placeholder from the
             // configuration, so a first run starts from the address this request came to.
-            SiteUrl = Draft!.SiteUrl ?? (FirstRun ? $"{Request.Scheme}://{Request.Host}" : State.Profile.Url),
-            Accent = Draft.AccentKey,
-            Content = Draft.Content,
+            SiteUrl = Draft?.SiteUrl ?? (FirstRun ? $"{Request.Scheme}://{Request.Host}" : State.Profile.Url),
+            Accent = Draft?.AccentKey,
+            Content = Draft?.Content ?? StarterChoice.Blank,
         };
         await PrepareAsync(ct);
         return Page();
+    }
+
+    /// <summary>Continue, or one of the indicator's buttons: saves the choices under the hard rules, then opens the step asked for (this one by default).</summary>
+    public async Task<IActionResult> OnPostAsync(CancellationToken ct)
+    {
+        await LoadAsync(ct);
+        if (await TrySaveAsync(ct) is { } again) return again;
+        return Leave();
     }
 
     /// <summary>Saves the choices and shows the preview again.</summary>
     public async Task<IActionResult> OnPostSaveAsync(CancellationToken ct)
     {
         await LoadAsync(ct);
-        if (RequireStep(2) is { } back) return back;
-        if (!ModelState.IsValid) { await PrepareAsync(ct); return Page(); }
-        if (!await Onboarding.SaveChoicesAsync(Form, ct))
-        {
-            ModelState.AddModelError(string.Empty, "That choice is not available for this template.");
-            await PrepareAsync(ct);
-            return Page();
-        }
+        if (await TrySaveAsync(ct) is { } again) return again;
 
         Flash("Choices saved. The preview shows your draft; nothing is public yet.");
         return RedirectToPage();
     }
 
-    /// <summary>Saves the choices, then publishes the draft in one step (see <see cref="OnboardingService.PublishAsync"/>).</summary>
+    /// <summary>Saves the choices, then publishes the draft in one step (see <see cref="OnboardingService.PublishAsync"/>). The service checks everything again, so the disabled button is only a convenience.</summary>
     public async Task<IActionResult> OnPostPublishAsync(CancellationToken ct)
     {
         await LoadAsync(ct);
@@ -96,14 +104,7 @@ public class WelcomeReviewModel : WelcomePageModel
             Flash("This setup was already published, so nothing changed.");
             return Redirect("/admin");
         }
-        if (RequireStep(2) is { } back) return back;
-        if (!ModelState.IsValid) { await PrepareAsync(ct); return Page(); }
-        if (!await Onboarding.SaveChoicesAsync(Form, ct))
-        {
-            ModelState.AddModelError(string.Empty, "That choice is not available for this template.");
-            await PrepareAsync(ct);
-            return Page();
-        }
+        if (await TrySaveAsync(ct) is { } again) return again;
 
         var result = await Onboarding.PublishAsync(ct);
         switch (result.Outcome)
@@ -113,15 +114,16 @@ public class WelcomeReviewModel : WelcomePageModel
                 Flash("Your site is live." + (added is { Count: > 0 } ? $" Sample content added: {string.Join(", ", added)}." : ""));
                 return Redirect("/admin");
             case PublishOutcome.Incomplete:
-                FlashError("Something from an earlier step is missing or no longer valid. Please check it and try again.");
-                return Redirect(Steps[Math.Clamp(result.Step, 1, 4) - 1].Path);
+                // Back here, where the checklist says what is missing and links to the step that fixes it.
+                FlashError("Nothing was published: something is missing or no longer valid. The checklist below shows what to fix.");
+                return Redirect(WizardProgress.Steps[3].Path);
             case PublishOutcome.NoMenu:
                 FlashError(result.Detail ?? "That template would leave your site without a menu section, so nothing was published.");
-                return Redirect(Steps[0].Path);
+                return Redirect(WizardProgress.Steps[0].Path);
             case PublishOutcome.Changed:
                 // Not "already published": the wizard is still open and the draft is kept, so the only truthful advice is to publish again.
                 FlashError("Your profile was changed while publishing, so nothing was published. Your answers are kept: check them and press Publish again.");
-                return Redirect(Steps[3].Path);
+                return Redirect(WizardProgress.Steps[3].Path);
             default:
                 // A second click, a replayed request, or another tab got there first: nothing was applied by this request.
                 Flash("This setup was already published, so nothing changed.");
@@ -129,15 +131,34 @@ public class WelcomeReviewModel : WelcomePageModel
         }
     }
 
+    /// <summary>Saves the form's choices under the hard rules. Null when saved; otherwise the page to show again with the reason.</summary>
+    private async Task<IActionResult?> TrySaveAsync(CancellationToken ct)
+    {
+        if (!ModelState.IsValid) { await PrepareAsync(ct); return Page(); }
+        if (!await Onboarding.SaveChoicesAsync(Form, ct))
+        {
+            ModelState.AddModelError(string.Empty, "That choice is not available for this template.");
+            await PrepareAsync(ct);
+            return Page();
+        }
+        return null;
+    }
+
     private async Task PrepareAsync(CancellationToken ct)
     {
         DraftSite = await Onboarding.DraftPreviewAsync(ct);
         var site = DraftSite ?? SiteProfileMapper.ToOptions(State.Profile);
         var view = _resolver.Resolve(site, Template.Key);
-        PreviewPages = [("/", "Home"), .. view.NavLinks(mobile: true).Select(l => (l.Path, l.Path == "/cv" ? "CV" : TemplateView.Cap(l.Label)))];
+        PreviewPages = TemplatePickerBuilder.PagesOf(view);
+        ShowSearch = string.Equals(Tab, SearchTab, StringComparison.Ordinal);
         PreviewPath = PreviewPages.Select(p => p.Path).FirstOrDefault(p => p == Tab) ?? "/";
         SearchTitle = TemplateSeo.Apply(Template.Seo.Title, site);
         SearchDescription = TemplateSeo.ApplyDescription(Template.Seo.Description, site);
         Sample = StarterContent.Offers(Template) ? await _starter.DescribeAsync(_db, Template, ct) : [];
+
+        // The address in the form is what the owner can see (on a first run it is prefilled and not yet saved), so the checklist counts it.
+        var shown = (Draft ?? new OnboardingDraft()).Clone();
+        shown.SiteUrl = ProfileForm.Line(Form.SiteUrl);
+        Checklist = Onboarding.ChecklistFor(shown);
     }
 }
