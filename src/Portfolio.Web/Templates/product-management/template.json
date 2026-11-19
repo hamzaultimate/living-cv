@@ -1,0 +1,380 @@
+{
+  "$schema": "../template.schema.json",
+  "key": "product-management",
+  "name": "Product & Project Management",
+  "profession": "Product or project manager",
+  "description": "Showcase for product and project managers: shipped work, the outcomes it produced and how it was delivered.",
+  "archetype": "showcase",
+  "theme": {
+    "default": "product-management",
+    "themeColor": "#141312",
+    "accents": [
+      {
+        "key": "amber",
+        "label": "Amber",
+        "dark": {
+          "accent": "#fbbf24",
+          "strong": "#fcd34d"
+        },
+        "light": {
+          "accent": "#a84a09",
+          "strong": "#92400e"
+        }
+      },
+      {
+        "key": "blue",
+        "label": "Blue",
+        "dark": {
+          "accent": "#60a5fa",
+          "strong": "#93c5fd"
+        },
+        "light": {
+          "accent": "#1d4ed8",
+          "strong": "#1e40af"
+        }
+      },
+      {
+        "key": "green",
+        "label": "Green",
+        "dark": {
+          "accent": "#34d399",
+          "strong": "#6ee7b7"
+        },
+        "light": {
+          "accent": "#047857",
+          "strong": "#065f46"
+        }
+      },
+      {
+        "key": "rose",
+        "label": "Rose",
+        "dark": {
+          "accent": "#fb7185",
+          "strong": "#fda4af"
+        },
+        "light": {
+          "accent": "#be123c",
+          "strong": "#9f1239"
+        }
+      }
+    ]
+  },
+  "heroSuggestions": {
+    "title": "Product Manager",
+    "summary": "Product manager who turns customer problems into shipped outcomes, aligning teams and stakeholders around clear goals and measurable results."
+  },
+  "editor": {
+    "experience": {
+      "itemLabel": "Role",
+      "fields": {
+        "company": {
+          "label": "Employer"
+        },
+        "title": {
+          "label": "Job title"
+        },
+        "tech": {
+          "label": "Tools and methods"
+        },
+        "summary": {
+          "hint": "Describe the teams, goals and outcomes. Never include confidential roadmaps, customer data or figures you are not allowed to share."
+        }
+      }
+    },
+    "skills": {
+      "itemLabel": "Skill"
+    },
+    "projects": {
+      "fields": {
+        "category": {
+          "hint": "An area such as Growth or Platform. Used by the filter on the Shipped work page."
+        },
+        "tech": {
+          "label": "Tools"
+        },
+        "problem": {
+          "hint": "Never include confidential roadmaps, customer data or figures you are not allowed to share."
+        },
+        "approach": {
+          "hint": "Never include confidential roadmaps, customer data or figures you are not allowed to share."
+        }
+      }
+    },
+    "certifications": {
+      "itemLabel": "Certification"
+    },
+    "talks": {
+      "itemLabel": "Talk",
+      "fields": {
+        "event": {
+          "label": "Event or conference"
+        },
+        "typeVideo": {
+          "label": "Recording"
+        },
+        "typeTalk": {
+          "label": "Live talk"
+        },
+        "url": {
+          "label": "Link to the recording or slides",
+          "hint": "http or https. Recordings are linked, not embedded."
+        },
+        "youtubeId": {
+          "hidden": true
+        }
+      }
+    },
+    "testimonials": {
+      "itemLabel": "Testimonial",
+      "fields": {
+        "authorTitle": {
+          "label": "Role and company"
+        }
+      }
+    },
+    "blog": {
+      "itemLabel": "Article",
+      "fields": {
+        "body": {
+          "label": "Article text"
+        },
+        "draft": {
+          "label": "Keep as a draft (not public)"
+        }
+      }
+    },
+    "hero": {
+      "fields": {
+        "heading": {
+          "label": "Home page hero",
+          "hint": "The headline block at the top of your home page. Plain text. Changes apply as soon as you save."
+        },
+        "eyebrow": {
+          "hint": "A short line above the headline, such as your title and the products you work on. Plain text."
+        },
+        "lede": {
+          "label": "Intro"
+        }
+      }
+    },
+    "metrics": {
+      "itemLabel": "Metric",
+      "fields": {
+        "heading": {
+          "label": "Headline metrics",
+          "hint": "Numbers shown under the hero, such as adoption, revenue or cycle time. Only publish figures you can defend. Changes apply as soon as you save."
+        },
+        "value": {
+          "hint": "For example 22 or 1.4M."
+        },
+        "unit": {
+          "hint": "For example % or days."
+        }
+      }
+    },
+    "sections": {
+      "itemLabel": "Section",
+      "fields": {
+        "heading": {
+          "label": "Site sections",
+          "hint": "Choose which pages the site has, what the menu calls them and in which order. Hiding a page never deletes its content. Changes apply as soon as you save."
+        },
+        "label": {
+          "label": "Menu name"
+        }
+      }
+    },
+    "about": {
+      "itemLabel": "Card",
+      "fields": {
+        "heading": {
+          "label": "About page"
+        },
+        "currentlyNote": {
+          "label": "\"Currently\" note"
+        },
+        "focus": {
+          "label": "Focus areas",
+          "hint": "One per line, for example the problems you are working on now."
+        }
+      }
+    },
+    "transfer": {
+      "fields": {
+        "heading": {
+          "label": "Backup and portability",
+          "hint": "Download all your content as one JSON file, or load one. You see a preview first; nothing is written until you confirm, and an import never deletes anything."
+        },
+        "exportHeading": {
+          "label": "Export",
+          "hint": "One JSON file with the profile and every entry, drafts included. Uploaded images are not in it, but the file lists the ones it uses."
+        },
+        "importHeading": {
+          "label": "Import",
+          "hint": "Entries are matched to yours by name, address name or title: a match is updated, anything else is added."
+        },
+        "profile": {
+          "label": "Profile"
+        }
+      }
+    }
+  },
+  "sections": [
+    {
+      "key": "about",
+      "label": "about"
+    },
+    {
+      "key": "experience",
+      "label": "experience"
+    },
+    {
+      "key": "projects",
+      "label": "shipped work",
+      "shortLabel": "shipped",
+      "itemLabel": "Release"
+    },
+    {
+      "key": "skills",
+      "label": "skills & methods",
+      "shortLabel": "skills"
+    },
+    {
+      "key": "certifications",
+      "label": "certifications",
+      "shortLabel": "certs"
+    },
+    {
+      "key": "blog",
+      "label": "writing",
+      "itemLabel": "Article"
+    },
+    {
+      "key": "talks",
+      "label": "talks",
+      "enabled": false
+    },
+    {
+      "key": "testimonials",
+      "label": "testimonials"
+    },
+    {
+      "key": "contact",
+      "label": "contact"
+    }
+  ],
+  "skillGroups": [
+    "Discovery",
+    "Delivery",
+    "Stakeholders",
+    "Metrics",
+    "Tools"
+  ],
+  "seo": {
+    "title": "{name} — {title}",
+    "description": "{name}, {title}. Releases, the outcomes they produced and how the team got there.",
+    "aboutDescription": "About {name}, {title}: how products and projects get from problem to measured outcome."
+  },
+  "copy": {
+    "layout": {
+      "footerNote": "Product and project delivery."
+    },
+    "home": {
+      "workEyebrow": "Shipped work",
+      "workHeading": "Outcomes delivered",
+      "workEmptyTitle": "Shipped work coming soon",
+      "workEmptyBody": "Add your featured releases and the outcome of each will appear here.",
+      "testimonialsEyebrow": "Kind words",
+      "testimonialsHeading": "Feedback from teams and stakeholders",
+      "contactHeading": "Have a problem worth shipping a fix for?",
+      "experienceEyebrow": "Experience",
+      "experienceHeading": "Where I've led delivery",
+      "credentialsEyebrow": "Learning and credentials",
+      "credentialsHeading": "Courses and certifications",
+      "skillsHeading": "Skills and methods"
+    },
+    "projects": {
+      "title": "Shipped work",
+      "description": "Shipped work: the problem, the approach and the measured outcome.",
+      "eyebrow": "Shipped work",
+      "heading": "Outcomes delivered",
+      "lead": "Each release states the problem, how the team approached it and what changed.",
+      "emptyTitle": "Nothing shipped yet",
+      "emptyBody": "Add your first release to show the problem, the approach and the outcome.",
+      "filterLabel": "Filter shipped work by area",
+      "featuredBadge": "featured",
+      "problemHeading": "The problem",
+      "approachHeading": "How we got there",
+      "noWriteup": "A full write-up of this release is on the way.",
+      "stackHeading": "Tools",
+      "linksHeading": "Links",
+      "proofHeading": "Evidence",
+      "screenshotsHeading": "Screens and artefacts",
+      "imageAlt": "{title} image",
+      "galleryLabel": "Screens and artefacts",
+      "openImageLabel": "Open image"
+    },
+    "experience": {
+      "title": "Experience",
+      "description": "{name}'s product and project experience, most recent first.",
+      "eyebrow": "Experience",
+      "heading": "Where I've led delivery",
+      "lead": "Most recent first: the teams, the goals and the outcomes.",
+      "empty": "Experience will appear here once it is added."
+    },
+    "skills": {
+      "title": "Skills & methods",
+      "description": "Skills and methods by area: discovery, delivery, stakeholders and metrics.",
+      "eyebrow": "Skills & methods",
+      "heading": "Skills and methods",
+      "lead": "Grouped by the part of the work they serve.",
+      "empty": "Skills will appear here once they are added."
+    },
+    "certifications": {
+      "title": "Courses & certifications",
+      "description": "Courses and certifications held, in progress and planned.",
+      "eyebrow": "Courses and credentials",
+      "heading": "Courses and certifications",
+      "lead": "What is held, what is in progress and what is next.",
+      "emptyTitle": "No certifications listed",
+      "emptyBody": "Add courses or certifications to show your learning.",
+      "filterLabel": "Filter courses and certifications by issuer",
+      "statusEarned": "Certified",
+      "statusInProgress": "Studying",
+      "statusPlanned": "Next up",
+      "viewCertificate": "View certificate",
+      "viewCredential": "View details →"
+    },
+    "blog": {
+      "title": "Writing",
+      "description": "Writing on product discovery, delivery and decisions.",
+      "eyebrow": "Writing",
+      "heading": "Notes on product and delivery",
+      "lead": "What I am learning about discovery, delivery and decisions.",
+      "empty": "Articles coming soon."
+    },
+    "talks": {
+      "title": "Talks",
+      "description": "Talks, workshops and recordings.",
+      "eyebrow": "Talks",
+      "heading": "Talks & workshops",
+      "empty": "No talks listed yet. Check back soon.",
+      "watch": "Watch the recording →"
+    },
+    "contact": {
+      "description": "Contact {name}: email, phone or LinkedIn.",
+      "heading": "Let us talk about what to build next.",
+      "lead": "The best ways to reach me about product, delivery or advisory conversations."
+    },
+    "cv": {
+      "description": "Curriculum vitae — {name}, {title}.",
+      "experienceHeading": "Professional experience",
+      "skillsHeading": "Skills & methods",
+      "projectsHeading": "Shipped work",
+      "certificationsHeading": "Courses and certifications"
+    }
+  },
+  "starter": {
+    "file": "starter.json"
+  }
+}
