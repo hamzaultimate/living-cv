@@ -1,13 +1,21 @@
 @model WelcomePageModel
-<div class="adm-wizard-exit">
-    <form method="post" asp-page-handler="Skip">
-        <button type="submit" class="adm-btn adm-btn-quiet">@(Model.FirstRun ? "Skip setup" : "Leave without publishing")</button>
-    </form>
-    @if (Model.Draft is not null)
-    {
-        <form method="post" asp-page-handler="Discard">
-            <button type="submit" class="adm-btn adm-btn-quiet">Start over</button>
+@* The card's bottom bar: Skip (or Leave) and Start over on the left, each its own form, and the step's Continue on the right. Continue is a submit button of the step's form
+   (form="wizard-form"), so it can sit here, outside that form. A step with its own main button (the template step's Use, the review step's Publish) has no ContinueLabel. *@
+<div class="adm-wizard-bar">
+    <div class="adm-wizard-exit">
+        <form method="post" asp-page-handler="Skip">
+            <button type="submit" class="adm-btn adm-btn-quiet">@(Model.FirstRun ? "Skip setup" : "Leave without publishing")</button>
         </form>
+        @if (Model.Draft is not null)
+        {
+            <form method="post" asp-page-handler="Discard">
+                <button type="submit" class="adm-btn adm-btn-quiet">Start over</button>
+            </form>
+        }
+    </div>
+    @if (Model.ContinueLabel is { } label)
+    {
+        <button type="submit" form="wizard-form" name="goto" value="@Model.NextStep" class="adm-btn adm-btn-primary">@label</button>
     }
 </div>
 @if (Model.FirstRun)

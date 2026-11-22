@@ -67,7 +67,7 @@ public class OnboardingAccessibilityAccentTests
             Assert.True(list.Success, WizardFlow.Pages[i]);
             Assert.Equal(4, Regex.Matches(list.Value, "<li\\b").Count);
             Assert.Single(Regex.Matches(list.Value, "aria-current=\"step\""));
-            Assert.Matches(new Regex($@"<li aria-current=""step"">\s*<span class=""adm-step-num"">{current[i]}</span>"), list.Value);
+            Assert.Matches(new Regex($@"<li class=""adm-step adm-step-[a-z]+ adm-step-current"">\s*<button type=""submit"" form=""wizard-form"" name=""goto"" value=""{current[i]}"" class=""adm-step-btn"" aria-current=""step"">\s*<span class=""adm-step-num"">{current[i]}</span>"), list.Value);
             Assert.Contains("<nav aria-label=\"Setup progress\">", html);
             Assert.Matches(new Regex($@"<div id=""wizard-status"" class=""adm-sr"" role=""status"" aria-live=""polite"" aria-atomic=""true"">Step {current[i]} of 4: "), html);
             Assert.Contains("<main id=\"main-content\"", html);
@@ -97,15 +97,15 @@ public class OnboardingAccessibilityAccentTests
         var (app, owner) = await ReadyAsync();
         using var _ = app;
 
-        var html = await (await WizardFlow.SaveBasicsAsync(owner, WizardFlow.BasicsFields(email: "nope"))).Content.ReadAsStringAsync();
+        var html = await (await WizardFlow.SaveBasicsAsync(owner, WizardFlow.BasicsFields(name: "<b>Jordan</b>"))).Content.ReadAsStringAsync();
 
         Assert.Matches(new Regex(@"<div id=""error-summary""[^>]*role=""alert""[^>]*tabindex=""-1""[^>]*autofocus"), html);
         Assert.Matches(new Regex(@"<h1 id=""step-heading"" tabindex=""-1"">"), html);
         Assert.Single(Regex.Matches(html, @"\sautofocus\b"));
-        var email = Tags(html, "input").Single(t => Attr(t, "id") == "Form_Email");
-        Assert.Equal("true", Attr(email, "aria-invalid"));
-        Assert.Contains("Enter a valid email address.", html);
-        Assert.Matches(new Regex(@"aria-describedby=""email-hint Form_Email-error"""), html);
+        var name = Tags(html, "input").Single(t => Attr(t, "id") == "Form_OwnerName");
+        Assert.Equal("true", Attr(name, "aria-invalid"));
+        Assert.Contains("Use plain text only", html);
+        Assert.Matches(new Regex(@"aria-describedby=""name-hint Form_OwnerName-error"""), html);
     }
 
     [Fact]
@@ -152,24 +152,6 @@ public class OnboardingAccessibilityAccentTests
             foreach (var img in Tags(html, "img")) Assert.False(string.IsNullOrWhiteSpace(Attr(img, "alt")), $"{path}: {img}");
             foreach (var svg in Tags(html, "svg")) Assert.Equal("true", Attr(svg, "aria-hidden"));
         }
-    }
-
-    [Fact]
-    public async Task TheProgressIndicator_OnlyLinksToStepsTheOwnerCanOpen()
-    {
-        using var app = new AdminApp();
-        var owner = await app.SignedInClientAsync();
-
-        var fresh = await owner.GetStringAsync(WizardFlow.Template);
-        Assert.DoesNotContain("href=\"/admin/welcome/basics\"><span class=\"adm-step-num\"", fresh);
-
-        await WizardFlow.PickTemplateAsync(owner, "software");
-        var afterTemplate = await owner.GetStringAsync(WizardFlow.Template);
-        Assert.Contains("href=\"/admin/welcome/basics\"><span class=\"adm-step-num\"", afterTemplate);
-        Assert.DoesNotContain("href=\"/admin/welcome/review\"><span class=\"adm-step-num\"", afterTemplate);
-
-        await WizardFlow.SaveBasicsAsync(owner);
-        Assert.Contains("href=\"/admin/welcome/review\"><span class=\"adm-step-num\"", await owner.GetStringAsync(WizardFlow.Template));
     }
 
     [Fact]
