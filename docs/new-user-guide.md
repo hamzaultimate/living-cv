@@ -72,13 +72,15 @@ showing the placeholder site meanwhile.
    preview with page tabs and a desktop or mobile width (all links; browsing saves nothing), the pages the template
    has, what a piece of work is called, whether sample content is available and any guidance (Healthcare reminds you never to publish patient data; Design & UX and Photography & Film remind you to publish only work you have the right to show; Marketing & Content, Sales & Business Development and Finance & Accounting remind you to publish only figures and client names you may share; Finance & Accounting also warns against confidential financial data). The button reads "Use" and the template's name and "and continue" (or "Keep" when it is already chosen); only that button saves the choice to the draft.
 2. **Basics.** Name, professional title, email, location (optional) and a short summary. Title and summary start
-   from the template's suggestion; they are published as written, so edit them.
+   from the template's suggestion; they are published as written, so edit them. You may leave a field blank or half typed while you move on; only publishing needs the name, title, email and summary complete and the email valid.
 3. **Photo.** Optional. The photo goes through the same checks as the Photo page (JPEG, PNG or WebP, re-encoded,
    metadata removed) and is kept in a private area until you publish. There is no cropping step: the site shows
    the photo as a circle centred on the picture. Without a photo your initials are shown.
 4. **Review and launch.** A live preview of your draft (owner-only, never indexed or cached, no analytics), the
    address your site will use, an accent colour from the template's list, and starting content: **blank**, or **sample
-   content** (fictional entries so you can see a full site). Press **Publish my site**.
+   content** (fictional entries so you can see a full site). A **Ready to publish?** checklist lists the template, your basics, the photo (optional) and the site address, each with a link to the step that fixes it, and **Publish my site** stays greyed out, with the reason beside it, until the list is complete. The preview has a **Search result** tab that shows how the page may appear in search results.
+
+**Jumping between steps.** The four steps at the top of each page are buttons: click any of them, from any step, to go there. What you typed on the current step is saved first, even if it is unfinished, and each step says in words whether it is Done, To do, Needs attention or Optional. The only things checked on every save are that every field is within its length limit, that your name, title and location are plain text (no `<` or `>`), and that an accent or starting content is one the template offers; if a value breaks one of those, you stay on the step and see why. Everything else is checked when you publish, and the server checks it again whatever the button says.
 
 Publishing applies everything in one transaction and refreshes the sitemap, CV and share image at once. Pressing it
 twice, or replaying the request, changes nothing the second time.

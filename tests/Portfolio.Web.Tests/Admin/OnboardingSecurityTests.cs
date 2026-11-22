@@ -229,24 +229,17 @@ public class OnboardingSecurityTests
 
     // ---------------------------------------------------------------- hostile values
 
+    // Hard rules only (length, plain text): these are refused on every save. Completeness is asked at publishing; see IncompleteBasics.
     public static TheoryData<string, string> BadBasics() => new()
     {
-        { "Form.OwnerName", "" },
-        { "Form.OwnerName", "   " },
         { "Form.OwnerName", new string('n', 201) },
         { "Form.OwnerName", "<script>alert(1)</script>" },
         { "Form.OwnerName", "\"><img src=x onerror=alert(1)>" },
-        { "Form.JobTitle", "" },
         { "Form.JobTitle", new string('t', 201) },
         { "Form.JobTitle", "Nurse <b>bold</b>" },
-        { "Form.Email", "" },
-        { "Form.Email", "not-an-email" },
-        { "Form.Email", "a@" },
-        { "Form.Email", "two@example.org three@example.org" },
         { "Form.Email", new string('e', 300) + "@example.org" },
         { "Form.Location", new string('l', 121) },
         { "Form.Location", "<iframe src=//evil>" },
-        { "Form.Summary", "" },
         { "Form.Summary", new string('s', 601) },
     };
 
@@ -271,6 +264,42 @@ public class OnboardingSecurityTests
         Assert.DoesNotContain("<img src=x", html);
         Assert.Equal(before, await SnapshotAsync(app));
         Assert.Null((await WizardFlow.DraftAsync(app))!.OwnerName);
+    }
+
+    // Completeness rules: an empty required field or an email that is not an address is saved as typed, so the owner can jump away half done, and refused at publishing.
+    public static TheoryData<string, string> IncompleteBasics() => new()
+    {
+        { "Form.OwnerName", "" },
+        { "Form.OwnerName", "   " },
+        { "Form.JobTitle", "" },
+        { "Form.Email", "" },
+        { "Form.Email", "not-an-email" },
+        { "Form.Email", "a@" },
+        { "Form.Email", "two@example.org three@example.org" },
+        { "Form.Summary", "" },
+    };
+
+    [Theory]
+    [MemberData(nameof(IncompleteBasics))]
+    public async Task IncompleteBasics_AreSavedAsTyped_ButNeverPublished(string field, string value)
+    {
+        using var app = new AdminApp();
+        var owner = await WizardFlow.FirstRunClientAsync(app);
+        await WizardFlow.PickTemplateAsync(owner, "healthcare");
+        var fields = WizardFlow.BasicsFields();
+        fields[field] = value;
+
+        var saved = await WizardFlow.SaveBasicsAsync(owner, fields);
+
+        Assert.Equal("/admin/welcome/photo", WizardFlow.Where(saved));
+        var before = WizardFlow.PublicFingerprint(await WizardFlow.ProfileAsync(app));
+
+        var publish = await WizardFlow.PublishAsync(owner);
+
+        Assert.NotEqual("/admin", WizardFlow.Where(publish));
+        var after = await WizardFlow.ProfileAsync(app);
+        Assert.Null(after.OnboardingCompletedAt);
+        Assert.Equal(before, WizardFlow.PublicFingerprint(after)); // nothing public changed; the answers stay in the draft
     }
 
     [Fact]
@@ -310,6 +339,7 @@ public class OnboardingSecurityTests
         Assert.Null(await WizardFlow.DraftAsync(app));
     }
 
+    // Hard rules only: an accent or content kind the template does not offer is refused on every save. An address that is not a valid address is a completeness rule; see IncompleteAddresses.
     public static TheoryData<string, string, string> BadChoices() => new()
     {
         { "https://ok.example", "emerald", StarterChoice.Blank },        // an accent the healthcare template does not offer
@@ -320,11 +350,6 @@ public class OnboardingSecurityTests
         { "https://ok.example", new string('a', 41), StarterChoice.Blank },
         { "https://ok.example", "", "everything" },
         { "https://ok.example", "", "" },
-        { "javascript:alert(1)", "", StarterChoice.Blank },
-        { "ftp://example.org/x", "", StarterChoice.Blank },
-        { "/relative", "", StarterChoice.Blank },
-        { "https://user:pass@example.org", "", StarterChoice.Blank },
-        { "", "", StarterChoice.Blank },
     };
 
     [Theory]
@@ -344,6 +369,36 @@ public class OnboardingSecurityTests
         Assert.Equal(before, await SnapshotAsync(app));
         Assert.Null((await WizardFlow.ProfileAsync(app)).OnboardingCompletedAt);
         Assert.Null((await WizardFlow.DraftAsync(app))!.AccentKey);
+    }
+
+    // Completeness rule: an address that is empty or not an http(s) address is saved as typed, so the owner can jump away, and refused at publishing.
+    public static TheoryData<string> IncompleteAddresses() => new()
+    {
+        "javascript:alert(1)",
+        "ftp://example.org/x",
+        "/relative",
+        "https://user:pass@example.org",
+        "",
+    };
+
+    [Theory]
+    [MemberData(nameof(IncompleteAddresses))]
+    public async Task AnAddressThatIsNotAValidAddress_IsSavedAsTyped_ButNeverPublished(string url)
+    {
+        using var app = new AdminApp();
+        var owner = await DraftedAsync(app);
+        var before = WizardFlow.PublicFingerprint(await WizardFlow.ProfileAsync(app));
+        var fields = WizardFlow.ReviewFields(url);
+
+        var save = await WizardFlow.SaveChoicesAsync(owner, fields);
+        var publish = await WizardFlow.PublishAsync(owner, fields);
+
+        Assert.Equal(HttpStatusCode.Redirect, save.StatusCode); // saved: only publishing asks for a valid address
+        Assert.Equal("/admin/welcome/review", WizardFlow.Where(publish));
+        var after = await WizardFlow.ProfileAsync(app);
+        Assert.Null(after.OnboardingCompletedAt);
+        Assert.Equal(before, WizardFlow.PublicFingerprint(after));
+        Assert.DoesNotContain("href=\"javascript:", await owner.GetStringAsync(WizardFlow.Review));
     }
 
     [Fact]
