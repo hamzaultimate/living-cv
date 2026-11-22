@@ -197,22 +197,7 @@ public class OnboardingFlowTests
         Assert.Matches(new Regex("id=\"content-sample\"[^>]*checked"), review);
         var dashboard = await second.GetStringAsync("/admin");
         Assert.Contains("Finish setting up", dashboard);
-        Assert.Contains("href=\"/admin/welcome/photo\"", dashboard); // resumes at the first step that is not saved yet... after basics that is the photo
-    }
-
-    [Fact]
-    public async Task AStepWithoutTheOnesBeforeIt_SendsTheOwnerBack()
-    {
-        using var app = new AdminApp();
-        var owner = await app.SignedInClientAsync();
-
-        Assert.Equal("/admin/welcome", WizardFlow.Where(await owner.GetAsync(WizardFlow.Basics)));
-        Assert.Equal("/admin/welcome", WizardFlow.Where(await WizardFlow.PostAsync(owner, WizardFlow.Basics, WizardFlow.BasicsFields(), WizardFlow.Template)));
-        await WizardFlow.PickTemplateAsync(owner, "software");
-        Assert.Equal("/admin/welcome/basics", WizardFlow.Where(await owner.GetAsync(WizardFlow.Photo)));
-        Assert.Equal("/admin/welcome/basics", WizardFlow.Where(await owner.GetAsync(WizardFlow.Review)));
-        Assert.Equal("/admin/welcome/basics", WizardFlow.Where(await WizardFlow.PostAsync(owner, WizardFlow.Review + "?handler=Publish", WizardFlow.ReviewFields(), WizardFlow.Template)));
-        Assert.Null((await WizardFlow.ProfileAsync(app)).OnboardingCompletedAt);
+        Assert.Contains("href=\"/admin/welcome/review\"", dashboard); // resumes at the first step that is neither done nor optional: the photo is optional, so after the basics that is the review
     }
 
     [Fact]

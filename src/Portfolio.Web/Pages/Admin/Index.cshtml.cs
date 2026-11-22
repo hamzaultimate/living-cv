@@ -23,7 +23,7 @@ public class IndexModel : AdminPageModel
     /// <summary>True until the onboarding wizard has been published or skipped. Only a prompt: nothing is forced and no admin page is blocked.</summary>
     public bool SetupPending { get; private set; }
 
-    /// <summary>Where "Continue setup" goes: the first step that is not saved yet.</summary>
+    /// <summary>Where "Continue setup" goes: the first step that is neither done nor optional (see <see cref="WizardProgress.Resume"/>).</summary>
     public string ResumePath { get; private set; } = "/admin/welcome";
 
     public async Task OnGetAsync(CancellationToken ct)
@@ -43,8 +43,7 @@ public class IndexModel : AdminPageModel
         {
             state = await _onboarding.GetStateAsync(ct);
             SetupPending = state.FirstRun;
-            if (state.Draft is { } draft)
-                ResumePath = Welcome.WelcomePageModel.Steps[Math.Clamp(draft.Step + 1, 1, 4) - 1].Path;
+            ResumePath = WizardProgress.Resume(_onboarding.ProgressOf(state.Draft)).Path;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

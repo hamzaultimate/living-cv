@@ -1,17 +1,22 @@
 @page "/admin/welcome"
 @model WelcomeTemplateModel
 @{
-    ViewData["Title"] = "Setup · Step 1 of 4 · Template";
+    ViewData["Title"] = "Template · Step 1 of 4";
 }
-<partial name="_WizardHeader" model="Model" />
-<p class="adm-lede">A template sets the layout, the wording and which pages your site has. Pick the one closest to your profession. You can change it later at any time: nothing you add is ever deleted, sections a template does not use are only hidden.</p>
+<div class="adm-card adm-wizard">
+    <partial name="_WizardHeader" model="Model" />
+    <p class="adm-lede">A template sets the layout, the wording and which pages your site has. Pick the one closest to your profession. You can change it later at any time: nothing you add is ever deleted, sections a template does not use are only hidden.</p>
 
-@if (!ViewData.ModelState.IsValid)
-{
-    <div id="error-summary" class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus>
-        <strong>Choose a template to continue.</strong>
-        <div asp-validation-summary="All"></div>
-    </div>
-}
-<partial name="/Pages/Admin/_TemplatePicker.cshtml" model="Model.Picker" />
-<partial name="_WizardFooter" model="Model" />
+    @* The indicator's buttons submit this form. It has no fields: the picker's own button (Use or Keep) is what changes the template. *@
+    <form id="wizard-form" method="post" asp-page-handler="Jump"></form>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div id="error-summary" class="adm-flash adm-flash-error" role="alert" tabindex="-1" autofocus>
+            <strong>Choose a template to continue.</strong>
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
+    <partial name="/Pages/Admin/_TemplatePicker.cshtml" model="Model.Picker" />
+    <partial name="_WizardFooter" model="Model" />
+</div>

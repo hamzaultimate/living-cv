@@ -130,10 +130,14 @@
 /* Onboarding wizard */
 .adm-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .adm-steps { list-style: none; margin: 0 0 1.25rem; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
-.adm-steps li { flex: 1 1 8rem; padding: .5rem .75rem; border: 1px solid var(--adm-border); border-radius: .35rem; background: var(--adm-surface); color: var(--adm-muted); }
-.adm-steps li[aria-current="step"] { border-color: var(--adm-accent); color: var(--adm-text); font-weight: 600; box-shadow: 0 0 0 1px var(--adm-accent); }
-.adm-steps a { color: inherit; text-decoration: none; display: block; }
-.adm-steps a:hover { text-decoration: underline; }
+.adm-steps li { flex: 1 1 8rem; padding: 0; border: 1px solid var(--adm-border); border-radius: .35rem; background: var(--adm-surface); color: var(--adm-muted); }
+.adm-steps li.adm-step-current { border-color: var(--adm-accent); color: var(--adm-text); font-weight: 600; box-shadow: 0 0 0 1px var(--adm-accent); }
+.adm-step-btn { display: block; width: 100%; padding: .5rem .75rem; border: 0; border-radius: .35rem; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.adm-step-btn:focus-visible { outline: 3px solid var(--adm-accent); outline-offset: 2px; }
+.adm-step-state { display: inline-block; margin-left: 2rem; font-size: .75rem; font-weight: 500; color: var(--adm-muted); }
+.adm-step-done .adm-step-state { color: var(--adm-ok-text); }
+.adm-step-needsattention .adm-step-state { padding: 0 .4rem; border-radius: .25rem; background: var(--adm-warn-bg); color: var(--adm-warn-text); }
+.adm-step-btn:hover { text-decoration: underline; }
 .adm-step-num { display: inline-block; min-width: 1.5rem; height: 1.5rem; line-height: 1.5rem; margin-right: .25rem; text-align: center; border-radius: 999px; border: 1px solid currentColor; font-size: .8rem; }
 .adm h1[tabindex="-1"]:focus { outline: 3px solid var(--adm-accent); outline-offset: 4px; }
 .adm-step-count { display: block; font-size: .85rem; font-weight: 600; color: var(--adm-muted); }
@@ -315,3 +319,27 @@ a.adm-btn { text-decoration: none; display: inline-block; }
   .adm-shell.adm-js .adm-menu { display: none; position: fixed; top: 3.25rem; right: 0; bottom: 0; left: 0; z-index: 20; height: auto; align-self: stretch; overflow-y: auto; border: 0; }
   .adm-shell.adm-js[data-menu-open="true"] .adm-menu { display: flex; }
 }
+
+/* Setup wizard: one card per step (PR C) */
+.adm-wizard { padding: var(--adm-space-5); }
+.adm-wizard .adm-picker { padding: 0; border: 0; box-shadow: none; background: transparent; }
+.adm-draft-saved { margin: 0 0 var(--adm-space-3); font-size: .85rem; color: var(--adm-muted); }
+.adm-wizard-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--adm-space-3); margin-top: var(--adm-space-5); padding-top: var(--adm-space-4); border-top: 1px solid var(--adm-border); }
+.adm-wizard-bar .adm-wizard-exit { margin-top: 0; }
+.adm-photo-step { display: grid; grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); gap: var(--adm-space-5); align-items: start; }
+.adm-photo-step h2 { margin-top: 0; }
+@media (max-width: 40rem) { .adm-photo-step { grid-template-columns: 1fr; } }
+.adm-review { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: var(--adm-space-5); align-items: start; }
+.adm-review h2 { margin-top: 0; }
+.adm-review-preview .adm-preview { height: clamp(18rem, calc(100vh - 22rem), 44rem); min-height: 0; }
+.adm-serp { padding: var(--adm-space-4); border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm); background: var(--adm-bg); }
+.adm-serp h3 { margin: 0 0 var(--adm-space-2); font-size: .95rem; color: var(--adm-muted); }
+.adm-readiness { list-style: none; margin: 0 0 var(--adm-space-4); padding: 0; }
+.adm-readiness li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .6rem; padding: .4rem 0; border-bottom: 1px solid var(--adm-border); }
+.adm-state { display: inline-block; padding: 0 .45rem; border-radius: .25rem; font-size: .75rem; font-weight: 600; border: 1px solid transparent; }
+.adm-ready-done .adm-state { background: var(--adm-ok-bg); color: var(--adm-ok-text); }
+.adm-ready-todo .adm-state { background: var(--adm-warn-bg); color: var(--adm-warn-text); }
+.adm-ready-optional .adm-state { background: var(--adm-bg); color: var(--adm-muted); border-color: var(--adm-border); }
+@media (max-width: 40rem) { .adm-review { grid-template-columns: 1fr; } }
+.adm-linkbtn { padding: 0; border: 0; background: none; font: inherit; color: var(--adm-accent); text-decoration: underline; cursor: pointer; }
+.adm-linkbtn:focus-visible { outline: 3px solid var(--adm-accent); outline-offset: 2px; }
