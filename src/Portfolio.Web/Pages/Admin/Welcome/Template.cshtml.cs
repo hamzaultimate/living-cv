@@ -61,6 +61,19 @@ public class WelcomeTemplateModel : WelcomePageModel
         return RedirectToPage("/Admin/Welcome/Basics");
     }
 
+    /// <summary>The indicator's buttons on this step. Leaving step 1 keeps the template the draft has, or, with none, the one on screen (the site's, or the default on a first run): only Use changes it.</summary>
+    public async Task<IActionResult> OnPostJumpAsync(CancellationToken ct)
+    {
+        await LoadAsync(ct);
+        if (await Onboarding.KeepTemplateAsync(ct) is { } refused)
+        {
+            ModelState.AddModelError(nameof(Key), refused);
+            BuildPicker(null);
+            return Page();
+        }
+        return Leave();
+    }
+
     /// <summary>Shows <paramref name="show"/> when it names a template, else the template the draft (or, before one exists, the site) is on.</summary>
     private void BuildPicker(string? show)
     {

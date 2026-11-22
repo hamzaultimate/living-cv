@@ -437,11 +437,12 @@ public class OnboardingPhotoPreviewTests
         var owner = await app.NewClientSignedInAsync();
 
         var html = System.Net.WebUtility.HtmlDecode(await owner.GetStringAsync(WizardFlow.Review));
+        var search = System.Net.WebUtility.HtmlDecode(await owner.GetStringAsync(WizardFlow.Review + "?tab=search")); // the search-result card is its own tab beside the page tabs
 
         Assert.Contains("<iframe class=\"adm-preview\" src=\"/?preview=healthcare&draft=1\"", html);
-        Assert.Contains("Preview Person — Registered Nurse", html);
-        Assert.Contains("Preview Person, Registered Nurse. Registrations, clinical experience and professional references.", html);
         Assert.Contains("Before you publish.", html);
+        Assert.Contains("Preview Person — Registered Nurse", search);
+        Assert.Contains("Preview Person, Registered Nurse. Registrations, clinical experience and professional references.", search);
     }
 
     [Fact]
