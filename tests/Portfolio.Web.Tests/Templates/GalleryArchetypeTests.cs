@@ -378,7 +378,7 @@ public class GalleryArchetypeTests
         {
             node["name"] = "Zork Gallery";
             foreach (var (group, value) in node["copy"]!.AsObject().ToList())
-                foreach (var (prop, _) in value!.AsObject().Where(p => !(group == "cv" && p.Key is "order" or "accent")).ToList()) // the CV order and accent are not wording
+                foreach (var (prop, _) in value!.AsObject().Where(p => TemplateDirs.IsWording(group, p.Key)).ToList())
                     value[prop] = prop switch
                     {
                         "imageAlt" => $"zork-{group}-{prop} {{title}}",
