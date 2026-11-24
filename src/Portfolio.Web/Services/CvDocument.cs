@@ -16,12 +16,22 @@ public record CvData(
     IReadOnlyList<Project> Projects,
     IReadOnlyList<Certification> Certifications,
     string? Website = null,
-    CvHeadings? Headings = null);
+    CvHeadings? Headings = null,
+    IReadOnlyList<string>? SectionOrder = null,
+    string? Accent = null);
 
 /// <summary>Section headings and certification status words on the CV; the template supplies them.</summary>
 public record CvHeadings(string Experience, string Skills, string Projects, string Certifications, string Earned, string InProgress, string Planned)
 {
     public static readonly CvHeadings Default = new("Experience", "Skills", "Selected Projects", "Certifications", "Earned", "In progress", "Planned");
+
+    /// <summary>The word the CV prints for a certification's status. One mapping for both renderers.</summary>
+    public string StatusWord(CertificationStatus status) => status switch
+    {
+        CertificationStatus.Earned => Earned,
+        CertificationStatus.InProgress => InProgress,
+        _ => Planned,
+    };
 }
 
 /// <summary>Print-friendly CV rendered with QuestPDF (light background, blue accent).</summary>
