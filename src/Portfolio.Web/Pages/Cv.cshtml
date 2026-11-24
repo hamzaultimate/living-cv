@@ -15,6 +15,9 @@
     var projects = data.Projects;
     var certs = data.Certifications;
     var contacts = data.Contacts;
+    var headings = data.Headings ?? CvHeadings.Default;
+    // The section blocks below sit at their original columns on purpose: Razor prints source indentation, so re-indenting them would change
+    // the bytes of Software's /cv snapshot. A line holding only "@:" at column 0 prints the blank separator line between two sections.
     var atsReport = AtsReportProvider.GetReport();
     var absBase = await SeoHelpers.AbsoluteBaseAsync(HttpContext);
     var breadcrumbLd = SeoHelpers.BreadcrumbJsonLd(absBase, ("Home", "/"), ("CV", "/cv"));
@@ -80,7 +83,9 @@
 
     <p class="mt-8 max-w-3xl text-muted">@site.Summary</p>
 
-    @if (roles.Count > 0)
+    @foreach (var sectionKey in data.SectionOrder ?? CvSections.Default)
+    {
+    if (sectionKey == "experience" && roles.Count > 0)
     {
         <h2 class="mt-12 text-xl">@Text(copy.Cv.ExperienceHeading)</h2>
         <div class="mt-4 space-y-6">
@@ -104,9 +109,9 @@
                 </div>
             }
         </div>
+@:
     }
-
-    @if (groups.Count > 0)
+    if (sectionKey == "skills" && groups.Count > 0)
     {
         <h2 class="mt-12 text-xl">@Text(copy.Cv.SkillsHeading)</h2>
         <div class="mt-4 space-y-2">
@@ -116,9 +121,9 @@
                     <span class="text-muted"> — @string.Join(", ", g.Select(s => s.Name))</span></p>
             }
         </div>
+@:
     }
-
-    @if (projects.Count > 0)
+    if (sectionKey == "projects" && projects.Count > 0)
     {
         <h2 class="mt-12 text-xl">@Text(copy.Cv.ProjectsHeading)</h2>
         <div class="mt-4 space-y-4">
@@ -134,16 +139,17 @@
                 </div>
             }
         </div>
+@:
     }
-
-    @if (certs.Count > 0)
+    if (sectionKey == "certifications" && certs.Count > 0)
     {
         <h2 class="mt-12 text-xl">@Text(copy.Cv.CertificationsHeading)</h2>
         <ul class="mt-4 space-y-1">
             @foreach (var c in certs)
             {
-                <li class="text-sm text-muted">@c.Name — <span class="font-mono text-xs">@c.Issuer (@c.Status)</span></li>
+                <li class="text-sm text-muted">@c.Name — <span class="font-mono text-xs">@c.Issuer (@(headings.StatusWord(c.Status)))</span></li>
             }
         </ul>
+    }
     }
 </section>
