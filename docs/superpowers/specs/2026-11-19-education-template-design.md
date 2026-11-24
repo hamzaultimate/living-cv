@@ -1,7 +1,7 @@
 # Education template on the Credentials layout
 
 Date: 2026-11-19
-Status: design approved in brainstorming, awaiting written-spec review
+Status: approved; implemented on this branch (see the implementation plan)
 Branch: `feature/phase-5d-education-template`, stacked on `feature/phase-5c-finance-template` (rebase onto `develop` once the Finance PR merges)
 Delivery: one pull request (Phase 5, item 3 of the numbered list in `docs/templates-and-onboarding-plan.md`)
 
@@ -59,7 +59,7 @@ Each criterion maps to an automated test, or to a manual check where it is visua
 - **Existing lists extended.** `TemplateManifestTests` (folder list and catalog order), `OnboardingFlowTests` (card and guidance counts), the stylesheet-coverage test, and the accent-contrast test (which already runs for every template in the catalog).
 - **New guards.** The guidance appears on every editor for a `sensitive` template; the held-only credentials markup; the starter has no legal-form suffix and no pupil-identifying shape.
 - **Mutation testing.** In a scratch copy, break each new guard (hide a heading, drop `credentialsJsonLd`, swap two sections, lower an accent below 4.5:1, add a suffix to a name) and confirm a test fails.
-- **Suite.** The full suite on an LF export of the branch, the way CI builds it, with the result reported as it is. Two tests fail on this Windows host's CRLF checkout, `SoftwareParityTests.DemoPersona_RendersByteForByteLikeTheSnapshots` and `OnboardingAccessibilityAccentTests.WithNoAccentPicked_ThePublicPageHasNoAccentOverride`. They fail the same way on clean develop and are not a defect of this work.
+- **Suite.** The full suite on an LF export of the branch, the way CI builds it, with the result reported as it is. Two tests fail on this Windows host, `SoftwareParityTests.DemoPersona_RendersByteForByteLikeTheSnapshots` and `OnboardingAccessibilityAccentTests.WithNoAccentPicked_ThePublicPageHasNoAccentOverride`. They also fail on an LF export on this host (Razor renders CRLF here), and fail identically on the Finance base commit, so they are not a defect of this work.
 - **Real-browser pass.** At 390, 768 and 1280 px in light and dark: the wizard card and publish, the public pages, switching templates, the sections editor, export and import, and the keyboard.
 
 ## 7. How a person sees the change

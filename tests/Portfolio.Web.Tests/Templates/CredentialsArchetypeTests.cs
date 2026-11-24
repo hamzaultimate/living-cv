@@ -73,7 +73,7 @@ public class CredentialsArchetypeTests
             Home: ["Teaching qualifications &amp; registration", "Teaching experience", "Teaching skills", "Curriculum &amp; initiatives", "References", "Sample profile (fictional)"],
             About: ["Careful planning and inclusive classrooms"],
             Experience: ["Teaching experience", "where I have taught"],
-            Projects: ["Curriculum &amp; initiatives", "Read initiative"],
+            Projects: ["Curriculum &amp; initiatives", "Read initiative", "Initiatives led or contributed to"],
             DetailSlug: "reading-for-pleasure-programme",
             Detail: ["Initiative", "Methods &amp; resources", "Aim", "Approach"],
             Skills: ["Teaching skills", "Pastoral and inclusion", "Technology"],
@@ -142,6 +142,11 @@ public class CredentialsArchetypeTests
         }
 
         var nav = (await GetAsync(client, "/")).Html;
+        // Registration and qualifications come before the practice (experience) section.
+        var credentialsAt = nav.IndexOf("id=\"credentials\"", StringComparison.Ordinal);
+        var practiceAt = nav.IndexOf("id=\"practice\"", StringComparison.Ordinal);
+        Assert.True(credentialsAt >= 0 && practiceAt >= 0, "the home page lacks the qualifications or the practice section");
+        Assert.True(credentialsAt < practiceAt, "the qualifications section must come before the practice section");
         foreach (var label in w.NavLabels) Assert.Contains(label, nav);
         Assert.DoesNotContain(">blog<", nav);
         Assert.DoesNotContain(">talks<", nav);
@@ -363,7 +368,8 @@ public class CredentialsArchetypeTests
 
         // No entry names a pupil, student or child: a heuristic for a capitalised name straight after one of those words.
         var text = File.ReadAllText(Path.Combine(TemplatesDir, key, "starter.json"));
-        Assert.DoesNotMatch(@"\b(?:[Pp]upil|[Ss]tudent|[Cc]hild|[Ll]earner)s?\s+(?:named\s+)?[A-Z][a-z]{2,}\b", text);
+        Assert.DoesNotMatch(@"\b(?:[Pp]upil|[Ss]tudent|[Cc]hild|[Ll]earner)s?,?\s+(?:(?:named|called)\s+)?[A-Z][a-z]{2,}\b", text);
+        Assert.DoesNotMatch(@"[A-Z][a-z]{2,},\s+(?:an?\s+)?(?:Year\s+\d+\s+)?(?:pupil|student|child|learner)\b", text);
     }
 
     // ---------------------------------------------------------------- structured data and editor guidance
@@ -412,6 +418,16 @@ public class CredentialsArchetypeTests
             Assert.Contains(phrase, html);
             Assert.Contains("Before you publish", html);
         }
+
+        // The profile editors, the sections page, the import and export page and the template page carry it too.
+        foreach (var path in new[] { ProfileFlow.Hero, ProfileFlow.Metrics, ProfileFlow.About, SectionsFlow.Path, TransferFlow.Page })
+        {
+            var html = WebUtility.HtmlDecode(await owner.GetStringAsync(path));
+            Assert.True(html.Contains(phrase, StringComparison.Ordinal), $"{path} does not show the guidance");
+            Assert.True(html.Contains("Before you publish", StringComparison.Ordinal), $"{path} does not show the guidance heading");
+        }
+        var template = WebUtility.HtmlDecode(await owner.GetStringAsync($"/admin/template?show={key}"));
+        Assert.Contains(phrase, template);
     }
 
     // ---------------------------------------------------------------- Education

@@ -1,9 +1,4 @@
 using System.Net;
-using System.Text.RegularExpressions;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Portfolio.Data.Entities;
-using Portfolio.Web.Services;
 using Portfolio.Web.Tests.Support;
 using Xunit;
 

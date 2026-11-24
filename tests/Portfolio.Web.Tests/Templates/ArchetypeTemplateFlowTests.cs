@@ -85,6 +85,7 @@ public class ArchetypeTemplateFlowTests
         var review = Plain(await owner.GetStringAsync(WizardFlow.Review));
         foreach (var accent in template.Theme.Accents) Assert.Contains(accent.Label, review);
         Assert.Contains("Sample", review, StringComparison.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(template.Guidance)) Assert.Contains(template.Guidance![..40], review); // the review step shows the guidance of every template that has one
 
         Assert.Equal(HttpStatusCode.Redirect, (await WizardFlow.PublishAsync(owner, WizardFlow.ReviewFields("https://robin.example", content: StarterChoice.Sample))).StatusCode);
 
@@ -276,6 +277,8 @@ public class ArchetypeTemplateFlowTests
             Assert.Contains("Seed Project", projects);
             if (Keys.Contains(other)) Assert.Contains(Card(other), projects); // drawn by that template's own layout
             else { Assert.DoesNotContain("data-results-card", projects); Assert.DoesNotContain("<article class=\"group relative", projects); }
+            // The credentials layout shares its card markup with the software pages, so it must also show none of the gallery or results cards.
+            if (Definition(other).Archetype == Archetypes.Credentials) { Assert.DoesNotContain("data-results-card", projects); Assert.DoesNotContain("<article class=\"group relative", projects); }
             Assert.Equal(HttpStatusCode.OK, (await target.NewClient().GetAsync("/projects/seed-project")).StatusCode);
         }
 
