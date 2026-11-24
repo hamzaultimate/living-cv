@@ -66,6 +66,21 @@ public sealed class TemplateView
         }
     }
 
+    /// <summary>The CV's print colour as #rrggbb: the owner's picked accent in its <c>light.strong</c> tone (the tone body text uses on a light page),
+    /// otherwise the template's <c>copy.cv.accent</c>, otherwise <see cref="CvSections.DefaultAccent"/>. A value that is not six-digit hex is skipped,
+    /// so junk can never reach the PDF's colour call.</summary>
+    public string CvAccent
+    {
+        get
+        {
+            if (Accent is { } picked && IsHex(picked.Light.Strong)) return picked.Light.Strong;
+            var own = Copy.Cv.AccentText();
+            return IsHex(own) ? own : CvSections.DefaultAccent;
+        }
+    }
+
+    private static bool IsHex(string? value) => value is not null && System.Text.RegularExpressions.Regex.IsMatch(value, "^#[0-9a-fA-F]{6}$");
+
     private static (string Accent, string Strong)? Channels(string accent, string strong)
     {
         static string? One(string hex) =>

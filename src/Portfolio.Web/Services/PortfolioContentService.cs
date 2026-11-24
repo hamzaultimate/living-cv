@@ -112,7 +112,9 @@ public class PortfolioContentService
         var status = template.Copy.Certifications;
         var headings = new CvHeadings(cv.ExperienceHeading, cv.SkillsHeading, cv.ProjectsHeading, cv.CertificationsHeading,
             status.StatusEarned, status.StatusInProgress, status.StatusPlanned);
-        return new CvData(site.OwnerName, site.Role, site.Summary, contacts, roles, groups, projects, certs, site.Url, headings);
+        // The template's order minus the sections it (or the owner) switched off. An empty section stays in the order; the renderers skip it.
+        var order = cv.OrderList().Where(template.IsEnabled).ToList();
+        return new CvData(site.OwnerName, site.Role, site.Summary, contacts, roles, groups, projects, certs, site.Url, headings, order, template.CvAccent);
     }
 
     /// <summary>Groups skills for the CV, ordered by <paramref name="groupOrder"/> (unlisted groups last).
