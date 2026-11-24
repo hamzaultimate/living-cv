@@ -17,6 +17,7 @@ status words, and their accent colour come from the template manifest. Software 
   (`CvDocument.cs`, `Pages/Cv.cshtml`). It differs from the site's `sections[]` order (experience, projects, skills, certifications),
   so reusing `sections[]` would reorder Software's CV and break `SoftwareParityTests`.
 - The PDF accent is a constant `#1D4ED8`. The HTML picks up the template theme through CSS variables.
+- The layout already applies the owner's picked accent to the HTML (through the same theme variables as every page), so only the PDF needs the accent resolved in code.
 - The HTML prints the certification status enum name (`Earned`); the PDF maps it to the template's wording.
 - The PDF upper-cases a default heading and the HTML uses manifest casing, so "Selected projects" differs between them.
 
@@ -32,6 +33,23 @@ status words, and their accent colour come from the template manifest. Software 
 
 All nine shipped manifests set both. Software sets the defaults explicitly, so its output does not change. The summary is always
 first and is not part of `order`.
+
+### Orders and accents shipped
+
+| Template | `copy.cv.order` | `copy.cv.accent` |
+|---|---|---|
+| software | experience, skills, projects, certifications | #1D4ED8 |
+| data-analytics | experience, projects, skills, certifications | #115e59 |
+| product-management | experience, projects, skills, certifications | #92400e |
+| design-ux | projects, experience, skills, certifications | #92320e |
+| photography-film | projects, experience, skills, certifications | #6b4608 |
+| marketing-content | projects, experience, skills, certifications | #9d174d |
+| sales-bd | projects, experience, skills, certifications | #065f46 |
+| finance-accounting | experience, certifications, projects, skills | #15375c |
+| healthcare | certifications, experience, skills, projects | #115e59 |
+
+The rule: the template's own `sections[]` order restricted to the four CV sections, and the theme's light `--c-accent-strong`.
+Software keeps today's order and colour.
 
 ### Accent resolution
 
@@ -52,6 +70,7 @@ as before.
 
 - The HTML shows the template's certification status word, as the PDF does.
 - Headings in both renderers use the manifest text as written (no upper-casing), so the two outputs agree.
+- Consequence for Software: its HTML changes by one certification status word ("InProgress" becomes "In progress" in the `/cv` snapshot), and the headings of its PDF change case ("EXPERIENCE" becomes "Experience"). Nothing else about Software's output changes.
 
 ### Out of scope
 
@@ -62,7 +81,7 @@ fields beyond the current four.
 
 Tests are written first.
 
-1. `SoftwareParityTests` passes with no snapshot edit. This is the proof that Software is unchanged.
+1. The `/cv` snapshot changes by the one status-word line and every other page is byte-identical (proved by diffing renders against the parent commit, because the test itself fails on this host's CRLF).
 2. A manifest test for all nine templates: `order` has only known, unique keys; `accent` is valid hex and meets 4.5:1 on white; every
    `accent` option's `light.strong` meets 4.5:1 on white.
 3. Per template, `/cv` renders sections in its `order` with its headings and status words; on non-Software templates the existing
@@ -70,7 +89,8 @@ Tests are written first.
 4. An owner-picked accent changes the HTML and PDF colour; with no pick the template's `accent` is used.
 5. A disabled section is absent from `/cv` and from the PDF data.
 6. `/cv.pdf` stays deterministic for equal input and changes when content changes (`EveryWrite_RefreshesTheGeneratedCvAtOnce` keeps
-   passing). PDF tests keep to blank sites or sites without impact lines because of the font gap.
+   passing). PDF comparisons mask the embedded creation time, because QuestPDF stamps the time of rendering; determinism in production
+   comes from the output cache, not from the renderer. PDF tests keep to blank sites or sites without impact lines because of the font gap.
 7. Mutation checks of the new guards, as in Phase 5.
 
 ## How a human sees it

@@ -102,6 +102,24 @@ load, the site renders the software template. See `Templates/healthcare/template
 }
 ```
 
+### CV output
+
+`/cv` and `/cv.pdf` follow the template through two optional fields of `copy.cv`:
+
+- `order`: the sections after the summary, as a list of keys. Only `experience`, `skills`, `projects` and `certifications` are allowed,
+  none twice. Absent means today's order (`experience, skills, projects, certifications`). The summary is always first and is not
+  listed. A section the owner has switched off is left out at render time, and one with no entries is not drawn.
+- `accent`: the print colour of the PDF as `#rrggbb`. Absent means `#1D4ED8`. It must reach at least 4.5:1 contrast on white
+  (`CvManifestTests` checks this). An accent the owner picked from `theme.accents[]` overrides it, in that option's `light.strong`
+  tone. The HTML page does not use this field: it takes its colours from the theme, as every page does.
+
+The shipped templates follow one rule: `order` is the template's own `sections[]` order restricted to the four CV sections, and
+`accent` is the theme's light-mode `--c-accent-strong` colour (its `Styles/themes/<key>.css`). Software has no theme file and states the
+defaults explicitly. Headings and certification status words come from the existing `copy.cv.*` and `copy.certifications.status*`
+strings and are printed as written in both outputs.
+
+A new template must also add its row (`order`, `accent`) to `CvManifestTests.Expected`; that test fails until it does.
+
 Section keys are a closed list owned by the app (`SectionRegistry`: `about`, `experience`, `projects`, `skills`,
 `certifications`, `blog`, `talks`, `testimonials`, `contact`). A template can relabel, reorder, and hide them but cannot
 invent new ones. `testimonials` has no page of its own; it is a block on the home page. The CV page is always present.
