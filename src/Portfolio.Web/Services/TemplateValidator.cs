@@ -70,6 +70,7 @@ public static partial class TemplateValidator
 
         ValidateSeo(t, errors);
         ValidateCopy(t, errors);
+        ValidateCv(t, errors);
 
         if (t.Starter is not null)
         {
@@ -111,6 +112,25 @@ public static partial class TemplateValidator
         Require(errors, "heroSuggestions.summary", s.Summary, MaxSuggestedSummary);
         if (HasMarkup(s.Title)) errors.Add("heroSuggestions.title must be plain text (no < or >).");
         if (HasMarkup(s.Summary)) errors.Add("heroSuggestions.summary must be plain text (no < or >).");
+    }
+
+    /// <summary>The CV order is a closed list of section keys and the CV accent ends up in a PDF colour call, so both are checked strictly.</summary>
+    private static void ValidateCv(TemplateDefinition t, List<string> errors)
+    {
+        var cv = t.Copy.Cv;
+        if (cv.Order is not null)
+        {
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var key in cv.Order)
+            {
+                if (string.IsNullOrWhiteSpace(key) || !CvSections.IsKnown(key))
+                    errors.Add($"copy.cv.order lists '{key}'; it may only list {string.Join(", ", CvSections.Default)}.");
+                else if (!seen.Add(key))
+                    errors.Add($"copy.cv.order lists '{key}' twice.");
+            }
+        }
+        if (!string.IsNullOrWhiteSpace(cv.Accent) && !HexColour().IsMatch(cv.Accent))
+            errors.Add($"copy.cv.accent '{cv.Accent}' must look like #1d4ed8.");
     }
 
     /// <summary>The accents are the allow-list for a value that ends up in a stylesheet, so everything about them is checked strictly.</summary>
