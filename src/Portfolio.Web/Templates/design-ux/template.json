@@ -243,7 +243,9 @@
       "experienceHeading": "Experience",
       "skillsHeading": "Skills & tools",
       "projectsHeading": "Selected case studies",
-      "certificationsHeading": "Awards & training"
+      "certificationsHeading": "Awards & training",
+      "order": ["projects", "experience", "skills", "certifications"],
+      "accent": "#92320e"
     }
   }
 }

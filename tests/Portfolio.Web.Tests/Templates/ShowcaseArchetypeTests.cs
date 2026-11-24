@@ -238,7 +238,7 @@ public class ShowcaseArchetypeTests
         {
             node["name"] = "Zork Showcase";
             foreach (var (group, value) in node["copy"]!.AsObject().ToList())
-                foreach (var (prop, _) in value!.AsObject().ToList())
+                foreach (var (prop, _) in value!.AsObject().Where(p => !(group == "cv" && p.Key is "order" or "accent")).ToList()) // the CV order and accent are not wording
                     value[prop] = prop switch
                     {
                         "imageAlt" => $"zork-{group}-{prop} {{title}}",

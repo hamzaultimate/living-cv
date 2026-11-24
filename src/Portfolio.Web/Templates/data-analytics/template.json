@@ -373,7 +373,9 @@
       "experienceHeading": "Professional experience",
       "skillsHeading": "Tools & methods",
       "projectsHeading": "Projects and results",
-      "certificationsHeading": "Courses and certifications"
+      "certificationsHeading": "Courses and certifications",
+      "order": ["experience", "projects", "skills", "certifications"],
+      "accent": "#115e59"
     }
   }
 }
