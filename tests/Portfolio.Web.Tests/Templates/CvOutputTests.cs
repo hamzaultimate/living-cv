@@ -134,6 +134,29 @@ public class CvOutputTests
         Assert.NotEqual(Pdf(Data(new[] { "experience" })), Pdf(Data(Array.Empty<string>())));
     }
 
+    [Theory]
+    [InlineData("experience")]
+    [InlineData("skills")]
+    [InlineData("projects")]
+    [InlineData("certifications")]
+    public void ThePdf_DrawsEachSectionKeyAsItsOwnSection(string key)
+    {
+        // The order names one section, over full content ...
+        var named = Pdf(Data(new[] { key }));
+        // ... must draw what a CV holding only that section's content draws in the default order.
+        var full = Data();
+        var onlyThat = full with
+        {
+            Experience = key == "experience" ? full.Experience : new List<Experience>(),
+            SkillGroups = key == "skills" ? full.SkillGroups : new List<IGrouping<string, Skill>>(),
+            Projects = key == "projects" ? full.Projects : new List<Project>(),
+            Certifications = key == "certifications" ? full.Certifications : new List<Certification>(),
+        };
+
+        Assert.Equal(Pdf(onlyThat), named);
+        Assert.NotEqual(Pdf(Data(Array.Empty<string>())), named); // the section drew something
+    }
+
     [Fact]
     public void ThePdf_UsesTheAccentOfTheData()
     {
