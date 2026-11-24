@@ -1276,7 +1276,7 @@ Create `src/Portfolio.Web/Templates/education/starter.json` (comments are allowe
       "start": "2019",
       "end": "2022",
       "current": false,
-      "summary": "Taught a lower upper primary class and led mathematics for the year group.",
+      "summary": "Taught an upper primary class and led mathematics for the year group.",
       "highlights": [
         "Piloted a mastery approach to number across the year group",
         "Ran termly staff training on planning and assessment"
@@ -1290,7 +1290,7 @@ Create `src/Portfolio.Web/Templates/education/starter.json` (comments are allowe
       "start": "2017",
       "end": "2019",
       "current": false,
-      "summary": "Induction programme with a class of her own from the first term, supported by a mentor and a reduced timetable.",
+      "summary": "Induction programme with a class of their own from the first term, supported by a mentor and a reduced timetable.",
       "highlights": ["Completed the induction programme on schedule"],
       "tech": [],
       "sortOrder": 3
@@ -1339,7 +1339,7 @@ Create `src/Portfolio.Web/Templates/education/starter.json` (comments are allowe
     {
       "title": "Mathematics mastery pilot (sample)",
       "slug": "mathematics-mastery-pilot",
-      "role": "Contributor",
+      "role": "Lead",
       "org": "Sample Hill Academy (fictional)",
       "period": "2022",
       "summary": "A year-group pilot of a mastery approach to number, shared with the rest of the school. Sample initiative (fictional).",
