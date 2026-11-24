@@ -971,7 +971,7 @@ Create `src/Portfolio.Web/Templates/education/template.json`:
       "description": "Curriculum, enrichment and improvement initiatives: the aim, the approach and the outcome.",
       "eyebrow": "Curriculum & initiatives",
       "heading": "Curriculum & initiatives",
-      "lead": "Projects led or contributed to: the aim, what was done and the outcome.",
+      "lead": "Initiatives led or contributed to: the aim, what was done and the outcome.",
       "emptyTitle": "No initiatives yet",
       "emptyBody": "Add your first initiative. Describe the work and its outcome, never individual pupils.",
       "filterLabel": "Filter initiatives by area",
