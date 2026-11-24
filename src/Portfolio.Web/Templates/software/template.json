@@ -219,7 +219,9 @@
       "experienceHeading": "Experience",
       "skillsHeading": "Skills",
       "projectsHeading": "Selected projects",
-      "certificationsHeading": "Certifications"
+      "certificationsHeading": "Certifications",
+      "order": ["experience", "skills", "projects", "certifications"],
+      "accent": "#1D4ED8"
     }
   }
 }

@@ -306,7 +306,9 @@
       "experienceHeading": "Clinical experience",
       "skillsHeading": "Clinical skills",
       "projectsHeading": "Research & initiatives",
-      "certificationsHeading": "Licences & registrations"
+      "certificationsHeading": "Licences & registrations",
+      "order": ["certifications", "experience", "skills", "projects"],
+      "accent": "#115e59"
     }
   }
 }
