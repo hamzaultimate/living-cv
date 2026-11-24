@@ -70,7 +70,7 @@ showing the placeholder site meanwhile.
 
 1. **Template.** Choose a template by name in the box on the right, grouped by profession. The page shows a live
    preview with page tabs and a desktop or mobile width (all links; browsing saves nothing), the pages the template
-   has, what a piece of work is called, whether sample content is available and any guidance (Healthcare reminds you never to publish patient data; Design & UX and Photography & Film remind you to publish only work you have the right to show; Marketing & Content, Sales & Business Development and Finance & Accounting remind you to publish only figures and client names you may share; Finance & Accounting also warns against confidential financial data). The button reads "Use" and the template's name and "and continue" (or "Keep" when it is already chosen); only that button saves the choice to the draft.
+   has, what a piece of work is called, whether sample content is available and any guidance (Healthcare reminds you never to publish patient data; Education reminds you never to publish pupil information; Design & UX and Photography & Film remind you to publish only work you have the right to show; Marketing & Content, Sales & Business Development and Finance & Accounting remind you to publish only figures and client names you may share; Finance & Accounting also warns against confidential financial data). The button reads "Use" and the template's name and "and continue" (or "Keep" when it is already chosen); only that button saves the choice to the draft.
 2. **Basics.** Name, professional title, email, location (optional) and a short summary. Title and summary start
    from the template's suggestion; they are published as written, so edit them. You may leave a field blank or half typed while you move on; only publishing needs the name, title, email and summary complete and the email valid.
 3. **Photo.** Optional. The photo goes through the same checks as the Photo page (JPEG, PNG or WebP, re-encoded,
@@ -368,13 +368,21 @@ These values are the defaults for the site profile. With a database, they are co
 
 ### Template
 
-The wizard's first step picks the template; to change it later without running the wizard, go to `/admin/template`, where you pick the template that suits your profession: **Software & IT**, **Healthcare**, **Design & UX**, **Photography & Film**, **Marketing & Content**, **Sales & Business Development** or **Finance & Accounting**.
+The wizard's first step picks the template; to change it later without running the wizard, go to `/admin/template`, where you pick the template that suits your profession: **Software & IT**, **Healthcare**, **Education**, **Design & UX**, **Photography & Film**, **Marketing & Content**, **Sales & Business Development** or **Finance & Accounting**.
 Choose a template by name in the box on the right, and the public site is shown inside the page in that template's
 layout, wording and colours, with tabs for each page and a desktop or mobile width (all links, so nothing is saved by
 browsing). The button reads "Switch to" and the template's name; the template in use is marked "In use" and has no button. Switching never
 deletes content: sections the new template does not use (for example Blog posts under Healthcare) are hidden from the
 navigation, sitemap and CV, their pages answer 404, and everything returns if you switch back. The page shows what
 stays hidden but kept. Healthcare shows a reminder never to publish patient-identifiable information.
+
+**Education (the same layout as Healthcare).** A school teacher's site. The home page opens with your teaching qualifications and registration, then your teaching
+experience, then your skills and your curriculum initiatives (what the template calls a piece of work), your references and a contact block. The menu follows the same order. Articles and
+workshops are off until you switch them on (Sections page). Your held qualifications are also listed in the site's structured data for search engines; ones you are still studying for or have planned are not.
+The look is a calm dark green (or warm cream) with a green accent you can change to terracotta, blue or gold. The template shows a note before you publish and repeats it on every editor:
+never publish pupil-identifiable information (names, photographs, work samples that carry a name, behaviour, attendance, special educational needs or safeguarding details), and check your school's and
+employer's policies first. The sample content is fictional: a made-up teacher, schools marked "(fictional)", three initiatives marked "(sample)" and qualifications from invented "Example ..." bodies,
+with simple generated pictures that you replace in the project editor.
 
 **Design & UX and Photography & Film (the gallery layout).** These two templates lead with pictures. The home page has a short introduction and a grid of
 your featured work: each card is a large cover picture with the title, a one-line summary and a few tags underneath, and the whole card opens that piece. The
