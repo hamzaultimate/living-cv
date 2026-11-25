@@ -454,7 +454,9 @@
       "experienceHeading": "Professional experience",
       "skillsHeading": "Skills & systems",
       "projectsHeading": "Selected engagements",
-      "certificationsHeading": "Qualifications"
+      "certificationsHeading": "Qualifications",
+      "order": ["experience", "certifications", "projects", "skills"],
+      "accent": "#15375c"
     }
   }
 }

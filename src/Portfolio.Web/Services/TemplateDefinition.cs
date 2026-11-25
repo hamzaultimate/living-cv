@@ -464,4 +464,14 @@ public class CvCopy
     public string SkillsHeading { get; set; } = "";
     public string ProjectsHeading { get; set; } = "";
     public string CertificationsHeading { get; set; } = "";
+
+    /// <summary>Optional. The CV sections after the summary, in print order: a subset of <see cref="CvSections.Default"/>, no repeats. Absent uses that default order.</summary>
+    public List<string>? Order { get; set; }
+
+    /// <summary>Optional print colour as #rrggbb, at least 4.5:1 on white (a manifest test checks it). Absent uses <see cref="CvSections.DefaultAccent"/>.
+    /// An accent the owner picked takes precedence (see <see cref="TemplateView.CvAccent"/>).</summary>
+    [OptionalCopy] public string Accent { get; set; } = "";
+
+    public IReadOnlyList<string> OrderList() => Order is null ? CvSections.Default : Order;
+    public string AccentText() => string.IsNullOrWhiteSpace(Accent) ? CvSections.DefaultAccent : Accent;
 }

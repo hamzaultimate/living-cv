@@ -193,9 +193,9 @@ Implementation notes (decisions worth reviewing):
   apply when the page has no `data-theme`; the catalog is resolved at startup so a broken default manifest fails the start; expanded
   manifest-driven meta descriptions (including projects, blog and talks) are cut to 160 characters at render time; the layout
   fallback (the profile summary on pages without their own description) is left as it was to keep software output identical.
-- **Known gaps.** The CV ATS badge still shows the committed demo-persona report on every template (Phase 6). The CV page prints
-  certification status with the enum names as before. Issuer logos on the certifications page are matched by name, as before.
-  /cv.pdf and /og.png keep the software look (per-template CV output is Phase 6).
+- **Known gaps.** The CV ATS badge still shows the committed demo-persona report on every template (Phase 6b). Issuer logos on the
+  certifications page are matched by name, as before. `/cv` and `/cv.pdf` now follow the template (done in Phase 6a, see below);
+  `/og.png` keeps the software look.
 
 ### Phase 3: 4-step onboarding wizard
 **Status: done** (pending independent review).
@@ -706,9 +706,78 @@ The gallery work shows the pattern for the new Results archetype: partials plus 
 
 **What remains in Phase 5.** Nothing in this change. Education (item 3) is its own pull request and is not part of it.
 
+#### Phase 6a: CV output per template (done, pending independent review)
+
+Spec: `docs/superpowers/specs/2026-11-22-cv-output-per-template-design.md`. Plan: `docs/superpowers/plans/2026-11-24-cv-output-per-template.md`.
+Branch `feature/phase-6a-cv-per-template`. The second half of Phase 6 (ATS score computed on save) is Phase 6b.
+
+**What shipped.** `copy.cv.order` and `copy.cv.accent` in the manifest (validated, in the schema, set by all nine templates); `CvData.SectionOrder`
+and `CvData.Accent`; `/cv` and `/cv.pdf` loop over the order and the PDF uses the accent. The accent is the owner's picked option's `light.strong`,
+else `copy.cv.accent`, else `#1D4ED8`. The HTML now prints the template's certification status words; both renderers print headings as the
+manifest wrote them. Authoring rules: `docs/template-authoring-guide.md`, "CV output".
+
+| Template | Order after the summary | Accent |
+|---|---|---|
+| software | experience, skills, projects, certifications | #1D4ED8 |
+| data-analytics | experience, projects, skills, certifications | #115e59 |
+| product-management | experience, projects, skills, certifications | #92400e |
+| design-ux | projects, experience, skills, certifications | #92320e |
+| photography-film | projects, experience, skills, certifications | #6b4608 |
+| marketing-content | projects, experience, skills, certifications | #9d174d |
+| sales-bd | projects, experience, skills, certifications | #065f46 |
+| finance-accounting | experience, certifications, projects, skills | #15375c |
+| healthcare | certifications, experience, skills, projects | #115e59 |
+
+**Changes to Software.** One snapshot line: `tests/Portfolio.Web.Tests/Snapshots/software/cv.html` prints "(In progress)" where it printed
+"(InProgress)". Every other page is byte-identical (proved by diffing renders against the parent commit, because `SoftwareParityTests` itself
+fails on a CRLF host). The Software PDF's headings change case ("EXPERIENCE" becomes "Experience"), because the PDF no longer upper-cases them
+and now agrees with the HTML.
+
+**Mutation checks** (an LF export of `HEAD` in a scratch copy, one change at a time, the named test run on its own, the file restored after each):
+
+| # | Mutation | Test that failed | Result |
+|---|---|---|---|
+| 1 | `ValidateCv`: drop the `CvSections.IsKnown` condition | `CvManifestTests.Validator_RejectsASectionKeyTheCvCannotShow` | failed as required |
+| 2 | `ValidateCv`: drop the repeated-key branch | `CvManifestTests.Validator_RejectsARepeatedKey_AndABlankEntry` | failed as required |
+| 3 | `ValidateCv`: drop the accent hex check | `CvManifestTests.Validator_RejectsAnAccentThatIsNotSixDigitHex` (7 of 7 cases) | failed as required |
+| 4 | `BuildCvDataAsync`: do not filter the order by `IsEnabled` | `CvDataTests.ADisabledSection_IsLeftOutOfTheOrder_AndTheRestKeepTheirPlaces` | failed as required |
+| 5 | `CvAccent`: the template's accent wins over the pick | `CvDataTests.APickedAccent_GivesItsLightStrongTone_ForEveryOptionOfEveryTemplate` (9 of 9 templates) | failed as required |
+| 6 | `CvAccent`: drop the `IsHex` guard on the picked tone | `CvDataTests.ABrokenPickedTone_FallsBackToTheTemplatesAccent_NeverToJunk` | failed as required |
+| 7 | `CvDocument`: loop over `CvSections.Default` | `CvOutputTests.ThePdf_FollowsTheSectionOrder` | failed as required |
+| 8 | `CvDocument.Accent`: always the default | `CvOutputTests.ThePdf_UsesTheAccentOfTheData` | failed as required |
+| 9 | `Cv.cshtml`: loop over `CvSections.Default` | `CvOutputTests.TheCvPage_ListsItsSectionsInTheTemplatesOrder_WithItsHeadings` (8 of 9; Software's order is the default, so it cannot fail) | failed as required |
+| 10 | `Cv.cshtml`: print `c.Status` again | `CvOutputTests.TheCvPage_PrintsTheTemplatesCertificationStatusWords_NotTheEnumNames` (9 of 9) | failed as required |
+| 11 | Healthcare `accent` set to `#8fd3c9` (low contrast) | `CvManifestTests.TheCvAccent_AndEveryPickableAccent_ReachBodyTextContrastOnWhite` and `EveryManifest_SetsItsCvOrderAndAccent` (healthcare) | both failed as required |
+| 12 | `CvDocument.Body`: the `skills` case calls `ProjectsSection` | none of the 24 existing `CvOutputTests` cases | **not caught: a gap** |
+
+Mutation 12 was the gap. It was closed with `CvOutputTests.ThePdf_DrawsEachSectionKeyAsItsOwnSection`, one case per key: the PDF of an order naming only that key over
+full content equals the PDF of content holding only that section in the default order, and differs from the PDF with no sections. Re-run: green on `HEAD` plus the test
+(28 `CvOutputTests` cases), and mutation 12 now fails it for `skills` and `projects`.
+
+**Whole suite** on an LF export of `HEAD` plus the new test (built with `-p:TailwindRequired=true`, as CI builds it): **2534 tests, 2534 passed, 0 failed, 0 skipped.** The two
+known baseline tests (`SoftwareParityTests.DemoPersona_RendersByteForByteLikeTheSnapshots`, `OnboardingAccessibilityAccentTests.WithNoAccentPicked_ThePublicPageHasNoAccentOverride`)
+passed on the LF export, as expected for a host whose only problem is CRLF; they were not re-run on the CRLF worktree here. The rebuilt `app.css` is byte-identical to the committed
+blob (this phase adds no Tailwind classes). `dotnet build tools/CvAtsReview` succeeds with 0 errors.
+
+**Looked at in the running app** (the worktree build on `http://localhost:5187`, a throwaway LocalDB database since dropped, driven with a real browser): the owner was created at `/setup`, the wizard
+published Finance & Accounting with its sample content, then `/admin/template` switched to Healthcare and to Software (the content stayed Finance's sample).
+- Finance & Accounting `/cv`: headings Professional experience, Qualifications, Selected engagements, Skills & systems (the table's order, the template's wording); status words
+  Qualified, Studying, Next up (no enum names); accent variable `--c-accent-strong` 21 55 92 (#15375c).
+- Healthcare `/cv`: Licences & registrations, Clinical experience, Clinical skills, Research & initiatives; status words Current, In progress, Planned; accent 17 94 89 (#115e59).
+- Picking Rose in the wizard's review step (Healthcare) and publishing changed the `/cv` accent variable to 159 18 57 (#9f1239) and kept the order. The accent is picked in the wizard's review step, not in `/admin/profile`
+  (the plan's wording was wrong).
+- Software `/cv`: Experience, Skills, Selected projects, Certifications; status words Earned, In progress, Planned; the Rose pick was kept across the template switch.
+- A full-page screenshot of the Finance & Accounting `/cv` was viewed.
+
+**Not looked at.** `/cv.pdf` was not seen on any template. In the running app on this host `/cv.pdf` returns HTTP 500: `QuestPDF 2026.9.1` no longer uses system fonts, and the document asks for "Arial", which is not
+available here (`DocumentDrawingException`). The tests turn `ThrowOnMissingFontFamilies` off, so they do not meet this. `FontFamily("Arial")` is unchanged since before Phase 6a (present at `9488463`) and the app never sets
+`ThrowOnMissingFontFamilies` or registers a font, so Phase 6a did not cause it. The PDF's order, heading case and accent colour are therefore proved by the byte-comparison tests only, never by eye, and
+`/cv.pdf` may fail the same way on any host without Arial (the "PDF font gap" is wider than the missing `▸` glyph and needs its own look). The other six templates' `/cv` pages
+were covered by tests, not by eye, and only Finance & Accounting's HTML was screenshotted.
+
 ### Phase 6: CV output per template
-- QuestPDF layout variants per archetype (section order and labels from the preset). HTML `/cv`
-  follows the same data model.
+- Done in Phase 6a: `/cv` and `/cv.pdf` follow the template's section order, headings, status words and accent (see above). Still open:
+  per-archetype QuestPDF layout variants, `/og.png`, and the PDF font gap.
 - ATS scoring computed from DB content on save (the rule scorer already exists in
   `CvAtsRuleScorer`), stored on the profile, replacing the committed `ats-report.json`.
   The offline console tool is kept for CI/regression use.

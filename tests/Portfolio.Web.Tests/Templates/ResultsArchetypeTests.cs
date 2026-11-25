@@ -673,7 +673,7 @@ public class ResultsArchetypeTests
         {
             node["name"] = "Zork Results";
             foreach (var (group, value) in node["copy"]!.AsObject().ToList())
-                foreach (var (prop, _) in value!.AsObject().ToList())
+                foreach (var (prop, _) in value!.AsObject().Where(p => TemplateDirs.IsWording(group, p.Key)).ToList())
                     value[prop] = prop switch
                     {
                         "imageAlt" => $"zork-{group}-{prop} {{title}}",

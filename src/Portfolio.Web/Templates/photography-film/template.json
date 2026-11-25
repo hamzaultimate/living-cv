@@ -245,7 +245,9 @@
       "experienceHeading": "Commissions and credits",
       "skillsHeading": "Craft & kit",
       "projectsHeading": "Selected series and films",
-      "certificationsHeading": "Exhibitions & awards"
+      "certificationsHeading": "Exhibitions & awards",
+      "order": ["projects", "experience", "skills", "certifications"],
+      "accent": "#6b4608"
     }
   }
 }

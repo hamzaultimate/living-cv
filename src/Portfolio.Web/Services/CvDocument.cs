@@ -16,18 +16,27 @@ public record CvData(
     IReadOnlyList<Project> Projects,
     IReadOnlyList<Certification> Certifications,
     string? Website = null,
-    CvHeadings? Headings = null);
+    CvHeadings? Headings = null,
+    IReadOnlyList<string>? SectionOrder = null,
+    string? Accent = null);
 
 /// <summary>Section headings and certification status words on the CV; the template supplies them.</summary>
 public record CvHeadings(string Experience, string Skills, string Projects, string Certifications, string Earned, string InProgress, string Planned)
 {
     public static readonly CvHeadings Default = new("Experience", "Skills", "Selected Projects", "Certifications", "Earned", "In progress", "Planned");
+
+    /// <summary>The word the CV prints for a certification's status. One mapping for both renderers.</summary>
+    public string StatusWord(CertificationStatus status) => status switch
+    {
+        CertificationStatus.Earned => Earned,
+        CertificationStatus.InProgress => InProgress,
+        _ => Planned,
+    };
 }
 
-/// <summary>Print-friendly CV rendered with QuestPDF (light background, blue accent).</summary>
+/// <summary>Print-friendly CV rendered with QuestPDF (light background). The accent and the order of the sections come from <see cref="CvData"/>.</summary>
 public class CvDocument : IDocument
 {
-    private const string Accent = "#1D4ED8"; // blue, high-contrast on paper
     private const string Ink = "#1A1A1A";
     private const string Muted = "#555555";
 
@@ -38,6 +47,9 @@ public class CvDocument : IDocument
         _d = d;
         _h = d.Headings ?? CvHeadings.Default;
     }
+
+    /// <summary>Print colour of this CV; the blue it always had when the data names none.</summary>
+    private string Accent => _d.Accent ?? CvSections.DefaultAccent;
 
     public DocumentMetadata GetMetadata() => new() { Title = $"{_d.Name} — CV" };
 
@@ -73,81 +85,90 @@ public class CvDocument : IDocument
 
         col.Item().Text(_d.Summary).FontSize(10.5f).FontColor(Muted);
 
-        if (_d.Experience.Count > 0)
+        foreach (var key in _d.SectionOrder ?? CvSections.Default)
         {
-            col.Item().Element(x => SectionTitle(x, _h.Experience));
-            foreach (var r in _d.Experience)
+            switch (key)
             {
-                col.Item().Column(e =>
-                {
-                    e.Item().Row(row =>
-                    {
-                        row.RelativeItem().Text(t =>
-                        {
-                            t.Span(r.Company).Bold();
-                            t.Span($"  —  {r.Title}").FontColor(Muted);
-                        });
-                        row.ConstantItem(130).AlignRight()
-                            .Text($"{r.Start} – {(r.Current ? "present" : r.End)}").FontSize(9).FontColor("#888");
-                    });
-                    if (!string.IsNullOrWhiteSpace(r.Summary))
-                        e.Item().PaddingTop(1).Text(r.Summary).FontSize(9.5f).FontColor(Muted);
-                    foreach (var h in r.Highlights)
-                        e.Item().Text($"▸  {h}").FontSize(9.5f).FontColor(Muted);
-                });
-            }
-        }
-
-        if (_d.SkillGroups.Count > 0)
-        {
-            col.Item().Element(x => SectionTitle(x, _h.Skills));
-            foreach (var g in _d.SkillGroups)
-            {
-                col.Item().Text(t =>
-                {
-                    t.Span($"{g.Key}:  ").Bold().FontColor(Accent);
-                    t.Span(string.Join(", ", g.Select(s => s.Name))).FontSize(9.5f);
-                });
-            }
-        }
-
-        if (_d.Projects.Count > 0)
-        {
-            col.Item().Element(x => SectionTitle(x, _h.Projects));
-            foreach (var p in _d.Projects)
-            {
-                col.Item().Column(pc =>
-                {
-                    pc.Item().Text(p.Title).Bold();
-                    pc.Item().Text(p.Summary).FontSize(9.5f).FontColor(Muted);
-                    if (p.Impact.Count > 0)
-                        pc.Item().Text($"▸  {string.Join("   ·   ", p.Impact)}").FontSize(9).FontColor(Accent);
-                });
-            }
-        }
-
-        if (_d.Certifications.Count > 0)
-        {
-            col.Item().Element(x => SectionTitle(x, _h.Certifications));
-            foreach (var cert in _d.Certifications)
-            {
-                col.Item().Text(t =>
-                {
-                    t.Span(cert.Name).FontSize(9.5f);
-                    t.Span($"  —  {cert.Issuer} ({Status(cert.Status)})").FontSize(9).FontColor("#888");
-                });
+                case SectionRegistry.Experience: ExperienceSection(col); break;
+                case SectionRegistry.Skills: SkillsSection(col); break;
+                case SectionRegistry.Projects: ProjectsSection(col); break;
+                case SectionRegistry.Certifications: CertificationsSection(col); break;
             }
         }
     });
 
-    private static void SectionTitle(IContainer c, string title) =>
-        c.PaddingTop(6).BorderBottom(1).BorderColor("#DDDDDD").PaddingBottom(2)
-            .Text(title.ToUpperInvariant()).FontSize(11).Bold().FontColor(Accent);
-
-    private string Status(CertificationStatus s) => s switch
+    private void ExperienceSection(ColumnDescriptor col)
     {
-        CertificationStatus.Earned => _h.Earned,
-        CertificationStatus.InProgress => _h.InProgress,
-        _ => _h.Planned,
-    };
+        if (_d.Experience.Count == 0) return;
+        col.Item().Element(x => SectionTitle(x, _h.Experience));
+        foreach (var r in _d.Experience)
+        {
+            col.Item().Column(e =>
+            {
+                e.Item().Row(row =>
+                {
+                    row.RelativeItem().Text(t =>
+                    {
+                        t.Span(r.Company).Bold();
+                        t.Span($"  —  {r.Title}").FontColor(Muted);
+                    });
+                    row.ConstantItem(130).AlignRight()
+                        .Text($"{r.Start} – {(r.Current ? "present" : r.End)}").FontSize(9).FontColor("#888");
+                });
+                if (!string.IsNullOrWhiteSpace(r.Summary))
+                    e.Item().PaddingTop(1).Text(r.Summary).FontSize(9.5f).FontColor(Muted);
+                foreach (var h in r.Highlights)
+                    e.Item().Text($"▸  {h}").FontSize(9.5f).FontColor(Muted);
+            });
+        }
+    }
+
+    private void SkillsSection(ColumnDescriptor col)
+    {
+        if (_d.SkillGroups.Count == 0) return;
+        col.Item().Element(x => SectionTitle(x, _h.Skills));
+        foreach (var g in _d.SkillGroups)
+        {
+            col.Item().Text(t =>
+            {
+                t.Span($"{g.Key}:  ").Bold().FontColor(Accent);
+                t.Span(string.Join(", ", g.Select(s => s.Name))).FontSize(9.5f);
+            });
+        }
+    }
+
+    private void ProjectsSection(ColumnDescriptor col)
+    {
+        if (_d.Projects.Count == 0) return;
+        col.Item().Element(x => SectionTitle(x, _h.Projects));
+        foreach (var p in _d.Projects)
+        {
+            col.Item().Column(pc =>
+            {
+                pc.Item().Text(p.Title).Bold();
+                pc.Item().Text(p.Summary).FontSize(9.5f).FontColor(Muted);
+                if (p.Impact.Count > 0)
+                    pc.Item().Text($"▸  {string.Join("   ·   ", p.Impact)}").FontSize(9).FontColor(Accent);
+            });
+        }
+    }
+
+    private void CertificationsSection(ColumnDescriptor col)
+    {
+        if (_d.Certifications.Count == 0) return;
+        col.Item().Element(x => SectionTitle(x, _h.Certifications));
+        foreach (var cert in _d.Certifications)
+        {
+            col.Item().Text(t =>
+            {
+                t.Span(cert.Name).FontSize(9.5f);
+                t.Span($"  —  {cert.Issuer} ({_h.StatusWord(cert.Status)})").FontSize(9).FontColor("#888");
+            });
+        }
+    }
+
+    /// <summary>The heading as the template wrote it, so the PDF and the HTML agree.</summary>
+    private void SectionTitle(IContainer c, string title) =>
+        c.PaddingTop(6).BorderBottom(1).BorderColor("#DDDDDD").PaddingBottom(2)
+            .Text(title).FontSize(11).Bold().FontColor(Accent);
 }

@@ -371,7 +371,9 @@
       "experienceHeading": "Professional experience",
       "skillsHeading": "Skills & methods",
       "projectsHeading": "Shipped work",
-      "certificationsHeading": "Courses and certifications"
+      "certificationsHeading": "Courses and certifications",
+      "order": ["experience", "projects", "skills", "certifications"],
+      "accent": "#92400e"
     }
   },
   "starter": {
