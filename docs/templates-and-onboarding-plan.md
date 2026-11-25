@@ -193,9 +193,9 @@ Implementation notes (decisions worth reviewing):
   apply when the page has no `data-theme`; the catalog is resolved at startup so a broken default manifest fails the start; expanded
   manifest-driven meta descriptions (including projects, blog and talks) are cut to 160 characters at render time; the layout
   fallback (the profile summary on pages without their own description) is left as it was to keep software output identical.
-- **Known gaps.** The CV ATS badge still shows the committed demo-persona report on every template (Phase 6). The CV page prints
-  certification status with the enum names as before. Issuer logos on the certifications page are matched by name, as before.
-  /cv.pdf and /og.png keep the software look (per-template CV output is Phase 6).
+- **Known gaps.** The CV ATS badge still shows the committed demo-persona report on every template (Phase 6b). Issuer logos on the
+  certifications page are matched by name, as before. `/cv` and `/cv.pdf` now follow the template (done in Phase 6a, see below);
+  `/og.png` keeps the software look.
 
 ### Phase 3: 4-step onboarding wizard
 **Status: done** (pending independent review).
@@ -534,13 +534,13 @@ download with `nosniff`). Two exports of the same data are byte-identical apart 
 **What remains.** Phase 5 (more templates) and 6 (CV output per template) are untouched. The unique-index gap for names that the editors share (two simultaneous creates of one skill name) is still known; the import re-checks keys at confirm but has the same theoretical race.
 
 ### Phase 5: Remaining templates and archetypes
-**Status: step 1 done** (gallery, Design & UX, Photography & Film; pending independent review). **Step 2 done** (results layout, Marketing & Content, Sales & Business Development; pending independent review). **Step 3 done** (Finance & Accounting on the results layout; pending independent review): this "step 3" is the third piece of work in the order they were done (step 2 left Finance as a preset on the results layout), not item 3 of the numbered list below. **Step 4 done** (Education on the Credentials layout; pending independent review): this is item 3 of the numbered list, which is therefore done. Item 4, Data & Analytics and Product / Project Management on Showcase, is the remaining work and is not started. Notes are in "Phase 5 step 1", "Phase 5 step 2", "Phase 5 step 3" and "Phase 5 step 4" below.
+**Status: step 1 done** (gallery, Design & UX, Photography & Film; pending independent review). **Step 2 done** (results layout, Marketing & Content, Sales & Business Development; pending independent review). **Step 3 done** (Finance & Accounting on the results layout; pending independent review): this "step 3" is the third piece of work in the order they were done (step 2 left Finance as a preset on the results layout), not item 3 of the numbered list below. **Step 4 done** (Education on the Credentials layout; pending independent review): this is item 3 of the numbered list. **Step 5 done** (Data & Analytics and Product & Project Management on the Showcase layout, item 4 of the list; independent review done and its findings fixed). Every item of the list is therefore done. Notes are in "Phase 5 step 1" to "Phase 5 step 5" below.
 
 Build one archetype per step, then the presets that use it:
 1. Gallery layout, then Design & UX, Photography/Creative. **Done.**
 2. Results layout, then Marketing, Sales, Finance. **Done** (Finance & Accounting was a preset only, see "Phase 5 step 3").
 3. Credentials layout (already proven by Healthcare), then Education. **Done** (Education was a preset only, see "Phase 5 step 4").
-4. Data & Analytics and Product/Project Management on the Showcase layout. **Not started.**
+4. Data & Analytics and Product/Project Management on the Showcase layout. **Done** (see "Phase 5 step 5").
 Each template needs a preset, theme, starter content, thumbnail, and a11y/contrast check.
 
 #### Phase 5 step 1: gallery archetype, Design & UX, Photography & Film (done, pending independent review)
@@ -745,11 +745,103 @@ Specific to this change or this step:
 20. **The starter pictures are generated placeholders**, not photographs; owners replace them in the project editor. SVGs are served as static files only; uploads stay raster.
 21. Carried from earlier phases and unchanged: no shipped template marks a section required; per-template CV output is Phase 6.
 
-**What remains in Phase 5.** Item 4 only: Data & Analytics and Product / Project Management on the existing Showcase layout (presets only). Education, Finance & Accounting, Marketing, Sales, Design & UX and Photography & Film are done.
+**What remains in Phase 5.** Nothing: Education (this step, item 3) and the showcase presets (step 5, item 4) were the last items of the list.
+
+#### Phase 5 step 5: Data & Analytics and Product & Project Management on the showcase layout (done, review findings fixed)
+
+**Scope.** Two data-only presets on the existing Showcase layout, the one Software & IT uses: keys `data-analytics` and `product-management`. No C# change, no Razor change, no migration, no CSP change, no new script, no new copy key. `/cv`, `/cv.pdf` and `/og.png` keep the Software look (Phase 6). Design: `docs/superpowers/specs/2026-11-19-showcase-templates-design.md`; plan: `docs/superpowers/plans/2026-11-19-showcase-templates.md`. Branch `feature/phase-5e-showcase-templates`, based on `develop`. It is independent of the Education pull request ("Phase 5 step 4"): both edit the same shared lists (`TemplateManifestTests`, `OnboardingFlowTests`, `ArchetypeTemplateFlowTests`), the README, this file and the one-line `wwwroot/css/app.css`, so whichever merges second needs those merged by hand and the stylesheet rebuilt.
+
+**What shipped.** For each: a manifest (Data & Analytics: projects, item "Analysis", tools & methods, notes; Product & Project Management: shipped work, item "Release", skills & methods, writing), fictional starter content, a theme (teal on deep blue-green; amber on warm charcoal) with four accent choices, seven generated SVG pictures and a real thumbnail. Talks are off and the `youtubeId` field is hidden. Neither is `sensitive`; the editors warn against client data, personal data and confidential roadmaps. `ShowcaseArchetypeTests.Keys` holds both keys and the admin flows in `ArchetypeTemplateFlowTests` run for them.
+
+**Verified.**
+1. Full suite, run twice. Before the branch was rebased onto `develop` (with the admin redesign), on an LF export: 2430 tests, 2428 passed. After the rebase, on an LF export of the branch tip: 2705 tests executed, 2703 passed. The two failures in both runs, `SoftwareParityTests.DemoPersona_RendersByteForByteLikeTheSnapshots` and `OnboardingAccessibilityAccentTests.WithNoAccentPicked_ThePublicPageHasNoAccentOverride`, fail identically on the parent commit in the same setup: on Windows the Razor output carries CRLF, so an LF export does not cure them (CI runs on Linux). The post-rebase run excluded `ImageProcessorTests` (34 tests): that class crashes the test host on the machine used, even when run alone, and this change does not touch the uploads code, so those tests have no verdict from this run. All of `ShowcaseArchetypeTests` (24), the 14 `ArchetypeTemplateFlowTests` cases for the two new keys, `OnboardingFlowTests`, `TemplateManifestTests`, `TemplatePickerBuilderTests` and the three picker and wizard classes passed.
+2. Before and after render of 14 routes (home, about, experience, work list, a case study, skills, certifications, blog, a post, talks, contact, CV, a missing case study and the sitemap) for Software, Healthcare, Design & UX, Photography & Film, Marketing, Sales and Finance, on `develop` and on the branch: all 196 normalised files (bodies and status codes) are identical. This proves the markup of the existing templates is unchanged; the stylesheet differs only by the two new theme rule sets.
+3. Mutation tests, each caught by the test meant for it: a dropped copy string, swapped sections, a washed-out accent, talks switched on, a legal suffix on a client name, the YouTube field un-hidden, Software wording in the copy; and after the review, a real-sounding employer name and the word "patient" in a sample quote.
+4. Independent `quality-reviewer` pass over the branch's changes (before the rebase): no change to `src/` beyond data, theme CSS and the stylesheet import; the generated `app.css` differs by exactly the two new theme rule sets; all SVGs are inert; contrast passes (closest pair 4.54:1). Its findings (employer names that read like real organisations, org-name shape rules, no rendered-wording test, headers on two pages only, two assertions that could not fail, spec wording) were fixed or recorded.
+5. Real-browser pass on a running site (LocalDB, throwaway databases, since dropped), done on the branch as it was before the admin redesign (the new wizard and shared template picker are covered by their own tests, which pass with the new keys, but were not driven in a browser for this change): the setup wizard offers all nine templates, pre-fills each template's title and summary and shows its four accent choices; publishing sample content works for both; every public page of both templates returns 200 with one `h1`, no skipped heading level and no missing `alt`; `/talks` is 404 and absent from the sitemap; no horizontal overflow at 390 or 768 px (Product & Project Management: home, projects, case study, CV at 390; home and projects at 768. Data & Analytics: home, projects, case study, certifications at 390; home and projects at 768); keyboard order and a visible accent-coloured focus outline on desktop (Product & Project Management); the admin sections, hero, transfer and project editors in the template's words; a valid export; switching to Software restores its base look and wording with every row kept, and switching on to Data & Analytics works. Light mode of Product & Project Management was looked at once.
+
+**Known gaps.**
+- The Showcase hero's "LinkedIn", "GitHub" and "Download CV" buttons and its waveform backdrop are fixed in the layout and shared with Software; making them manifest wording is a separate change, as it was for the results layout.
+- Not done: a test of the rendered public menu order (only the manifest order and the admin rows are asserted); round trips with every template other than Software; keyboard and light-mode passes for Data & Analytics; SQL Server (no migration); screen-reader output.
+- A starter certification may not carry a `credentialUrl` (a shipped-template test forbids an address there), so the starters list none.
+- The starter cover pictures are dark tiles in light mode as well.
+- The default hero titles ("Data Analyst", "Product Manager") do not cover data scientists or project managers, as with Software and Healthcare.
+
+**What remains in Phase 5.** Nothing: Education (step 4, item 3) is merged and this step covers item 4, the last item of the list.
+
+#### Phase 6a: CV output per template (done, pending independent review)
+
+Spec: `docs/superpowers/specs/2026-11-22-cv-output-per-template-design.md`. Plan: `docs/superpowers/plans/2026-11-24-cv-output-per-template.md`.
+Branch `feature/phase-6a-cv-per-template`. The second half of Phase 6 (ATS score computed on save) is Phase 6b.
+
+**What shipped.** `copy.cv.order` and `copy.cv.accent` in the manifest (validated, in the schema, set by all ten templates); `CvData.SectionOrder`
+and `CvData.Accent`; `/cv` and `/cv.pdf` loop over the order and the PDF uses the accent. The accent is the owner's picked option's `light.strong`,
+else `copy.cv.accent`, else `#1D4ED8`. The HTML now prints the template's certification status words; both renderers print headings as the
+manifest wrote them. Authoring rules: `docs/template-authoring-guide.md`, "CV output".
+
+| Template | Order after the summary | Accent |
+|---|---|---|
+| software | experience, skills, projects, certifications | #1D4ED8 |
+| data-analytics | experience, projects, skills, certifications | #115e59 |
+| product-management | experience, projects, skills, certifications | #92400e |
+| design-ux | projects, experience, skills, certifications | #92320e |
+| photography-film | projects, experience, skills, certifications | #6b4608 |
+| marketing-content | projects, experience, skills, certifications | #9d174d |
+| sales-bd | projects, experience, skills, certifications | #065f46 |
+| finance-accounting | experience, certifications, projects, skills | #15375c |
+| healthcare | certifications, experience, skills, projects | #115e59 |
+| education | certifications, experience, skills, projects | #124e31 |
+
+**Changes to Software.** One snapshot line: `tests/Portfolio.Web.Tests/Snapshots/software/cv.html` prints "(In progress)" where it printed
+"(InProgress)". Every other page is byte-identical (proved by diffing renders against the parent commit, because `SoftwareParityTests` itself
+fails on a CRLF host). The Software PDF's headings change case ("EXPERIENCE" becomes "Experience"), because the PDF no longer upper-cases them
+and now agrees with the HTML.
+
+**Mutation checks** (an LF export of `HEAD` in a scratch copy, one change at a time, the named test run on its own, the file restored after each):
+
+| # | Mutation | Test that failed | Result |
+|---|---|---|---|
+| 1 | `ValidateCv`: drop the `CvSections.IsKnown` condition | `CvManifestTests.Validator_RejectsASectionKeyTheCvCannotShow` | failed as required |
+| 2 | `ValidateCv`: drop the repeated-key branch | `CvManifestTests.Validator_RejectsARepeatedKey_AndABlankEntry` | failed as required |
+| 3 | `ValidateCv`: drop the accent hex check | `CvManifestTests.Validator_RejectsAnAccentThatIsNotSixDigitHex` (7 of 7 cases) | failed as required |
+| 4 | `BuildCvDataAsync`: do not filter the order by `IsEnabled` | `CvDataTests.ADisabledSection_IsLeftOutOfTheOrder_AndTheRestKeepTheirPlaces` | failed as required |
+| 5 | `CvAccent`: the template's accent wins over the pick | `CvDataTests.APickedAccent_GivesItsLightStrongTone_ForEveryOptionOfEveryTemplate` (9 of 9 templates) | failed as required |
+| 6 | `CvAccent`: drop the `IsHex` guard on the picked tone | `CvDataTests.ABrokenPickedTone_FallsBackToTheTemplatesAccent_NeverToJunk` | failed as required |
+| 7 | `CvDocument`: loop over `CvSections.Default` | `CvOutputTests.ThePdf_FollowsTheSectionOrder` | failed as required |
+| 8 | `CvDocument.Accent`: always the default | `CvOutputTests.ThePdf_UsesTheAccentOfTheData` | failed as required |
+| 9 | `Cv.cshtml`: loop over `CvSections.Default` | `CvOutputTests.TheCvPage_ListsItsSectionsInTheTemplatesOrder_WithItsHeadings` (8 of 9; Software's order is the default, so it cannot fail) | failed as required |
+| 10 | `Cv.cshtml`: print `c.Status` again | `CvOutputTests.TheCvPage_PrintsTheTemplatesCertificationStatusWords_NotTheEnumNames` (9 of 9) | failed as required |
+| 11 | Healthcare `accent` set to `#8fd3c9` (low contrast) | `CvManifestTests.TheCvAccent_AndEveryPickableAccent_ReachBodyTextContrastOnWhite` and `EveryManifest_SetsItsCvOrderAndAccent` (healthcare) | both failed as required |
+| 12 | `CvDocument.Body`: the `skills` case calls `ProjectsSection` | none of the 24 existing `CvOutputTests` cases | **not caught: a gap** |
+
+Mutation 12 was the gap. It was closed with `CvOutputTests.ThePdf_DrawsEachSectionKeyAsItsOwnSection`, one case per key: the PDF of an order naming only that key over
+full content equals the PDF of content holding only that section in the default order, and differs from the PDF with no sections. Re-run: green on `HEAD` plus the test
+(28 `CvOutputTests` cases), and mutation 12 now fails it for `skills` and `projects`.
+
+**Whole suite** on an LF export of `HEAD` plus the new test (built with `-p:TailwindRequired=true`, as CI builds it): **2534 tests, 2534 passed, 0 failed, 0 skipped.** The two
+known baseline tests (`SoftwareParityTests.DemoPersona_RendersByteForByteLikeTheSnapshots`, `OnboardingAccessibilityAccentTests.WithNoAccentPicked_ThePublicPageHasNoAccentOverride`)
+passed on the LF export, as expected for a host whose only problem is CRLF; they were not re-run on the CRLF worktree here. The rebuilt `app.css` is byte-identical to the committed
+blob (this phase adds no Tailwind classes). `dotnet build tools/CvAtsReview` succeeds with 0 errors.
+
+**Looked at in the running app** (the worktree build on `http://localhost:5187`, a throwaway LocalDB database since dropped, driven with a real browser): the owner was created at `/setup`, the wizard
+published Finance & Accounting with its sample content, then `/admin/template` switched to Healthcare and to Software (the content stayed Finance's sample).
+- Finance & Accounting `/cv`: headings Professional experience, Qualifications, Selected engagements, Skills & systems (the table's order, the template's wording); status words
+  Qualified, Studying, Next up (no enum names); accent variable `--c-accent-strong` 21 55 92 (#15375c).
+- Healthcare `/cv`: Licences & registrations, Clinical experience, Clinical skills, Research & initiatives; status words Current, In progress, Planned; accent 17 94 89 (#115e59).
+- Picking Rose in the wizard's review step (Healthcare) and publishing changed the `/cv` accent variable to 159 18 57 (#9f1239) and kept the order. The accent is picked in the wizard's review step, not in `/admin/profile`
+  (the plan's wording was wrong).
+- Software `/cv`: Experience, Skills, Selected projects, Certifications; status words Earned, In progress, Planned; the Rose pick was kept across the template switch.
+- A full-page screenshot of the Finance & Accounting `/cv` was viewed.
+
+**Not looked at.** `/cv.pdf` was not seen on any template. In the running app on this host `/cv.pdf` returns HTTP 500: `QuestPDF 2026.9.1` no longer uses system fonts, and the document asks for "Arial", which is not
+available here (`DocumentDrawingException`). The tests turn `ThrowOnMissingFontFamilies` off, so they do not meet this. `FontFamily("Arial")` is unchanged since before Phase 6a (present at `9488463`) and the app never sets
+`ThrowOnMissingFontFamilies` or registers a font, so Phase 6a did not cause it. The PDF's order, heading case and accent colour are therefore proved by the byte-comparison tests only, never by eye, and
+`/cv.pdf` may fail the same way on any host without Arial (the "PDF font gap" is wider than the missing `▸` glyph and needs its own look). The other six templates' `/cv` pages
+were covered by tests, not by eye, and only Finance & Accounting's HTML was screenshotted.
 
 ### Phase 6: CV output per template
-- QuestPDF layout variants per archetype (section order and labels from the preset). HTML `/cv`
-  follows the same data model.
+- Done in Phase 6a: `/cv` and `/cv.pdf` follow the template's section order, headings, status words and accent (see above). Still open:
+  per-archetype QuestPDF layout variants, `/og.png`, and the PDF font gap.
 - ATS scoring computed from DB content on save (the rule scorer already exists in
   `CvAtsRuleScorer`), stored on the profile, replacing the committed `ats-report.json`.
   The offline console tool is kept for CI/regression use.

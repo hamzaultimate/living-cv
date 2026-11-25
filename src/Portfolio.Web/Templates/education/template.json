@@ -246,7 +246,9 @@
       "experienceHeading": "Teaching experience",
       "skillsHeading": "Teaching skills",
       "projectsHeading": "Curriculum & initiatives",
-      "certificationsHeading": "Qualifications & registration"
+      "certificationsHeading": "Qualifications & registration",
+      "order": ["certifications", "experience", "skills", "projects"],
+      "accent": "#124e31"
     }
   }
 }

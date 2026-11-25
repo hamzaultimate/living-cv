@@ -1,0 +1,243 @@
+// Fictional sample content for the Data & Analytics template. Every person, employer, organisation, project and figure below is invented.
+// The pictures are simple generated placeholders bundled under wwwroot/img/starter/data-analytics.
+{
+  "fictional": true,
+  "profile": {
+    "ownerName": "Imani Vale",
+    "brandName": "Imani",
+    "role": "Data Analyst · Forecasting, customer analytics and reporting (sample profile)",
+    "jobTitle": "Data Analyst",
+    "summary": "Sample profile (fictional). Data analyst with six years of experience turning messy data into clear answers, from forecasting models to dashboards that teams open every week.",
+    "knowsAbout": [
+      "Forecasting",
+      "Statistical modelling",
+      "Customer analytics",
+      "Data pipelines",
+      "Dashboards and reporting",
+      "Text analysis"
+    ],
+    "hero": {
+      "eyebrow": "Data Analyst · Forecasting, customer analytics and reporting",
+      "headline": "Messy data, clear questions,",
+      "headlineAccent": "answers people act on.",
+      "lede": "Sample profile (fictional). Six years of turning raw tables into forecasts, studies and dashboards, with the question stated up front and the result measured afterwards."
+    },
+    "metrics": [
+      { "value": "6", "unit": "yrs", "label": "Working with data" },
+      { "value": "14", "unit": "", "label": "Analyses delivered" },
+      { "value": "-18", "unit": "%", "label": "Forecast error after the rebuild" },
+      { "value": "30", "unit": "+", "label": "Weekly dashboard users" }
+    ],
+    "about": {
+      "headline": "A good analysis starts with a good question.",
+      "paragraphs": [
+        "Sample profile (fictional). I am a data analyst who begins by agreeing what decision the numbers should support. Only then do I clean the data, choose a method and build something the team can read without me in the room.",
+        "I started in reporting, moved into forecasting and now spend most of my time on customer analytics and dashboards. I have rebuilt a demand forecast that cut its error by almost a fifth, found the drivers behind customer churn and put a weekly operations dashboard in front of thirty people.",
+        "This page is sample content for the Data & Analytics template. Replace it with your own story, and only share figures, employer names and data you are allowed to."
+      ],
+      "valueProps": [
+        { "title": "Question first", "body": "Every piece of work states the decision it is meant to inform." },
+        { "title": "Method you can check", "body": "Assumptions written down, code reviewed and results reproducible." },
+        { "title": "Plain-language results", "body": "Charts and summaries a non-specialist can act on." },
+        { "title": "Measured afterwards", "body": "The result is compared with what actually happened." }
+      ],
+      "currentlyNote": "Working on customer analytics for a growing retailer and studying for a machine learning certificate.",
+      "focus": [
+        "Forecasting",
+        "Customer analytics",
+        "Dashboards",
+        "Text analysis"
+      ]
+    },
+    "email": "imani.vale@example.org",
+    "linkedIn": "https://www.linkedin.com/in/example-imani-vale/",
+    "templateKey": "data-analytics"
+  },
+  "experiences": [
+    {
+      "company": "Example Data Studio (fictional)",
+      "title": "Senior Data Analyst",
+      "start": "2022",
+      "end": null,
+      "current": true,
+      "summary": "Own forecasting, customer analytics and the weekly operations dashboard for a sample retail group, working with the commercial and operations teams.",
+      "highlights": [
+        "Rebuilt the demand forecast and cut its error by 18%",
+        "Introduced a review step so every model ships with its assumptions written down",
+        "Mentored two junior analysts"
+      ],
+      "tech": ["Forecasting", "Customer analytics", "Dashboards", "SQL"],
+      "sortOrder": 1
+    },
+    {
+      "company": "Sample Regional Council (fictional)",
+      "title": "Data Analyst",
+      "start": "2019",
+      "end": "2022",
+      "current": false,
+      "summary": "Produced reporting and ad hoc analysis for the services team of a sample local authority.",
+      "highlights": [
+        "Replaced twelve manual monthly reports with one automated pipeline",
+        "Clustered survey comments to show residents' main concerns",
+        "Trained staff to read and question the dashboards"
+      ],
+      "tech": ["Reporting", "Text analysis", "Data cleaning"],
+      "sortOrder": 2
+    }
+  ],
+  "skills": [
+    { "name": "Hypothesis testing", "group": "Analysis & statistics", "sortOrder": 1 },
+    { "name": "Regression and forecasting", "group": "Analysis & statistics", "sortOrder": 2 },
+    { "name": "SQL and data modelling", "group": "Data engineering", "sortOrder": 3 },
+    { "name": "Scheduled pipelines", "group": "Data engineering", "sortOrder": 4 },
+    { "name": "Dashboard design", "group": "Visualisation", "sortOrder": 5 },
+    { "name": "Chart and report writing", "group": "Visualisation", "sortOrder": 6 },
+    { "name": "Classification models", "group": "Machine learning", "sortOrder": 7 },
+    { "name": "Text clustering", "group": "Machine learning", "sortOrder": 8 },
+    { "name": "Python and notebooks", "group": "Languages & tools", "sortOrder": 9 },
+    { "name": "Version control", "group": "Languages & tools", "sortOrder": 10 }
+  ],
+  "projects": [
+    {
+      "title": "Demand forecast rebuild (sample)",
+      "slug": "forecast-rebuild",
+      "role": "Lead analyst",
+      "org": "Tarnwick",
+      "period": "2024",
+      "summary": "Rebuilding the weekly demand forecast for a sample retailer's distribution arm. Sample project (fictional).",
+      "category": "Forecasting",
+      "problem": "Which products would sell next quarter? The existing forecast missed by a wide margin on promoted lines, and the buying team had stopped trusting it.",
+      "approach": "Separated baseline demand from promotions, added seasonality and holiday effects, backtested on two years of weekly data and published the error by product group each month.",
+      "impact": [
+        "18% lower forecast error on promoted lines",
+        "Error reported openly every month for the buying team"
+      ],
+      "tech": ["Time series", "Backtesting", "Python", "SQL"],
+      "heroImage": "/img/starter/data-analytics/forecast-rebuild.svg",
+      "heroImageAlt": "Abstract illustration of a rising line chart with a dashed forecast line above a row of bars.",
+      "screenshots": [
+        { "url": "/img/starter/data-analytics/forecast-rebuild-1.svg", "caption": "Forecast against actual demand, by week" },
+        { "url": "/img/starter/data-analytics/forecast-rebuild-2.svg", "caption": "Forecast error by product group, before and after" }
+      ],
+      "links": [
+        { "label": "Method summary", "url": "https://example.org/forecast-rebuild-method" }
+      ],
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "title": "Churn drivers study (sample)",
+      "slug": "churn-drivers",
+      "role": "Analyst",
+      "org": "Olliberry",
+      "period": "2023",
+      "summary": "Finding what separates customers who stay from those who leave, for a sample subscription business. Sample project (fictional).",
+      "category": "Customer analytics",
+      "problem": "Why were customers leaving in their first three months? The team had theories but no ranked evidence to decide where to act.",
+      "approach": "Built a cohort table of the first ninety days, fitted a simple survival model, checked it against a holdout group and summarised the three strongest drivers for the product team.",
+      "impact": [
+        "Three ranked drivers agreed with the product team",
+        "Onboarding change tested against a control group"
+      ],
+      "tech": ["Survival analysis", "Cohort analysis", "Python"],
+      "heroImage": "/img/starter/data-analytics/churn-drivers.svg",
+      "heroImageAlt": "Abstract illustration of a donut chart beside a set of horizontal bars of different lengths.",
+      "screenshots": [
+        { "url": "/img/starter/data-analytics/churn-drivers-1.svg", "caption": "Customers remaining by week since sign-up" }
+      ],
+      "links": [
+        { "label": "Study summary", "url": "https://example.org/churn-drivers-summary" }
+      ],
+      "featured": true,
+      "sortOrder": 2
+    },
+    {
+      "title": "Operations dashboard rollout (sample)",
+      "slug": "dashboard-rollout",
+      "role": "Analyst",
+      "org": "Sundrel",
+      "period": "2023",
+      "summary": "A single weekly dashboard replacing a pile of spreadsheets for a sample logistics team. Sample project (fictional).",
+      "category": "Reporting",
+      "problem": "Where was time being lost each week? Five spreadsheets gave five different answers and nobody could say which to believe.",
+      "approach": "Agreed the definitions with the operations leads, built one tested data model, designed a one-page view with the three numbers that drive decisions and trained the team to use it.",
+      "impact": [
+        "30+ people use it every week",
+        "Five spreadsheets retired"
+      ],
+      "tech": ["Dashboard design", "Data modelling", "SQL"],
+      "heroImage": "/img/starter/data-analytics/dashboard-rollout.svg",
+      "heroImageAlt": "Abstract illustration of a dashboard grid with tiles, a line chart and a set of vertical bars.",
+      "links": [
+        { "label": "Dashboard guide", "url": "https://example.org/dashboard-guide" }
+      ],
+      "featured": true,
+      "sortOrder": 3
+    },
+    {
+      "title": "Survey comment clustering (sample)",
+      "slug": "comment-clustering",
+      "role": "Analyst",
+      "org": "Pennagrove",
+      "period": "2021",
+      "summary": "Grouping thousands of free-text survey comments into themes for a sample public service. Sample project (fictional).",
+      "category": "Text analysis",
+      "problem": "What were people actually asking for? Four thousand free-text comments were too many to read and too varied to count by hand.",
+      "approach": "Cleaned and de-duplicated the text, grouped comments by meaning, checked each group by reading a sample and reported themes with example quotes and counts.",
+      "impact": [
+        "Eight themes covering 90% of comments",
+        "Findings shaped the next year's service plan"
+      ],
+      "tech": ["Text clustering", "Sampling", "Python"],
+      "heroImage": "/img/starter/data-analytics/comment-clustering.svg",
+      "heroImageAlt": "Abstract illustration of clusters of dots in several groups on a plain grid.",
+      "links": [
+        { "label": "Themes report", "url": "https://example.org/survey-themes-report" }
+      ],
+      "featured": false,
+      "sortOrder": 4
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Applied Statistics certificate (sample)",
+      "issuer": "Example Statistics Society",
+      "status": "Earned",
+      "date": "2020",
+      "category": "Certificate",
+      "sortOrder": 1
+    },
+    {
+      "name": "Machine Learning Practitioner (sample)",
+      "issuer": "Example Learning Academy",
+      "status": "InProgress",
+      "date": "2026",
+      "category": "Course",
+      "sortOrder": 2
+    },
+    {
+      "name": "Data Engineering Foundations (sample)",
+      "issuer": "Example Data Institute",
+      "status": "Planned",
+      "date": "2027",
+      "category": "Course",
+      "sortOrder": 3
+    }
+  ],
+  "testimonials": [
+    {
+      "quote": "Sample feedback (fictional). Imani rebuilt our forecast and, just as importantly, showed us how to read its error. The buying team trusts the numbers again.",
+      "author": "Sample Director",
+      "authorTitle": "Head of Buying, Sample Retail Co (fictional)",
+      "featured": true,
+      "sortOrder": 1
+    },
+    {
+      "quote": "Sample feedback (fictional). Clear about what the data could and could not say, and generous with their time explaining it to people who were not analysts.",
+      "author": "Sample Manager",
+      "authorTitle": "Services Manager, Sample Public Service (fictional)",
+      "featured": true,
+      "sortOrder": 2
+    }
+  ]
+}

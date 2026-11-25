@@ -16,6 +16,9 @@ public static class TemplateDirs
         }
     }
 
+    /// <summary>Whether a copy field is wording the "zork" tests may overwrite; non-string copy fields (cv.order, and the hex cv.accent) must be listed here.</summary>
+    public static bool IsWording(string group, string prop) => !(group == "cv" && prop is "order" or "accent");
+
     private static string Shipped => Path.Combine(AppContext.BaseDirectory, "Templates");
 
     private static JsonObject Read(string path) =>

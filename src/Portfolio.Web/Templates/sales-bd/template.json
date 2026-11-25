@@ -453,7 +453,9 @@
       "experienceHeading": "Experience",
       "skillsHeading": "Skills & methods",
       "projectsHeading": "Selected deals",
-      "certificationsHeading": "Training & awards"
+      "certificationsHeading": "Training & awards",
+      "order": ["projects", "experience", "skills", "certifications"],
+      "accent": "#065f46"
     }
   }
 }

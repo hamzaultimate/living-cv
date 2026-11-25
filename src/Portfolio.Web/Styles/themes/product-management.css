@@ -1,0 +1,33 @@
+/* Product & Project Management theme: a warm charcoal dark mode (a soft paper white in light) with an amber accent, system sans faces and gently rounded corners, so the page reads like a well-kept product brief.
+   Only variables are set here, so the whole site switches look with the data-template attribute and no rebuild. Specificity beats the base :root tokens. */
+:root[data-template="product-management"] {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --radius-lg: 0.625rem;
+  --radius-md: 0.5rem;
+}
+
+/* Dark is the default look (the base tokens do the same on :root), so it also applies before the theme script has set data-theme or when it cannot run. */
+:root[data-template="product-management"],
+:root[data-template="product-management"][data-theme="dark"] {
+  --c-bg: 20 19 18;
+  --c-surface: 29 28 26;
+  --c-surface-2: 41 39 36;
+  --c-border: 66 63 58;
+  --c-text: 244 241 236;
+  --c-muted: 168 162 152;
+  --c-accent: 251 191 36;
+  --c-accent-strong: 252 211 77;
+}
+
+:root[data-template="product-management"][data-theme="light"] {
+  --c-bg: 250 248 244;
+  --c-surface: 255 255 255;
+  --c-surface-2: 240 236 228;
+  --c-border: 220 214 203;
+  --c-text: 28 25 23;
+  --c-muted: 87 83 78;
+  --c-accent: 168 74 9;
+  --c-accent-strong: 146 64 14;
+}

@@ -620,6 +620,24 @@
             },
             "certificationsHeading": {
               "type": "string"
+            },
+            "order": {
+              "type": "array",
+              "description": "Optional. CV sections after the summary, in print order. Default: experience, skills, projects, certifications.",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "experience",
+                  "skills",
+                  "projects",
+                  "certifications"
+                ]
+              }
+            },
+            "accent": {
+              "type": "string",
+              "description": "Optional. Print colour of the CV as #rrggbb, at least 4.5:1 contrast on white. Default: #1D4ED8. An accent the owner picked takes precedence.",
+              "pattern": "^#[0-9a-fA-F]{6}$"
             }
           }
         }

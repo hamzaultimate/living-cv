@@ -453,7 +453,9 @@
       "experienceHeading": "Experience",
       "skillsHeading": "Skills & channels",
       "projectsHeading": "Selected campaigns & writing",
-      "certificationsHeading": "Training & awards"
+      "certificationsHeading": "Training & awards",
+      "order": ["projects", "experience", "skills", "certifications"],
+      "accent": "#9d174d"
     }
   }
 }

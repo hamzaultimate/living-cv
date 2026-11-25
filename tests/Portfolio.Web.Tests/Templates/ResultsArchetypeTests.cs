@@ -162,6 +162,16 @@ public class ResultsArchetypeTests
         Assert.DoesNotMatch(@"[a-z](Inc|LLP|LLC|Ltd|GmbH|PLC|LP)$", name.Trim());
     }
 
+    /// <summary>A client name is an invented wordmark: a coined single word (no address, handle, industry word, "&amp;" or company suffix), short enough to set as a wordmark. No trademark search is possible, so owners replace them.</summary>
+    internal static void AssertCoinedClientName(string org)
+    {
+        Assert.DoesNotMatch(@"[@/]|https?:|www\.|\.(com|org|net|io)\b|\b(inc|ltd|llc|gmbh|plc)\b", org.ToLowerInvariant());
+        // A coined single word, not a place or industry combination that reads like an existing business.
+        Assert.DoesNotMatch(@"(?i)\b(software|health|medical|energy|freight|logistics|retail|foods?|coffee|analytics|studio|media|bank|capital|group|partners|labs|systems|solutions|consulting|cloud|digital|global|company|co|corp|sample|example)\b|&", org);
+        Assert.DoesNotContain(' ', org);
+        Assert.True(org.Length <= 40, $"{org} is too long for a wordmark");
+    }
+
     [Theory]
     [MemberData(nameof(KeyData))]
     public void TheStarterContent_IsFictional_UsesOnlyBundledPictures_DescribesEveryOne_AndCarriesResults(string key)
@@ -189,11 +199,7 @@ public class ResultsArchetypeTests
         // "(sample)" titles and the profile summary above, not in the strip.
         Assert.All(starter.Projects.Where(p => !string.IsNullOrWhiteSpace(p.Org)), p =>
         {
-            Assert.DoesNotMatch(@"[@/]|https?:|www\.|\.(com|org|net|io)\b|\b(inc|ltd|llc|gmbh|plc)\b", p.Org!.ToLowerInvariant());
-            // A coined single word, not a place or industry combination that reads like an existing business (no trademark search is possible, so owners replace them).
-            Assert.DoesNotMatch(@"(?i)\b(software|health|medical|energy|freight|logistics|retail|foods?|coffee|analytics|studio|media|bank|capital|group|partners|labs|systems|solutions|consulting|cloud|digital|global|company|co|corp|sample|example)\b|&", p.Org!);
-            Assert.DoesNotContain(' ', p.Org!);
-            Assert.True(p.Org!.Length <= 40, $"{p.Org} is too long for a wordmark");
+            AssertCoinedClientName(p.Org!);
             Assert.Contains("(sample)", p.Title);
         });
         var images = new List<string>();
@@ -667,7 +673,7 @@ public class ResultsArchetypeTests
         {
             node["name"] = "Zork Results";
             foreach (var (group, value) in node["copy"]!.AsObject().ToList())
-                foreach (var (prop, _) in value!.AsObject().ToList())
+                foreach (var (prop, _) in value!.AsObject().Where(p => TemplateDirs.IsWording(group, p.Key)).ToList())
                     value[prop] = prop switch
                     {
                         "imageAlt" => $"zork-{group}-{prop} {{title}}",

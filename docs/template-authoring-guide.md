@@ -13,7 +13,7 @@ A template is two independent parts:
 | Preset | Sections and their order, wording ("copy"), skill groups, SEO patterns, guidance, wizard suggestions, accent colours, editor wording and field visibility, optional starter content and thumbnail | `src/Portfolio.Web/Templates/<key>/template.json` (+ `starter.json`, `preview.png`) |
 | Layout | One of a fixed set of archetypes plus a theme | Razor partials under `Pages/Shared/Layouts/<archetype>/` (shared blocks in `Pages/Shared/Blocks/`), theme in `Styles/themes/<key>.css` |
 
-Archetypes with a layout today: `showcase` (Software & IT), `credentials` (Healthcare, Education), `gallery` (Design & UX, Photography & Film) and `results` (Marketing & Content, Sales & Business Development, Finance & Accounting).
+Archetypes with a layout today: `showcase` (Software & IT, Data & Analytics, Product & Project Management), `credentials` (Healthcare, Education), `gallery` (Design & UX, Photography & Film) and `results` (Marketing & Content, Sales & Business Development, Finance & Accounting).
 A new profession picks an existing archetype. A new archetype is a larger change (section 5).
 
 ## 2. Hard rules
@@ -101,6 +101,24 @@ load, the site renders the software template. See `Templates/healthcare/template
   "starter": { "file": "starter.json" }   // optional fictional sample content: a file, or { "source": "seed" } for the built-in demo persona
 }
 ```
+
+### CV output
+
+`/cv` and `/cv.pdf` follow the template through two optional fields of `copy.cv`:
+
+- `order`: the sections after the summary, as a list of keys. Only `experience`, `skills`, `projects` and `certifications` are allowed,
+  none twice. Absent means today's order (`experience, skills, projects, certifications`). The summary is always first and is not
+  listed. A section the owner has switched off is left out at render time, and one with no entries is not drawn.
+- `accent`: the print colour of the PDF as `#rrggbb`. Absent means `#1D4ED8`. It must reach at least 4.5:1 contrast on white
+  (`CvManifestTests` checks this). An accent the owner picked from `theme.accents[]` overrides it, in that option's `light.strong`
+  tone. The HTML page does not use this field: it takes its colours from the theme, as every page does.
+
+The shipped templates follow one rule: `order` is the template's own `sections[]` order restricted to the four CV sections, and
+`accent` is the theme's light-mode `--c-accent-strong` colour (its `Styles/themes/<key>.css`). Software has no theme file and states the
+defaults explicitly. Headings and certification status words come from the existing `copy.cv.*` and `copy.certifications.status*`
+strings and are printed as written in both outputs.
+
+A new template must also add its row (`order`, `accent`) to `CvManifestTests.Expected`; that test fails until it does.
 
 Section keys are a closed list owned by the app (`SectionRegistry`: `about`, `experience`, `projects`, `skills`,
 `certifications`, `blog`, `talks`, `testimonials`, `contact`). A template can relabel, reorder, and hide them but cannot
@@ -283,6 +301,15 @@ The gallery hero's "Download CV" and "LinkedIn" buttons stay fixed words, as in 
 - **Adding a results template.** Add its key to `ResultsArchetypeTests.Keys` (every check, and the flow tests in `ArchetypeTemplateFlowTests`, then run for it), to the hard-coded lists in `TemplateManifestTests` and the counts of template name links on the wizard step in `OnboardingFlowTests`, and write a manifest, starter, theme, bundled pictures and a real screenshot thumbnail. The layout needs no change.
 
 The validator's "has no layout yet" check (an archetype in `Known` but not in `Implemented`) is kept as a safety net for the next archetype, but it has no test while `Implemented` equals `Known`; add one with the first archetype that ships in two steps.
+
+### Adding a showcase template
+
+`showcase` is the layout Software & IT uses; Data & Analytics and Product & Project Management are presets on it with no layout change. The Showcase home (`Layouts/showcase/_Home.cshtml`) is the hero, a row of the profile's metrics, the featured work, testimonials and the contact call to action; the work, case-study and other pages are the shared pages. So a showcase template is data only:
+- **Add its key** to `ShowcaseArchetypeTests.Keys` (every check there, and the admin flows in `ArchetypeTemplateFlowTests`, then run for it), to the hard-coded lists in `TemplateManifestTests` and the wizard card counts in `OnboardingFlowTests`. Software stays under its parity snapshots and is not in the list.
+- **Write** the manifest (start from Software's, which has the full key set), the starter, a theme file with its `@import` in `Styles/app.css`, bundled pictures and a real screenshot thumbnail. Section order is `about, experience, projects, skills, certifications, blog, talks, testimonials, contact`, with `talks` listed as `"enabled": false` and its `youtubeId` editor field hidden.
+- **Wording.** Every `copy` string must differ from Software's unless it is in the neutral list the test names (`Skills`, `Experience`, `Links`, `featured`, `View certificate`, the CV description and `Selected work`); the serialised copy and editor text must not contain Software-only words. The unique-word test replaces every string and checks the shared pages show them, so a heading or empty state must come from the manifest and never from the page.
+- **Starter content.** Starter certifications carry no `credentialUrl` (a shipped-template test forbids an address there); client names and employers follow the shape rules above.
+- **Known gap, shared with Software.** The Showcase hero's "LinkedIn", "GitHub" and "Download CV" buttons and its waveform backdrop are fixed in the layout, not copy keys. Making them manifest wording is a separate change, as it was for the results layout.
 
 ### Credentials templates through data only (Education)
 
