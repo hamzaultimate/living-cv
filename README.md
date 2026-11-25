@@ -42,10 +42,12 @@ testable the moment you run it. Swap in your own details to make it yours.
   (in your template's wording, refusing a stale tab instead of overwriting it), a sections page (`/admin/sections`) to show, hide, rename and reorder
   the sections your template has, and photo upload (re-encoded, metadata stripped,
   stored outside `wwwroot`). See [docs/new-user-guide.md](docs/new-user-guide.md#3-claim-the-site-and-use-the-admin)
-- **Profession templates** with a live preview switcher at `/admin/template`. Nine ship today:
+- **Profession templates** with a live preview switcher at `/admin/template`. Ten ship today:
   **Software & IT** (case-study showcase, the original look), **Data & Analytics** and **Product & Project Management**
   (the same showcase layout as Software & IT, each with its own wording, theme, accent choices and fictional starter content), **Healthcare** (credentials-first
   layout, calm theme, guidance against publishing patient data, fictional starter content),
+  **Education** (for school teachers, on the same layout as Healthcare: it leads with teaching qualifications and registration, then teaching
+  experience and curriculum initiatives, with its own warm green theme, guidance never to publish pupil information and fictional starter content),
   **Design & UX** and **Photography & Film** (an image-first gallery layout: a work grid of large cover pictures and a
   case-study page per piece, each with its own theme and fictional starter content; video is a link, never an embedded
   player, and the cover picture is what visitors see), and **Marketing & Content**, **Sales & Business Development** and **Finance & Accounting**

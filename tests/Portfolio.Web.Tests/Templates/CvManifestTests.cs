@@ -82,6 +82,7 @@ public class CvManifestTests
         ["sales-bd"] = (new[] { "projects", "experience", "skills", "certifications" }, "#065f46"),
         ["finance-accounting"] = (new[] { "experience", "certifications", "projects", "skills" }, "#15375c"),
         ["healthcare"] = (new[] { "certifications", "experience", "skills", "projects" }, "#115e59"),
+        ["education"] = (new[] { "certifications", "experience", "skills", "projects" }, "#124e31"),
     };
 
     [Fact]

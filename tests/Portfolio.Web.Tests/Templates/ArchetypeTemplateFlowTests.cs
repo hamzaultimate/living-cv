@@ -10,25 +10,29 @@ using Xunit;
 namespace Portfolio.Web.Tests.Templates;
 
 /// <summary>
-/// The admin and cross-cutting paths for every template on an archetype other than Software and Healthcare (gallery, results and the showcase presets), through data only: wizard, preview,
+/// The admin and cross-cutting paths for every template that has a keyed archetype test class (gallery, results, credentials and the showcase presets), through data only: wizard, preview,
 /// switching, section settings, sitemap and structured data, export and import, and a blank wizard-finished site end to end. Driven by
-/// <see cref="GalleryArchetypeTests.Keys"/>, <see cref="ResultsArchetypeTests.Keys"/> and <see cref="ShowcaseArchetypeTests.Keys"/>: a further template is covered by adding its key there.
+/// <see cref="GalleryArchetypeTests.Keys"/>, <see cref="ResultsArchetypeTests.Keys"/>, <see cref="CredentialsArchetypeTests.Keys"/> and <see cref="ShowcaseArchetypeTests.Keys"/>: a further template on any of them is covered by adding its key there.
 /// </summary>
 public class ArchetypeTemplateFlowTests
 {
-    public static readonly string[] Keys = [.. GalleryArchetypeTests.Keys, .. ResultsArchetypeTests.Keys, .. ShowcaseArchetypeTests.Keys];
+    public static readonly string[] Keys = [.. GalleryArchetypeTests.Keys, .. ResultsArchetypeTests.Keys, .. CredentialsArchetypeTests.Keys, .. ShowcaseArchetypeTests.Keys];
 
     public static TheoryData<string> KeyData => new(Keys);
 
-    /// <summary>What marks one work card in the archetype's own layout (the showcase presets use the shared work page, so its card).</summary>
-    private static string Card(string key) =>
-        Definition(key).Archetype == Archetypes.Results ? "data-results-card"
-        : Definition(key).Archetype == Archetypes.Showcase ? "<article class=\"card group flex flex-col\""
-        : "<article class=\"group relative";
+    /// <summary>What marks one work card in the archetype's own layout. The credentials and showcase layouts have no work-page partials, so their cards are the shared markup the work page and the home grid both use.</summary>
+    private static string Card(string key) => Definition(key).Archetype switch
+    {
+        Archetypes.Results => "data-results-card",
+        Archetypes.Credentials or Archetypes.Showcase => "<article class=\"card group flex flex-col\"",
+        _ => "<article class=\"group relative",
+    };
 
-    /// <summary>What marks a case-study page in the archetype's own layout.</summary>
-    private static string DetailMarker(string key) =>
-        Definition(key).Archetype == Archetypes.Showcase ? "<article class=\"container-page py-16 md:py-20\">" : "Next ";
+    /// <summary>Only the gallery and results case-study pages end with a link to the next entry.</summary>
+    private static bool HasNextLink(string key) => Definition(key).Archetype is Archetypes.Gallery or Archetypes.Results;
+
+    /// <summary>What marks a showcase case-study page (the shared project page; only the showcase keys pin it).</summary>
+    private const string ShowcaseCaseStudy = "<article class=\"container-page py-16 md:py-20\">";
 
     private static string TemplatesDir => Path.Combine(AppContext.BaseDirectory, "Templates");
     private static TemplateDefinition Definition(string key) => new TemplateCatalog(TemplatesDir).Get(key);
@@ -84,6 +88,7 @@ public class ArchetypeTemplateFlowTests
         var review = Plain(await owner.GetStringAsync(WizardFlow.Review));
         foreach (var accent in template.Theme.Accents) Assert.Contains(accent.Label, review);
         Assert.Contains("Sample", review, StringComparison.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(template.Guidance)) Assert.Contains(template.Guidance![..40], review); // the review step shows the guidance of every template that has one
 
         Assert.Equal(HttpStatusCode.Redirect, (await WizardFlow.PublishAsync(owner, WizardFlow.ReviewFields("https://robin.example", content: StarterChoice.Sample))).StatusCode);
 
@@ -122,9 +127,15 @@ public class ArchetypeTemplateFlowTests
             Assert.Contains("noindex", html);
             Assert.Contains("no-store", preview.Headers.CacheControl?.ToString() ?? "");
             Assert.Contains("Telemetry", html); // the same rows, drawn by the gallery layout
-            if (path != "/") Assert.Contains(path == "/projects" ? Card(key) : DetailMarker(key), html);
-            // The showcase marker is also in the other archetypes' case-study partials, so a showcase key must also lack their "Next" navigation and result tiles.
-            if (path != "/" && template.Archetype == Archetypes.Showcase) { Assert.DoesNotContain("Next ", html); Assert.DoesNotContain("data-results", html); }
+            if (path == "/projects") Assert.Contains(Card(key), html);
+            else if (path != "/" && HasNextLink(key)) Assert.Contains("Next ", html);
+            else if (path != "/" && template.Archetype == Archetypes.Showcase)
+            {
+                // The showcase marker is also in the other archetypes' case-study partials, so a showcase key must also lack their "Next" navigation and result tiles.
+                Assert.Contains(ShowcaseCaseStudy, html);
+                Assert.DoesNotContain("Next ", html);
+                Assert.DoesNotContain("data-results", html);
+            }
 
             // A visitor asking for the same thing gets the saved (software) page, unchanged.
             var plain = await (await visitor.GetAsync($"{path}?preview={key}")).Content.ReadAsStringAsync();
@@ -265,7 +276,7 @@ public class ArchetypeTemplateFlowTests
         Assert.Contains("\"seed-project\"", file);
         Assert.Contains($"\"templateKey\": \"{key}\"", file);
 
-        foreach (var other in new[] { "software", "healthcare" }.Concat(Keys.Where(k => k != key)))
+        foreach (var other in new[] { "software" }.Concat(Keys.Where(k => k != key)))
         {
             using var target = new AdminApp();
             var owner = await ContentFlow.BlankSiteAsync(target, other);
@@ -276,6 +287,8 @@ public class ArchetypeTemplateFlowTests
             Assert.Contains("Seed Project", projects);
             if (Keys.Contains(other)) Assert.Contains(Card(other), projects); // drawn by that template's own layout
             else { Assert.DoesNotContain("data-results-card", projects); Assert.DoesNotContain("<article class=\"group relative", projects); }
+            // The credentials layout shares its card markup with the software pages, so it must also show none of the gallery or results cards.
+            if (Definition(other).Archetype == Archetypes.Credentials) { Assert.DoesNotContain("data-results-card", projects); Assert.DoesNotContain("<article class=\"group relative", projects); }
             Assert.Equal(HttpStatusCode.OK, (await target.NewClient().GetAsync("/projects/seed-project")).StatusCode);
         }
 

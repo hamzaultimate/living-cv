@@ -1,6 +1,7 @@
 /* One file per template theme: variables only, scoped to [data-template="<key>"]. */
 @import "./themes/data-analytics.css";
 @import "./themes/design-ux.css";
+@import "./themes/education.css";
 @import "./themes/finance-accounting.css";
 @import "./themes/healthcare.css";
 @import "./themes/marketing-content.css";
