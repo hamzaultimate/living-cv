@@ -1205,7 +1205,7 @@ Expected: `app.css identical to the committed file` (this plan adds no Tailwind 
 
 - [ ] **Step 3: Look at the real thing**
 
-Use the `run` skill to start the app against this worktree, sign in, open `/admin/template` and switch to Finance & Accounting, then Healthcare, then Software (apply each template's sample content from the wizard if the site is empty). For each: open `/cv` and read the order of the four headings against the table in this plan; check certification status words; pick a different accent in `/admin/profile` and reload `/cv`. Download `/cv.pdf` and open it: on a host with the glyph fonts, confirm the same order, the heading text as the template wrote it (no upper-casing) and the accent colour; on a host without them, say so rather than claiming the PDF was seen. Record exactly what was and was not looked at.
+Use the `run` skill to start the app against this worktree, sign in, open `/admin/template` and switch to Finance & Accounting, then Healthcare, then Software (apply each template's sample content from the wizard if the site is empty). For each: open `/cv` and read the order of the four headings against the table in this plan; check certification status words; pick a different accent in the wizard review step (`/admin/welcome/review`) and reload `/cv`. Download `/cv.pdf` and open it: on a host with the glyph fonts, confirm the same order, the heading text as the template wrote it (no upper-casing) and the accent colour; on a host without them, say so rather than claiming the PDF was seen. Record exactly what was and was not looked at.
 
 - [ ] **Step 4: Docs**
 
