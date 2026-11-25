@@ -276,9 +276,9 @@ public class OnboardingFlowTests
 
         var html = WebUtility.HtmlDecode(await owner.GetStringAsync(WizardFlow.Template));
 
-        foreach (var profession in new[] { "Software engineer", "Healthcare professional", "Product designer", "Photographer and filmmaker", "Marketing and content strategist", "Sales and business development lead", "Finance and accounting professional" })
+        foreach (var profession in new[] { "Software engineer", "Healthcare professional", "Product designer", "Photographer and filmmaker", "Marketing and content strategist", "Sales and business development lead", "Finance and accounting professional", "School teacher" })
             Assert.Contains($">{profession}</h3>", html);
-        Assert.Equal(7, Regex.Matches(html, @"href=""/admin/welcome\?show=[a-z-]+&size=desktop""").Count);
+        Assert.Equal(8, Regex.Matches(html, @"href=""/admin/welcome\?show=[a-z-]+&size=desktop""").Count);
         Assert.Contains("<strong>Pages:</strong> about, experience, work, skills, certifications, blog, talks, testimonials, contact", html); // the default template, software
         Assert.DoesNotContain("Before you publish", html); // software carries no guidance, and no other template's details are on the page
 
@@ -289,6 +289,13 @@ public class OnboardingFlowTests
         Assert.Single(Regex.Matches(healthcare, "Before you publish")); // only the selected template's guidance is on the page
         Assert.Contains("href=\"/admin/welcome/thumb/healthcare\"", healthcare);
         Assert.Single(Regex.Matches(healthcare, "name=\"Key\""));
+        var education = WebUtility.HtmlDecode(await owner.GetStringAsync(WizardFlow.Template + "?show=education"));
+        Assert.Contains("teaching qualifications", education);
+        Assert.Contains("Initiative", education);
+        Assert.Contains("pupil-identifiable", education);
+        Assert.Single(Regex.Matches(education, "Before you publish")); // only the selected template's guidance is on the page
+        Assert.Contains("href=\"/admin/welcome/thumb/education\"", education);
+        Assert.Single(Regex.Matches(education, "name=\"Key\""));
     }
 
     [Fact]

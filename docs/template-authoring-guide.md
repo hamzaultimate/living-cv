@@ -13,7 +13,7 @@ A template is two independent parts:
 | Preset | Sections and their order, wording ("copy"), skill groups, SEO patterns, guidance, wizard suggestions, accent colours, editor wording and field visibility, optional starter content and thumbnail | `src/Portfolio.Web/Templates/<key>/template.json` (+ `starter.json`, `preview.png`) |
 | Layout | One of a fixed set of archetypes plus a theme | Razor partials under `Pages/Shared/Layouts/<archetype>/` (shared blocks in `Pages/Shared/Blocks/`), theme in `Styles/themes/<key>.css` |
 
-Archetypes with a layout today: `showcase` (Software & IT), `credentials` (Healthcare), `gallery` (Design & UX, Photography & Film) and `results` (Marketing & Content, Sales & Business Development, Finance & Accounting).
+Archetypes with a layout today: `showcase` (Software & IT), `credentials` (Healthcare, Education), `gallery` (Design & UX, Photography & Film) and `results` (Marketing & Content, Sales & Business Development, Finance & Accounting).
 A new profession picks an existing archetype. A new archetype is a larger change (section 5).
 
 ## 2. Hard rules
@@ -230,7 +230,8 @@ accent and photo for that one request. Anyone else, a stale session, or a missin
    neutral editor wording does not fit the profession (what an entry is called, employer vs company, fields the profession never uses).
 4. Run `dotnet test`. The manifest tests cover every template found on disk: validity, unique key, known section keys,
    SEO lengths, guidance for sensitive professions, suggestions, accent contrast, the thumbnail, schema drift, theme contrast, and the rendering tests show no other
-   template's wording. Add the new template to the rendering tests' wording lists.
+   template's wording. Add the new template to the rendering tests' wording lists. For a Credentials template the list is `CredentialsArchetypeTests.Keys` and its `Wordings` entry
+   (the strings each page must show, plus an optional `Foreign` pattern for wording from another profession that must never appear); every keyed check, including `ArchetypeTemplateFlowTests`, then runs for it.
 5. Update the template list in the README.
 6. Open a PR. Description must state the archetype and attach desktop and mobile screenshots.
 
@@ -282,6 +283,16 @@ The gallery hero's "Download CV" and "LinkedIn" buttons stay fixed words, as in 
 - **Adding a results template.** Add its key to `ResultsArchetypeTests.Keys` (every check, and the flow tests in `ArchetypeTemplateFlowTests`, then run for it), to the hard-coded lists in `TemplateManifestTests` and the counts of template name links on the wizard step in `OnboardingFlowTests`, and write a manifest, starter, theme, bundled pictures and a real screenshot thumbnail. The layout needs no change.
 
 The validator's "has no layout yet" check (an archetype in `Known` but not in `Implemented`) is kept as a safety net for the next archetype, but it has no test while `Implemented` equals `Known`; add one with the first archetype that ships in two steps.
+
+### Credentials templates through data only (Education)
+
+`education` (profession "School teacher") is a second preset on the `credentials` layout that Healthcare proved, added with data only: a manifest, a starter, a theme, four generated pictures and a thumbnail, plus tests added to the existing keyed lists.
+It needed no C# change, no Razor change, no layout change, no migration and no new copy key; the credentials layout (hero, qualifications strip, recent roles, skills, work, references, contact) was used as it was.
+- **Qualifications first** is expressed with existing mechanisms: the `sections` order is the menu order (`about`, `certifications` with short label "qualifications", `experience`, `skills`, `projects` with short label "initiatives" and item label "Initiative", `testimonials`, `contact`), `seo.credentialsJsonLd: true` lists only held (Earned) qualifications in the Person markup, and Blog and Talks are `enabled: false` (the Talks `youtubeId` field is hidden, as no layout plays video for it).
+- **`sensitive: true`.** Education carries a `guidance` note about pupil privacy and, being `sensitive`, repeats it on every editor, as Healthcare does for patients. Its field hints in the `editor` block say "never include pupil information" where free text is entered. A marketing or finance template, which has a guidance note but is not `sensitive`, does not repeat it.
+- **The `Foreign` wording guard.** A `Wordings` entry may carry a `Foreign` regex: wording that belongs to another profession and must not appear on any of the template's public routes. Education's guards against Healthcare's clinical vocabulary (`clinical`, `patient`, `nurse`, `healthcare`, `hospital`, `ward`); Healthcare's is `null`. `DemoSite.HealthcareWording` is a separate guard for Software pages and was not changed, because it contains words ("initiative", "registration", "references") Education legitimately uses.
+- **Adding another credentials template.** Add its key to `CredentialsArchetypeTests.Keys` and a `Wordings` entry (strings taken from its manifest and starter), to the hard-coded lists in `TemplateManifestTests` and the wizard card and guidance counts in `OnboardingFlowTests`, and write the manifest, starter, theme, pictures and a real screenshot thumbnail. The theme must also be accounted for in the stylesheet: the committed `wwwroot/css/app.css` is CI's LF build output, so add the new theme's rules to it as described in the plan (a Windows build writes a byte-different but equivalent file; do not commit that one).
+- **Starter shape.** Names follow the existing rules: employers and schools marked "(fictional)" with no legal-form suffix, work entries marked "(sample)", qualification bodies invented "Example ..." names, `example.org` links, no text, script or download in the pictures, and nothing that names a pupil (a test rejects "pupil", "student", "child" or "learner" followed by a capitalised name).
 
 ### Media and video in layouts
 

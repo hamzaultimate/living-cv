@@ -1,0 +1,252 @@
+{
+  "$schema": "../template.schema.json",
+  "key": "education",
+  "name": "Education",
+  "profession": "School teacher",
+  "description": "Qualifications-first layout for school teachers: teaching registration, classroom experience and curriculum work.",
+  "archetype": "credentials",
+  "sensitive": true,
+  "guidance": "Never publish pupil-identifiable information: no names, photographs, work samples that carry a name, behaviour, attendance, special educational needs or safeguarding details, or anything that could identify a pupil, family or colleague. Check your school's and employer's policies on confidentiality and social media before publishing.",
+  "theme": {
+    "default": "education",
+    "themeColor": "#101613",
+    "accents": [
+      { "key": "green", "label": "Green", "dark": { "accent": "#4ade80", "strong": "#86efac" }, "light": { "accent": "#166534", "strong": "#14532d" } },
+      { "key": "terracotta", "label": "Terracotta", "dark": { "accent": "#f4a07a", "strong": "#f9c3a8" }, "light": { "accent": "#a2431f", "strong": "#862f10" } },
+      { "key": "blue", "label": "Blue", "dark": { "accent": "#7cb4f5", "strong": "#a9cdf8" }, "light": { "accent": "#1d4ed8", "strong": "#1e40af" } },
+      { "key": "gold", "label": "Gold", "dark": { "accent": "#e9c25a", "strong": "#f2d78d" }, "light": { "accent": "#7a5a06", "strong": "#634a05" } }
+    ]
+  },
+  "heroSuggestions": {
+    "title": "Primary School Teacher",
+    "summary": "Primary school teacher committed to well-planned, inclusive teaching that helps every pupil make progress, with a focus on clear feedback and supporting colleagues."
+  },
+  "sections": [
+    { "key": "about", "label": "about" },
+    { "key": "certifications", "label": "teaching qualifications & registration", "shortLabel": "qualifications" },
+    { "key": "experience", "label": "teaching experience", "shortLabel": "experience" },
+    { "key": "skills", "label": "teaching skills", "shortLabel": "skills" },
+    { "key": "projects", "label": "curriculum & initiatives", "shortLabel": "initiatives", "itemLabel": "Initiative" },
+    { "key": "blog", "label": "articles", "itemLabel": "Article", "enabled": false },
+    { "key": "talks", "label": "workshops", "itemLabel": "Workshop", "enabled": false },
+    { "key": "testimonials", "label": "references" },
+    { "key": "contact", "label": "contact" }
+  ],
+  "skillGroups": ["Teaching and learning", "Curriculum and assessment", "Pastoral and inclusion", "Technology", "Languages"],
+  "seo": {
+    "title": "{name} — {title}",
+    "description": "{name}, {title}. Qualifications, teaching experience and professional references.",
+    "aboutDescription": "About {name}, {title}: training, registration and approach to teaching and learning.",
+    "credentialsJsonLd": true
+  },
+  "editor": {
+    "experience": {
+      "itemLabel": "Position",
+      "fields": {
+        "company": { "label": "School or employer" },
+        "title": { "label": "Role" },
+        "summary": { "hint": "Describe your responsibilities and outcomes in general terms. Never include pupil information." },
+        "highlights": { "label": "Key responsibilities", "hint": "One per line, up to 12. No pupil details." },
+        "tech": { "label": "Resources and programmes" }
+      }
+    },
+    "skills": {
+      "itemLabel": "Teaching skill",
+      "fields": {
+        "name": { "label": "Skill or competency" }
+      }
+    },
+    "projects": {
+      "fields": {
+        "org": { "label": "School or organisation" },
+        "problem": { "label": "Aim", "hint": "Why the work was needed. Plain text. No pupil information." },
+        "approach": { "label": "What was done", "hint": "Plain text. No pupil information." },
+        "impact": { "label": "Outcomes", "hint": "One outcome per line, up to 8. Whole-class or whole-school figures only, never individual pupils." },
+        "tech": { "label": "Methods and resources" },
+        "category": { "hint": "A type such as Curriculum or Enrichment. Used by the filter on the listing page." }
+      }
+    },
+    "certifications": {
+      "itemLabel": "Qualification or registration",
+      "fields": {
+        "name": { "label": "Qualification or registration" },
+        "issuer": { "label": "Awarding or registering body" },
+        "credentialUrl": { "label": "Register entry link", "hint": "Where someone can check the registration (http or https)." },
+        "badgeImageUrl": { "hidden": true }
+      }
+    },
+    "talks": {
+      "itemLabel": "Workshop",
+      "fields": {
+        "title": { "label": "Workshop title", "hint": "Plain text. No pupil information." },
+        "event": { "label": "Event or training day" },
+        "typeVideo": { "label": "Recording" },
+        "typeTalk": { "label": "Live session" },
+        "youtubeId": { "hidden": true }
+      }
+    },
+    "testimonials": {
+      "itemLabel": "Reference",
+      "fields": {
+        "quote": { "label": "Reference text", "hint": "Plain text. Only with the referee's permission, and never any pupil information." },
+        "author": { "label": "Referee" },
+        "authorTitle": { "label": "Referee's role and school" }
+      }
+    },
+    "blog": {
+      "itemLabel": "Article",
+      "fields": {
+        "title": { "label": "Article title", "hint": "Plain text. No pupil information." },
+        "body": { "label": "Article text", "hint": "Markdown. Raw HTML is shown as text, not run. Describe classroom examples in general terms only. Never include pupil information." },
+        "cover": { "hint": "JPEG, PNG or WebP. Never use a photograph that could identify a pupil, family or colleague." }
+      }
+    },
+    "hero": {
+      "fields": {
+        "heading": { "label": "Home page introduction", "hint": "The first thing visitors read. Write about your teaching in general terms. Never include pupil information. Changes apply as soon as you save." },
+        "eyebrow": { "label": "Role line", "hint": "For example your phase and subject. Plain text." },
+        "headlineAccent": { "hidden": true },
+        "lede": { "label": "Professional summary" }
+      }
+    },
+    "metrics": {
+      "itemLabel": "Figure",
+      "fields": {
+        "heading": { "label": "Key figures", "hint": "General figures about your teaching, such as years of experience. Never figures about individual pupils. Changes apply as soon as you save." },
+        "unit": { "hidden": true },
+        "label": { "label": "What it measures" }
+      }
+    },
+    "sections": {
+      "itemLabel": "Page",
+      "fields": {
+        "heading": { "label": "Pages of your site", "hint": "Choose which pages the site has, what the menu calls them and in which order. Articles and workshops are off until you switch them on. Hiding a page never deletes it. Saves apply at once." },
+        "label": { "label": "Menu name" },
+        "defaultOff": { "label": "Off until you switch it on", "hint": "Not shown by default for this profession. Think about what you would publish there first." }
+      }
+    },
+    "about": {
+      "itemLabel": "Highlight",
+      "fields": {
+        "heading": { "label": "About you", "hint": "Describe your teaching and values. Never include pupil information. Changes apply as soon as you save." },
+        "valueProps": { "label": "Highlights", "hint": "Short statements about how you teach, shown above the text." },
+        "currentlyNote": { "label": "Current role or interest" },
+        "focus": { "label": "Teaching focus", "hint": "One area per line." }
+      }
+    },
+    "transfer": {
+      "itemLabel": "Entry",
+      "fields": {
+        "heading": { "label": "Save and restore your portfolio", "hint": "Keep your portfolio in one file, or restore one. You see what would change first, and nothing is ever removed. Never put pupil information in an entry." },
+        "exportHeading": { "label": "Save a copy", "hint": "One file with your details and every entry, including unpublished ones. Pictures you uploaded are listed, not included." },
+        "exportButton": { "label": "Download my portfolio file" },
+        "importHeading": { "label": "Restore from a file", "hint": "Each entry in the file is matched to one of yours by its name or title: a match is updated, anything else is added." },
+        "fileLabel": { "label": "Portfolio file (.json)" },
+        "applyProfile": { "label": "Also restore my details and page choices", "hint": "Left unticked, only the entries are restored. Ticked, your details, introduction, key figures, about text, template and page choices come from the file; the preview lists each change." },
+        "previewButton": { "label": "Check the file" },
+        "confirmButton": { "label": "Restore now" },
+        "discardButton": { "label": "Cancel" },
+        "profile": { "label": "Details" },
+        "authoritative": { "label": "Your content is rebuilt at every start", "hint": "This site refills its content from its seed files whenever it starts, so what you restore would be replaced. Ask whoever runs the site to change that setting first." }
+      }
+    }
+  },
+  "starter": { "file": "starter.json" },
+  "copy": {
+    "layout": { "footerNote": "Professional portfolio. It contains no pupil information." },
+    "home": {
+      "workEyebrow": "Curriculum & initiatives",
+      "workHeading": "Curriculum & initiatives",
+      "workEmptyTitle": "Initiatives coming soon",
+      "workEmptyBody": "Add the curriculum, enrichment or improvement projects you have led or contributed to. Describe the work and its outcome, never individual pupils.",
+      "testimonialsEyebrow": "References",
+      "testimonialsHeading": "What colleagues say",
+      "contactHeading": "Get in touch about teaching roles, mentoring or collaboration.",
+      "experienceEyebrow": "Classroom",
+      "experienceHeading": "Teaching experience",
+      "credentialsEyebrow": "Qualifications",
+      "credentialsHeading": "Teaching qualifications & registration",
+      "skillsHeading": "Teaching skills"
+    },
+    "projects": {
+      "title": "Initiatives",
+      "description": "Curriculum, enrichment and improvement initiatives: the aim, the approach and the outcome.",
+      "eyebrow": "Curriculum & initiatives",
+      "heading": "Curriculum & initiatives",
+      "lead": "Initiatives led or contributed to: the aim, what was done and the outcome.",
+      "emptyTitle": "No initiatives yet",
+      "emptyBody": "Add your first initiative. Describe the work and its outcome, never individual pupils.",
+      "filterLabel": "Filter initiatives by area",
+      "featuredBadge": "featured",
+      "problemHeading": "Aim",
+      "approachHeading": "Approach",
+      "noWriteup": "A full description of this initiative is on the way.",
+      "stackHeading": "Methods & resources",
+      "linksHeading": "Links",
+      "proofHeading": "Evidence",
+      "screenshotsHeading": "Images",
+      "imageAlt": "{title} image",
+      "galleryLabel": "Images",
+      "openImageLabel": "Open image"
+    },
+    "experience": {
+      "title": "Experience",
+      "description": "{name}'s teaching experience: schools, roles and responsibilities, most recent first.",
+      "eyebrow": "Classroom",
+      "heading": "Teaching experience",
+      "lead": "Most recent first: where I have taught, the responsibilities I held and what I contributed.",
+      "empty": "No roles have been added yet."
+    },
+    "skills": {
+      "title": "Skills",
+      "description": "Teaching skills grouped by area: teaching and learning, curriculum, pastoral care, technology and languages.",
+      "eyebrow": "Skills",
+      "heading": "Teaching skills",
+      "lead": "Grouped by area: what I am trained and confident to do.",
+      "empty": "No skills have been added yet."
+    },
+    "certifications": {
+      "title": "Qualifications",
+      "description": "Teaching qualifications, registration and training: current, in progress and planned.",
+      "eyebrow": "Qualifications",
+      "heading": "Qualifications, registration & training",
+      "lead": "Current registration and qualifications, training under way and planned professional development.",
+      "emptyTitle": "No qualifications yet",
+      "emptyBody": "Add your teaching registration, degrees and mandatory training.",
+      "filterLabel": "Filter by awarding body",
+      "statusEarned": "Current",
+      "statusInProgress": "In progress",
+      "statusPlanned": "Planned",
+      "viewCertificate": "View certificate",
+      "viewCredential": "Verify registration →"
+    },
+    "blog": {
+      "title": "Articles",
+      "description": "Articles on teaching, learning and professional development.",
+      "eyebrow": "Articles",
+      "heading": "Writing",
+      "lead": "Reflections on teaching and professional development.",
+      "empty": "Articles coming soon."
+    },
+    "talks": {
+      "title": "Workshops",
+      "description": "Workshops and training sessions I have led.",
+      "eyebrow": "Workshops",
+      "heading": "Coming soon",
+      "empty": "No workshops listed yet. Check back soon.",
+      "watch": "Watch →"
+    },
+    "contact": {
+      "description": "Contact {name}: email, phone or LinkedIn.",
+      "heading": "Get in touch about teaching roles, mentoring or collaboration.",
+      "lead": "The best ways to reach me. Please do not send pupil information."
+    },
+    "cv": {
+      "description": "Curriculum vitae — {name}, {title}.",
+      "experienceHeading": "Teaching experience",
+      "skillsHeading": "Teaching skills",
+      "projectsHeading": "Curriculum & initiatives",
+      "certificationsHeading": "Qualifications & registration"
+    }
+  }
+}
