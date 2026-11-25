@@ -97,7 +97,7 @@ Tests are written first.
 
 Path `/cv` and `/cv.pdf` after choosing a template in `/setup` or in the admin template switcher. Precondition: sample or real content
 with experience, skills, projects and certifications. Steps: switch templates and compare section order, headings, status words and
-accent; pick a different accent and reload.
+accent; pick a different accent in the wizard review step (`/admin/welcome/review`) and reload.
 
 ## Risks
 
